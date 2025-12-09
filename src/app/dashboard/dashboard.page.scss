@@ -1,0 +1,124 @@
+/* src/app/pages/nexus-dashboard/nexus-dashboard.page.scss */
+
+.dashboard-wrapper {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+}
+
+/* Stats cards */
+.stat-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+}
+
+.stat-label {
+  font-size: 13px;
+  color: var(--ion-color-medium);
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 700;
+  margin-top: 4px;
+}
+
+.stat-change {
+  display: flex;
+  align-items: center;
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.stat-change ion-icon {
+  font-size: 14px;
+  margin-right: 4px;
+}
+
+.stat-change.up {
+  color: var(--ion-color-success);
+}
+
+.stat-change.down {
+  color: var(--ion-color-danger);
+}
+
+.stat-icon {
+  height: 48px;
+  width: 48px;
+  border-radius: 12px;
+  background: rgba(56, 128, 255, 0.1);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.stat-icon ion-icon {
+  font-size: 24px;
+  color: var(--ion-color-primary);
+}
+
+/* Muted text */
+.muted {
+  color: var(--ion-color-medium);
+  font-size: 13px;
+  margin-bottom: 8px;
+}
+
+/* Recent orders table */
+.table-wrapper {
+  width: 100%;
+  overflow-x: auto;
+}
+
+.orders-table {
+  width: 100%;
+  border-collapse: collapse;
+}
+
+.orders-table th,
+.orders-table td {
+  padding: 8px 12px;
+  border-bottom: 1px solid var(--ion-color-light-shade);
+  font-size: 13px;
+}
+
+.orders-table th {
+  text-align: left;
+  color: var(--ion-color-medium);
+  font-weight: 500;
+}
+
+.orders-table tr:last-child td {
+  border-bottom: none;
+}
+
+.text-right {
+  text-align: right;
+}
+
+/* Status chip */
+.status-chip {
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 500;
+  background: var(--ion-color-medium-tint);
+  color: var(--ion-color-dark);
+}
+
+.status-chip.delivered {
+  background: rgba(16, 185, 129, 0.15);
+  color: #047857;
+}
+
+.status-chip.transit {
+  background: rgba(59, 130, 246, 0.15);
+  color: #1d4ed8;
+}
+
+.status-chip.pending {
+  background: rgba(234, 179, 8, 0.15);
+  color: #92400e;
+}

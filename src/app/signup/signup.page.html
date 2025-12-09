@@ -1,0 +1,168 @@
+<!-- src/app/pages/nexus-signup/nexus-signup.page.html -->
+<ion-content class="ion-padding">
+  <div class="signup-wrapper">
+    <ion-card class="signup-card">
+      <ion-card-header class="ion-text-center">
+        <div class="logo-wrapper">
+          <ion-avatar class="logo-avatar">
+            <ion-icon name="cube-outline"></ion-icon>
+          </ion-avatar>
+        </div>
+        <ion-card-title class="app-title">Nexus</ion-card-title>
+        <ion-card-subtitle class="app-subtitle">
+          Create your account to manage inventory
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+          <!-- Name -->
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12" sizeMd="6">
+                <ion-item>
+                  <ion-label position="stacked">First Name</ion-label>
+                  <ion-input
+                    type="text"
+                    placeholder="John"
+                    formControlName="firstName"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="6">
+                <ion-item>
+                  <ion-label position="stacked">Last Name</ion-label>
+                  <ion-input
+                    type="text"
+                    placeholder="Doe"
+                    formControlName="lastName"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <!-- Email -->
+          <ion-item>
+            <ion-label position="stacked">Email</ion-label>
+            <ion-input
+              type="email"
+              placeholder="john.doe@example.com"
+              formControlName="email"
+            ></ion-input>
+          </ion-item>
+
+          <!-- City / Country / ZIP -->
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12" sizeMd="4">
+                <ion-item>
+                  <ion-label position="stacked">City</ion-label>
+                  <ion-input
+                    type="text"
+                    placeholder="New York"
+                    formControlName="city"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="4">
+                <ion-item>
+                  <ion-label position="stacked">Country</ion-label>
+                  <ion-select
+                    placeholder="Select country"
+                    formControlName="country"
+                  >
+                    <ion-select-option
+                      *ngFor="let c of countries"
+                      [value]="c.value"
+                    >
+                      {{ c.label }}
+                    </ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="4">
+                <ion-item>
+                  <ion-label position="stacked">ZIP Code</ion-label>
+                  <ion-input
+                    type="text"
+                    placeholder="10001"
+                    formControlName="zip"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <!-- Username -->
+          <ion-item>
+            <ion-label position="stacked">Username</ion-label>
+            <ion-input
+              type="text"
+              placeholder="johndoe"
+              formControlName="username"
+            ></ion-input>
+          </ion-item>
+
+          <!-- Password / Confirm Password -->
+          <ion-grid>
+            <ion-row>
+              <ion-col size="12" sizeMd="6">
+                <ion-item>
+                  <ion-label position="stacked">Password</ion-label>
+                  <ion-input
+                    type="password"
+                    placeholder="••••••••"
+                    formControlName="password"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+
+              <ion-col size="12" sizeMd="6">
+                <ion-item>
+                  <ion-label position="stacked">Confirm Password</ion-label>
+                  <ion-input
+                    type="password"
+                    placeholder="••••••••"
+                    formControlName="confirmPassword"
+                  ></ion-input>
+                </ion-item>
+              </ion-col>
+            </ion-row>
+          </ion-grid>
+
+          <div
+            *ngIf="signupForm.errors?.['passwordsNotMatch'] && signupForm.touched"
+            class="error-text"
+          >
+            Passwords do not match.
+          </div>
+
+          <!-- Submit -->
+          <div class="submit-wrapper">
+            <ion-button
+              expand="block"
+              size="large"
+              type="submit"
+              [disabled]="signupForm.invalid"
+            >
+              Create Account
+            </ion-button>
+          </div>
+
+          <!-- Login link -->
+         <!-- Login link -->
+      <div class="login-text">
+        <span>Already have an account?</span>
+        <button type="button" class="link-button" (click)="goToLogin($event)">
+          Sign in
+        </button>
+      </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>

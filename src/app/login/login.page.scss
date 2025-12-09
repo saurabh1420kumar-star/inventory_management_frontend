@@ -1,0 +1,88 @@
+/* src/app/pages/nexus-login/nexus-login.page.scss */
+
+ion-content {
+  --background: radial-gradient(circle at top left, #3880ff1a, transparent),
+    radial-gradient(circle at bottom right, #0cd1e81a, transparent),
+    var(--ion-color-light);
+}
+
+.login-wrapper {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-card {
+  width: 100%;
+  max-width: 420px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.logo-avatar {
+  --border-radius: 16px;
+  background: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-avatar ion-icon {
+  color: white;
+  font-size: 32px;
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.app-subtitle {
+  font-size: 14px;
+}
+
+.password-row {
+  display: flex;
+  align-items: center;
+  width: 100%;
+}
+
+.password-row ion-input {
+  flex: 1;
+}
+
+.forgot-wrapper {
+  margin-top: 8px;
+  text-align: right;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0;
+  color: var(--ion-color-primary);
+  font-size: 13px;
+  cursor: pointer;
+}
+
+.submit-wrapper {
+  margin-top: 20px;
+}
+
+.signup-text {
+  margin-top: 12px;
+  font-size: 13px;
+  text-align: center;
+  opacity: 0.9;
+}
+
+.signup-text .link-button {
+  margin-left: 4px;
+  font-weight: 600;
+}

@@ -1,0 +1,73 @@
+/* src/app/pages/nexus-signup/nexus-signup.page.scss */
+
+ion-content {
+  --background: radial-gradient(circle at top left, #3880ff1a, transparent),
+    radial-gradient(circle at bottom right, #0cd1e81a, transparent),
+    var(--ion-color-light);
+}
+
+.signup-wrapper {
+  min-height: 100%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.signup-card {
+  width: 100%;
+  max-width: 640px;
+  box-shadow: 0 20px 40px rgba(0, 0, 0, 0.12);
+}
+
+.logo-wrapper {
+  display: flex;
+  justify-content: center;
+  margin-bottom: 12px;
+}
+
+.logo-avatar {
+  --border-radius: 16px;
+  background: var(--ion-color-primary);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.logo-avatar ion-icon {
+  color: white;
+  font-size: 32px;
+}
+
+.app-title {
+  font-size: 24px;
+  font-weight: 700;
+}
+
+.app-subtitle {
+  font-size: 14px;
+}
+
+.error-text {
+  margin-top: 4px;
+  font-size: 12px;
+  color: var(--ion-color-danger);
+}
+
+.submit-wrapper {
+  margin-top: 16px;
+}
+
+.login-text {
+  margin-top: 12px;
+  text-align: center;
+  font-size: 13px;
+}
+
+.link-button {
+  border: none;
+  background: none;
+  padding: 0 4px;
+  color: var(--ion-color-primary);
+  font-weight: 600;
+  cursor: pointer;
+}

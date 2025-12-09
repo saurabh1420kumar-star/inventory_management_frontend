@@ -1,0 +1,81 @@
+<!-- src/app/pages/nexus-login/nexus-login.page.html -->
+<ion-content class="ion-padding">
+  <div class="login-wrapper">
+    <ion-card class="login-card">
+      <ion-card-header class="ion-text-center">
+        <div class="logo-wrapper">
+          <ion-avatar class="logo-avatar">
+            <ion-icon name="cube-outline"></ion-icon>
+          </ion-avatar>
+        </div>
+        <ion-card-title class="app-title">Nexus</ion-card-title>
+        <ion-card-subtitle class="app-subtitle">
+          Inventory Management System
+        </ion-card-subtitle>
+      </ion-card-header>
+
+      <ion-card-content>
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+          <!-- Username -->
+          <ion-item>
+            <ion-label position="stacked">Username</ion-label>
+            <ion-input
+              type="text"
+              placeholder="Enter your username"
+              formControlName="username"
+            ></ion-input>
+          </ion-item>
+
+          <!-- Password + toggle -->
+          <ion-item>
+            <ion-label position="stacked">Password</ion-label>
+            <div class="password-row">
+              <ion-input
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="••••••••"
+                formControlName="password"
+              ></ion-input>
+              <ion-button
+                fill="clear"
+                size="small"
+                (click)="togglePasswordVisibility()"
+                type="button"
+              >
+                <ion-icon
+                  [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
+                ></ion-icon>
+              </ion-button>
+            </div>
+          </ion-item>
+
+          <!-- Forgot password -->
+          <div class="forgot-wrapper">
+            <button type="button" class="link-button" (click)="forgotPassword()">
+              Forgot password?
+            </button>
+          </div>
+
+          <!-- Sign in button -->
+          <div class="submit-wrapper">
+            <ion-button
+              expand="block"
+              size="large"
+              type="submit"
+              [disabled]="loginForm.invalid"
+            >
+              Sign In
+            </ion-button>
+          </div>
+
+          <!-- Signup link -->
+          <div class="signup-text">
+            <span>Don't have an account?</span>
+            <button type="button" class="link-button" (click)="goToSignup()">
+              Create one
+            </button>
+          </div>
+        </form>
+      </ion-card-content>
+    </ion-card>
+  </div>
+</ion-content>
