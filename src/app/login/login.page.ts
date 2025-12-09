@@ -1,11 +1,11 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { 
-  IonicModule,
-  ToastController 
-} from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+
+import { Auth } from '../services/auth';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-login',
@@ -21,13 +21,14 @@ import { CommonModule } from '@angular/common';
 export class LoginPage {
 
   loginForm: FormGroup;
-  
   showPassword = false;
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
-    private toastController: ToastController,
-    private router: Router
+    private toast: Toast,
+    private router: Router,
+    private auth: Auth
   ) {
     this.loginForm = this.fb.group({
       username: ['', [Validators.required]],
@@ -39,28 +40,36 @@ export class LoginPage {
     this.showPassword = !this.showPassword;
   }
 
-  async presentToast(message: string, color: 'success' | 'danger' = 'success') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'top',
-    });
-    await toast.present();
-  }
-
-  async onSubmit() {
+  onSubmit() {
     if (this.loginForm.invalid) {
-      await this.presentToast('Please fill in all fields', 'danger');
+      this.toast.present('Please fill in all fields', 'warning');
       return;
     }
 
     const { username, password } = this.loginForm.value;
-    console.log('Login data:', { username, password });
+    this.loading = true;
 
-    // TODO: replace with real API call
-    await this.presentToast('Welcome back! Successfully logged in to Nexus');
-    this.router.navigateByUrl('/dashboard'); // configure this route later
+    this.auth.login(username, password).subscribe({
+      next: async (res) => {
+        this.loading = false;
+        await this.toast.present(res.message || 'Login successful', 'success');
+        this.router.navigateByUrl('/dashboard');
+      },
+      error: async (err) => {
+        this.loading = false;
+        console.error('Login error:', err);
+
+        const backendMsg = err?.error?.error || err?.error?.message;
+
+        if (backendMsg) {
+          await this.toast.present(backendMsg, 'warning');
+        } else if (err.status === 401 || err.status === 403) {
+          await this.toast.present('Invalid username or password', 'warning');
+        } else {
+          await this.toast.present('Something went wrong. Please try again.', 'danger');
+        }
+      },
+    });
   }
 
   goToSignup() {
@@ -68,7 +77,6 @@ export class LoginPage {
   }
 
   forgotPassword() {
-    // TODO: implement forgot password flow
     console.log('Forgot password clicked');
   }
 }

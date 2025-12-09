@@ -16,12 +16,13 @@
 
       <ion-card-content>
         <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+          
           <!-- Name -->
           <ion-grid>
             <ion-row>
               <ion-col size="12" sizeMd="6">
                 <ion-item>
-                  <ion-label position="stacked">First Name</ion-label>
+                  <ion-label position="stacked">First Name *</ion-label>
                   <ion-input
                     type="text"
                     placeholder="John"
@@ -32,7 +33,7 @@
 
               <ion-col size="12" sizeMd="6">
                 <ion-item>
-                  <ion-label position="stacked">Last Name</ion-label>
+                  <ion-label position="stacked">Last Name *</ion-label>
                   <ion-input
                     type="text"
                     placeholder="Doe"
@@ -45,7 +46,7 @@
 
           <!-- Email -->
           <ion-item>
-            <ion-label position="stacked">Email</ion-label>
+            <ion-label position="stacked">Email *</ion-label>
             <ion-input
               type="email"
               placeholder="john.doe@example.com"
@@ -53,12 +54,22 @@
             ></ion-input>
           </ion-item>
 
-          <!-- City / Country / ZIP -->
+          <!-- Contact No -->
+          <ion-item>
+            <ion-label position="stacked">Contact Number *</ion-label>
+            <ion-input
+              type="text"
+              placeholder="+1234567890"
+              formControlName="contactNo"
+            ></ion-input>
+          </ion-item>
+
+          <!-- Country/City/ZIP -->
           <ion-grid>
             <ion-row>
               <ion-col size="12" sizeMd="4">
                 <ion-item>
-                  <ion-label position="stacked">City</ion-label>
+                  <ion-label position="stacked">City *</ion-label>
                   <ion-input
                     type="text"
                     placeholder="New York"
@@ -69,14 +80,16 @@
 
               <ion-col size="12" sizeMd="4">
                 <ion-item>
-                  <ion-label position="stacked">Country</ion-label>
+                  <ion-label position="stacked">Country *</ion-label>
                   <ion-select
                     placeholder="Select country"
                     formControlName="country"
+                    interface="popover"
+                    [interfaceOptions]="{ cssClass: 'custom-popover' }"
                   >
                     <ion-select-option
                       *ngFor="let c of countries"
-                      [value]="c.value"
+                      [value]="c.label"
                     >
                       {{ c.label }}
                     </ion-select-option>
@@ -86,7 +99,7 @@
 
               <ion-col size="12" sizeMd="4">
                 <ion-item>
-                  <ion-label position="stacked">ZIP Code</ion-label>
+                  <ion-label position="stacked">ZIP Code *</ion-label>
                   <ion-input
                     type="text"
                     placeholder="10001"
@@ -99,7 +112,7 @@
 
           <!-- Username -->
           <ion-item>
-            <ion-label position="stacked">Username</ion-label>
+            <ion-label position="stacked">Username *</ion-label>
             <ion-input
               type="text"
               placeholder="johndoe"
@@ -107,12 +120,30 @@
             ></ion-input>
           </ion-item>
 
-          <!-- Password / Confirm Password -->
+          <!-- Role Dropdown -->
+          <ion-item>
+            <ion-label position="stacked">Select Role *</ion-label>
+            <ion-select
+              placeholder="Choose a role"
+              formControlName="roleType"
+              interface="popover"
+              [interfaceOptions]="{ cssClass: 'custom-popover' }"
+            >
+              <ion-select-option
+                *ngFor="let r of roles"
+                [value]="r.value"
+              >
+                {{ r.label }}
+              </ion-select-option>
+            </ion-select>
+          </ion-item>
+
+          <!-- Password -->
           <ion-grid>
             <ion-row>
               <ion-col size="12" sizeMd="6">
                 <ion-item>
-                  <ion-label position="stacked">Password</ion-label>
+                  <ion-label position="stacked">Password *</ion-label>
                   <ion-input
                     type="password"
                     placeholder="••••••••"
@@ -123,7 +154,7 @@
 
               <ion-col size="12" sizeMd="6">
                 <ion-item>
-                  <ion-label position="stacked">Confirm Password</ion-label>
+                  <ion-label position="stacked">Confirm Password *</ion-label>
                   <ion-input
                     type="password"
                     placeholder="••••••••"
@@ -134,8 +165,9 @@
             </ion-row>
           </ion-grid>
 
+          <!-- Validation error -->
           <div
-            *ngIf="signupForm.errors?.['passwordsNotMatch'] && signupForm.touched"
+            *ngIf="signupForm.errors?.['passwordsNotMatch']"
             class="error-text"
           >
             Passwords do not match.
@@ -147,20 +179,25 @@
               expand="block"
               size="large"
               type="submit"
-              [disabled]="signupForm.invalid"
+              [disabled]="signupForm.invalid || loading"
             >
-              Create Account
+              <ng-container *ngIf="loading; else textOnly">
+                <ion-spinner name="crescent"></ion-spinner>
+              </ng-container>
+              <ng-template #textOnly>
+                Create Account
+              </ng-template>
             </ion-button>
           </div>
 
           <!-- Login link -->
-         <!-- Login link -->
-      <div class="login-text">
-        <span>Already have an account?</span>
-        <button type="button" class="link-button" (click)="goToLogin($event)">
-          Sign in
-        </button>
-      </div>
+          <div class="login-text">
+            <span>Already have an account?</span>
+            <button type="button" class="link-button" (click)="goToLogin($event)">
+              Sign in
+            </button>
+          </div>
+
         </form>
       </ion-card-content>
     </ion-card>

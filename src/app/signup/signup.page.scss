@@ -12,6 +12,24 @@ ion-content {
   align-items: center;
   justify-content: center;
 }
+::ng-deep {
+  .custom-popover {
+    .alert-button-group {
+      display: none !important;
+    }
+    
+    .alert-radio-group {
+      max-height: 300px;
+      overflow-y: auto;
+    }
+
+    // Optional: Make it look cleaner
+    .alert-wrapper {
+      box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+      border-radius: 8px;
+    }
+  }
+}
 
 .signup-card {
   width: 100%;
@@ -71,3 +89,14 @@ ion-content {
   font-weight: 600;
   cursor: pointer;
 }
+.toast-right {
+  position: fixed !important;
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+  width: auto;
+  z-index: 9999;
+}
+

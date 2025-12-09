@@ -5,6 +5,29 @@ ion-content {
     radial-gradient(circle at bottom right, #0cd1e81a, transparent),
     var(--ion-color-light);
 }
+.error-text {
+  color: red;
+  font-size: 13px;
+  margin: 4px 0 12px 10px;
+}
+
+.forgot-wrapper, .signup-text {
+  margin-top: 10px;
+  text-align: right;
+}
+
+.link-button {
+  background: none;
+  border: none;
+  color: var(--ion-color-primary);
+  font-weight: 500;
+  font-size: 14px;
+}
+
+.submit-wrapper {
+  margin-top: 20px;
+}
+
 
 .login-wrapper {
   min-height: 100%;
@@ -86,3 +109,15 @@ ion-content {
   margin-left: 4px;
   font-weight: 600;
 }
+
+.toast-right {
+  position: fixed !important;
+  top: 10px !important;
+  right: 10px !important;
+  left: auto !important;
+  margin: 0 !important;
+  transform: none !important;
+  width: auto;
+  z-index: 9999;
+}
+

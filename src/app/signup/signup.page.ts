@@ -3,7 +3,9 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { ToastController } from '@ionic/angular';
+
+import { Auth, CreateUserRequest } from '../services/auth';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-signup',
@@ -21,19 +23,44 @@ export class SignupPage implements OnInit {
   signupForm: FormGroup;
 
   countries = [
-    { value: 'us', label: 'United States' },
-    { value: 'uk', label: 'United Kingdom' },
-    { value: 'ca', label: 'Canada' },
-    { value: 'au', label: 'Australia' },
-    { value: 'in', label: 'India' },
-    { value: 'de', label: 'Germany' },
-    { value: 'fr', label: 'France' },
+    { value: 'USA', label: 'United States' },
+    { value: 'UK', label: 'United Kingdom' },
+    { value: 'CANADA', label: 'Canada' },
+    { value: 'AUSTRALIA', label: 'Australia' },
+    { value: 'INDIA', label: 'India' },
+    { value: 'GERMANY', label: 'Germany' },
+    { value: 'FRANCE', label: 'France' },
   ];
+
+  roles = [
+    { value: 'ADMIN', label: 'Admin' },
+    { value: 'BUSINESS_DEV_MGR', label: 'Business Dev Manager' },
+    { value: 'PLANT_MGR', label: 'Plant Manager' },
+    { value: 'HR_MGR', label: 'HR Manager' },
+    { value: 'LOGISTICS_MGR', label: 'Logistics Manager' },
+    { value: 'ACCOUNT_MGR', label: 'Account Manager' },
+    { value: 'ACCOUNT_OFFICER', label: 'Account Officer' },
+    { value: 'ACCOUNT_EXECUTIVE', label: 'Account Executive' },
+    { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager' },
+    { value: 'STATE_SALES_MGR', label: 'State Sales Manager' },
+    { value: 'ZONAL_SALES_MGR', label: 'Zonal Sales Manager' },
+    { value: 'REGIONAL_SALES_MGR', label: 'Regional Sales Manager' },
+    { value: 'AREA_SALES_MGR', label: 'Area Sales Manager' },
+    { value: 'SALES_OFFICER', label: 'Sales Officer' },
+    { value: 'SALES_EXECUTIVE', label: 'Sales Executive' },
+    { value: 'LOGISTICS_OFFICER', label: 'Logistics Officer' },
+    { value: 'HR_EXECUTIVE', label: 'HR Executive' },
+    { value: 'PLANT_OFFICER', label: 'Plant Officer' },
+    { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' },
+  ];
+
+  loading = false;
 
   constructor(
     private fb: FormBuilder,
-    private toastController: ToastController,
-    private router: Router
+    private toast: Toast,
+    private router: Router,
+    private auth: Auth
   ) {
     this.signupForm = this.fb.group(
       {
@@ -43,7 +70,9 @@ export class SignupPage implements OnInit {
         city: ['', [Validators.required]],
         country: ['', [Validators.required]],
         zip: ['', [Validators.required]],
+        contactNo: [''],
         username: ['', [Validators.required]],
+        roleType: ['', [Validators.required]],
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', [Validators.required]],
       },
@@ -51,8 +80,7 @@ export class SignupPage implements OnInit {
     );
   }
 
-  ngOnInit() {
-  }
+  ngOnInit() {}
 
   passwordsMatchValidator(group: FormGroup) {
     const pass = group.get('password')?.value;
@@ -60,35 +88,54 @@ export class SignupPage implements OnInit {
     return pass === confirm ? null : { passwordsNotMatch: true };
   }
 
-  async presentToast(message: string, color: 'success' | 'danger' = 'success') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'top',
-    });
-    await toast.present();
-  }
-
   async onSubmit() {
     if (this.signupForm.invalid) {
       if (this.signupForm.errors?.['passwordsNotMatch']) {
-        await this.presentToast('Passwords do not match', 'danger');
+        await this.toast.present('Passwords do not match', 'warning');
       } else {
-        await this.presentToast('Please fill all required fields', 'danger');
+        await this.toast.present('Please fill all required fields', 'warning');
       }
       return;
     }
 
-    const data = this.signupForm.value;
-    console.log('Signup data:', data);
+    const v = this.signupForm.value;
 
-    // TODO: call your API here
+    const payload: CreateUserRequest = {
+      username: v.username,
+      email: v.email,
+      password: v.password,
+      status: 'ACTIVE',
+      firstName: v.firstName,
+      lastName: v.lastName,
+      contactNo: v.contactNo || '',
+      city: v.city,
+      country: v.country,
+      zip: v.zip,
+      roleType: v.roleType,
+    };
 
-    await this.presentToast(
-      'Account Created. Welcome to Nexus! Please login to continue.'
-    );
-    this.router.navigateByUrl('/login');
+    this.loading = true;
+
+    this.auth.createUser(payload).subscribe({
+      next: async (res) => {
+        this.loading = false;
+        await this.toast.present(
+          `Account created for ${res.username}. Status: ${res.status}`,
+          'success'
+        );
+        this.router.navigateByUrl('/login');
+      },
+      error: async (err) => {
+        this.loading = false;
+        console.error('Signup error:', err);
+
+        const msg =
+          err?.error?.error ||
+          err?.error?.message ||
+          'Failed to create account. Please try again.';
+        await this.toast.present(msg, 'danger');
+      },
+    });
   }
 
   goToLogin(event?: Event): void {
