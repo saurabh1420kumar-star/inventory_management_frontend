@@ -1,0 +1,190 @@
+ion-menu {
+  --width: 260px;
+  --background: #ffffff;
+  border-right: 1px solid #e5e7eb;
+  border-radius: 6px;
+}
+
+.brand {
+  display: flex;
+  align-items: center;
+  padding: 20px 16px 16px;
+  border-bottom: 1px solid #f3f4f6;
+  margin-bottom: 8px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 12px;
+  background: #3b82f6;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.brand-text h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.menu-list {
+  padding: 8px 12px;
+  background: transparent;
+}
+
+// Main menu items
+ion-item {
+  --background: transparent;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  --border-radius: 8px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-size: 14px;
+  --color: #374151;
+  cursor: pointer;
+}
+
+ion-item:hover {
+  --background: #f9fafb;
+}
+
+ion-item ion-icon[slot='start'] {
+  font-size: 20px;
+  margin-right: 12px;
+  color: #6b7280;
+}
+
+// Active menu item
+.active-item {
+  --background: #eff6ff;
+  --color: #2563eb;
+  font-weight: 600;
+
+  ion-icon {
+    color: #2563eb;
+  }
+}
+
+// Accordion styling
+ion-accordion-group {
+  margin-bottom: 4px;
+}
+
+ion-accordion {
+  background: transparent;
+}
+
+// Accordion header
+ion-accordion ion-item[slot='header'] {
+  --background: transparent;
+  --color: #374151;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  margin-bottom: 0;
+}
+
+ion-accordion ion-item[slot='header']:hover {
+  --background: #f9fafb;
+}
+
+// Expanded accordion header
+ion-accordion.accordion-expanded ion-item[slot='header'] {
+  --background: #f9fafb;
+}
+
+// Submenu items
+.submenu {
+  background: transparent;
+  padding-left: 20px;
+}
+
+.submenu ion-item {
+  --padding-start: 32px;
+  font-size: 13px;
+  --color: #4b5563;
+  margin-bottom: 2px;
+}
+
+.submenu ion-item:hover {
+  --background: #f3f4f6;
+}
+
+// Active submenu item
+.submenu ion-item.active-item {
+  --background: #eff6ff;
+  --color: #2563eb;
+  font-weight: 500;
+}
+
+// ... your existing styles ...
+
+// User Footer at bottom of sidebar
+.user-footer {
+  position: absolute;
+  bottom: 0;
+  left: 0;
+  right: 0;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px;
+  border-top: 1px solid #e5e7eb;
+  background: #ffffff;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  flex: 1;
+}
+
+.user-avatar {
+  width: 40px;
+  height: 40px;
+}
+
+.user-details {
+  display: flex;
+  flex-direction: column;
+}
+
+.user-greeting {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+  color: #111827;
+}
+
+.user-role {
+  font-size: 12px;
+  color: #6b7280;
+}
+
+.logout-btn {
+  --color: #6b7280;
+  --padding-start: 8px;
+  --padding-end: 8px;
+  margin: 0;
+
+  ion-icon {
+    font-size: 20px;
+  }
+}
+
+.logout-btn:hover {
+  --color: #dc2626;
+}
+
+// Make sure menu content has padding at bottom for footer
+ion-menu ion-content {
+  --padding-bottom: 80px;
+}

@@ -52,8 +52,16 @@ export class LoginPage {
     this.auth.login(username, password).subscribe({
       next: async (res) => {
         this.loading = false;
+
+        // success toast
         await this.toast.present(res.message || 'Login successful', 'success');
-        this.router.navigateByUrl('/dashboard');
+
+        // 🔥 redirect based on role
+        if (res.roleType === 'ADMIN') {
+          this.router.navigateByUrl('/pending-approvals');
+        } else {
+          this.router.navigateByUrl('/dashboard');
+        }
       },
       error: async (err) => {
         this.loading = false;

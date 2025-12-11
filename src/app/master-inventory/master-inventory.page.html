@@ -1,0 +1,212 @@
+<ion-header translucent>
+  <ion-toolbar>
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
+    <ion-title>Master Inventory</ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openAddModal()" color="primary">
+        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        Add Product
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="page-content">
+  <div class="page-inner">
+    <!-- Stats -->
+    <div class="stats-grid">
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Total Items</small>
+              <h3>{{ stats.totalItems }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Raw Materials</small>
+              <h3>{{ stats.rawMaterials }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Finished Products</small>
+              <h3>{{ stats.finishedProducts }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Low Stock</small>
+              <h3>{{ stats.lowStock }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Out of Stock</small>
+              <h3>{{ stats.outOfStock }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+
+      <ion-card class="stat-card">
+        <ion-card-content>
+          <div class="stat-row">
+            <div>
+              <small>Total Value</small>
+              <h3>${{ stats.totalValue | number:'1.0-0' }}</h3>
+            </div>
+          </div>
+        </ion-card-content>
+      </ion-card>
+    </div>
+
+    <!-- Controls -->
+    <div class="controls">
+      <ion-searchbar placeholder="Search inventory..." debounce="300" [(ngModel)]="searchTerm"></ion-searchbar>
+
+      <ion-segment [(ngModel)]="activeTab" mode="md">
+        <ion-segment-button value="all">All ({{ stats.totalItems }})</ion-segment-button>
+        <ion-segment-button value="raw_materials">Raw Materials ({{ stats.rawMaterials }})</ion-segment-button>
+        <ion-segment-button value="finished_products">Finished Products ({{ stats.finishedProducts }})</ion-segment-button>
+      </ion-segment>
+    </div>
+
+    <!-- Scrollable table -->
+    <div class="table-wrapper">
+      <table class="inventory-table">
+        <thead>
+          <tr>
+            <th>ID</th>
+            <th>Name</th>
+            <th>Type</th>
+            <th>Category</th>
+            <th>Quantity</th>
+            <th>Unit Price</th>
+            <th>Status</th>
+            <th>Last Updated</th>
+            <th class="actions-col">Actions</th>
+          </tr>
+        </thead>
+        <tbody>
+          <tr *ngFor="let item of filteredInventory">
+            <td>{{ item.id }}</td>
+            <td>
+              <div class="name-cell">
+                <div class="title">{{ item.name }}</div>
+                <div class="muted" *ngIf="item.supplier">{{ item.supplier }}</div>
+                <div class="muted" *ngIf="item.sku">{{ item.sku }}</div>
+              </div>
+            </td>
+            <td>{{ item.type === 'raw_material' ? 'Raw Material' : 'Finished Product' }}</td>
+            <td>{{ item.category }}</td>
+            <td>{{ item.quantity }} {{ item.unit }}</td>
+            <td>${{ item.unitPrice.toFixed(2) }}</td>
+            <td><span class="badge" [ngClass]="badgeClass(item.status)">{{ item.status.replace('_',' ') }}</span></td>
+            <td>{{ item.lastUpdated }}</td>
+            <td class="actions-col">
+              <ion-button fill="clear" size="small" (click)="viewItem(item)">
+                <ion-icon name="eye-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" size="small" (click)="editItem(item)">
+                <ion-icon name="pencil-outline"></ion-icon>
+              </ion-button>
+              <ion-button fill="clear" color="danger" size="small" (click)="deleteItem(item.id)">
+                <ion-icon name="trash-outline"></ion-icon>
+              </ion-button>
+            </td>
+          </tr>
+        </tbody>
+      </table>
+    </div>
+  </div>
+</ion-content>
+
+<!-- Add item modal -->
+<ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" cssClass="add-modal">
+  <ng-template>
+    <ion-header>
+      <ion-toolbar>
+        <ion-title>Add Inventory Item</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeAddModal()">Close</ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <form [formGroup]="addForm" (ngSubmit)="addItem()">
+        <ion-item>
+          <ion-label>Type</ion-label>
+          <ion-select formControlName="type">
+            <ion-select-option value="raw_material">Raw Material</ion-select-option>
+            <ion-select-option value="finished_product">Finished Product</ion-select-option>
+          </ion-select>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Name</ion-label>
+          <ion-input formControlName="name"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Category</ion-label>
+          <ion-input formControlName="category"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Quantity</ion-label>
+          <ion-input type="number" formControlName="quantity"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Unit</ion-label>
+          <ion-input formControlName="unit"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Unit Price</ion-label>
+          <ion-input type="number" formControlName="unitPrice"></ion-input>
+        </ion-item>
+
+        <ion-item>
+          <ion-label position="stacked">Reorder Level</ion-label>
+          <ion-input type="number" formControlName="reorderLevel"></ion-input>
+        </ion-item>
+
+        <ion-item *ngIf="addForm.value.type === 'raw_material'">
+          <ion-label position="stacked">Supplier</ion-label>
+          <ion-input formControlName="supplier"></ion-input>
+        </ion-item>
+
+        <div class="modal-actions">
+          <ion-button fill="clear" (click)="closeAddModal()">Cancel</ion-button>
+          <ion-button type="submit" [disabled]="addForm.invalid">Add Item</ion-button>
+        </div>
+      </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>

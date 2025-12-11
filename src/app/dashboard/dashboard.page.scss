@@ -1,124 +1,198 @@
-/* src/app/pages/nexus-dashboard/nexus-dashboard.page.scss */
-
-.dashboard-wrapper {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
+/* app.component.scss */
+ion-menu {
+  --width: 260px;
+  --background: #ffffff;
+  border-right: 1px solid #e5e7eb;
 }
 
-/* Stats cards */
-.stat-header {
+.brand {
+  display: flex;
+  align-items: center;
+  padding: 16px 16px 8px;
+}
+
+.logo {
+  width: 40px;
+  height: 40px;
+  border-radius: 14px;
+  background: #1d4ed8;
+  color: #ffffff;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-weight: 700;
+  font-size: 20px;
+  margin-right: 12px;
+}
+
+.brand-text h2 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 600;
+}
+
+ion-list {
+  padding: 8px;
+}
+
+ion-item {
+  --background: transparent;
+  --padding-start: 12px;
+  --inner-padding-end: 12px;
+  border-radius: 8px;
+  margin-bottom: 4px;
+  font-size: 14px;
+}
+
+ion-item ion-icon[slot='start'] {
+  font-size: 18px;
+  margin-right: 8px;
+}
+
+.active-item {
+  --background: #e5edff;
+  --color: #1d4ed8;
+  font-weight: 600;
+}
+
+
+/* dashboard.page.scss */
+.dashboard-content {
+  --background: #f5f7fb;
+}
+
+.stat-row {
+  margin-bottom: 8px;
+}
+
+.stat-card {
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 34, 58, 0.08);
+  --background: #ffffff;
+}
+
+.stat-title {
+  margin: 0;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.stat-unit {
+  margin: 0;
+  font-size: 16px;
+  color: #9ca3af;
+  text-align: right;
+}
+
+.stat-card ion-card-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: flex-start;
+  padding-bottom: 4px;
+}
+
+.stat-card h2 {
+  margin: 0 0 4px;
+  font-size: 24px;
+  font-weight: 700;
+  color: #111827;
+}
+
+.stat-change {
+  margin: 0;
+  font-size: 12px;
+}
+
+.positive {
+  color: #12b981;
+}
+
+/* Analytics card */
+.analytics-card {
+  margin-top: 12px;
+  border-radius: 12px;
+  box-shadow: 0 4px 14px rgba(15, 34, 58, 0.08);
+  --background: #ffffff;
+}
+
+.analytics-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
 }
 
-.stat-label {
+.analytics-header h2 {
+  margin: 0;
+  font-size: 20px;
+}
+
+.subtitle {
+  margin: 4px 0 0;
   font-size: 13px;
-  color: var(--ion-color-medium);
+  color: #6b7280;
 }
 
-.stat-value {
-  font-size: 22px;
-  font-weight: 700;
-  margin-top: 4px;
-}
-
-.stat-change {
+.filters {
   display: flex;
-  align-items: center;
+  gap: 8px;
+}
+
+.filters ion-select {
+  --padding-start: 10px;
+  --padding-end: 26px;
+  --border-radius: 6px;
+  --background: #f3f4f6;
+  --placeholder-color: #374151;
   font-size: 13px;
-  margin-top: 4px;
+  min-width: 110px;
 }
 
-.stat-change ion-icon {
-  font-size: 14px;
-  margin-right: 4px;
+.chart-container {
+  position: relative;
+  height: 320px;
 }
 
-.stat-change.up {
-  color: var(--ion-color-success);
-}
-
-.stat-change.down {
-  color: var(--ion-color-danger);
-}
-
-.stat-icon {
-  height: 48px;
-  width: 48px;
-  border-radius: 12px;
-  background: rgba(56, 128, 255, 0.1);
-  display: flex;
-  align-items: center;
-  justify-content: center;
-}
-
-.stat-icon ion-icon {
-  font-size: 24px;
-  color: var(--ion-color-primary);
-}
-
-/* Muted text */
-.muted {
-  color: var(--ion-color-medium);
+.legend {
+  margin-top: 12px;
   font-size: 13px;
-  margin-bottom: 8px;
+  color: #6b7280;
 }
 
-/* Recent orders table */
-.table-wrapper {
-  width: 100%;
-  overflow-x: auto;
-}
-
-.orders-table {
-  width: 100%;
-  border-collapse: collapse;
-}
-
-.orders-table th,
-.orders-table td {
-  padding: 8px 12px;
-  border-bottom: 1px solid var(--ion-color-light-shade);
-  font-size: 13px;
-}
-
-.orders-table th {
-  text-align: left;
-  color: var(--ion-color-medium);
-  font-weight: 500;
-}
-
-.orders-table tr:last-child td {
-  border-bottom: none;
-}
-
-.text-right {
-  text-align: right;
-}
-
-/* Status chip */
-.status-chip {
-  padding: 2px 8px;
+.dot {
+  display: inline-block;
+  width: 10px;
+  height: 10px;
   border-radius: 999px;
-  font-size: 11px;
-  font-weight: 500;
-  background: var(--ion-color-medium-tint);
-  color: var(--ion-color-dark);
+  margin: 0 4px 0 12px;
 }
 
-.status-chip.delivered {
-  background: rgba(16, 185, 129, 0.15);
-  color: #047857;
+.revenue-dot {
+  background: #2f80ed;
 }
 
-.status-chip.transit {
-  background: rgba(59, 130, 246, 0.15);
-  color: #1d4ed8;
+.expenses-dot {
+  background: #00c9a7;
 }
 
-.status-chip.pending {
-  background: rgba(234, 179, 8, 0.15);
-  color: #92400e;
+.legend {
+  margin-top: 16px;
+  text-align: center;
+  font-size: 13px;
+  color: #6b7280;
+}
+
+.dot {
+  display: inline-block;
+  width: 12px;
+  height: 12px;
+  border-radius: 999px;
+  margin: 0 6px 0 16px;
+}
+
+.revenue-dot {
+  background: #3b82f6; // Vibrant blue
+}
+
+.expenses-dot {
+  background: #10b981; // Vibrant green
 }

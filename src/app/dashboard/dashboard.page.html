@@ -1,154 +1,90 @@
-<!-- src/app/pages/nexus-dashboard/nexus-dashboard.page.html -->
-<ion-header>
+<!-- <ion-header>
   <ion-toolbar color="light">
+    <ion-buttons slot="start">
+      <ion-menu-button></ion-menu-button>
+    </ion-buttons>
     <ion-title>Dashboard</ion-title>
     <ion-buttons slot="end">
-      <ion-button>
-        <ion-icon slot="icon-only" name="notifications-outline"></ion-icon>
-      </ion-button>
-
-      <ion-button (click)="logout()">
-        <ion-icon slot="start" name="log-out-outline"></ion-icon>
-        Logout
-      </ion-button>
+      <ion-chip color="primary">
+        <ion-avatar>
+          <img src="assets/avatar-default.png" alt="User" />
+        </ion-avatar>
+        <ion-label>
+          <div>Welcome</div>
+          <small>{{ currentUser.name }}</small>
+        </ion-label>
+      </ion-chip>
     </ion-buttons>
   </ion-toolbar>
-  <ion-toolbar color="light">
-    <ion-title size="small">
-      Welcome back, {{ currentUser.name }} ({{ currentUser.role }})
-    </ion-title>
-  </ion-toolbar>
-</ion-header>
+</ion-header> -->
 
-<ion-content class="ion-padding">
-  <div class="dashboard-wrapper">
-    <!-- Stats cards -->
-    <ion-grid>
-      <ion-row>
-        <ion-col
-          size="12"
-          sizeSm="6"
-          sizeLg="3"
-          *ngFor="let stat of statsCards"
-        >
-          <ion-card>
-            <ion-card-content>
-              <div class="stat-header">
-                <div>
-                  <p class="stat-label">{{ stat.label }}</p>
-                  <h3 class="stat-value">{{ stat.value }}</h3>
-                  <p
-                    class="stat-change"
-                    [ngClass]="{
-                      up: stat.changeType === 'up',
-                      down: stat.changeType === 'down'
-                    }"
-                  >
-                    <ion-icon
-                      [name]="
-                        stat.changeType === 'up'
-                          ? 'arrow-up-outline'
-                          : 'arrow-down-outline'
-                      "
-                    ></ion-icon>
-                    {{ stat.change }}
-                  </p>
-                </div>
-                <div class="stat-icon">
-                  <ion-icon [name]="stat.icon"></ion-icon>
-                </div>
-              </div>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+<ion-content [fullscreen]="true" class="dashboard-content">
+  <ion-grid>
+    <!-- Stats Cards -->
+    <ion-row class="stat-row">
+      <ion-col size="12" size-md="3" *ngFor="let card of statsCards">
+        <ion-card class="stat-card">
+          <ion-card-header>
+            <p class="stat-title">{{ card.label }}</p>
+            <ion-icon [name]="card.icon" class="stat-icon"></ion-icon>
+          </ion-card-header>
+          <ion-card-content>
+            <h2>{{ card.value }}</h2>
+            <p class="stat-change positive">{{ card.change }}</p>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
 
-    <!-- Middle section: revenue / inventory (simple placeholder layout) -->
-    <ion-grid>
-      <ion-row>
-        <!-- Revenue placeholder -->
-        <ion-col size="12" sizeLg="8">
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>Revenue Overview</ion-card-title>
-              <ion-card-subtitle>
-                Monthly revenue for the current year
-              </ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <p class="muted">
-                Chart placeholder – integrate Chart.js / ngx-charts later if you
-                want real graphs.
-              </p>
-              <ion-list>
-                <ion-item *ngFor="let stat of statsCards">
-                  <ion-label>
-                    <h3>{{ stat.label }}</h3>
-                    <p>{{ stat.value }} ({{ stat.change }})</p>
-                  </ion-label>
-                </ion-item>
-              </ion-list>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
+    <!-- Revenue Analytics Chart -->
+    <ion-row>
+      <ion-col size="12">
+        <ion-card class="analytics-card">
+          <ion-card-header class="analytics-header">
+            <div>
+              <h2>Revenue Analytics</h2>
+              <p class="subtitle">Financial performance overview</p>
+            </div>
 
-        <!-- Inventory distribution -->
-        <ion-col size="12" sizeLg="4">
-          <ion-card>
-            <ion-card-header>
-              <ion-card-title>Inventory Distribution</ion-card-title>
-              <ion-card-subtitle>By category</ion-card-subtitle>
-            </ion-card-header>
-            <ion-card-content>
-              <ion-list>
-                <ion-item *ngFor="let item of inventoryData">
-                  <ion-label>
-                    <h3>{{ item.name }}</h3>
-                    <p>{{ item.value }} units</p>
-                  </ion-label>
-                </ion-item>
-              </ion-list>
-            </ion-card-content>
-          </ion-card>
-        </ion-col>
-      </ion-row>
-    </ion-grid>
+            <div class="filters">
+              <ion-select interface="popover" value="yearly">
+                <ion-select-option value="yearly">Yearly</ion-select-option>
+                <ion-select-option value="monthly">Monthly</ion-select-option>
+                <ion-select-option value="quarterly">Quarterly</ion-select-option>
+              </ion-select>
 
-    <!-- Recent Orders -->
-    <ion-card>
-      <ion-card-header>
-        <ion-card-title>Recent Orders</ion-card-title>
-        <ion-card-subtitle>Latest inventory transactions</ion-card-subtitle>
-      </ion-card-header>
-      <ion-card-content>
-        <div class="table-wrapper">
-          <table class="orders-table">
-            <thead>
-              <tr>
-                <th>Order ID</th>
-                <th>Product</th>
-                <th>Quantity</th>
-                <th>Status</th>
-                <th class="text-right">Amount</th>
-              </tr>
-            </thead>
-            <tbody>
-              <tr *ngFor="let order of recentOrders">
-                <td>{{ order.id }}</td>
-                <td>{{ order.product }}</td>
-                <td>{{ order.quantity }}</td>
-                <td>
-                  <span [ngClass]="getStatusChipClass(order.status)">
-                    {{ order.status }}
-                  </span>
-                </td>
-                <td class="text-right">{{ order.amount }}</td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-      </ion-card-content>
-    </ion-card>
-  </div>
+              <ion-select 
+                interface="popover" 
+                [(ngModel)]="selectedChartType"
+                (ionChange)="onChartTypeChange($event)">
+                <ion-select-option value="line">Line Chart</ion-select-option>
+                <ion-select-option value="bar">Bar Chart</ion-select-option>
+              </ion-select>
+            </div>
+          </ion-card-header>
+
+          <ion-card-content class="chart-container">
+            <apx-chart
+              *ngIf="chartOptions"
+              [series]="chartOptions.series!"
+              [chart]="chartOptions.chart!"
+              [xaxis]="chartOptions.xaxis!"
+              [yaxis]="chartOptions.yaxis!"
+              [stroke]="chartOptions.stroke!"
+              [dataLabels]="chartOptions.dataLabels!"
+              [grid]="chartOptions.grid!"
+              [colors]="chartOptions.colors!"
+              [fill]="chartOptions.fill!"
+              [tooltip]="chartOptions.tooltip!">
+            </apx-chart>
+
+            <div class="legend">
+              <span class="dot revenue-dot"></span> Revenue
+              <span class="dot expenses-dot"></span> Expenses
+            </div>
+          </ion-card-content>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
 </ion-content>

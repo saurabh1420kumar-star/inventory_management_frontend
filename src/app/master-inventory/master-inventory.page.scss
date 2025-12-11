@@ -1,0 +1,107 @@
+/* src/app/pages/nexus-master-inventory/nexus-master-inventory.page.scss */
+
+/* layout */
+.page-content {
+  --padding-start: 16px;
+  --padding-end: 16px;
+}
+
+.page-inner {
+  padding: 16px;
+}
+
+/* stats grid */
+.stats-grid {
+  display: grid;
+  grid-template-columns: repeat(6, 1fr);
+  gap: 12px;
+  margin-bottom: 16px;
+}
+
+.stat-card {
+  padding: 12px;
+  text-align: left;
+}
+.stat-card h3 { margin: 6px 0 0; font-size: 1.25rem; }
+
+/* responsive */
+@media (max-width: 1200px) {
+  .stats-grid { grid-template-columns: repeat(3, 1fr); }
+}
+@media (max-width: 700px) {
+  .stats-grid { grid-template-columns: repeat(1, 1fr); }
+}
+
+/* controls */
+.controls {
+  display: flex;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+  flex-wrap: wrap;
+}
+
+/* table wrapper - scrollable */
+.table-wrapper {
+  overflow-x: auto;
+  border-radius: 8px;
+  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+}
+
+.inventory-table {
+  width: 100%;
+  border-collapse: collapse;
+  min-width: 900px;
+}
+.inventory-table thead {
+  background: var(--ion-color-light);
+}
+.inventory-table th, .inventory-table td {
+  padding: 12px 10px;
+  text-align: left;
+  border-bottom: 1px solid rgba(0,0,0,0.04);
+}
+.actions-col { text-align: right; }
+
+/* name cell */
+.name-cell .title { font-weight: 600; }
+.name-cell .muted { color: #777; font-size: 12px; }
+
+/* badges */
+.badge {
+  padding: 6px 10px;
+  border-radius: 12px;
+  font-size: 12px;
+  text-transform: capitalize;
+}
+.badge-in-stock { background: #e6ffef; color: #087f3b; }
+.badge-low-stock { background: #fff7e6; color: #b46300; }
+.badge-out-of-stock { background: #ffe6e6; color: #b91c1c; }
+
+/* sidebar */
+.app-sidebar .brand {
+  padding: 18px;
+  display:flex;
+  gap:12px;
+  align-items:center;
+}
+.app-sidebar .logo {
+  width:44px;height:44px;border-radius:8px;
+  background: linear-gradient(135deg,#0ea5e9,#6366f1);
+  color:white; display:flex;align-items:center;justify-content:center;font-weight:700;
+}
+.user-footer {
+  position: absolute;
+  bottom: 12px;
+  left: 12px;
+  right: 12px;
+  display:flex;justify-content:space-between;align-items:center;
+}
+
+/* modal */
+.add-modal .modal-actions {
+  display:flex;
+  justify-content:flex-end;
+  gap: 8px;
+  padding: 12px;
+}

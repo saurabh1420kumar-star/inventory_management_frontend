@@ -4,10 +4,10 @@
       <ion-card-header class="ion-text-center">
         <div class="logo-wrapper">
           <ion-avatar class="logo-avatar">
-            <ion-icon name="cube-outline"></ion-icon>
+              <ion-icon name="cube-outline"></ion-icon>
           </ion-avatar>
         </div>
-        <ion-card-title class="app-title">Nexus</ion-card-title>
+        <ion-card-title class="app-title">Nectar</ion-card-title>
         <ion-card-subtitle class="app-subtitle">
           Inventory Management System
         </ion-card-subtitle>
@@ -15,7 +15,7 @@
 
       <ion-card-content>
         <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
-          
+
           <!-- Username -->
           <ion-item>
             <ion-label position="stacked">Username</ion-label>
@@ -23,8 +23,15 @@
               type="text"
               placeholder="Enter your username"
               formControlName="username"
+              required
             ></ion-input>
           </ion-item>
+
+          <!-- validation message -->
+          <p *ngIf="loginForm.controls['username'].touched && loginForm.controls['username'].invalid"
+             class="error-text">
+            Username is required
+          </p>
 
           <!-- Password -->
           <ion-item>
@@ -34,6 +41,7 @@
                 [type]="showPassword ? 'text' : 'password'"
                 placeholder="••••••••"
                 formControlName="password"
+                required
               ></ion-input>
 
               <ion-button
@@ -42,12 +50,16 @@
                 type="button"
                 (click)="togglePasswordVisibility()"
               >
-                <ion-icon
-                  [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"
-                ></ion-icon>
+                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
               </ion-button>
             </div>
           </ion-item>
+
+          <!-- validation message -->
+          <p *ngIf="loginForm.controls['password'].touched && loginForm.controls['password'].invalid"
+             class="error-text">
+            Password is required
+          </p>
 
           <!-- Forgot password -->
           <div class="forgot-wrapper">
@@ -64,12 +76,15 @@
               type="submit"
               [disabled]="loginForm.invalid || loading"
             >
-              <ng-container *ngIf="loading; else textOnly">
-                <ion-spinner name="crescent"></ion-spinner>
+              <ng-container *ngIf="loading; else showText">
+                <ion-spinner name="crescent" slot="start"></ion-spinner>
+                Signing in...
               </ng-container>
-              <ng-template #textOnly>
-                 Sign In
+
+              <ng-template #showText>
+                Sign In
               </ng-template>
+
             </ion-button>
           </div>
 

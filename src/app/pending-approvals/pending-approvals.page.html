@@ -1,0 +1,104 @@
+<ion-content>
+  <div class="header-section">
+    <h2>Pending Approvals</h2>
+  </div>
+
+  <!-- Stats -->
+  <ion-grid class="stats-wrapper">
+    <ion-row>
+      <ion-col size="4">
+        <ion-card class="stat-card pending">
+          <h3>{{ approvals.length }}</h3>
+          <p>Pending Requests</p>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="4">
+        <ion-card class="stat-card approved">
+          <h3>{{ approvedTodayCount }}</h3>
+          <p>Approved Today</p>
+        </ion-card>
+      </ion-col>
+
+      <ion-col size="4">
+        <ion-card class="stat-card rejected">
+          <h3>{{ rejectedTodayCount }}</h3>
+          <p>Rejected Today</p>
+        </ion-card>
+      </ion-col>
+    </ion-row>
+  </ion-grid>
+
+  <!-- Approval Table -->
+  <ion-card>
+    <ion-card-header>
+      <ion-card-title>User Approval Queue</ion-card-title>
+      <ion-card-subtitle>Review and approve new user registrations</ion-card-subtitle>
+    </ion-card-header>
+
+    <ion-card-content>
+
+      <!-- No records -->
+      <div *ngIf="approvals.length === 0" class="no-records">
+        No pending approvals found.
+      </div>
+
+      <!-- Scrollable Table -->
+      <div class="table-container" *ngIf="approvals.length > 0">
+        <table class="approval-table">
+
+          <thead>
+            <tr>
+              <th>ID</th>
+              <th>User</th>
+              <th>Role</th>
+              <th>Requested Date</th>
+              <th>Action</th>
+            </tr>
+          </thead>
+
+          <tbody>
+            <tr *ngFor="let item of approvals">
+
+              <td>#{{ item.user.id }}</td>
+
+              <td>
+                <div class="username">@{{ item.user.username }}</div>
+                <small>{{ item.user.firstName }} {{ item.user.lastName }}</small>
+              </td>
+
+              <td>
+                <span class="role-badge"
+                      [class.admin]="item.user.roleType === 'ADMIN'"
+                      [class.other]="item.user.roleType !== 'ADMIN'">
+                  {{ item.user.roleType }}
+                </span>
+              </td>
+
+              <td>{{ item.requestedOn | date:'MMM d, y, h:mm a' }}</td>
+
+              <td>
+                <ion-button
+                  color="success"
+                  size="small"
+                  (click)="approve(item)"
+                  [disabled]="loadingItem === item.user.id"
+                >
+                  <ng-container *ngIf="loadingItem === item.user.id; else approveBtn">
+                    <ion-spinner name="dots"></ion-spinner>
+                  </ng-container>
+
+                  <ng-template #approveBtn>
+                    Approve
+                  </ng-template>
+                </ion-button>
+              </td>
+            </tr>
+          </tbody>
+
+        </table>
+      </div>
+
+    </ion-card-content>
+  </ion-card>
+</ion-content>

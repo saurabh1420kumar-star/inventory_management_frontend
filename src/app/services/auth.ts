@@ -24,6 +24,7 @@ export interface LoginResponse {
   type: string;
   userId: number;
   username: string;
+  roleType: string;   // 👈 NEW
 }
 
 // ---------------- SIGNUP MODELS ----------------
@@ -76,6 +77,7 @@ export class Auth {
         localStorage.setItem('auth_user_id', String(res.userId));
         localStorage.setItem('auth_features', JSON.stringify(res.features));
         localStorage.setItem('auth_feature_names', JSON.stringify(res.featureNames));
+        localStorage.setItem('auth_role_type', res.roleType);   // 👈 save role
       })
     );
   }
@@ -96,6 +98,7 @@ export class Auth {
     localStorage.removeItem('auth_user_id');
     localStorage.removeItem('auth_feature_names');
     localStorage.removeItem('auth_features');
+    localStorage.removeItem('auth_role_type');
   }
 
   getToken(): string | null {
@@ -106,8 +109,16 @@ export class Auth {
     return !!this.getToken();
   }
 
+  getUsername(): string | null {
+    return localStorage.getItem('auth_username');
+  }
+
   getFeatures(): Feature[] {
     const raw = localStorage.getItem('auth_features');
     return raw ? JSON.parse(raw) : [];
+  }
+
+  getRoleType(): string | null {
+    return localStorage.getItem('auth_role_type');
   }
 }

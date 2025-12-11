@@ -24,6 +24,15 @@ const routes: Routes = [
     path: 'dashboard',
     loadChildren: () => import('./dashboard/dashboard.module').then( m => m.DashboardPageModule)
   },
+  {
+    path: 'pending-approvals',
+    loadChildren: () => import('./pending-approvals/pending-approvals.module').then( m => m.PendingApprovalsPageModule)
+
+  },
+  {
+    path: 'master-inventory',
+    loadChildren: () => import('./master-inventory/master-inventory.module').then( m => m.MasterInventoryPageModule)
+  }
 ];
 
 @NgModule({
