@@ -32,7 +32,15 @@ const routes: Routes = [
   {
     path: 'master-inventory',
     loadChildren: () => import('./master-inventory/master-inventory.module').then( m => m.MasterInventoryPageModule)
+  },  {
+    path: 'accounts-master',
+    loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then( m => m.AccountsMasterPageModule)
+  },
+  {
+    path: 'sidebar',
+    loadChildren: () => import('./sidebar/sidebar.module').then( m => m.SidebarPageModule)
   }
+
 ];
 
 @NgModule({

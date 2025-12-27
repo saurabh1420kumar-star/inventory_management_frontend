@@ -1,205 +1,168 @@
-<!-- src/app/pages/nexus-signup/nexus-signup.page.html -->
-<ion-content class="ion-padding">
-  <div class="signup-wrapper">
-    <ion-card class="signup-card">
-      <ion-card-header class="ion-text-center">
-        <div class="logo-wrapper">
-          <ion-avatar class="logo-avatar">
-            <ion-icon name="cube-outline"></ion-icon>
-          </ion-avatar>
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 p-4 md:p-6">
+    
+    <div class="w-full max-w-3xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 overflow-hidden my-4">
+      
+      <div class="pt-10 pb-6 px-8 text-center bg-gradient-to-b from-white/50 to-transparent">
+        <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-2xl shadow-lg shadow-emerald-200/50 mb-4 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+          <ion-icon name="cube-outline" class="text-white text-3xl"></ion-icon>
         </div>
-        <ion-card-title class="app-title">Nexus</ion-card-title>
-        <ion-card-subtitle class="app-subtitle">
-          Create your account to manage inventory
-        </ion-card-subtitle>
-      </ion-card-header>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Nexus</h1>
+        <p class="text-slate-500 font-medium mt-2 text-sm">Create your account to manage inventory</p>
+      </div>
 
-      <ion-card-content>
-        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()">
+      <div class="px-6 md:px-10 pb-12">
+        <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-5">
           
-          <!-- Name -->
-          <ion-grid>
-            <ion-row>
-              <ion-col size="12" sizeMd="6">
-                <ion-item>
-                  <ion-label position="stacked">First Name *</ion-label>
-                  <ion-input
-                    type="text"
-                    placeholder="John"
-                    formControlName="firstName"
-                  ></ion-input>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">First Name <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" placeholder="John" formControlName="firstName" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
-              </ion-col>
+              </div>
+            </div>
 
-              <ion-col size="12" sizeMd="6">
-                <ion-item>
-                  <ion-label position="stacked">Last Name *</ion-label>
-                  <ion-input
-                    type="text"
-                    placeholder="Doe"
-                    formControlName="lastName"
-                  ></ion-input>
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Last Name <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" placeholder="Doe" formControlName="lastName" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-
-          <!-- Email -->
-          <ion-item>
-            <ion-label position="stacked">Email *</ion-label>
-            <ion-input
-              type="email"
-              placeholder="john.doe@example.com"
-              formControlName="email"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Contact No -->
-          <ion-item>
-            <ion-label position="stacked">Contact Number *</ion-label>
-            <ion-input
-              type="text"
-              placeholder="+1234567890"
-              formControlName="contactNo"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Country/City/ZIP -->
-          <ion-grid>
-            <ion-row>
-              <ion-col size="12" sizeMd="4">
-                <ion-item>
-                  <ion-label position="stacked">City *</ion-label>
-                  <ion-input
-                    type="text"
-                    placeholder="New York"
-                    formControlName="city"
-                  ></ion-input>
-                </ion-item>
-              </ion-col>
-
-              <ion-col size="12" sizeMd="4">
-                <ion-item>
-                  <ion-label position="stacked">Country *</ion-label>
-                  <ion-select
-                    placeholder="Select country"
-                    formControlName="country"
-                    interface="popover"
-                    [interfaceOptions]="{ cssClass: 'custom-popover' }"
-                  >
-                    <ion-select-option
-                      *ngFor="let c of countries"
-                      [value]="c.label"
-                    >
-                      {{ c.label }}
-                    </ion-select-option>
-                  </ion-select>
-                </ion-item>
-              </ion-col>
-
-              <ion-col size="12" sizeMd="4">
-                <ion-item>
-                  <ion-label position="stacked">ZIP Code *</ion-label>
-                  <ion-input
-                    type="text"
-                    placeholder="10001"
-                    formControlName="zip"
-                  ></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-
-          <!-- Username -->
-          <ion-item>
-            <ion-label position="stacked">Username *</ion-label>
-            <ion-input
-              type="text"
-              placeholder="johndoe"
-              formControlName="username"
-            ></ion-input>
-          </ion-item>
-
-          <!-- Role Dropdown -->
-          <ion-item>
-            <ion-label position="stacked">Select Role *</ion-label>
-            <ion-select
-              placeholder="Choose a role"
-              formControlName="roleType"
-              interface="popover"
-              [interfaceOptions]="{ cssClass: 'custom-popover' }"
-            >
-              <ion-select-option
-                *ngFor="let r of roles"
-                [value]="r.value"
-              >
-                {{ r.label }}
-              </ion-select-option>
-            </ion-select>
-          </ion-item>
-
-          <!-- Password -->
-          <ion-grid>
-            <ion-row>
-              <ion-col size="12" sizeMd="6">
-                <ion-item>
-                  <ion-label position="stacked">Password *</ion-label>
-                  <ion-input
-                    type="password"
-                    placeholder="••••••••"
-                    formControlName="password"
-                  ></ion-input>
-                </ion-item>
-              </ion-col>
-
-              <ion-col size="12" sizeMd="6">
-                <ion-item>
-                  <ion-label position="stacked">Confirm Password *</ion-label>
-                  <ion-input
-                    type="password"
-                    placeholder="••••••••"
-                    formControlName="confirmPassword"
-                  ></ion-input>
-                </ion-item>
-              </ion-col>
-            </ion-row>
-          </ion-grid>
-
-          <!-- Validation error -->
-          <div
-            *ngIf="signupForm.errors?.['passwordsNotMatch']"
-            class="error-text"
-          >
-            Passwords do not match.
+              </div>
+            </div>
           </div>
 
-          <!-- Submit -->
-          <div class="submit-wrapper">
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Email <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="email" placeholder="john.doe@example.com" formControlName="email" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Contact Number <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="tel" placeholder="+1234567890" formControlName="contactNo" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">City <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" placeholder="New York" formControlName="city" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Country <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-select placeholder="Select" formControlName="country" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option *ngFor="let c of countries" [value]="c.label">{{ c.label }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">ZIP Code <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" placeholder="10001" formControlName="zip" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Username <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" placeholder="johndoe" formControlName="username" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Role <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-select placeholder="Choose Role" formControlName="roleType" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Password <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="password" placeholder="••••••••" formControlName="password" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Confirm Password <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="password" placeholder="••••••••" formControlName="confirmPassword" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="signupForm.errors?.['passwordsNotMatch']" 
+               class="p-3 bg-rose-50 border border-rose-100 rounded-xl flex items-center animate-fade-in">
+            <ion-icon name="alert-circle-outline" class="text-rose-500 text-xl mr-2"></ion-icon>
+            <span class="text-sm font-medium text-rose-600">Passwords do not match.</span>
+          </div>
+
+          <div class="pt-4">
             <ion-button
               expand="block"
-              size="large"
               type="submit"
               [disabled]="signupForm.invalid || loading"
+              class="h-14 font-bold rounded-2xl overflow-hidden shadow-lg shadow-emerald-200/50"
+              style="--background: linear-gradient(135deg, #34d399 0%, #0ea5e9 100%); --border-radius: 16px; --box-shadow: none;"
             >
               <ng-container *ngIf="loading; else textOnly">
-                <ion-spinner name="crescent"></ion-spinner>
+                <ion-spinner name="crescent" class="mr-2 text-white"></ion-spinner>
+                <span class="text-white">Creating Account...</span>
               </ng-container>
               <ng-template #textOnly>
-                Create Account
+                <span class="text-white text-lg tracking-wide">Create Account</span>
               </ng-template>
             </ion-button>
           </div>
 
-          <!-- Login link -->
-          <div class="login-text">
-            <span>Already have an account?</span>
-            <button type="button" class="link-button" (click)="goToLogin($event)">
-              Sign in
-            </button>
+          <div class="text-center pt-2">
+            <p class="text-slate-500 text-sm">
+              Already have an account?
+              <button type="button" (click)="goToLogin($event)" 
+                class="font-bold text-emerald-600 hover:text-emerald-700 ml-1 transition-colors hover:underline">
+                Sign in
+              </button>
+            </p>
           </div>
 
         </form>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </div>
   </div>
 </ion-content>
