@@ -1,103 +1,111 @@
-<ion-content class="ion-padding">
-  <div class="login-wrapper">
-    <ion-card class="login-card">
-      <ion-card-header class="ion-text-center">
-        <div class="logo-wrapper">
-          <ion-avatar class="logo-avatar">
-              <ion-icon name="cube-outline"></ion-icon>
-          </ion-avatar>
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 p-6">
+    
+    <div class="w-full max-w-md bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 overflow-hidden">
+      
+      <div class="pt-12 pb-8 px-8 text-center">
+        <div class="inline-flex items-center justify-center w-20 h-20 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-2xl shadow-lg shadow-emerald-200/50 mb-6 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
+          <ion-icon name="cube-outline" class="text-white text-4xl"></ion-icon>
         </div>
-        <ion-card-title class="app-title">Nectar</ion-card-title>
-        <ion-card-subtitle class="app-subtitle">
-          Inventory Management System
-        </ion-card-subtitle>
-      </ion-card-header>
+        <h1 class="text-3xl font-bold text-slate-800 tracking-tight">Nectar</h1>
+        <p class="text-slate-500 font-medium mt-2 text-sm">Inventory Management System</p>
+      </div>
 
-      <ion-card-content>
-        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()">
+      <div class="px-8 pb-12">
+        <form [formGroup]="loginForm" (ngSubmit)="onSubmit()" class="space-y-6">
+          
+          <div class="group">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Username</label>
+            
+            <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300 ease-in-out">
+              
+              <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                <ion-input
+                  type="text"
+                  placeholder="Enter your username"
+                  formControlName="username"
+                  class="px-5 py-2 !text-slate-900 custom-input" 
+                ></ion-input>
+              </ion-item>
 
-          <!-- Username -->
-          <ion-item>
-            <ion-label position="stacked">Username</ion-label>
-            <ion-input
-              type="text"
-              placeholder="Enter your username"
-              formControlName="username"
-              required
-            ></ion-input>
-          </ion-item>
-
-          <!-- validation message -->
-          <p *ngIf="loginForm.controls['username'].touched && loginForm.controls['username'].invalid"
-             class="error-text">
-            Username is required
-          </p>
-
-          <!-- Password -->
-          <ion-item>
-            <ion-label position="stacked">Password</ion-label>
-            <div class="password-row">
-              <ion-input
-                [type]="showPassword ? 'text' : 'password'"
-                placeholder="••••••••"
-                formControlName="password"
-                required
-              ></ion-input>
-
-              <ion-button
-                fill="clear"
-                size="small"
-                type="button"
-                (click)="togglePasswordVisibility()"
-              >
-                <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'"></ion-icon>
-              </ion-button>
             </div>
-          </ion-item>
+            
+            <p *ngIf="loginForm.controls['username'].touched && loginForm.controls['username'].invalid"
+               class="mt-2 text-xs font-medium text-rose-500 flex items-center ml-1 animate-fade-in">
+              <ion-icon name="alert-circle-outline" class="mr-1 text-base"></ion-icon>
+              Username is required
+            </p>
+          </div>
 
-          <!-- validation message -->
-          <p *ngIf="loginForm.controls['password'].touched && loginForm.controls['password'].invalid"
-             class="error-text">
-            Password is required
-          </p>
+          <div class="group">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Password</label>
+            
+            <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+              
+              <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                <ion-input
+                  [type]="showPassword ? 'text' : 'password'"
+                  placeholder="••••••••"
+                  formControlName="password"
+                  class="px-5 py-2 !text-slate-900 custom-input"
+                ></ion-input>
 
-          <!-- Forgot password -->
-          <div class="forgot-wrapper">
-            <button type="button" class="link-button" (click)="forgotPassword()">
+                <ion-button 
+                  slot="end" 
+                  fill="clear" 
+                  (click)="togglePasswordVisibility()"
+                  class="mr-2 text-slate-400 hover:text-emerald-500 transition-colors"
+                >
+                  <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" slot="icon-only"></ion-icon>
+                </ion-button>
+              </ion-item>
+
+            </div>
+
+            <p *ngIf="loginForm.controls['password'].touched && loginForm.controls['password'].invalid"
+               class="mt-2 text-xs font-medium text-rose-500 flex items-center ml-1 animate-fade-in">
+              <ion-icon name="alert-circle-outline" class="mr-1 text-base"></ion-icon>
+              Password is required
+            </p>
+          </div>
+
+          <div class="flex justify-end">
+            <button type="button" (click)="forgotPassword()" 
+              class="text-sm font-semibold text-emerald-600 hover:text-emerald-700 transition-colors focus:outline-none hover:underline">
               Forgot password?
             </button>
           </div>
 
-          <!-- Login Button -->
-          <div class="submit-wrapper">
+          <div class="pt-2">
             <ion-button
               expand="block"
-              size="large"
               type="submit"
               [disabled]="loginForm.invalid || loading"
+              class="h-14 font-bold rounded-2xl overflow-hidden shadow-lg shadow-emerald-200/50"
+              style="--background: linear-gradient(135deg, #34d399 0%, #0ea5e9 100%); --border-radius: 16px; --box-shadow: none;"
             >
               <ng-container *ngIf="loading; else showText">
-                <ion-spinner name="crescent" slot="start"></ion-spinner>
-                Signing in...
+                <ion-spinner name="crescent" class="mr-2 text-white"></ion-spinner>
+                <span class="text-white">Signing in...</span>
               </ng-container>
-
               <ng-template #showText>
-                Sign In
+                <span class="text-white text-lg tracking-wide">Sign In</span>
               </ng-template>
-
             </ion-button>
           </div>
 
-          <!-- Signup link -->
-          <div class="signup-text">
-            <span>Don't have an account?</span>
-            <button type="button" class="link-button" (click)="goToSignup()">
-              Create one
-            </button>
+          <div class="text-center pt-4">
+            <p class="text-slate-500 text-sm">
+              Don't have an account?
+              <button type="button" (click)="goToSignup()" 
+                class="font-bold text-emerald-600 hover:text-emerald-700 ml-1 transition-colors hover:underline">
+                Create one
+              </button>
+            </p>
           </div>
 
         </form>
-      </ion-card-content>
-    </ion-card>
+      </div>
+    </div>
   </div>
 </ion-content>

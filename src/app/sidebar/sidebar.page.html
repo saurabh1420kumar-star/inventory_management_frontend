@@ -1,0 +1,141 @@
+      <ion-content>
+        <!-- Brand Header -->
+        <div class="brand">
+          <div class="logo">N</div>
+          <div class="brand-text">
+            <h2>Nectar</h2>
+          </div>
+        </div>
+
+        <!-- Accordion Menu -->
+        <ion-list lines="none" class="menu-list">
+
+          <!-- Dashboard -->
+          <ion-item button routerLink="/dashboard" routerLinkActive="active-item" detail="false">
+            <ion-icon name="albums-outline" slot="start"></ion-icon>
+            <ion-label>Dashboard</ion-label>
+          </ion-item>
+
+          <!-- Accounts -->
+          <ion-accordion-group>
+            <ion-accordion>
+              <ion-item slot="header" button detail="false">
+                <ion-icon name="reader-outline" slot="start"></ion-icon>
+                <ion-label>Accounts</ion-label>
+              </ion-item>
+              <div class="submenu" slot="content">
+                <ion-item button routerLink="/accounts-master" detail="false">
+                  <ion-label>Master</ion-label>
+                </ion-item>
+                <ion-item button routerLink="/accounts/transaction" detail="false">
+                  <ion-label>Transaction</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+
+          <!-- HR -->
+          <ion-accordion-group>
+            <ion-accordion>
+              <ion-item slot="header" button detail="false">
+                <ion-icon name="people-outline" slot="start"></ion-icon>
+                <ion-label>Human Resources</ion-label>
+              </ion-item>
+              <div class="submenu" slot="content">
+                <ion-item button routerLink="/hr/dept-master" detail="false">
+                  <ion-label>Department master</ion-label>
+                </ion-item>
+                <ion-item button routerLink="/hr/designation-master" detail="false">
+                  <ion-label>Designation master</ion-label>
+                </ion-item>
+                <ion-item button routerLink="/hr/employee-master" detail="false">
+                  <ion-label>Employee master</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+
+          <!-- Distributor -->
+          <ion-accordion-group>
+            <ion-accordion>
+              <ion-item slot="header" button detail="false">
+                <ion-icon name="business-outline" slot="start"></ion-icon>
+                <ion-label>Distributor</ion-label>
+              </ion-item>
+              <div class="submenu" slot="content">
+                <ion-item button routerLink="/distributor/master" detail="false">
+                  <ion-label>Master</ion-label>
+                </ion-item>
+                <ion-item button routerLink="/distributor/view" detail="false">
+                  <ion-label>View</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+
+          <!-- Inventory -->
+          <ion-accordion-group>
+            <ion-accordion>
+              <ion-item slot="header" button detail="false">
+                <ion-icon name="cube-outline" slot="start"></ion-icon>
+                <ion-label>Inventory</ion-label>
+              </ion-item>
+              <div class="submenu" slot="content">
+                <ion-item button routerLink="/inventory/unit-master" detail="false">
+                  <ion-label>Master</ion-label>
+                </ion-item>
+              
+                <ion-item button routerLink="/inventory/transaction" detail="false">
+                  <ion-label>Transaction</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+
+          <!-- Complaints -->
+          <ion-item button routerLink="/complaints" detail="false">
+            <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
+            <ion-label>Complaints and feedback</ion-label>
+          </ion-item>
+
+          <!-- User Rights -->
+          <ion-item button routerLink="/user-rights" detail="false">
+            <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+            <ion-label>User Rights</ion-label>
+          </ion-item>
+
+          <!-- Operations -->
+          <ion-item button routerLink="/operations" detail="false">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            <ion-label>Operations / Transactions</ion-label>
+          </ion-item>
+
+          <ng-container *ngIf="userRole === 'ADMIN'">
+            <ion-item button routerLink="/pending-approvals" detail="false">
+              <ion-icon name="hourglass-outline" slot="start"></ion-icon>
+              <ion-label>Pending Approvals</ion-label>
+            </ion-item>
+          </ng-container>
+
+
+        </ion-list>
+
+        <!-- User Profile Footer (NEW) -->
+
+
+      </ion-content>
+
+      <ion-footer class="ion-no-border">
+  <div class="user-footer">
+    <div class="user-info">
+      <ion-icon name="person-sharp"></ion-icon>
+      <div class="user-details">
+        <p class="user-greeting">Hi, {{userName}}</p>
+        <span class="user-role">{{userRole}}</span>
+      </div>
+    </div>
+    <ion-button fill="clear" size="small" (click)="logout()" class="logout-btn">
+      <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
+    </ion-button>
+  </div>
+</ion-footer>
