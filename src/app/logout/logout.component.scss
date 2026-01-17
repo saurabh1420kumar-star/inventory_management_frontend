@@ -1,0 +1,21 @@
+.logout-wrapper {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+
+.user-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+}
+
+.user-details p {
+  margin: 0;
+  font-weight: 500;
+}
+
+small {
+  font-size: 11px;
+  color: var(--ion-color-medium);
+}

@@ -1,7 +1,8 @@
+// dashboard.page.ts
+
+import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { Component } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import {
@@ -11,9 +12,9 @@ import {
   ApexYAxis,
   ApexStroke,
   ApexDataLabels,
-  ApexTooltip,
-  ApexFill,
   ApexGrid,
+  ApexFill,
+  ApexTooltip
 } from 'ng-apexcharts';
 
 export type ChartOptions = {
@@ -23,18 +24,21 @@ export type ChartOptions = {
   yaxis: ApexYAxis;
   stroke: ApexStroke;
   dataLabels: ApexDataLabels;
-  tooltip: ApexTooltip;
-  fill: ApexFill;
   grid: ApexGrid;
   colors: string[];
+  fill: ApexFill;
+  tooltip: ApexTooltip;
 };
 
-interface StatCard {
+interface StatsCard {
   label: string;
   value: string;
   change: string;
-  changeType: 'up' | 'down';
   icon: string;
+  bgClass: string;
+  iconClass: string;
+  badgeClass: string;
+  borderClass: string;
 }
 
 @Component({
@@ -42,50 +46,70 @@ interface StatCard {
   templateUrl: './dashboard.page.html',
   styleUrls: ['./dashboard.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule, NgApexchartsModule,FormsModule],
+  imports: [
+    CommonModule,
+    FormsModule,
+    IonicModule,
+    NgApexchartsModule
+  ],
 })
-export class DashboardPage {
-  public chartOptions: Partial<ChartOptions> = {};
-  public selectedChartType: 'line' | 'bar' = 'line';
-
+export class DashboardPage implements OnInit {
+  
   currentUser = {
-    name: 'John Doe',
-    email: 'john.doe@nexus.com',
-    role: 'Admin',
+    name: 'John Doe'
   };
 
-  statsCards: StatCard[] = [
+  currentDate = new Date();
+
+  statsCards: StatsCard[] = [
     {
       label: 'Total Revenue',
-      value: '₹45,231',
-      change: '+20.1% from last month',
-      changeType: 'up',
-      icon: 'cash-outline',
+      value: '$45,231',
+      change: '+12.5%',
+      icon: 'trending-up',
+      bgClass: 'bg-emerald-50',
+      iconClass: 'text-emerald-500',
+      badgeClass: 'bg-emerald-50 text-emerald-600',
+      borderClass: 'border border-emerald-100 hover:border-emerald-200'
     },
     {
-      label: 'Inventory Items',
-      value: '1,234',
-      change: '+15 new items',
-      changeType: 'up',
-      icon: 'cube-outline',
+      label: 'Active Users',
+      value: '2,845',
+      change: '+8.2%',
+      icon: 'people-outline',
+      bgClass: 'bg-blue-50',
+      iconClass: 'text-blue-500',
+      badgeClass: 'bg-blue-50 text-blue-600',
+      borderClass: 'border border-blue-100 hover:border-blue-200'
     },
     {
-      label: 'Active Orders',
-      value: '+573',
-      change: '+201 since last hour',
-      changeType: 'up',
-      icon: 'pulse-outline',
+      label: 'Total Orders',
+      value: '1,248',
+      change: '+23.1%',
+      icon: 'cart-outline',
+      bgClass: 'bg-purple-50',
+      iconClass: 'text-purple-500',
+      badgeClass: 'bg-purple-50 text-purple-600',
+      borderClass: 'border border-purple-100 hover:border-purple-200'
     },
     {
-      label: 'Growth',
-      value: '+12.5%',
-      change: '+4.5% from last quarter',
-      changeType: 'up',
-      icon: 'trending-up-outline',
-    },
+      label: 'Conversion Rate',
+      value: '3.24%',
+      change: '+5.4%',
+      icon: 'stats-chart-outline',
+      bgClass: 'bg-amber-50',
+      iconClass: 'text-amber-500',
+      badgeClass: 'bg-amber-50 text-amber-600',
+      borderClass: 'border border-amber-100 hover:border-amber-200'
+    }
   ];
 
-  constructor(private router: Router) {
+  public chartOptions: Partial<ChartOptions> | undefined;
+  selectedChartType: 'line' | 'bar' = 'line';
+
+  constructor() {}
+
+  ngOnInit() {
     this.initializeChart();
   }
 
@@ -94,108 +118,99 @@ export class DashboardPage {
       series: [
         {
           name: 'Revenue',
-          data: [4000, 3000, 2000, 2800, 2000, 2500],
+          data: [31000, 40000, 28000, 51000, 42000, 109000, 100000, 85000, 95000, 88000, 92000, 105000]
         },
         {
           name: 'Expenses',
-          data: [2500, 1500, 10000, 4000, 4800, 3800],
-        },
+          data: [11000, 32000, 45000, 32000, 34000, 52000, 41000, 55000, 48000, 52000, 58000, 62000]
+        }
       ],
       chart: {
-        height: 320,
+        height: 350,
         type: this.selectedChartType,
         toolbar: {
-          show: false,
+          show: false
         },
         zoom: {
-          enabled: false,
+          enabled: false
         },
-      },
-      colors: ['#3b82f6', '#10b981'], // More vibrant blue and green
-      dataLabels: {
-        enabled: false,
+        fontFamily: 'inherit'
       },
       stroke: {
         curve: 'smooth',
-        width: 4, // Thicker lines
+        width: 3
+      },
+      colors: ['#10b981', '#3b82f6'],
+      dataLabels: {
+        enabled: false
       },
       grid: {
-        borderColor: '#e5e7eb',
-        strokeDashArray: 4,
+        borderColor: '#f1f5f9',
+        strokeDashArray: 5,
+        padding: {
+          top: 0,
+          right: 10,
+          bottom: 0,
+          left: 10
+        }
       },
       xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun'],
+        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
         labels: {
           style: {
-            colors: '#6b7280',
+            colors: '#64748b',
             fontSize: '12px',
-          },
+            fontWeight: 500
+          }
         },
+        axisBorder: {
+          show: false
+        },
+        axisTicks: {
+          show: false
+        }
       },
       yaxis: {
         labels: {
           style: {
-            colors: '#6b7280',
+            colors: '#64748b',
             fontSize: '12px',
+            fontWeight: 500
           },
-          formatter: (val: number) => `₹${val}`,
-        },
-      },
-      tooltip: {
-        y: {
-          formatter: (val: number) => `₹${val}`,
-        },
+          formatter: (value) => {
+            return '$' + (value / 1000) + 'k';
+          }
+        }
       },
       fill: {
         type: 'gradient',
         gradient: {
           shade: 'light',
           type: 'vertical',
-          shadeIntensity: 0.5,
-          gradientToColors: ['#60a5fa', '#34d399'], // Lighter gradient colors
-          opacityFrom: 0.8,
+          shadeIntensity: 0.3,
+          gradientToColors: ['#34d399', '#60a5fa'],
+          opacityFrom: 0.7,
           opacityTo: 0.2,
-          stops: [0, 100],
-        },
+          stops: [0, 100]
+        }
       },
+      tooltip: {
+        y: {
+          formatter: (value) => {
+            return '$' + value.toLocaleString();
+          }
+        },
+        theme: 'light',
+        style: {
+          fontSize: '12px',
+          fontFamily: 'inherit'
+        }
+      }
     };
   }
 
-  // Method to change chart type
   onChartTypeChange(event: any) {
     this.selectedChartType = event.detail.value;
-    this.updateChartType();
-  }
-
-  updateChartType() {
-    this.chartOptions = {
-      ...this.chartOptions,
-      chart: {
-        ...this.chartOptions.chart,
-        type: this.selectedChartType,
-      },
-      stroke: {
-        ...this.chartOptions.stroke,
-        // Bar charts don't need stroke width
-        width: this.selectedChartType === 'bar' ? 4 : 0,
-      },
-    };
-  }
-
-  logout() {
-    this.router.navigateByUrl('/login');
-  }
-
-  getStatusChipClass(status: string): string {
-    switch (status) {
-      case 'Delivered':
-        return 'status-chip delivered';
-      case 'In Transit':
-        return 'status-chip transit';
-      case 'Pending':
-        return 'status-chip pending';
-      default:
-        return 'status-chip';
-    }
+    this.initializeChart();
   }
 }

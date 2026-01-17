@@ -1,3 +1,4 @@
+// src/app/pages/signup/signup.component.ts
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
@@ -54,6 +55,23 @@ export class SignupPage implements OnInit {
     { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' },
   ];
 
+  genders = [
+    { value: 'Male', label: 'Male' },
+    { value: 'Female', label: 'Female' },
+    { value: 'Other', label: 'Other' }
+  ];
+
+  bloodGroups = [
+    { value: 'A+', label: 'A+' },
+    { value: 'A-', label: 'A-' },
+    { value: 'B+', label: 'B+' },
+    { value: 'B-', label: 'B-' },
+    { value: 'O+', label: 'O+' },
+    { value: 'O-', label: 'O-' },
+    { value: 'AB+', label: 'AB+' },
+    { value: 'AB-', label: 'AB-' }
+  ];
+
   loading = false;
 
   constructor(
@@ -64,13 +82,25 @@ export class SignupPage implements OnInit {
   ) {
     this.signupForm = this.fb.group(
       {
+        // Personal Information
         firstName: ['', [Validators.required]],
         lastName: ['', [Validators.required]],
+        dateOfBirth: ['', [Validators.required]],
+        gender: ['', [Validators.required]],
+        bloodGroup: [''],
+        
+        // Contact Information
         email: ['', [Validators.required, Validators.email]],
+        contactNo: ['', [Validators.required]],
+        alternateContactNo: [''],
+        
+        // Address Information
+        completeAddress: ['', [Validators.required]],
         city: ['', [Validators.required]],
         country: ['', [Validators.required]],
         zip: ['', [Validators.required]],
-        contactNo: [''],
+        
+        // Account Information
         username: ['', [Validators.required]],
         roleType: ['', [Validators.required]],
         password: ['', [Validators.required, Validators.minLength(6)]],
@@ -107,8 +137,13 @@ export class SignupPage implements OnInit {
       status: 'ACTIVE',
       firstName: v.firstName,
       lastName: v.lastName,
-      contactNo: v.contactNo || '',
+      contactNo: v.contactNo,
+      alternateContactNo: v.alternateContactNo, // Default to contactNo if not provided
+      bloodGroup: v.bloodGroup || 'O+', // Default to O+ if not provided
+      completeAddress: v.completeAddress,
       city: v.city,
+      dateOfBirth: v.dateOfBirth,
+      gender: v.gender,
       country: v.country,
       zip: v.zip,
       roleType: v.roleType,
@@ -120,7 +155,7 @@ export class SignupPage implements OnInit {
       next: async (res) => {
         this.loading = false;
         await this.toast.present(
-          `Account created for ${res.username}. Status: ${res.status}`,
+          `Account created successfully for ${res.username}!`,
           'success'
         );
         this.router.navigateByUrl('/login');

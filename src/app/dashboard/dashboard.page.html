@@ -1,90 +1,256 @@
-<!-- <ion-header>
-  <ion-toolbar color="light">
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Dashboard</ion-title>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Dashboard</span> Overview
+    </ion-title>
     <ion-buttons slot="end">
-      <ion-chip color="primary">
-        <ion-avatar>
-          <img src="assets/avatar-default.png" alt="User" />
-        </ion-avatar>
-        <ion-label>
-          <div>Welcome</div>
-          <small>{{ currentUser.name }}</small>
-        </ion-label>
-      </ion-chip>
+      <ion-button class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="notifications-outline" class="text-xl"></ion-icon>
+      </ion-button>
     </ion-buttons>
   </ion-toolbar>
-</ion-header> -->
+</ion-header>
 
-<ion-content [fullscreen]="true" class="dashboard-content">
-  <ion-grid>
-    <!-- Stats Cards -->
-    <ion-row class="stat-row">
-      <ion-col size="12" size-md="3" *ngFor="let card of statsCards">
-        <ion-card class="stat-card">
-          <ion-card-header>
-            <p class="stat-title">{{ card.label }}</p>
-            <ion-icon [name]="card.icon" class="stat-icon"></ion-icon>
-          </ion-card-header>
-          <ion-card-content>
-            <h2>{{ card.value }}</h2>
-            <p class="stat-change positive">{{ card.change }}</p>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- HERO CARD -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
 
-    <!-- Revenue Analytics Chart -->
-    <ion-row>
-      <ion-col size="12">
-        <ion-card class="analytics-card">
-          <ion-card-header class="analytics-header">
+        <div class="relative px-8 py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h2>Revenue Analytics</h2>
-              <p class="subtitle">Financial performance overview</p>
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Dashboard Overview</h1>
+              <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="pulse-outline" class="text-lg"></ion-icon>
+                Real-time Business Insights
+              </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+              <ion-button 
+                fill="clear" 
+                class="text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 normal-case tracking-normal h-10"
+              >
+                <ion-icon slot="start" name="refresh-outline"></ion-icon>
+                Refresh
+              </ion-button>
+              <ion-button 
+                class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
+                style="--background: white; --color: #059669; --box-shadow: none;"
+              >
+                <ion-icon slot="start" name="download-outline"></ion-icon>
+                Export Report
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        
+        <div 
+          *ngFor="let card of statsCards"
+          class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] transition-all duration-300 group hover:shadow-xl hover:-translate-y-1"
+          [ngClass]="card.borderClass"
+        >
+          <div class="flex items-center justify-between mb-4">
+            <div 
+              class="w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform"
+              [ngClass]="card.bgClass"
+            >
+              <ion-icon [name]="card.icon" [ngClass]="card.iconClass" class="text-2xl"></ion-icon>
+            </div>
+            <span class="text-xs font-bold px-2.5 py-1 rounded-lg" [ngClass]="card.badgeClass">
+              {{ card.change }}
+            </span>
+          </div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{{ card.label }}</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ card.value }}</p>
+        </div>
+
+      </div>
+
+      <!-- REVENUE ANALYTICS CHART -->
+      <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden mb-8">
+        
+        <div class="px-8 py-6 border-b border-slate-100 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="bg-gradient-to-br from-blue-50 to-emerald-50 p-2 rounded-lg">
+              <ion-icon name="bar-chart-outline" class="text-blue-500 text-xl"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">Revenue Analytics</h2>
+              <p class="text-slate-400 text-sm">Financial performance overview</p>
+            </div>
+          </div>
+
+          <div class="flex gap-3">
+            <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+              <ion-select 
+                interface="popover" 
+                value="yearly"
+                class="px-4 py-2 text-sm font-medium"
+              >
+                <ion-select-option value="yearly">📅 Yearly</ion-select-option>
+                <ion-select-option value="monthly">📆 Monthly</ion-select-option>
+                <ion-select-option value="quarterly">📊 Quarterly</ion-select-option>
+              </ion-select>
             </div>
 
-            <div class="filters">
-              <ion-select interface="popover" value="yearly">
-                <ion-select-option value="yearly">Yearly</ion-select-option>
-                <ion-select-option value="monthly">Monthly</ion-select-option>
-                <ion-select-option value="quarterly">Quarterly</ion-select-option>
-              </ion-select>
-
+            <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
               <ion-select 
                 interface="popover" 
                 [(ngModel)]="selectedChartType"
-                (ionChange)="onChartTypeChange($event)">
-                <ion-select-option value="line">Line Chart</ion-select-option>
-                <ion-select-option value="bar">Bar Chart</ion-select-option>
+                (ionChange)="onChartTypeChange($event)"
+                class="px-4 py-2 text-sm font-medium"
+              >
+                <ion-select-option value="line">📈 Line Chart</ion-select-option>
+                <ion-select-option value="bar">📊 Bar Chart</ion-select-option>
               </ion-select>
             </div>
-          </ion-card-header>
+          </div>
+        </div>
 
-          <ion-card-content class="chart-container">
-            <apx-chart
-              *ngIf="chartOptions"
-              [series]="chartOptions.series!"
-              [chart]="chartOptions.chart!"
-              [xaxis]="chartOptions.xaxis!"
-              [yaxis]="chartOptions.yaxis!"
-              [stroke]="chartOptions.stroke!"
-              [dataLabels]="chartOptions.dataLabels!"
-              [grid]="chartOptions.grid!"
-              [colors]="chartOptions.colors!"
-              [fill]="chartOptions.fill!"
-              [tooltip]="chartOptions.tooltip!">
-            </apx-chart>
+        <div class="p-8">
+          <apx-chart
+            *ngIf="chartOptions"
+            [series]="chartOptions.series!"
+            [chart]="chartOptions.chart!"
+            [xaxis]="chartOptions.xaxis!"
+            [yaxis]="chartOptions.yaxis!"
+            [stroke]="chartOptions.stroke!"
+            [dataLabels]="chartOptions.dataLabels!"
+            [grid]="chartOptions.grid!"
+            [colors]="chartOptions.colors!"
+            [fill]="chartOptions.fill!"
+            [tooltip]="chartOptions.tooltip!">
+          </apx-chart>
 
-            <div class="legend">
-              <span class="dot revenue-dot"></span> Revenue
-              <span class="dot expenses-dot"></span> Expenses
+          <div class="flex justify-center gap-6 mt-6 pt-6 border-t border-slate-100">
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-emerald-500"></div>
+              <span class="text-sm font-medium text-slate-600">Revenue</span>
             </div>
-          </ion-card-content>
-        </ion-card>
-      </ion-col>
-    </ion-row>
-  </ion-grid>
+            <div class="flex items-center gap-2">
+              <div class="w-3 h-3 rounded-full bg-blue-500"></div>
+              <span class="text-sm font-medium text-slate-600">Expenses</span>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- QUICK ACTIONS & RECENT ACTIVITY -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 gap-6">
+        
+        <!-- QUICK ACTIONS -->
+        <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="bg-purple-50 p-2 rounded-lg">
+              <ion-icon name="flash-outline" class="text-purple-500 text-xl"></ion-icon>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800">Quick Actions</h3>
+              <p class="text-slate-400 text-xs">Common shortcuts</p>
+            </div>
+          </div>
+          
+          <div class="p-6 grid grid-cols-2 gap-3">
+            <button class="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-emerald-50 to-emerald-100/50 hover:from-emerald-100 hover:to-emerald-200/50 rounded-xl transition-all group">
+              <div class="w-10 h-10 bg-emerald-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <ion-icon name="add-circle-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <span class="text-sm font-semibold text-slate-700">New Entry</span>
+            </button>
+
+            <button class="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-blue-50 to-blue-100/50 hover:from-blue-100 hover:to-blue-200/50 rounded-xl transition-all group">
+              <div class="w-10 h-10 bg-blue-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <ion-icon name="document-text-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <span class="text-sm font-semibold text-slate-700">Reports</span>
+            </button>
+
+            <button class="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-purple-50 to-purple-100/50 hover:from-purple-100 hover:to-purple-200/50 rounded-xl transition-all group">
+              <div class="w-10 h-10 bg-purple-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <ion-icon name="people-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <span class="text-sm font-semibold text-slate-700">Users</span>
+            </button>
+
+            <button class="flex flex-col items-center justify-center p-4 bg-gradient-to-br from-amber-50 to-amber-100/50 hover:from-amber-100 hover:to-amber-200/50 rounded-xl transition-all group">
+              <div class="w-10 h-10 bg-amber-500 rounded-lg flex items-center justify-center mb-2 group-hover:scale-110 transition-transform">
+                <ion-icon name="settings-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <span class="text-sm font-semibold text-slate-700">Settings</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- RECENT ACTIVITY -->
+        <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 overflow-hidden">
+          <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+            <div class="bg-blue-50 p-2 rounded-lg">
+              <ion-icon name="time-outline" class="text-blue-500 text-xl"></ion-icon>
+            </div>
+            <div>
+              <h3 class="font-bold text-slate-800">Recent Activity</h3>
+              <p class="text-slate-400 text-xs">Latest updates</p>
+            </div>
+          </div>
+          
+          <div class="p-6 space-y-4">
+            <div class="flex items-start gap-3 group cursor-pointer">
+              <div class="w-8 h-8 bg-emerald-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <ion-icon name="checkmark-circle" class="text-emerald-600"></ion-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-700">New order completed</p>
+                <p class="text-xs text-slate-400">2 minutes ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 group cursor-pointer">
+              <div class="w-8 h-8 bg-blue-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <ion-icon name="person-add" class="text-blue-600"></ion-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-700">New user registered</p>
+                <p class="text-xs text-slate-400">15 minutes ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 group cursor-pointer">
+              <div class="w-8 h-8 bg-purple-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <ion-icon name="cube" class="text-purple-600"></ion-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-700">Inventory updated</p>
+                <p class="text-xs text-slate-400">1 hour ago</p>
+              </div>
+            </div>
+
+            <div class="flex items-start gap-3 group cursor-pointer">
+              <div class="w-8 h-8 bg-amber-100 rounded-lg flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform">
+                <ion-icon name="warning" class="text-amber-600"></ion-icon>
+              </div>
+              <div class="flex-1">
+                <p class="text-sm font-medium text-slate-700">Low stock alert</p>
+                <p class="text-xs text-slate-400">3 hours ago</p>
+              </div>
+            </div>
+          </div>
+        </div>
+
+      </div>
+
+    </div>
+  </div>
 </ion-content>

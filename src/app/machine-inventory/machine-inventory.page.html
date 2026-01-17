@@ -1,0 +1,306 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Machine</span> Parts
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refreshMachines()" class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <!-- Hero -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div class="relative px-8 py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Machine Parts Overview</h1>
+              <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="cog-outline" class="text-lg"></ion-icon>
+                Real-time Parts Monitoring
+              </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+              <ion-button 
+                (click)="openAddModal()" 
+                class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all h-10"
+                style="--background: white; --color: #059669;">
+                <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+                Add New Part
+              </ion-button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div *ngFor="let stat of statCards" class="bg-white rounded-2xl p-6 shadow border border-slate-100 hover:border-emerald-200 transition-all group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <ion-icon [name]="stat.icon" class="text-2xl"></ion-icon>
+            </div>
+          </div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">{{ stat.label }}</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+        </div>
+      </div>
+
+      <!-- SEARCH + FILTER -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+
+          <div class="flex-1 w-full relative">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
+            <input 
+              type="text"
+              [(ngModel)]="searchTerm"
+              (input)="applyFilters()"
+              placeholder="Search by name or part code..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <div class="flex gap-2">
+            <button 
+              *ngFor="let type of filterTabs"
+              (click)="activeFilter = type.key; applyFilters()"
+              [class]="activeFilter === type.key ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-4 py-3 rounded-xl font-semibold text-sm transition-all">
+              {{ type.label }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- DATA -->
+      <div *ngIf="filteredMachines.length > 0">
+
+        <!-- Desktop Table -->
+        <div class="hidden lg:block bg-white rounded-2xl shadow border border-slate-100 overflow-hidden">
+          <div class="grid grid-cols-5 gap-4 px-6 py-4 bg-slate-50 border-b font-bold text-sm text-slate-600 uppercase tracking-wide">
+            <div>Part Code</div>
+            <div>Name</div>
+            <div>Qty</div>
+            <div>Warranty Expiry Date</div>
+            <div class="text-right">Actions</div>
+          </div>
+
+          <div *ngFor="let m of filteredMachines; let last = last" class="grid grid-cols-5 gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors border-b border-slate-100">
+            <div class="font-mono text-sm bg-slate-50 px-3 py-1 rounded-lg border border-slate-200">{{ m.partNumber }}</div>
+            <div class="font-semibold text-slate-800">{{ m.name }}</div>
+            <div class="text-lg font-bold text-slate-800">{{ m.quantity }}</div>
+            <div class="text-lg font-bold text-amber-700">{{ m.warrantyExpiryDate }}</div>
+            <div class="flex gap-2 justify-end">
+              <button (click)="editPart(m)" class="px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 rounded-lg transition-colors">
+                <ion-icon name="create-outline"></ion-icon>
+              </button>
+              <button (click)="deletePart(m)" class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 rounded-lg transition-colors">
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Mobile Cards -->
+        <div class="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-6">
+          <div *ngFor="let m of filteredMachines" class="bg-white rounded-2xl shadow border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all p-6">
+            <div class="mb-4">
+              <h3 class="text-lg font-bold text-slate-800">{{ m.name }}</h3>
+              <p class="text-xs font-mono bg-slate-50 px-2 py-1 rounded border border-slate-200">
+                Code: {{ m.partNumber }}
+              </p>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <p class="text-xs font-bold text-slate-500 uppercase">Quantity</p>
+                <p class="text-lg font-bold">{{ m.quantity }}</p>
+              </div>
+              <div class="bg-amber-50 rounded-lg p-3 border border-amber-100">
+                <p class="text-xs font-bold text-amber-600 uppercase">Warranty Expiry Date</p>
+                <p class="text-lg font-bold text-amber-700">{{ m.warrantyExpiryDate }}</p>
+              </div>
+            </div>
+
+            <div class="flex gap-2">
+              <button (click)="editPart(m)" class="px-4 py-2 flex-1 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg">
+                <ion-icon name="create-outline"></ion-icon>
+              </button>
+              <button (click)="deletePart(m)" class="px-4 py-2 flex-1 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-lg">
+                <ion-icon name="trash-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="filteredMachines.length === 0" class="bg-white rounded-3xl shadow border p-20 text-center">
+        <div class="flex flex-col items-center justify-center">
+          <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mb-4">
+            <ion-icon name="cog-outline" class="text-4xl text-slate-300"></ion-icon>
+          </div>
+          <h3 class="text-lg font-bold text-slate-700">No Machine Parts Found</h3>
+          <p class="text-slate-500 mb-6">Start by adding your first part</p>
+          <button 
+            (click)="openAddModal()"
+            class="px-6 py-3 bg-gradient-to-r from-emerald-400 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all">
+            <ion-icon name="add-circle-outline" class="mr-2"></ion-icon>
+            Add New Part
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Floating Add -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="openAddModal()" class="shadow-lg">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
+
+  <!-- ADD MODAL -->
+  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()">
+    <ng-template>
+      <div class="h-full bg-slate-50 overflow-y-auto">
+
+        <div class="sticky top-0 z-10 bg-white/80 border-b px-6 py-4 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-800">Add Machine Part</h2>
+          <button (click)="closeAddModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+            <ion-icon name="close-outline" class="text-xl text-slate-600"></ion-icon>
+          </button>
+        </div>
+
+        <div class="max-w-xl mx-auto p-6 pb-20">
+          <form [formGroup]="addForm" (ngSubmit)="addMachinePart()" class="space-y-5">
+
+            <ion-item>
+              <ion-input formControlName="name" placeholder="Part Name"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input formControlName="partNumber" placeholder="Part Number"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input formControlName="vendor" placeholder="Vendor"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-select interface="popover" formControlName="condition">
+                <ion-select-option value="NEW">NEW</ion-select-option>
+                <ion-select-option value="IN_USE">USED</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="date" formControlName="purchaseDate"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="date" formControlName="warrantyExpiryDate"></ion-input>
+            </ion-item>
+            <ion-item>
+              <ion-select interface="popover" formControlName="category">
+                <ion-select-option value="MACHINE">MACHINE</ion-select-option>
+                <ion-select-option value="TOOL">TOOL</ion-select-option>
+                <ion-select-option value="SPARE_PART">SPARE_PART</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="number" formControlName="quantity" placeholder="Qty"></ion-input>
+            </ion-item>
+
+            <ion-button expand="block" type="submit" [disabled]="addForm.invalid">
+              Add Part
+            </ion-button>
+
+          </form>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- EDIT MODAL -->
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()">
+    <ng-template>
+      <div class="h-full bg-slate-50 overflow-y-auto">
+
+        <div class="sticky top-0 z-10 bg-white/80 border-b px-6 py-4 flex items-center justify-between">
+          <h2 class="text-xl font-bold text-slate-800">Edit Machine Part</h2>
+          <button (click)="closeEditModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200">
+            <ion-icon name="close-outline" class="text-xl text-slate-600"></ion-icon>
+          </button>
+        </div>
+
+        <div class="max-w-xl mx-auto p-6 pb-20">
+          <form [formGroup]="editForm" (ngSubmit)="updateMachinePart()" class="space-y-5">
+
+            <ion-item>
+              <ion-input formControlName="name" placeholder="Part Name"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input formControlName="partNumber" placeholder="Part Number"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input formControlName="vendor" placeholder="Vendor"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-select interface="popover" formControlName="condition">
+                <ion-select-option value="NEW">NEW</ion-select-option>
+                <ion-select-option value="IN_USE">USED</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="date" formControlName="purchaseDate"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="date" formControlName="warrantyExpiryDate"></ion-input>
+            </ion-item>
+
+            <ion-item>
+              <ion-select interface="popover" formControlName="category">
+                <ion-select-option value="MACHINE">MACHINE</ion-select-option>
+                <ion-select-option value="TOOL">TOOL</ion-select-option>
+                <ion-select-option value="SPARE_PART">SPARE_PART</ion-select-option>
+              </ion-select>
+            </ion-item>
+
+            <ion-item>
+              <ion-input type="number" formControlName="quantity" placeholder="Qty"></ion-input>
+            </ion-item>
+
+            <ion-button expand="block" type="submit" [disabled]="editForm.invalid">
+              Update Part
+            </ion-button>
+
+          </form>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

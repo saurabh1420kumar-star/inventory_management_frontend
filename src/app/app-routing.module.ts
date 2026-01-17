@@ -1,11 +1,8 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
+import { AuthGuard } from './guards/auth.guard'; // Import the guard
 
 const routes: Routes = [
-  // {
-  //   path: 'home',
-  //   loadChildren: () => import('./home/home.module').then( m => m.HomePageModule)
-  // },
   {
     path: '',
     redirectTo: 'login',
@@ -13,32 +10,51 @@ const routes: Routes = [
   },
   {
     path: 'login',
-    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'signup',
-    loadChildren: () => import('./signup/signup.module').then( m => m.SignupPageModule)
+    loadChildren: () => import('./signup/signup.module').then(m => m.SignupPageModule)
   },
- 
   {
     path: 'dashboard',
-    loadChildren: () => import('./dashboard/dashboard.module').then( m => m.DashboardPageModule)
+    loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule),
+    canActivate: [AuthGuard] // Protected route
   },
   {
     path: 'pending-approvals',
-    loadChildren: () => import('./pending-approvals/pending-approvals.module').then( m => m.PendingApprovalsPageModule)
-
+    loadChildren: () => import('./pending-approvals/pending-approvals.module').then(m => m.PendingApprovalsPageModule),
+    canActivate: [AuthGuard] // Protected route
   },
   {
     path: 'master-inventory',
-    loadChildren: () => import('./master-inventory/master-inventory.module').then( m => m.MasterInventoryPageModule)
-  },  {
-    path: 'accounts-master',
-    loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then( m => m.AccountsMasterPageModule)
+    loadChildren: () => import('./master-inventory/master-inventory.module').then(m => m.MasterInventoryPageModule),
+    canActivate: [AuthGuard] // Protected route
   },
   {
-    path: 'sidebar',
-    loadChildren: () => import('./sidebar/sidebar.module').then( m => m.SidebarPageModule)
+    path: 'complaints',
+    loadChildren: () => import('./feedback/feedback.module').then(m => m.FeedbackPageModule),
+    canActivate: [AuthGuard] // Protected route
+  },
+  {
+    path: 'accounts-master',
+    loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then(m => m.AccountsMasterPageModule),
+    canActivate: [AuthGuard] // Protected route
+  },
+  
+  {
+    path: 'feedback',
+    loadChildren: () => import('./feedback/feedback.module').then(m => m.FeedbackPageModule),
+    canActivate: [AuthGuard] // Protected route
+  },
+  {
+    path: 'user-right',
+    loadChildren: () => import('./user-right/user-right.module').then(m => m.UserRightPageModule),
+    canActivate: [AuthGuard] // Protected route
+  },
+  {
+    path: 'machine-inventory',
+    loadChildren: () => import('./machine-inventory/machine-inventory.module').then( m => m.MachineInventoryPageModule)
   }
 
 ];

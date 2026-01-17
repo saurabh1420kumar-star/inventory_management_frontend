@@ -1,7 +1,7 @@
 <ion-content class="bg-slate-50">
   <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 p-4 md:p-6">
     
-    <div class="w-full max-w-3xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 overflow-hidden my-4">
+    <div class="w-full max-w-5xl bg-white/90 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 overflow-hidden my-4">
       
       <div class="pt-10 pb-6 px-8 text-center bg-gradient-to-b from-white/50 to-transparent">
         <div class="inline-flex items-center justify-center w-16 h-16 bg-gradient-to-tr from-emerald-400 to-cyan-500 rounded-2xl shadow-lg shadow-emerald-200/50 mb-4 transform -rotate-3 hover:rotate-0 transition-transform duration-300">
@@ -14,6 +14,14 @@
       <div class="px-6 md:px-10 pb-12">
         <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-5">
           
+          <!-- Personal Information Section -->
+          <div class="pb-2">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
+              <ion-icon name="person-outline" class="text-emerald-500 mr-2 text-lg"></ion-icon>
+              Personal Information
+            </h3>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="group">
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">First Name <span class="text-rose-400">*</span></label>
@@ -34,6 +42,47 @@
             </div>
           </div>
 
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Date of Birth <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="date" formControlName="dateOfBirth" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Gender <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-select placeholder="Select Gender" formControlName="gender" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option *ngFor="let g of genders" [value]="g.value">{{ g.label }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Blood Group</label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-select placeholder="Select Blood Group" formControlName="bloodGroup" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option *ngFor="let b of bloodGroups" [value]="b.value">{{ b.label }}</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </div>
+          </div>
+
+          <!-- Contact Information Section -->
+          <div class="pt-4 pb-2">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
+              <ion-icon name="mail-outline" class="text-emerald-500 mr-2 text-lg"></ion-icon>
+              Contact Information
+            </h3>
+          </div>
+
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="group">
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Email <span class="text-rose-400">*</span></label>
@@ -48,9 +97,41 @@
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Contact Number <span class="text-rose-400">*</span></label>
               <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="tel" placeholder="+1234567890" formControlName="contactNo" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  <ion-input type="tel" placeholder="+91 1234567890" formControlName="contactNo" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
               </div>
+            </div>
+          </div>
+
+          <div class="group">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Alternate Contact Number</label>
+            <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+              <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                <ion-input type="tel" placeholder="+91 9876543210" formControlName="alternateContactNo" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+              </ion-item>
+            </div>
+          </div>
+
+          <!-- Address Information Section -->
+          <div class="pt-4 pb-2">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
+              <ion-icon name="location-outline" class="text-emerald-500 mr-2 text-lg"></ion-icon>
+              Address Information
+            </h3>
+          </div>
+
+          <div class="group">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Complete Address <span class="text-rose-400">*</span></label>
+            <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
+              <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                <ion-textarea 
+                  placeholder="Enter your complete address (Street, Building, Landmark)" 
+                  formControlName="completeAddress" 
+                  rows="3"
+                  class="px-5 py-3 !text-slate-900 custom-input"
+                  style="min-height: 80px;"
+                ></ion-textarea>
+              </ion-item>
             </div>
           </div>
 
@@ -59,7 +140,7 @@
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">City <span class="text-rose-400">*</span></label>
               <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" placeholder="New York" formControlName="city" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  <ion-input type="text" placeholder="Mumbai" formControlName="city" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
               </div>
             </div>
@@ -68,21 +149,29 @@
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Country <span class="text-rose-400">*</span></label>
               <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-select placeholder="Select" formControlName="country" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
-                    <ion-select-option *ngFor="let c of countries" [value]="c.label">{{ c.label }}</ion-select-option>
+                  <ion-select placeholder="Select Country" formControlName="country" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option value="INDIA">India</ion-select-option>
                   </ion-select>
                 </ion-item>
               </div>
             </div>
 
             <div class="group">
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">ZIP Code <span class="text-rose-400">*</span></label>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">PIN Code <span class="text-rose-400">*</span></label>
               <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" placeholder="10001" formControlName="zip" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  <ion-input type="text" placeholder="400001" formControlName="zip" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
               </div>
             </div>
+          </div>
+
+          <!-- Account Information Section -->
+          <div class="pt-4 pb-2">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
+              <ion-icon name="shield-checkmark-outline" class="text-emerald-500 mr-2 text-lg"></ion-icon>
+              Account Information
+            </h3>
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
@@ -90,7 +179,7 @@
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Username <span class="text-rose-400">*</span></label>
               <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" placeholder="johndoe" formControlName="username" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  <ion-input type="text" placeholder="johndoe123" formControlName="username" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
                 </ion-item>
               </div>
             </div>

@@ -1,16 +1,31 @@
 <ion-app>
-  @if (!isAuthPage) {
-  <ion-split-pane contentId="main" when="lg">
-    <ion-menu contentId="main" type="overlay">
-      <app-sidebar></app-sidebar>
-    </ion-menu>
 
-    <!-- MAIN CONTENT -->
-    <div class="ion-page" id="main">
-      <ion-router-outlet></ion-router-outlet>
-    </div>
-  </ion-split-pane>
+  @if (!isAuthPage) {
+
+    <!-- ================= LAYOUT ================= -->
+    <ion-split-pane contentId="main" when="lg">
+
+      <!-- SIDEBAR (FEATURE GUARDED) -->
+      <ion-menu contentId="main" type="overlay" [class.collapsed]="sidebarCollapsed">
+        <app-sidebar 
+          *appAcl="{ anyFeature: true }"
+          [collapsed]="sidebarCollapsed"
+          (toggleSidebar)="onSidebarToggle()">
+        </app-sidebar>
+      </ion-menu>
+
+      <!-- MAIN CONTENT -->
+      <div class="ion-page" id="main">
+        <ion-router-outlet></ion-router-outlet>
+      </div>
+
+    </ion-split-pane>
+
   } @else {
-  <ion-router-outlet></ion-router-outlet>
+
+    <!-- AUTH PAGES (login, signup, etc.) -->
+    <ion-router-outlet></ion-router-outlet>
+
   }
+
 </ion-app>

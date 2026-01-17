@@ -1,6 +1,5 @@
-/* src/app/pages/nexus-master-inventory/nexus-master-inventory.page.scss */
+/* ---------- PAGE LAYOUT ---------- */
 
-/* layout */
 .page-content {
   --padding-start: 16px;
   --padding-end: 16px;
@@ -10,98 +9,136 @@
   padding: 16px;
 }
 
-/* stats grid */
+/* ---------- STATS GRID ---------- */
+
 .stats-grid {
   display: grid;
   grid-template-columns: repeat(6, 1fr);
   gap: 12px;
-  margin-bottom: 16px;
+  margin-bottom: 20px;
 }
 
 .stat-card {
   padding: 12px;
+  border-radius: 12px;
+  background: #f8f9fc;
   text-align: left;
 }
-.stat-card h3 { margin: 6px 0 0; font-size: 1.25rem; }
+
+.stat-card h3 {
+  margin: 6px 0 0;
+  font-size: 1.25rem;
+}
 
 /* responsive */
 @media (max-width: 1200px) {
   .stats-grid { grid-template-columns: repeat(3, 1fr); }
 }
+
 @media (max-width: 700px) {
   .stats-grid { grid-template-columns: repeat(1, 1fr); }
 }
 
-/* controls */
+/* ---------- CONTROLS ---------- */
+
 .controls {
   display: flex;
   gap: 12px;
   align-items: center;
-  margin-bottom: 12px;
+  margin-bottom: 16px;
   flex-wrap: wrap;
 }
 
-/* table wrapper - scrollable */
-.table-wrapper {
-  overflow-x: auto;
-  border-radius: 8px;
-  box-shadow: 0 0 0 1px rgba(0,0,0,0.04);
+/* ---------- PRODUCT CARD GRID ---------- */
+
+.inventory-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(170px, 1fr));
+  gap: 14px;
 }
 
-.inventory-table {
-  width: 100%;
-  border-collapse: collapse;
-  min-width: 900px;
-}
-.inventory-table thead {
-  background: var(--ion-color-light);
-}
-.inventory-table th, .inventory-table td {
-  padding: 12px 10px;
-  text-align: left;
-  border-bottom: 1px solid rgba(0,0,0,0.04);
-}
-.actions-col { text-align: right; }
-
-/* name cell */
-.name-cell .title { font-weight: 600; }
-.name-cell .muted { color: #777; font-size: 12px; }
-
-/* badges */
-.badge {
-  padding: 6px 10px;
+/* Product card */
+.product-card {
   border-radius: 12px;
-  font-size: 12px;
+  overflow: hidden;
+  --background: #ffffff;
+  box-shadow: 0 1px 3px rgba(0,0,0,0.08);
+  transition: transform 0.2s ease;
+}
+
+.product-card:hover {
+  transform: translateY(-4px);
+}
+
+/* Image */
+.product-img {
+  width: 100%;
+  height: 140px;
+  object-fit: cover;
+  background: #e9e9e9;
+}
+
+/* Info rows */
+.info-row {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+
+/* ---------- CARD ACTION BUTTONS ---------- */
+
+.card-actions {
+  text-align: center;
+  padding-bottom: 10px;
+  display: flex;
+  justify-content: center;
+  gap: 2px;
+}
+
+/* ---------- BADGES (status) ---------- */
+
+.badge {
+  padding: 4px 8px;
+  border-radius: 8px;
+  font-size: 11px;
   text-transform: capitalize;
 }
-.badge-in-stock { background: #e6ffef; color: #087f3b; }
-.badge-low-stock { background: #fff7e6; color: #b46300; }
-.badge-out-of-stock { background: #ffe6e6; color: #b91c1c; }
 
-/* sidebar */
-.app-sidebar .brand {
-  padding: 18px;
-  display:flex;
-  gap:12px;
-  align-items:center;
-}
-.app-sidebar .logo {
-  width:44px;height:44px;border-radius:8px;
-  background: linear-gradient(135deg,#0ea5e9,#6366f1);
-  color:white; display:flex;align-items:center;justify-content:center;font-weight:700;
-}
-.user-footer {
-  position: absolute;
-  bottom: 12px;
-  left: 12px;
-  right: 12px;
-  display:flex;justify-content:space-between;align-items:center;
+.badge-in-stock {
+  background: #e6ffef;
+  color: #087f3b;
 }
 
-/* modal */
+.badge-low-stock {
+  background: #fff7e6;
+  color: #b46300;
+}
+
+.badge-out-of-stock {
+  background: #ffe6e6;
+  color: #b91c1c;
+}
+
+/* ---------- IMAGE PREVIEW ---------- */
+
+.img-preview {
+  margin-top: 12px;
+  width: 100%;
+  text-align: center;
+}
+
+.img-preview img {
+  width: 100%;
+  border-radius: 10px;
+  max-height: 200px;
+  object-fit: cover;
+  box-shadow: 0px 2px 6px rgba(0,0,0,0.15);
+}
+
+/* ---------- MODAL ACTIONS ---------- */
+
 .add-modal .modal-actions {
-  display:flex;
-  justify-content:flex-end;
-  gap: 8px;
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
   padding: 12px;
 }

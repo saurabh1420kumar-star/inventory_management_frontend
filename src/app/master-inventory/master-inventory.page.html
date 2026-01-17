@@ -1,212 +1,410 @@
-<ion-header translucent>
-  <ion-toolbar>
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
     <ion-buttons slot="start">
-      <ion-menu-button></ion-menu-button>
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
     </ion-buttons>
-    <ion-title>Master Inventory</ion-title>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Master</span> Inventory
+    </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="openAddModal()" color="primary">
-        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
-        Add Product
+      <ion-button (click)="refreshInventory()" class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="page-content">
-  <div class="page-inner">
-    <!-- Stats -->
-    <div class="stats-grid">
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- Hero Section -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+        <div class="relative px-8 py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <small>Total Items</small>
-              <h3>{{ stats.totalItems }}</h3>
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Inventory Overview</h1>
+              <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="cube-outline" class="text-lg"></ion-icon>
+                Real-time Stock Monitoring
+              </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+              <ion-button 
+                (click)="openAddModal()" 
+                class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
+                style="--background: white; --color: #059669; --box-shadow: none;"
+              >
+                <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+                Add New Item
+              </ion-button>
             </div>
           </div>
-        </ion-card-content>
-      </ion-card>
+        </div>
+      </div>
 
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
-            <div>
-              <small>Raw Materials</small>
-              <h3>{{ stats.rawMaterials }}</h3>
+      <!-- LOADER -->
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+        <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+        <p class="text-slate-500 mt-4 font-medium">Loading inventory...</p>
+      </div>
+
+      <!-- ERROR -->
+      <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 rounded-2xl p-6 mb-8">
+        <div class="flex items-center gap-3">
+          <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl"></ion-icon>
+          <p class="text-rose-700 font-medium">{{ errorMessage }}</p>
+        </div>
+      </div>
+
+      <!-- STATS -->
+      <div *ngIf="!isLoading" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div *ngFor="let stat of statCards" class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:border-emerald-200 transition-all duration-300 group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="cube-outline" class="text-2xl"></ion-icon>
             </div>
           </div>
-        </ion-card-content>
-      </ion-card>
+          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{{ stat.label }}</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+        </div>
+      </div>
 
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
-            <div>
-              <small>Finished Products</small>
-              <h3>{{ stats.finishedProducts }}</h3>
+      <!-- SEARCH & FILTER -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+          
+          <!-- Search -->
+          <div class="flex-1 w-full relative group">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-emerald-500 transition-colors"></ion-icon>
+            <input 
+              type="text"
+              [(ngModel)]="searchTerm"
+              placeholder="Search by name, SKU or description..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200"
+            />
+          </div>
+
+          <!-- Category Filter Buttons -->
+          <div class="flex gap-2">
+            <button 
+              (click)="activeTab = 'all'"
+              [class]="activeTab === 'all' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            >
+              All
+            </button>
+            <button 
+              (click)="activeTab = 'raw_material'"
+              [class]="activeTab === 'raw_material' ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            >
+              Raw Material
+            </button>
+            <button 
+              (click)="activeTab = 'finished_product'"
+              [class]="activeTab === 'finished_product' ? 'bg-purple-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
+            >
+              Finished Product
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- INVENTORY LIST -->
+      <div *ngIf="filteredInventory.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div *ngFor="let item of filteredInventory" class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 overflow-hidden group">
+          
+          <!-- Image -->
+          <div class="relative overflow-hidden bg-slate-100 h-48">
+            <img [src]="item.imageUrl" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
+            <div class="absolute top-3 right-3">
+              <span 
+                class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
+                [ngClass]="{
+                  'bg-blue-500 text-white': item.category === 'raw_material',
+                  'bg-purple-500 text-white': item.category === 'finished_product'
+                }"
+              >
+                {{ item.category === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
+              </span>
             </div>
           </div>
-        </ion-card-content>
-      </ion-card>
 
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
-            <div>
-              <small>Low Stock</small>
-              <h3>{{ stats.lowStock }}</h3>
+          <!-- Content -->
+          <div class="p-6">
+            <div class="mb-4">
+              <h3 class="text-lg font-bold text-slate-800 mb-1">{{ item.name }}</h3>
+              <p class="text-xs font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded inline-block border border-slate-200">
+                Code: {{ item.materialCode }}
+              </p>
             </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
 
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
-            <div>
-              <small>Out of Stock</small>
-              <h3>{{ stats.outOfStock }}</h3>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-
-      <ion-card class="stat-card">
-        <ion-card-content>
-          <div class="stat-row">
-            <div>
-              <small>Total Value</small>
-              <h3>${{ stats.totalValue | number:'1.0-0' }}</h3>
-            </div>
-          </div>
-        </ion-card-content>
-      </ion-card>
-    </div>
-
-    <!-- Controls -->
-    <div class="controls">
-      <ion-searchbar placeholder="Search inventory..." debounce="300" [(ngModel)]="searchTerm"></ion-searchbar>
-
-      <ion-segment [(ngModel)]="activeTab" mode="md">
-        <ion-segment-button value="all">All ({{ stats.totalItems }})</ion-segment-button>
-        <ion-segment-button value="raw_materials">Raw Materials ({{ stats.rawMaterials }})</ion-segment-button>
-        <ion-segment-button value="finished_products">Finished Products ({{ stats.finishedProducts }})</ion-segment-button>
-      </ion-segment>
-    </div>
-
-    <!-- Scrollable table -->
-    <div class="table-wrapper">
-      <table class="inventory-table">
-        <thead>
-          <tr>
-            <th>ID</th>
-            <th>Name</th>
-            <th>Type</th>
-            <th>Category</th>
-            <th>Quantity</th>
-            <th>Unit Price</th>
-            <th>Status</th>
-            <th>Last Updated</th>
-            <th class="actions-col">Actions</th>
-          </tr>
-        </thead>
-        <tbody>
-          <tr *ngFor="let item of filteredInventory">
-            <td>{{ item.id }}</td>
-            <td>
-              <div class="name-cell">
-                <div class="title">{{ item.name }}</div>
-                <div class="muted" *ngIf="item.supplier">{{ item.supplier }}</div>
-                <div class="muted" *ngIf="item.sku">{{ item.sku }}</div>
+            <div class="grid grid-cols-2 gap-3 mb-4">
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Unit</p>
+                <p class="text-lg font-bold text-slate-800">{{ item.unit }}</p>
               </div>
-            </td>
-            <td>{{ item.type === 'raw_material' ? 'Raw Material' : 'Finished Product' }}</td>
-            <td>{{ item.category }}</td>
-            <td>{{ item.quantity }} {{ item.unit }}</td>
-            <td>${{ item.unitPrice.toFixed(2) }}</td>
-            <td><span class="badge" [ngClass]="badgeClass(item.status)">{{ item.status.replace('_',' ') }}</span></td>
-            <td>{{ item.lastUpdated }}</td>
-            <td class="actions-col">
-              <ion-button fill="clear" size="small" (click)="viewItem(item)">
+              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
+                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Quantity</p>
+                <p class="text-lg font-bold text-slate-800">{{ item.quantity }}</p>
+              </div>
+            </div>
+
+            <div class="bg-amber-50 rounded-lg p-3 border border-amber-100 mb-4">
+              <p class="text-xs text-amber-600 font-bold uppercase mb-1">Min Threshold</p>
+              <p class="text-lg font-bold text-amber-700">{{ item.minimumThreshold }}</p>
+            </div>
+
+            <!-- Status Badges -->
+            <div class="flex flex-wrap gap-2 mb-4">
+              <span 
+                class="px-3 py-1 rounded-lg text-xs font-bold"
+                [ngClass]="{
+                  'bg-emerald-50 text-emerald-700 border border-emerald-200': item.status === 'in_stock',
+                  'bg-amber-50 text-amber-700 border border-amber-200': item.status === 'low_stock',
+                  'bg-rose-50 text-rose-700 border border-rose-200': item.status === 'out_of_stock'
+                }"
+              >
+                {{ item.status.replace('_', ' ') | uppercase }}
+              </span>
+              <span *ngIf="item.lowStock" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
+                <ion-icon name="warning-outline"></ion-icon>
+                Low Stock Alert
+              </span>
+            </div>
+
+            <!-- Actions -->
+            <div class="flex gap-2">
+              <button 
+                (click)="viewItem(item)"
+                class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
                 <ion-icon name="eye-outline"></ion-icon>
-              </ion-button>
-              <ion-button fill="clear" size="small" (click)="editItem(item)">
-                <ion-icon name="pencil-outline"></ion-icon>
-              </ion-button>
-              <ion-button fill="clear" color="danger" size="small" (click)="deleteItem(item.id)">
+                View
+              </button>
+              <button 
+                (click)="editItem(item)"
+                class="flex-1 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
+                <ion-icon name="create-outline"></ion-icon>
+                Edit
+              </button>
+              <button 
+                (click)="deleteItem(item.id, item.category)"
+                class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
+              >
                 <ion-icon name="trash-outline"></ion-icon>
-              </ion-button>
-            </td>
-          </tr>
-        </tbody>
-      </table>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div *ngIf="!isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
+        <div class="flex flex-col items-center justify-center">
+          <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center shadow-sm mb-4">
+            <ion-icon name="cube-outline" class="text-4xl text-slate-300"></ion-icon>
+          </div>
+          <h3 class="text-lg font-bold text-slate-700 mb-1">No Inventory Items Found</h3>
+          <p class="text-slate-500 mb-6">Get started by adding your first item</p>
+          <button 
+            (click)="openAddModal()"
+            class="px-6 py-3 bg-gradient-to-r from-emerald-400 to-blue-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all"
+          >
+            <ion-icon name="add-circle-outline" class="mr-2"></ion-icon>
+            Add New Item
+          </button>
+        </div>
+      </div>
     </div>
   </div>
-</ion-content>
 
-<!-- Add item modal -->
-<ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" cssClass="add-modal">
-  <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <ion-title>Add Inventory Item</ion-title>
-        <ion-buttons slot="end">
-          <ion-button (click)="closeAddModal()">Close</ion-button>
-        </ion-buttons>
-      </ion-toolbar>
-    </ion-header>
+  <!-- FLOATING ADD BUTTON -->
+  <ion-fab vertical="bottom" horizontal="end" slot="fixed">
+    <ion-fab-button (click)="openAddModal()" class="shadow-lg">
+      <ion-icon name="add"></ion-icon>
+    </ion-fab-button>
+  </ion-fab>
 
-    <ion-content class="ion-padding">
-      <form [formGroup]="addForm" (ngSubmit)="addItem()">
-        <ion-item>
-          <ion-label>Type</ion-label>
-          <ion-select formControlName="type">
-            <ion-select-option value="raw_material">Raw Material</ion-select-option>
-            <ion-select-option value="finished_product">Finished Product</ion-select-option>
-          </ion-select>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Name</ion-label>
-          <ion-input formControlName="name"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Category</ion-label>
-          <ion-input formControlName="category"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Quantity</ion-label>
-          <ion-input type="number" formControlName="quantity"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Unit</ion-label>
-          <ion-input formControlName="unit"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Unit Price</ion-label>
-          <ion-input type="number" formControlName="unitPrice"></ion-input>
-        </ion-item>
-
-        <ion-item>
-          <ion-label position="stacked">Reorder Level</ion-label>
-          <ion-input type="number" formControlName="reorderLevel"></ion-input>
-        </ion-item>
-
-        <ion-item *ngIf="addForm.value.type === 'raw_material'">
-          <ion-label position="stacked">Supplier</ion-label>
-          <ion-input formControlName="supplier"></ion-input>
-        </ion-item>
-
-        <div class="modal-actions">
-          <ion-button fill="clear" (click)="closeAddModal()">Cancel</ion-button>
-          <ion-button type="submit" [disabled]="addForm.invalid">Add Item</ion-button>
+  <!-- ADD ITEM MODAL -->
+  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" class="custom-modal">
+    <ng-template>
+      <div class="h-full bg-slate-50 overflow-y-auto">
+        
+        <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Add Inventory Item</h2>
+            <p class="text-xs text-slate-500">Enter item details below</p>
+          </div>
+          <button (click)="closeAddModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+            <ion-icon name="close-outline" class="text-xl text-slate-600"></ion-icon>
+          </button>
         </div>
-      </form>
-    </ion-content>
-  </ng-template>
-</ion-modal>
+
+        <div class="max-w-xl mx-auto p-6 pb-20">
+          <form [formGroup]="addForm" (ngSubmit)="addItem()" class="space-y-5">
+            
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Material Name</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" formControlName="name" placeholder="e.g. Steel Rods" class="px-4 py-2 text-slate-900"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Material Code</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" formControlName="materialCode" placeholder="e.g. MAT-001" class="px-4 py-2 text-slate-900 font-mono"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Unit</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-select formControlName="unit" placeholder="Select Unit" interface="popover" class="w-full px-4 py-3 text-slate-900 font-medium">
+                  <ion-select-option value="KG">KG (Kilogram)</ion-select-option>
+                  <ion-select-option value="LITER">Liter</ion-select-option>
+                  <ion-select-option value="PIECE">Piece</ion-select-option>
+                  <ion-select-option value="METER">Meter</ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Quantity</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="quantity" placeholder="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Min Threshold</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="minimumThreshold" placeholder="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-6">
+              <ion-button 
+                expand="block" 
+                type="submit" 
+                [disabled]="addForm.invalid"
+                class="h-14 font-bold rounded-2xl overflow-hidden shadow-lg shadow-emerald-200/50"
+                style="--background: linear-gradient(135deg, #34d399 0%, #0ea5e9 100%); --border-radius: 16px; --box-shadow: none;"
+              >
+                <span class="text-white text-lg tracking-wide">Add Item</span>
+              </ion-button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- EDIT ITEM MODAL -->
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" class="custom-modal">
+    <ng-template>
+      <div class="h-full bg-slate-50 overflow-y-auto">
+        
+        <div class="sticky top-0 z-10 bg-white/80 backdrop-blur-md border-b border-slate-100 px-6 py-4 flex items-center justify-between">
+          <div>
+            <h2 class="text-xl font-bold text-slate-800">Edit Inventory Item</h2>
+            <p class="text-xs text-slate-500">Update item details below</p>
+          </div>
+          <button (click)="closeEditModal()" class="p-2 bg-slate-100 rounded-full hover:bg-slate-200 transition-colors">
+            <ion-icon name="close-outline" class="text-xl text-slate-600"></ion-icon>
+          </button>
+        </div>
+
+        <div class="max-w-xl mx-auto p-6 pb-20">
+          <form [formGroup]="editForm" (ngSubmit)="updateItem()" class="space-y-5">
+            
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Material Name</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" formControlName="name" placeholder="e.g. Steel Rods" class="px-4 py-2 text-slate-900"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Material Code</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="text" formControlName="materialCode" placeholder="e.g. MAT-001" class="px-4 py-2 text-slate-900 font-mono"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Unit</label>
+              <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                <ion-select formControlName="unit" placeholder="Select Unit" interface="popover" class="w-full px-4 py-3 text-slate-900 font-medium">
+                  <ion-select-option value="KG">KG (Kilogram)</ion-select-option>
+                  <ion-select-option value="LITER">Liter</ion-select-option>
+                  <ion-select-option value="PIECE">Piece</ion-select-option>
+                  <ion-select-option value="METER">Meter</ion-select-option>
+                </ion-select>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Quantity</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="quantity" placeholder="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Min Threshold</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="minimumThreshold" placeholder="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+            </div>
+
+            <div class="pt-6">
+              <ion-button 
+                expand="block" 
+                type="submit" 
+                [disabled]="editForm.invalid"
+                class="h-14 font-bold rounded-2xl overflow-hidden shadow-lg shadow-blue-200/50"
+                style="--background: linear-gradient(135deg, #3b82f6 0%, #8b5cf6 100%); --border-radius: 16px; --box-shadow: none;"
+              >
+                <span class="text-white text-lg tracking-wide">Update Item</span>
+              </ion-button>
+            </div>
+
+          </form>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

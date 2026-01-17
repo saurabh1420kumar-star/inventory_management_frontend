@@ -4,17 +4,18 @@ import { FormsModule } from '@angular/forms';
 
 import { IonicModule } from '@ionic/angular';
 
-import { MasterInventoryPageRoutingModule } from './master-inventory-routing.module';
+import { FeedbackPageRoutingModule } from './feedback-routing.module';
 
-import { MasterInventoryPage } from './master-inventory.page';
+import { FeedbackPage } from './feedback.page';
 
 @NgModule({
   imports: [
     CommonModule,
     FormsModule,
     IonicModule,
-    MasterInventoryPageRoutingModule
+    FeedbackPageRoutingModule,
+    FeedbackPage
   ],
-  //declarations: [MasterInventoryPage]
+  // FeedbackPage is a standalone component and is imported above
 })
-export class MasterInventoryPageModule {}
+export class FeedbackPageModule {}

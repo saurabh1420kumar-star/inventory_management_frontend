@@ -14,46 +14,68 @@ export class AppComponent {
   userRole: string | null = null;
   userName: string | null = null;
 
-  // 👇 CHANGE: Default to TRUE so sidebar is HIDDEN initially.
-  // This prevents the "flash" of the sidebar on the login page.
-  isAuthPage = true; 
+  /**
+   * Sidebar visibility flag
+   * true  → Auth pages (login, signup, etc.)
+   * false → App pages (dashboard, others)
+   */
+  isAuthPage = true; // ✅ default TRUE to avoid sidebar flash
 
-  constructor(private router: Router, private auth: Auth) {
+  /**
+   * Sidebar collapsed state
+   * false → Expanded (240px)
+   * true  → Collapsed (60px)
+   */
+  sidebarCollapsed = false;
+
+  constructor(
+    private router: Router,
+    private auth: Auth
+  ) {
+
+    // 🔁 Listen to route changes
     this.router.events
       .pipe(filter(event => event instanceof NavigationEnd))
-      .subscribe((event: any) => {
-        this.checkAuthPage(event.url); // Extract logic to a function
-        
-        // Only fetch user data if we are NOT on an auth page
+      .subscribe((event: NavigationEnd) => {
+        this.updateAuthPageState(event.urlAfterRedirects);
+
+        // Only load user data when sidebar is allowed
         if (!this.isAuthPage) {
           this.userRole = this.auth.getRoleType();
           this.userName = this.auth.getUsername();
+        } else {
+          this.userRole = null;
+          this.userName = null;
         }
       });
-      
-    // 👇 ALSO CHECK ON LOAD (Handles manual refreshes or direct URL entry)
-    // We check window.location.pathname immediately in constructor
-    this.checkAuthPage(window.location.pathname);
+
+    // 🔁 Handle direct refresh / initial load
+    this.updateAuthPageState(window.location.pathname);
   }
 
-  // Helper function to centralize the logic
-  checkAuthPage(url: string) {
-    // List of pages where sidebar should be HIDDEN
+  /**
+   * Determines whether current route is an auth page
+   */
+  private updateAuthPageState(url: string): void {
     const authRoutes = ['/login', '/signup', '/forgot-password'];
-    
-    // Check if the current URL contains any of the auth routes
-    // We use 'includes' to handle potential query params
+
     this.isAuthPage = authRoutes.some(route => url.includes(route));
-    
-    // Special case: If URL is exactly '/' (root), treat it as auth page 
-    // because your router redirects '' -> 'login'
+
+    // Root path redirects to login
     if (url === '/' || url === '') {
       this.isAuthPage = true;
     }
   }
 
-  logout() {
-    console.log('Logout clicked');
+  /**
+   * Handle sidebar toggle - just flip the state
+   */
+  onSidebarToggle(): void {
+    this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  logout(): void {
+    this.auth.logout();        // ✅ clear storage
     this.router.navigateByUrl('/login');
   }
 }
