@@ -1,7 +1,7 @@
 // sidebar.page.ts
 
 import { Component, OnInit, HostBinding, Input, Output, EventEmitter } from '@angular/core';
-import { Router } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { Auth } from '../services/auth';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
@@ -17,6 +17,7 @@ import { LogoutComponent } from '../logout/logout.component';
   imports: [
     CommonModule,
     FormsModule,
+    RouterModule,
     IonicModule,
     LogoutComponent,
     AclDirective,
