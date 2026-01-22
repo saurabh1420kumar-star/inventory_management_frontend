@@ -1,0 +1,370 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">User</span> Profile
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="settings-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-5xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+      
+      <!-- PROFILE HERO CARD -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+
+        <div class="relative px-8 py-10">
+          <div class="flex flex-col md:flex-row items-center gap-6">
+            
+            <!-- Profile Picture -->
+            <div class="relative group">
+              <div class="w-28 h-28 rounded-2xl bg-white/20 backdrop-blur-sm border-4 border-white/50 overflow-hidden shadow-xl">
+                <img *ngIf="userProfile?.profileImage" [src]="userProfile.profileImage" class="w-full h-full object-cover" />
+                <div *ngIf="!userProfile?.profileImage" class="w-full h-full flex items-center justify-center text-white text-4xl font-bold">
+                  {{ getInitials() }}
+                </div>
+              </div>
+              <button 
+                *ngIf="isEditMode"
+                (click)="uploadProfilePicture()"
+                class="absolute -bottom-2 -right-2 w-10 h-10 bg-white rounded-xl shadow-lg flex items-center justify-center text-emerald-600 hover:scale-110 transition-transform"
+              >
+                <ion-icon name="camera-outline" class="text-xl"></ion-icon>
+              </button>
+            </div>
+
+            <!-- Profile Info -->
+            <div class="flex-1 text-center md:text-left">
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">
+                {{ userProfile?.firstName }} {{ userProfile?.lastName }}
+              </h1>
+              <p class="text-emerald-50 text-sm font-medium mb-3">
+                @{{ userProfile?.username }}
+              </p>
+              <div class="flex flex-wrap gap-2 justify-center md:justify-start">
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                  <ion-icon name="briefcase-outline" class="mr-1"></ion-icon>
+                  {{ userProfile?.roleType }}
+                </span>
+                <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold bg-white/20 backdrop-blur-sm border border-white/30 text-white">
+                  <ion-icon name="location-outline" class="mr-1"></ion-icon>
+                  {{ userProfile?.city }}, {{ userProfile?.country }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex flex-col gap-3">
+              <ion-button 
+                *ngIf="!isEditMode"
+                (click)="toggleEditMode()"
+                class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
+                style="--background: white; --color: #059669; --box-shadow: none;"
+              >
+                <ion-icon slot="start" name="pencil-outline"></ion-icon>
+                Edit Profile
+              </ion-button>
+              
+              <ion-button 
+                *ngIf="isEditMode"
+                (click)="saveProfile()"
+                [disabled]="profileForm.invalid || isSaving"
+                class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
+                style="--background: white; --color: #059669; --box-shadow: none;"
+              >
+                <ion-spinner *ngIf="isSaving" name="dots" class="mr-2"></ion-spinner>
+                <ion-icon *ngIf="!isSaving" slot="start" name="checkmark-outline"></ion-icon>
+                {{ isSaving ? 'Saving...' : 'Save Changes' }}
+              </ion-button>
+
+              <ion-button 
+                *ngIf="isEditMode"
+                (click)="cancelEdit()"
+                fill="clear"
+                class="text-white bg-white/10 hover:bg-white/20 rounded-xl transition-all duration-200 normal-case tracking-normal h-10"
+              >
+                <ion-icon slot="start" name="close-outline"></ion-icon>
+                Cancel
+              </ion-button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- STATS CARDS -->
+      <div class="grid grid-cols-1 sm:grid-cols-3 gap-6 mb-8">
+        
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-blue-100 hover:border-blue-200 transition-all duration-300 group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="calendar-outline" class="text-2xl"></ion-icon>
+            </div>
+            <span class="bg-blue-50 text-blue-600 text-xs font-bold px-2.5 py-1 rounded-lg">Active</span>
+          </div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Member Since</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ userProfile?.memberSince || 'Jan 2024' }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-emerald-100 hover:border-emerald-200 transition-all duration-300 group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="cube-outline" class="text-2xl"></ion-icon>
+            </div>
+            <span class="bg-emerald-50 text-emerald-600 text-xs font-bold px-2.5 py-1 rounded-lg">Total</span>
+          </div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Products Managed</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ userProfile?.productsManaged || '0' }}</p>
+        </div>
+
+        <div class="bg-white rounded-2xl p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-purple-100 hover:border-purple-200 transition-all duration-300 group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-purple-50 flex items-center justify-center text-purple-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="checkmark-done-outline" class="text-2xl"></ion-icon>
+            </div>
+            <span class="bg-purple-50 text-purple-600 text-xs font-bold px-2.5 py-1 rounded-lg">Completed</span>
+          </div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">Tasks Completed</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ userProfile?.tasksCompleted || '0' }}</p>
+        </div>
+
+      </div>
+
+      <!-- PROFILE DETAILS CARD -->
+      <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden mb-6">
+        
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-3">
+            <div class="bg-blue-50 p-2 rounded-lg">
+              <ion-icon name="person-outline" class="text-blue-500 text-xl"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-slate-800">Profile Information</h2>
+              <p class="text-slate-400 text-sm">{{ isEditMode ? 'Edit your details below' : 'View your account details' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <div class="p-8">
+          <form [formGroup]="profileForm" class="space-y-6">
+
+            <!-- VIEW MODE -->
+            <div *ngIf="!isEditMode" class="space-y-6">
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">First Name</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl">{{ userProfile?.firstName }}</p>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Last Name</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl">{{ userProfile?.lastName }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Email</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl flex items-center">
+                    <ion-icon name="mail-outline" class="text-slate-400 mr-2"></ion-icon>
+                    {{ userProfile?.email }}
+                  </p>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Contact Number</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl flex items-center">
+                    <ion-icon name="call-outline" class="text-slate-400 mr-2"></ion-icon>
+                    {{ userProfile?.contactNo }}
+                  </p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-6">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">City</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl">{{ userProfile?.city }}</p>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Country</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl">{{ userProfile?.country }}</p>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">ZIP Code</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl">{{ userProfile?.zip }}</p>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-6">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Username</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl flex items-center">
+                    <ion-icon name="at-outline" class="text-slate-400 mr-2"></ion-icon>
+                    {{ userProfile?.username }}
+                  </p>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-400 uppercase tracking-wider mb-2">Role</label>
+                  <p class="text-lg font-semibold text-slate-800 py-2 px-4 bg-slate-50 rounded-xl flex items-center">
+                    <ion-icon name="briefcase-outline" class="text-slate-400 mr-2"></ion-icon>
+                    {{ userProfile?.roleType }}
+                  </p>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- EDIT MODE -->
+            <div *ngIf="isEditMode" class="space-y-5">
+              
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">First Name <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="text" formControlName="firstName" placeholder="John" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Last Name <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="text" formControlName="lastName" placeholder="Doe" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Email <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-icon name="mail-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
+                    <ion-item lines="none" class="bg-transparent rounded-xl pl-10" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="email" formControlName="email" placeholder="john@example.com" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Contact Number <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-icon name="call-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
+                    <ion-item lines="none" class="bg-transparent rounded-xl pl-10" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="tel" formControlName="contactNo" placeholder="+1234567890" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-3 gap-5">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">City <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="text" formControlName="city" placeholder="New York" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Country <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-select formControlName="country" placeholder="Select" interface="popover" class="w-full px-4 py-3 text-slate-900">
+                        <ion-select-option *ngFor="let c of countries" [value]="c.label">{{ c.label }}</ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">ZIP Code <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="text" formControlName="zip" placeholder="10001" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+              <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Username <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-icon name="at-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
+                    <ion-item lines="none" class="bg-transparent rounded-xl pl-10" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-input type="text" formControlName="username" placeholder="johndoe" class="px-4 py-2 text-slate-900"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Role <span class="text-rose-500">*</span></label>
+                  <div class="relative bg-white rounded-xl border border-slate-200 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                      <ion-select formControlName="roleType" placeholder="Choose Role" interface="popover" class="w-full px-4 py-3 text-slate-900">
+                        <ion-select-option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</ion-select-option>
+                      </ion-select>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+            </div>
+
+          </form>
+        </div>
+      </div>
+
+      <!-- SECURITY SECTION -->
+      <div class="bg-white rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-slate-100 overflow-hidden">
+        
+        <div class="px-8 py-6 border-b border-slate-100 flex items-center gap-3">
+          <div class="bg-rose-50 p-2 rounded-lg">
+            <ion-icon name="lock-closed-outline" class="text-rose-500 text-xl"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-slate-800">Security Settings</h2>
+            <p class="text-slate-400 text-sm">Manage your password and security options</p>
+          </div>
+        </div>
+
+        <div class="p-8">
+          <div class="flex items-center justify-between p-6 bg-slate-50 rounded-2xl hover:bg-slate-100 transition-colors cursor-pointer">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 rounded-xl bg-white flex items-center justify-center text-slate-600">
+                <ion-icon name="key-outline" class="text-2xl"></ion-icon>
+              </div>
+              <div>
+                <h3 class="font-bold text-slate-800">Change Password</h3>
+                <p class="text-sm text-slate-500">Last changed 30 days ago</p>
+              </div>
+            </div>
+            <ion-button fill="clear" class="text-emerald-600 font-semibold">
+              Update
+              <ion-icon slot="end" name="chevron-forward-outline"></ion-icon>
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

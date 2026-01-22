@@ -1,127 +1,129 @@
-<ion-content>
-  <!-- Brand Header -->
-  <div class="brand">
-    <div class="logo">N</div>
-    <div class="brand-text">
-      <h2>Nectar</h2>
-    </div>
-  </div>
+<!-- sidebar.page.html -->
 
-  <!-- Accordion Menu -->
-  <ion-list lines="none" class="menu-list">
+<ion-content class="sidebar-content" [class.collapsed]="isCollapsed">
+  <div class="sidebar-container" [class.collapsed]="isCollapsed">
 
-    <!-- Dashboard -->
-    <ion-item button routerLink="/dashboard" routerLinkActive="active-item" detail="false">
-      <ion-icon name="albums-outline" slot="start"></ion-icon>
-      <ion-label>Dashboard</ion-label>
-    </ion-item>
-
-    <!-- Accounts -->
-    <ion-accordion-group>
-      <ion-accordion>
-        <ion-item slot="header" button detail="false">
-          <ion-icon name="reader-outline" slot="start"></ion-icon>
-          <ion-label>Accounts</ion-label>
-        </ion-item>
-        <div class="submenu" slot="content">
-          <ion-item button routerLink="/accounts-master" detail="false">
-            <ion-label>Master</ion-label>
-          </ion-item>
-          <ion-item button routerLink="/accounts/transaction" detail="false">
-            <ion-label>Transaction</ion-label>
-          </ion-item>
-        </div>
-      </ion-accordion>
-    </ion-accordion-group>
-
-    <!-- HR -->
-    <ion-accordion-group>
-      <ion-accordion>
-        <ion-item slot="header" button detail="false">
-          <ion-icon name="people-outline" slot="start"></ion-icon>
-          <ion-label>Human Resources</ion-label>
-        </ion-item>
-        <div class="submenu" slot="content">
-          <ion-item button routerLink="/hr-department" detail="false">
-            <ion-label>Employee master</ion-label>
-          </ion-item>
-        </div>
-      </ion-accordion>
-    </ion-accordion-group>
-
-    <!-- Distributor -->
-    <ion-accordion-group>
-      <ion-accordion>
-        <ion-item slot="header" button detail="false">
-          <ion-icon name="business-outline" slot="start"></ion-icon>
-          <ion-label>Distributor</ion-label>
-        </ion-item>
-        <div class="submenu" slot="content">
-          <ion-item button routerLink="/distributor/master" detail="false">
-            <ion-label>Master</ion-label>
-          </ion-item>
-          <ion-item button routerLink="/distributor/view" detail="false">
-            <ion-label>View</ion-label>
-          </ion-item>
-        </div>
-      </ion-accordion>
-    </ion-accordion-group>
-
-    <!-- Inventory -->
-    <ion-accordion-group>
-      <ion-accordion>
-        <ion-item slot="header" button detail="false">
-          <ion-icon name="cube-outline" slot="start"></ion-icon>
-          <ion-label>Inventory</ion-label>
-        </ion-item>
-        <div class="submenu" slot="content">
-          <ion-item button routerLink="/inventory/unit-master" detail="false">
-            <ion-label>Master</ion-label>
-          </ion-item>
-
-          <ion-item button routerLink="/inventory/transaction" detail="false">
-            <ion-label>Transaction</ion-label>
-          </ion-item>
-        </div>
-      </ion-accordion>
-    </ion-accordion-group>
-
-    <!-- Complaints -->
-    <ion-item button routerLink="/complaints" detail="false">
-      <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
-      <ion-label>Complaints and feedback</ion-label>
-    </ion-item>
-
-    <!-- User Rights -->
-    <ion-item button routerLink="/user-rights" detail="false">
-      <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
-      <ion-label>User Rights</ion-label>
-    </ion-item>
-
-    <!-- Operations -->
-    <ion-item button routerLink="/operations" detail="false">
-      <ion-icon name="document-text-outline" slot="start"></ion-icon>
-      <ion-label>Operations / Transactions</ion-label>
-    </ion-item>
-
-  </ion-list>
-
-  <!-- User Profile Footer (NEW) -->
-
-
-</ion-content>
-
-<ion-footer class="ion-no-border">
-  <div class="user-footer">
-    <div class="user-info">
-      <ion-icon name="person-sharp"></ion-icon>
-      <div class="user-details">
-        <p class="user-greeting">Hi, {{userName}}</p>
-        <span class="user-role">{{userRole}}</span>
+    <!-- ========================= -->
+    <!-- BRAND HEADER -->
+    <!-- ========================= -->
+    <div class="brand">
+      <div class="logo">N</div>
+      <div class="brand-text">
+        <h2>Nectar</h2>
       </div>
+
+      <ion-button
+        fill="clear"
+        class="menu-toggle"
+        (click)="onToggleSidebar()">
+        <ion-icon
+          [name]="isCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'">
+        </ion-icon>
+      </ion-button>
     </div>
-    <ion-button fill="clear" size="small" (click)="logout()" class="logout-btn">
-      <ion-icon name="log-out-outline" slot="icon-only"></ion-icon>
-    </ion-button>
+
+    <!-- ========================= -->
+    <!-- MENU (FEATURE CONTROLLED) -->
+    <!-- ========================= -->
+    <ng-container *appAcl="{ anyFeature: true }">
+
+      <ion-list lines="none" class="menu-list">
+
+        <ion-item routerLink="/dashboard">
+          <ion-icon name="albums-outline" slot="start"></ion-icon>
+          <ion-label>Dashboard</ion-label>
+        </ion-item>
+
+        <ion-accordion-group *appAcl="{ features: ['ACCOUNTS_MASTER', 'ACCOUNTS_TRANSACTION'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="reader-outline" slot="start"></ion-icon>
+              <ion-label>Accounts</ion-label>
+            </ion-item>
+
+            <div slot="content">
+              <ion-item *appAcl="'ACCOUNTS_MASTER'" routerLink="/accounts-master">
+                <ion-label>Master</ion-label>
+              </ion-item>
+              <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction">
+                <ion-label>Transaction</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+
+        <ion-accordion-group *appAcl="{ features: ['HR_DEPT', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="people-outline" slot="start"></ion-icon>
+              <ion-label>Human Resources</ion-label>
+            </ion-item>
+
+            <div slot="content">
+              <ion-item *appAcl="'HR_DEPT'" routerLink="/hr/dept-master">
+                <ion-label>Department Master</ion-label>
+              </ion-item>
+              <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master">
+                <ion-label>Designation Master</ion-label>
+              </ion-item>
+              <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master">
+                <ion-label>Employee Master</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+
+        <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTER', 'INVENTORY_TXN'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="cube-outline" slot="start"></ion-icon>
+              <ion-label>Inventory</ion-label>
+            </ion-item>
+
+            <div slot="content">
+              <ion-item *appAcl="'INVENTORY_MASTER'" routerLink="/master-inventory">
+                <ion-label>Master Inventory</ion-label>
+              </ion-item>
+              <ion-item *appAcl="'INVENTORY_TXN'" routerLink="/machine-inventory">
+                <ion-label>Machine Parts</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+
+        <ion-item *appAcl="'COMPLAINTS'" routerLink="/complaints">
+          <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
+          <ion-label>Complaints & Feedback</ion-label>
+        </ion-item>
+
+        <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights">
+          <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+          <ion-label>User Rights</ion-label>
+        </ion-item>
+
+        <ion-item *appAcl="'OPERATIONS'" routerLink="/operations">
+          <ion-icon name="document-text-outline" slot="start"></ion-icon>
+          <ion-label>Operations</ion-label>
+        </ion-item>
+
+      </ion-list>
+    </ng-container>
+
+    <!-- ========================= -->
+    <!-- LOGOUT (ALWAYS VISIBLE) -->
+    <!-- ========================= -->
+    <div class="sidebar-footer">
+      <div class="user-info">
+        <ion-icon name="person-sharp" class="user-avatar"></ion-icon>
+        <div class="user-details">
+          <p class="user-greeting">Hi, {{ userName }}</p>
+          <span class="user-role">{{ userRole }}</span>
+        </div>
+      </div>
+
+      <!-- 🚀 This calls API logout -->
+      <app-logout></app-logout>
+    </div>
+
   </div>
-</ion-footer>
+</ion-content>

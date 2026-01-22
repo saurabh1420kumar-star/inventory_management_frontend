@@ -1,0 +1,17 @@
+ion-card {
+  max-width: 700px;
+  margin: auto;
+}
+
+.btn-row {
+  display: flex;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 20px;
+}
+
+.char-count {
+  font-size: 12px;
+  text-align: right;
+  color: var(--ion-color-medium);
+}
