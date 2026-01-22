@@ -13,32 +13,32 @@ const routes: Routes = [
   },
   {
     path: 'login',
-    loadChildren: () => import('./login/login.module').then( m => m.LoginPageModule)
+    loadChildren: () => import('./login/login.module').then(m => m.LoginPageModule)
   },
   {
     path: 'signup',
-    loadChildren: () => import('./signup/signup.module').then( m => m.SignupPageModule)
+    loadChildren: () => import('./signup/signup.module').then(m => m.SignupPageModule)
   },
- 
+
   {
     path: 'dashboard',
-    loadChildren: () => import('./dashboard/dashboard.module').then( m => m.DashboardPageModule)
-  },
-  {
-    path: 'pending-approvals',
-    loadChildren: () => import('./pending-approvals/pending-approvals.module').then( m => m.PendingApprovalsPageModule)
-
+    loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule)
   },
   {
     path: 'master-inventory',
-    loadChildren: () => import('./master-inventory/master-inventory.module').then( m => m.MasterInventoryPageModule)
-  },  {
+    loadChildren: () => import('./master-inventory/master-inventory.module').then(m => m.MasterInventoryPageModule)
+  },
+  {
     path: 'accounts-master',
-    loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then( m => m.AccountsMasterPageModule)
+    loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then(m => m.AccountsMasterPageModule)
   },
   {
     path: 'sidebar',
-    loadChildren: () => import('./sidebar/sidebar.module').then( m => m.SidebarPageModule)
+    loadChildren: () => import('./sidebar/sidebar.module').then(m => m.SidebarPageModule)
+  },
+  {
+    path: 'hr-department',
+    loadChildren: () => import('./hr-department/hr-department.module').then(m => m.HrDepartmentPageModule)
   }
 
 ];

@@ -58,7 +58,7 @@ export class LoginPage {
 
         // 🔥 redirect based on role
         if (res.roleType === 'ADMIN') {
-          this.router.navigateByUrl('/pending-approvals');
+          this.router.navigateByUrl('/dashboard');
         } else {
           this.router.navigateByUrl('/dashboard');
         }

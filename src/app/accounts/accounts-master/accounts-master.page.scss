@@ -1,341 +1,58 @@
-.ledger-content {
+:host {
+  --ion-background-color: #f9fafb;
+}
+
+ion-content {
   --background: #f9fafb;
 }
 
-.ledger-container {
-  max-width: 1400px;
-  margin: 0 auto;
-  padding: 1rem;
+// Custom scrollbar
+::-webkit-scrollbar {
+  width: 8px;
+  height: 8px;
 }
 
-// ========== HEADER ==========
-.ledger-header {
-  padding: 1.5rem 0;
-
-  .header-content {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    flex-wrap: wrap;
-    gap: 1rem;
-
-    h1 {
-      font-size: 1.875rem;
-      font-weight: 700;
-      margin: 0 0 0.25rem 0;
-    }
-
-    p {
-      margin: 0;
-      font-size: 0.875rem;
-    }
-
-    .header-actions {
-      display: flex;
-      gap: 0.5rem;
-      flex-wrap: wrap;
-    }
-  }
+::-webkit-scrollbar-track {
+  background: #f1f1f1;
 }
 
-// ========== SUMMARY CARDS ==========
-.summary-grid {
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(250px, 1fr));
-  gap: 1rem;
-  margin: 1.5rem 0;
+::-webkit-scrollbar-thumb {
+  background: #888;
+  border-radius: 4px;
 }
 
-.summary-card {
-  margin: 0;
-  border-radius: 12px;
-  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-
-  .card-header {
-    display: flex;
-    justify-content: space-between;
-    align-items: center;
-    margin-bottom: 0.75rem;
-
-    .card-title {
-      font-size: 0.875rem;
-      font-weight: 500;
-      margin: 0;
-    }
-
-    .card-icon {
-      font-size: 1.25rem;
-      color: var(--ion-color-medium);
-    }
-  }
-
-  .card-body {
-    h2 {
-      font-size: 1.5rem;
-      font-weight: 700;
-      margin: 0 0 0.25rem 0;
-
-      &.value-debit {
-        color: #dc2626;
-      }
-
-      &.value-credit {
-        color: #059669;
-      }
-
-      &.value-primary {
-        color: var(--ion-color-primary);
-      }
-    }
-
-    .trend {
-      font-size: 0.75rem;
-    }
-  }
+::-webkit-scrollbar-thumb:hover {
+  background: #555;
 }
 
-// ========== FILTERS ==========
-.filters-section {
-  margin: 1.5rem 0;
-}
-
-.filters-row {
-  display: flex;
-  gap: 1rem;
-  flex-wrap: wrap;
-  align-items: center;
-
-  .filter-search {
-    flex: 1;
-    min-width: 250px;
-    padding: 0;
-  }
-
-  .filter-select {
-    min-width: 150px;
-  }
-}
-
-// ========== TABLE ==========
-.table-card {
-  margin: 1.5rem 0;
-  border-radius: 12px;
-
-  .table-content {
-    padding: 0;
-  }
-
-  .table-wrapper {
-    overflow-x: auto;
-
-    .ledger-table {
-      width: 100%;
-      border-collapse: collapse;
-      font-size: 0.875rem;
-
-      thead {
-        background-color: var(--ion-color-light);
-
-        th {
-          padding: 0.75rem 1rem;
-          text-align: left;
-          font-weight: 600;
-          color: var(--ion-color-dark);
-          white-space: nowrap;
-
-          &.text-right {
-            text-align: right;
-          }
-
-          &.sortable {
-            cursor: pointer;
-            user-select: none;
-            
-            &:hover {
-              background-color: var(--ion-color-light-shade);
-            }
-
-            ion-icon {
-              font-size: 0.875rem;
-              vertical-align: middle;
-              margin-left: 0.25rem;
-            }
-          }
-        }
-      }
-
-      tbody {
-        tr {
-          border-bottom: 1px solid var(--ion-color-light);
-          transition: background-color 0.2s;
-
-          &.clickable-row {
-            cursor: pointer;
-
-            &:hover {
-              background-color: var(--ion-color-light-tint);
-            }
-          }
-
-          td {
-            padding: 0.75rem 1rem;
-
-            &.text-right {
-              text-align: right;
-            }
-
-            &.reference-cell {
-              font-family: monospace;
-              font-size: 0.8125rem;
-              color: var(--ion-color-medium);
-            }
-
-            &.description-cell {
-              max-width: 250px;
-              overflow: hidden;
-              text-overflow: ellipsis;
-              white-space: nowrap;
-            }
-
-            &.amount-cell {
-              font-family: monospace;
-              font-weight: 500;
-
-              &.debit-amount {
-                color: #dc2626;
-              }
-
-              &.credit-amount {
-                color: #059669;
-              }
-            }
-
-            &.balance-cell {
-              font-family: monospace;
-              font-weight: 600;
-            }
-
-            &.empty-state {
-              padding: 3rem;
-              text-align: center;
-
-              .empty-content {
-                display: flex;
-                flex-direction: column;
-                align-items: center;
-                gap: 1rem;
-
-                ion-icon {
-                  font-size: 3rem;
-                  color: var(--ion-color-medium);
-                }
-
-                p {
-                  margin: 0;
-                  color: var(--ion-color-medium);
-                }
-              }
-            }
-          }
-        }
-      }
-    }
-  }
-}
-
-// ========== MODALS ==========
-.form-actions {
-  margin-top: 1.5rem;
-}
-
-.detail-header {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-
-  p {
-    margin: 0;
-    font-family: monospace;
-    font-size: 0.875rem;
-  }
-}
-
-.amount-debit {
-  color: #dc2626 !important;
-  font-weight: 600;
-}
-
-.amount-credit {
-  color: #059669 !important;
-  font-weight: 600;
-}
-
-// ========== FOOTER ==========
-.ledger-footer {
-  text-align: center;
-  padding: 2rem 0;
-  margin-top: 2rem;
-  border-top: 1px solid var(--ion-color-light);
-
-  p {
-    margin: 0;
-    font-size: 0.875rem;
-  }
-}
-
-// ========== RESPONSIVE ==========
+// Table responsive
 @media (max-width: 768px) {
-  .ledger-header .header-content {
-    flex-direction: column;
-    align-items: flex-start;
-
-    .header-actions {
-      width: 100%;
-
-      ion-button {
-        flex: 1;
-        min-width: 120px;
-      }
-    }
+  table {
+    font-size: 0.875rem;
   }
-
-  .summary-grid {
-    grid-template-columns: 1fr;
-  }
-
-  .filters-row {
-    flex-direction: column;
-
-    .filter-search,
-    .filter-select {
-      width: 100%;
-    }
+  
+  th, td {
+    padding: 0.5rem !important;
   }
 }
 
-
-// Custom searchbar styling
-ion-searchbar.custom-searchbar {
-  --background: #f9fafb;
-  --border-radius: 12px;
-  --box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
-  --placeholder-color: #9ca3af;
-  --icon-color: #6b7280;
-  padding-left: 2.5rem;
+// Animation
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(-10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
 }
 
-// Modal styling
-.custom-modal {
-  --height: 90%;
-  --border-radius: 16px;
+.animate-slide-in {
+  animation: slideIn 0.3s ease-out;
 }
 
-// Table hover effect enhancement
-table tbody tr:hover {
-  transform: scale(1.001);
-}
-
-// Smooth animations
-* {
-  transition: all 0.2s ease-in-out;
+// Math utility for template
+.Math {
+  min: min;
 }

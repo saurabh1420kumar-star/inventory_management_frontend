@@ -24,7 +24,7 @@ export interface LoginResponse {
   type: string;
   userId: number;
   username: string;
-  roleType: string;   // 👈 NEW
+  roleType: string;
 }
 
 // ---------------- SIGNUP MODELS ----------------
@@ -36,10 +36,15 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   contactNo: string;
+  alternateContactNo?: string; // ✅ Added (optional)
   city: string;
   country: string;
   zip: string;
   roleType: string;
+  dateOfBirth: string; // ✅ Added (required)
+  gender: string; // ✅ Added (required)
+  bloodGroup?: string; // ✅ Added (optional but API may require it)
+  completeAddress: string; // ✅ Added (required)
 }
 
 export interface CreateUserResponse {
@@ -64,7 +69,6 @@ export class Auth {
   // ---------------- LOGIN API ----------------
   login(username: string, password: string): Observable<LoginResponse> {
     const body: LoginRequest = { username, password };
-
     return this.http.post<LoginResponse>(
       `${this.apiUrl}/api/auth/login`,
       body
@@ -77,7 +81,7 @@ export class Auth {
         localStorage.setItem('auth_user_id', String(res.userId));
         localStorage.setItem('auth_features', JSON.stringify(res.features));
         localStorage.setItem('auth_feature_names', JSON.stringify(res.featureNames));
-        localStorage.setItem('auth_role_type', res.roleType);   // 👈 save role
+        localStorage.setItem('auth_role_type', res.roleType);
       })
     );
   }

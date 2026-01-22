@@ -112,6 +112,9 @@ export class SignupPage implements OnInit {
       country: v.country,
       zip: v.zip,
       roleType: v.roleType,
+      dateOfBirth: '',
+      gender: '',
+      completeAddress: ''
     };
 
     this.loading = true;

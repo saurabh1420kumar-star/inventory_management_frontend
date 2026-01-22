@@ -1,0 +1,965 @@
+<!-- Main Container with Gradient Theme -->
+<ion-header class="ion-no-border">
+ <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100">
+  <ion-buttons slot="start">
+   <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors">
+   </ion-menu-button>
+  </ion-buttons>
+  <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+   <span class="text-emerald-500">
+    Human
+   </span>
+   Resources
+  </ion-title>
+ </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+<div class="flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-8">
+ <!-- Fixed Header Section with Exact Ledger Style -->
+ <div class="flex-shrink-0 p-5">
+  <div class="max-w-7xl mx-auto">
+   <!-- Gradient Banner Container -->
+   <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-2xl p-10">
+    <!-- Top Section: Title and Buttons -->
+    <div class="flex items-center justify-between mb-6">
+     <!-- Left: Title with Badge -->
+     <div>
+      <h1 class="text-2xl font-bold mb-4">
+       <span class="text-emerald-600">
+        Human Resources
+       </span>
+       <span class="text-white">
+        Department
+       </span>
+      </h1>
+      <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+       <ion-icon class="text-white text-sm" name="shield-checkmark-outline">
+       </ion-icon>
+       <span class="text-white text-sm font-medium">
+        Add - Modify - Delete employees
+       </span>
+      </div>
+     </div>
+     <!-- Right: Action Buttons -->
+     <div class="flex items-center gap-3">
+      <!-- New Employee Button (Primary) -->
+      <button (click)="openAddModal()" class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
+       <ion-icon class="text-xl" name="person-add">
+       </ion-icon>
+       <span>
+        New Employee
+       </span>
+      </button>
+     </div>
+    </div>
+    <!-- Bottom Section: Search and Filter -->
+   </div>
+   <div class="mb-8">
+    <div class="flex gap-4 mt-6 mb-6">
+     <!-- Search Input -->
+     <div class="flex-1 relative">
+      <ion-icon class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl pointer-events-none z-10" name="search-outline">
+      </ion-icon>
+      <input (input)="onSearchChange($event)" [value]="searchQuery" class="w-full pl-12 pr-4 py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-white/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium" placeholder="Search employee name, designation or department..." type="text"/>
+     </div>
+     <!-- Status Filter Dropdown -->
+     <div class="relative">
+      <button (click)="showStatusDropdown = !showStatusDropdown" class="flex items-center gap-3 px-6 py-3.5 bg-white/95 backdrop-blur-sm rounded-xl hover:bg-white transition-all shadow-md min-w-[160px] justify-between">
+       <span [ngClass]="getStatusFilterClass(statusFilter)" class="font-semibold text-gray-700">
+        {{ statusFilter }}
+       </span>
+       <ion-icon [ngClass]="{'rotate-180': showStatusDropdown}" class="text-gray-500 transition-transform" name="chevron-down-outline">
+       </ion-icon>
+      </button>
+      <!-- Dropdown Menu -->
+      <div *ngIf="showStatusDropdown" class="absolute right-0 mt-2 w-48 bg-white rounded-xl shadow-xl border border-gray-100 z-50 overflow-hidden">
+       <button (click)="onStatusFilterChange(status)" *ngFor="let status of getStatusOptions()" [ngClass]="getStatusFilterClass(status)" class="w-full px-4 py-3 text-left hover:bg-gray-50 transition-colors flex items-center justify-between font-medium">
+        {{ status }}
+        <ion-icon *ngIf="statusFilter === status" class="text-emerald-500 text-lg" name="checkmark-circle">
+        </ion-icon>
+       </button>
+      </div>
+     </div>
+    </div>
+    <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+     <!-- Card: All -->
+     <div class="bg-white p-5 rounded-2xl shadow-sm border border-slate-100 hover:shadow-md transition-all">
+      <div class="flex items-center justify-between mb-2">
+       <span class="text-slate-500 font-medium text-sm">
+        All Employees
+       </span>
+       <div class="p-2 bg-slate-50 rounded-lg text-slate-600">
+        <ion-icon class="text-lg" name="people">
+        </ion-icon>
+       </div>
+      </div>
+      <div class="text-3xl font-bold text-slate-800">
+       {{ filteredEmployees?.length || 0 }}
+      </div>
+     </div>
+     <!-- Card: Pending -->
+     <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all">
+      <div class="flex items-center justify-between mb-2">
+       <span class="text-orange-500 font-medium text-sm">
+        Pending
+       </span>
+       <div class="p-2 bg-orange-50 rounded-lg text-orange-600">
+        <ion-icon class="text-lg" name="time">
+        </ion-icon>
+       </div>
+      </div>
+      <div class="text-3xl font-bold text-slate-800">
+       {{ getStatusCount('Pending') }}
+      </div>
+     </div>
+     <!-- Card: Active -->
+     <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 hover:shadow-md transition-all">
+      <div class="flex items-center justify-between mb-2">
+       <span class="text-emerald-500 font-medium text-sm">
+        Active
+       </span>
+       <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+        <ion-icon class="text-lg" name="checkmark-circle">
+        </ion-icon>
+       </div>
+      </div>
+      <div class="text-3xl font-bold text-slate-800">
+       {{ getStatusCount('Active') }}
+      </div>
+     </div>
+     <!-- Card: Rejected -->
+     <div class="bg-white p-5 rounded-2xl shadow-sm border border-red-100 hover:shadow-md transition-all">
+      <div class="flex items-center justify-between mb-2">
+       <span class="text-red-500 font-medium text-sm">
+        Rejected
+       </span>
+       <div class="p-2 bg-red-50 rounded-lg text-red-600">
+        <ion-icon class="text-lg" name="close-circle">
+        </ion-icon>
+       </div>
+      </div>
+      <div class="text-3xl font-bold text-slate-800">
+       {{ getStatusCount('Rejected') }}
+      </div>
+     </div>
+    </div>
+   </div>
+  </div>
+ </div>
+ <!-- Scrollable Employee Cards Section -->
+ <div class="flex-1">
+  <div class="max-w-7xl mx-auto px-6">
+   <!-- Employee Cards Grid -->
+   <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-5">
+    <div *ngFor="let employee of paginatedEmployees" class="bg-white rounded-2xl shadow-md hover:shadow-xl transition-all transform hover:-translate-y-1 border border-gray-100">
+     <!-- Card Header -->
+     <div class="px-5 pt-5 pb-4 border-b border-gray-100">
+      <div class="flex items-start justify-between">
+       <div class="flex items-center gap-3 flex-1">
+        <!-- Avatar Circle with Gradient -->
+        <div class="w-12 h-12 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-lg shadow-md">
+         {{ employee.name.charAt(0) }}
+        </div>
+        <div class="flex-1 min-w-0">
+         <h3 class="font-bold text-base text-gray-900 truncate">
+          {{ employee.name }}
+         </h3>
+         <p class="text-xs text-teal-600 font-semibold mt-0.5 truncate">
+          {{ employee.position }}
+         </p>
+        </div>
+       </div>
+       <span [ngClass]="getStatusClass(employee.status)" class="px-3 py-1.5 rounded-full text-xs font-bold border-2 whitespace-nowrap ml-2">
+        {{ employee.status }}
+       </span>
+      </div>
+     </div>
+     <!-- Card Body -->
+     <div class="px-5 py-4 space-y-3 bg-gradient-to-br from-gray-50/50 to-white">
+      <div class="flex items-center gap-3 text-gray-600">
+       <div class="w-8 h-8 rounded-lg bg-blue-100 flex items-center justify-center">
+        <ion-icon class="text-blue-600 text-lg" name="business-outline">
+        </ion-icon>
+       </div>
+       <span class="text-sm font-medium">
+        {{ employee.department }}
+       </span>
+      </div>
+      <div class="flex items-center gap-3 text-gray-600">
+       <div class="w-8 h-8 rounded-lg bg-emerald-100 flex items-center justify-center">
+        <ion-icon class="text-emerald-600 text-lg" name="mail-outline">
+        </ion-icon>
+       </div>
+       <span class="text-sm truncate font-medium">
+        {{ employee.email }}
+       </span>
+      </div>
+      <div class="flex items-center gap-3 text-gray-600">
+       <div class="w-8 h-8 rounded-lg bg-purple-100 flex items-center justify-center">
+        <ion-icon class="text-purple-600 text-lg" name="call-outline">
+        </ion-icon>
+       </div>
+       <span class="text-sm font-medium">
+        {{ employee.phone }}
+       </span>
+      </div>
+     </div>
+     <!-- Card Actions -->
+     <div class="px-4 pb-4 pt-3 flex gap-2">
+      <button (click)="openViewModal(employee)" class="flex-1 flex items-center justify-center p-2.5 rounded-xl bg-blue-50 hover:bg-blue-100 transition-colors group">
+       <ion-icon class="text-blue-600 text-lg group-hover:scale-110 transition-transform" name="eye-outline">
+       </ion-icon>
+      </button>
+      <button (click)="openEditModal(employee)" class="flex-1 flex items-center justify-center p-2.5 rounded-xl bg-emerald-50 hover:bg-emerald-100 transition-colors group">
+       <ion-icon class="text-emerald-600 text-lg group-hover:scale-110 transition-transform" name="create-outline">
+       </ion-icon>
+      </button>
+      <button (click)="openDeleteModal(employee)" class="flex-1 flex items-center justify-center p-2.5 rounded-xl bg-red-50 hover:bg-red-100 transition-colors group">
+       <ion-icon class="text-red-600 text-lg group-hover:scale-110 transition-transform" name="trash-outline">
+       </ion-icon>
+      </button>
+     </div>
+    </div>
+   </div>
+   <!-- Empty State -->
+   <div *ngIf="filteredEmployees.length === 0" class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl shadow-md mt-6">
+    <div class="w-24 h-24 rounded-full bg-gradient-to-br from-emerald-100 to-blue-100 flex items-center justify-center mb-4">
+     <ion-icon class="text-emerald-500 text-6xl" name="people-outline">
+     </ion-icon>
+    </div>
+    <p class="text-gray-700 text-lg font-semibold">
+     No employees found
+    </p>
+    <p class="text-gray-400 text-sm mt-2">
+     Try adjusting your search or filter
+    </p>
+   </div>
+   <!-- Pagination -->
+   <div *ngIf="showPagination" class="flex items-center justify-between mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
+    <!-- Pagination Info -->
+    <div class="text-sm text-gray-600 font-medium">
+     Showing
+     <span class="font-bold text-emerald-600">
+      {{ (currentPage - 1) * itemsPerPage + 1 }}
+     </span>
+     to
+     <span class="font-bold text-emerald-600">
+      {{ Math.min(currentPage * itemsPerPage, filteredEmployees.length)
+            }}
+     </span>
+     of
+     <span class="font-bold text-emerald-600">
+      {{ filteredEmployees.length }}
+     </span>
+     employees
+    </div>
+    <!-- Pagination Controls -->
+    <div class="flex items-center gap-2">
+     <!-- Previous Button -->
+     <button (click)="previousPage()" [disabled]="currentPage === 1" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+      <ion-icon name="chevron-back-outline">
+      </ion-icon>
+     </button>
+     <!-- Page Numbers -->
+     <div class="flex gap-2">
+      <button (click)="goToPage(page)" *ngFor="let page of pages" [class.bg-gradient-to-r]="currentPage === page" [class.bg-gray-100]="currentPage !== page" [class.from-emerald-400]="currentPage === page" [class.hover:bg-gray-200]="currentPage !== page" [class.shadow-md]="currentPage === page" [class.text-gray-700]="currentPage !== page" [class.text-white]="currentPage === page" [class.to-teal-500]="currentPage === page" class="min-w-[44px] px-4 py-2.5 rounded-xl transition-all font-bold text-sm">
+       {{ page }}
+      </button>
+     </div>
+     <!-- Next Button -->
+     <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+      <ion-icon name="chevron-forward-outline">
+      </ion-icon>
+     </button>
+    </div>
+   </div>
+  </div>
+ </div>
+</div>
+</ion-content>
+
+<!-- Modal Backdrop -->
+<div (click)="closeModal()" *ngIf="activeModal" class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
+ <!-- ✨ Add Employee Modal -->
+ <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'add'" class="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-slideUp">
+  <!-- Header with Gradient -->
+<div class="bg-gradient-to-r from-emerald-400 to-teal-500 px-6 py-5">
+   <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-white">
+     Add New Employee
+    </h2>
+    <button (click)="closeModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors bg-transparent" type="button">
+     <ion-icon class="text-2xl text-white" name="close-outline">
+     </ion-icon>
+    </button>
+   </div>
+</div>
+
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="mx-6 mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+   <p class="text-green-700 font-medium">
+    {{ successMessage }}
+   </p>
+  </div>
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="mx-6 mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+   <p class="text-red-700 font-medium">
+    {{ errorMessage }}
+   </p>
+  </div>
+  <!-- Form -->
+  <form (ngSubmit)="onAddEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-auto bg-white">
+   <div class="p-6 space-y-4">
+    <!-- First Name -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      First Name *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('firstName')?.invalid && employeeForm.get('firstName')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="firstName" placeholder="Enter first name" type="text"/>
+     <p *ngIf="employeeForm.get('firstName')?.invalid && employeeForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      First name is required (minimum 2 characters)
+     </p>
+    </div>
+    <!-- Last Name -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Last Name *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('lastName')?.invalid && employeeForm.get('lastName')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="lastName" placeholder="Enter last name" type="text"/>
+     <p *ngIf="employeeForm.get('lastName')?.invalid && employeeForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Last name is required (minimum 2 characters)
+     </p>
+    </div>
+    <!-- Username -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Username *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="username" placeholder="Enter username" type="text"/>
+     <p *ngIf="employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Username is required (minimum 3 characters)
+     </p>
+    </div>
+    <!-- Email -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Email Address *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="email" placeholder="Enter email address" type="email"/>
+     <p *ngIf="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid email address
+     </p>
+    </div>
+    <!-- Password -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Password *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('password')?.invalid && employeeForm.get('password')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="password" placeholder="Enter password" type="password"/>
+     <p *ngIf="employeeForm.get('password')?.invalid && employeeForm.get('password')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Password is required (minimum 6 characters)
+     </p>
+    </div>
+    <!-- Contact -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Contact Number *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('contact')?.invalid && employeeForm.get('contact')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="contact" placeholder="Enter 10-digit contact number" type="tel"/>
+     <p *ngIf="employeeForm.get('contact')?.invalid && employeeForm.get('contact')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid 10-digit contact number
+     </p>
+    </div>
+    <!-- Alternate Contact -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Alternate Contact
+     </label>
+     <input class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="alternateContact" placeholder="Enter alternate contact number" type="tel"/>
+    </div>
+    <!-- City -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      City *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('city')?.invalid && employeeForm.get('city')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="city" placeholder="Enter city" type="text"/>
+     <p *ngIf="employeeForm.get('city')?.invalid && employeeForm.get('city')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      City is required
+     </p>
+    </div>
+    <!-- PIN Code -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      PIN Code *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('zip')?.invalid && employeeForm.get('zip')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="zip" placeholder="Enter 6-digit ZIP code" type="text"/>
+     <p *ngIf="employeeForm.get('zip')?.invalid && employeeForm.get('zip')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid 6-digit PIN code
+     </p>
+    </div>
+    <!-- Country -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Country *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('country')?.invalid && employeeForm.get('country')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="country" placeholder="Enter country" type="text"/>
+     <p *ngIf="employeeForm.get('country')?.invalid && employeeForm.get('country')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Country is required
+     </p>
+    </div>
+    <!-- Date of Birth -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Date of Birth *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('dateOfBirth')?.invalid && employeeForm.get('dateOfBirth')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="dateOfBirth" type="date"/>
+     <p *ngIf="employeeForm.get('dateOfBirth')?.invalid && employeeForm.get('dateOfBirth')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Date of birth is required
+     </p>
+    </div>
+    <!-- Gender - UPDATED WITH DYNAMIC VALUES -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Gender *
+     </label>
+     <select [class.border-red-400]="employeeForm.get('gender')?.invalid && employeeForm.get('gender')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="gender">
+      <option disabled="" selected="" value="">
+       Select gender
+      </option>
+      <option *ngFor="let gender of genderOptions" [value]="gender.value">
+       {{ gender.label }}
+      </option>
+     </select>
+     <p *ngIf="employeeForm.get('gender')?.invalid && employeeForm.get('gender')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Gender is required
+     </p>
+    </div>
+    <!-- Blood Group - UPDATED WITH DYNAMIC VALUES -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Blood Group
+     </label>
+     <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="bloodGroup">
+      <option selected="" value="">
+       Select blood group
+      </option>
+      <option *ngFor="let group of bloodGroups" [value]="group">
+       {{ group }}
+      </option>
+     </select>
+    </div>
+    <!-- Role Type - UPDATED WITH ALL DYNAMIC VALUES -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Role Type *
+     </label>
+     <select [class.border-red-400]="employeeForm.get('roleType')?.invalid && employeeForm.get('roleType')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all" formControlName="roleType">
+      <option disabled="" selected="" value="">
+       Select role type
+      </option>
+      <option *ngFor="let role of roleTypes" [value]="role.value">
+       {{ role.label }}
+      </option>
+     </select>
+     <p *ngIf="employeeForm.get('roleType')?.invalid && employeeForm.get('roleType')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Role type is required
+     </p>
+    </div>
+
+    <!-- Feature Access -->
+<div>
+  <label class="block text-sm font-semibold text-gray-700 mb-3">
+    Feature Access *
+  </label>
+  <div class="grid grid-cols-2 gap-3">
+    <!-- Dashboard -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-dashboard" 
+        formControlName="featureDashboard"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-dashboard" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        Dashboard
+      </label>
+    </div>
+
+    <!-- Accounts -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-accounts" 
+        formControlName="featureAccounts"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-accounts" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        Accounts
+      </label>
+    </div>
+
+    <!-- HR -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-hr" 
+        formControlName="featureHR"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-hr" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        HR
+      </label>
+    </div>
+
+    <!-- Inventory -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-inventory" 
+        formControlName="featureInventory"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-inventory" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        Inventory
+      </label>
+    </div>
+
+    <!-- Transaction -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-transaction" 
+        formControlName="featureTransaction"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-transaction" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        Transaction
+      </label>
+    </div>
+
+    <!-- Distributor -->
+    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
+      <input 
+        type="checkbox" 
+        id="feature-distributor" 
+        formControlName="featureDistributor"
+        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
+      />
+      <label for="feature-distributor" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
+        Distributor
+      </label>
+    </div>
+  </div>
+  <p *ngIf="employeeForm.get('featureAccess')?.invalid && employeeForm.get('featureAccess')?.touched" 
+     class="text-red-500 text-xs mt-2 font-medium">
+    Please select at least one feature access
+  </p>
+</div>
+
+    <!-- Complete Address -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Complete Address *
+     </label>
+     <textarea [class.border-red-400]="employeeForm.get('completeAddress')?.invalid && employeeForm.get('completeAddress')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all resize-none" formControlName="completeAddress" placeholder="Enter complete address" rows="3"></textarea>
+     <p *ngIf="employeeForm.get('completeAddress')?.invalid && employeeForm.get('completeAddress')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Complete address is required (minimum 10 characters)
+     </p>
+    </div>
+   </div>
+   <!-- Footer -->
+   <div class="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
+    <button (click)="closeModal()" [disabled]="isLoading" class="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-semibold disabled:opacity-50" type="button">
+     Cancel
+    </button>
+    <button [disabled]="isLoading" class="flex-1 px-6 py-3.5 bg-gradient-to-r from-emerald-400 to-teal-500 text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+     <span *ngIf="!isLoading">
+      Add Employee
+     </span>
+     <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+      <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+       </circle>
+       <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor">
+       </path>
+      </svg>
+      Creating...
+     </span>
+    </button>
+   </div>
+  </form>
+ </div>
+ <!-- 📝 Edit Employee Modal - NOW IDENTICAL TO ADD EMPLOYEE -->
+ <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'edit'" class="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-slideUp">
+  <!-- Header with Gradient -->
+  <div class="bg-gradient-to-r from-blue-500 to-teal-400 px-6 py-5">
+   <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-white">
+     Edit Employee
+    </h2>
+    <button (click)="closeModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors" type="button">
+     <ion-icon class="text-2xl text-white" name="close-outline">
+     </ion-icon>
+    </button>
+   </div>
+  </div>
+  <!-- Success Message -->
+  <div *ngIf="successMessage" class="mx-6 mt-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+   <p class="text-green-700 font-medium">
+    {{ successMessage }}
+   </p>
+  </div>
+  <!-- Error Message -->
+  <div *ngIf="errorMessage" class="mx-6 mt-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+   <p class="text-red-700 font-medium">
+    {{ errorMessage }}
+   </p>
+  </div>
+  <!-- Form -->
+  <form (ngSubmit)="onUpdateEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-auto bg-white">
+   <div class="p-6 space-y-4">
+    <!-- First Name -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      First Name *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('firstName')?.invalid && employeeForm.get('firstName')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="firstName" placeholder="Enter first name" type="text"/>
+     <p *ngIf="employeeForm.get('firstName')?.invalid && employeeForm.get('firstName')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      First name is required (minimum 2 characters)
+     </p>
+    </div>
+    <!-- Last Name -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Last Name *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('lastName')?.invalid && employeeForm.get('lastName')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="lastName" placeholder="Enter last name" type="text"/>
+     <p *ngIf="employeeForm.get('lastName')?.invalid && employeeForm.get('lastName')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Last name is required (minimum 2 characters)
+     </p>
+    </div>
+    <!-- Username -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Username *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="username" placeholder="Enter username" type="text"/>
+     <p *ngIf="employeeForm.get('username')?.invalid && employeeForm.get('username')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Username is required (minimum 5 characters)
+     </p>
+    </div>
+    <!-- Email -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Email Address *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="email" placeholder="Enter email address" type="email"/>
+     <p *ngIf="employeeForm.get('email')?.invalid && employeeForm.get('email')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid email address
+     </p>
+    </div>
+    <!-- Contact -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Contact Number *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('contact')?.invalid && employeeForm.get('contact')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="contact" placeholder="Enter 10-digit contact number" type="tel"/>
+     <p *ngIf="employeeForm.get('contact')?.invalid && employeeForm.get('contact')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid 10-digit contact number
+     </p>
+    </div>
+    <!-- Alternate Contact -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Alternate Contact
+     </label>
+     <input class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="alternateContact" placeholder="Enter alternate contact number" type="tel"/>
+    </div>
+    <!-- City -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      City *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('city')?.invalid && employeeForm.get('city')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="city" placeholder="Enter city" type="text"/>
+     <p *ngIf="employeeForm.get('city')?.invalid && employeeForm.get('city')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      City is required
+     </p>
+    </div>
+    <!-- ZIP Code -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      ZIP Code *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('zip')?.invalid && employeeForm.get('zip')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="zip" placeholder="Enter 6-digit ZIP code" type="text"/>
+     <p *ngIf="employeeForm.get('zip')?.invalid && employeeForm.get('zip')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Please enter a valid 6-digit ZIP code
+     </p>
+    </div>
+    <!-- Country -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Country *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('country')?.invalid && employeeForm.get('country')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="country" placeholder="Enter country" type="text"/>
+     <p *ngIf="employeeForm.get('country')?.invalid && employeeForm.get('country')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Country is required
+     </p>
+    </div>
+    <!-- Date of Birth -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Date of Birth *
+     </label>
+     <input [class.border-red-400]="employeeForm.get('dateOfBirth')?.invalid && employeeForm.get('dateOfBirth')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="dateOfBirth" type="date"/>
+     <p *ngIf="employeeForm.get('dateOfBirth')?.invalid && employeeForm.get('dateOfBirth')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Date of birth is required
+     </p>
+    </div>
+    <!-- Gender -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Gender *
+     </label>
+     <select [class.border-red-400]="employeeForm.get('gender')?.invalid && employeeForm.get('gender')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="gender">
+      <option disabled="" value="">
+       Select gender
+      </option>
+      <option *ngFor="let gender of genderOptions" [value]="gender.value">
+       {{ gender.label }}
+      </option>
+     </select>
+     <p *ngIf="employeeForm.get('gender')?.invalid && employeeForm.get('gender')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Gender is required
+     </p>
+    </div>
+    <!-- Blood Group -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Blood Group
+     </label>
+     <select class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="bloodGroup">
+      <option value="">
+       Select blood group
+      </option>
+      <option *ngFor="let group of bloodGroups" [value]="group">
+       {{ group }}
+      </option>
+     </select>
+    </div>
+    <!-- Role Type -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Role Type *
+     </label>
+     <select [class.border-red-400]="employeeForm.get('roleType')?.invalid && employeeForm.get('roleType')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="roleType">
+      <option disabled="" value="">
+       Select role type
+      </option>
+      <option *ngFor="let role of roleTypes" [value]="role.value">
+       {{ role.label }}
+      </option>
+     </select>
+     <p *ngIf="employeeForm.get('roleType')?.invalid && employeeForm.get('roleType')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Role type is required
+     </p>
+    </div>
+    <!-- Status -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Status *
+     </label>
+     <select [class.border-red-400]="employeeForm.get('status')?.invalid && employeeForm.get('status')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all" formControlName="status">
+      <option disabled="" value="">
+       Select status
+      </option>
+      <option *ngFor="let status of statusOptions" [value]="status.value">
+       {{ status.label }}
+      </option>
+     </select>
+    </div>
+    <!-- Complete Address -->
+    <div>
+     <label class="block text-sm font-semibold text-gray-700 mb-2">
+      Complete Address *
+     </label>
+     <textarea [class.border-red-400]="employeeForm.get('completeAddress')?.invalid && employeeForm.get('completeAddress')?.touched" class="w-full px-4 py-3 border-2 border-gray-200 rounded-xl focus:outline-none focus:ring-2 focus:ring-blue-400 focus:border-transparent transition-all resize-none" formControlName="completeAddress" placeholder="Enter complete address" rows="3"></textarea>
+     <p *ngIf="employeeForm.get('completeAddress')?.invalid && employeeForm.get('completeAddress')?.touched" class="text-red-500 text-xs mt-1 font-medium">
+      Complete address is required (minimum 10 characters)
+     </p>
+    </div>
+   </div>
+   <!-- Footer -->
+   <div class="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
+    <button (click)="closeModal()" [disabled]="isLoading" class="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-semibold disabled:opacity-50" type="button">
+     Cancel
+    </button>
+    <button [disabled]="isLoading" class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-teal-400 text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
+     <span *ngIf="!isLoading">
+      Save Changes
+     </span>
+     <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+      <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+       <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+       </circle>
+       <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor">
+       </path>
+      </svg>
+      Updating...
+     </span>
+    </button>
+   </div>
+  </form>
+ </div>
+ <!-- 👁️ View Employee Modal -->
+ <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'view' && selectedEmployee" class="bg-white rounded-3xl w-full max-w-lg max-h-[90vh] overflow-hidden flex flex-col shadow-2xl animate-slideUp">
+  <!-- Header with Gradient -->
+  <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 px-6 py-5">
+   <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-white">
+     Employee Details
+    </h2>
+    <button (click)="closeModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors" type="button">
+     <ion-icon class="text-2xl text-white" name="close-outline">
+     </ion-icon>
+    </button>
+   </div>
+  </div>
+  <!-- Content -->
+  <div class="flex-1 overflow-y-auto p-6 bg-white">
+   <!-- Employee Header -->
+   <div class="flex items-center gap-6 mb-6">
+    <div class="w-24 h-24 rounded-2xl bg-gradient-to-br from-emerald-400 to-blue-500 flex items-center justify-center text-white font-bold text-4xl shadow-lg">
+     {{ selectedEmployee.name.charAt(0) }}
+    </div>
+    <div class="flex-1">
+     <h3 class="text-2xl font-bold text-gray-900 mb-1">
+      {{ selectedEmployee.name }}
+     </h3>
+     <p class="text-teal-600 font-semibold mb-3">
+      {{ selectedEmployee.position }}
+     </p>
+     <span [ngClass]="getStatusClass(selectedEmployee.status)" class="inline-block px-4 py-2 rounded-xl text-sm font-bold border-2 shadow-sm">
+      {{ selectedEmployee.status }}
+     </span>
+    </div>
+   </div>
+   <!-- Employee Details -->
+   <div class="space-y-3">
+    <div class="bg-gradient-to-r from-blue-50 to-teal-50 rounded-xl p-4 border-2 border-blue-100">
+     <p class="text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+      Department
+     </p>
+     <p class="text-base text-gray-900 flex items-center gap-2 font-semibold">
+      <ion-icon class="text-blue-600 text-xl" name="business">
+      </ion-icon>
+      {{ selectedEmployee.department }}
+     </p>
+    </div>
+    <div class="bg-gradient-to-r from-emerald-50 to-teal-50 rounded-xl p-4 border-2 border-emerald-100">
+     <p class="text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+      Email
+     </p>
+     <p class="text-base text-gray-900 flex items-center gap-2 font-semibold break-all">
+      <ion-icon class="text-emerald-600 text-xl" name="mail">
+      </ion-icon>
+      {{ selectedEmployee.email }}
+     </p>
+    </div>
+    <div class="bg-gradient-to-r from-purple-50 to-blue-50 rounded-xl p-4 border-2 border-purple-100">
+     <p class="text-xs font-bold text-gray-500 mb-1.5 uppercase tracking-wide">
+      Phone
+     </p>
+     <p class="text-base text-gray-900 flex items-center gap-2 font-semibold">
+      <ion-icon class="text-purple-600 text-xl" name="call">
+      </ion-icon>
+      {{ selectedEmployee.phone }}
+     </p>
+    </div>
+   </div>
+  </div>
+  <!-- Footer Actions -->
+  <div class="p-6 border-t border-gray-100 bg-gray-50">
+   <!-- Success Message in Modal -->
+   <div *ngIf="successMessage" class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+    <p class="text-green-700 font-medium">
+     {{ successMessage }}
+    </p>
+   </div>
+   <!-- Error Message in Modal -->
+   <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+    <p class="text-red-700 font-medium">
+     {{ errorMessage }}
+    </p>
+   </div>
+   <div *ngIf="selectedEmployee.status === 'Pending'" class="flex gap-3">
+    <button (click)="onRejectEmployee()" [disabled]="isLoading" class="flex-1 px-4 py-3.5 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all flex items-center justify-center gap-2 font-bold shadow-md disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+     <ion-icon class="text-xl" name="close-circle">
+     </ion-icon>
+     Reject
+    </button>
+    <button (click)="onApproveEmployee()" [disabled]="isLoading" class="flex-1 px-4 py-3.5 bg-gradient-to-r from-emerald-500 to-green-500 text-white rounded-xl hover:shadow-lg transition-all flex items-center justify-center gap-2 font-bold disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+     <svg *ngIf="isLoading" class="animate-spin h-5 w-5 mr-2" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+      </circle>
+      <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor">
+      </path>
+     </svg>
+     <ion-icon *ngIf="!isLoading" class="text-xl" name="checkmark-circle">
+     </ion-icon>
+     <span *ngIf="!isLoading">
+      Approve
+     </span>
+     <span *ngIf="isLoading">
+      Approving...
+     </span>
+    </button>
+   </div>
+   <button (click)="closeModal()" *ngIf="selectedEmployee.status !== 'Pending'" class="w-full px-6 py-3.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold" type="button">
+    Close
+   </button>
+  </div>
+ </div>
+ <!-- 🗑️ Delete Employee Modal -->
+ <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'delete' && selectedEmployee" class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-slideUp">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-red-500 to-pink-500 px-6 py-5">
+   <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-white">
+     Delete Employee
+    </h2>
+    <button (click)="closeModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors" type="button">
+     <ion-icon class="text-2xl text-white" name="close-outline">
+     </ion-icon>
+    </button>
+   </div>
+  </div>
+  <!-- Content -->
+  <div class="p-6 bg-white">
+   <div class="flex items-center justify-center mb-6">
+    <div class="w-20 h-20 bg-gradient-to-br from-red-100 to-pink-100 rounded-2xl flex items-center justify-center shadow-lg">
+     <ion-icon class="text-5xl text-red-600" name="warning">
+     </ion-icon>
+    </div>
+   </div>
+   <p class="text-center text-gray-700 text-lg mb-2 font-semibold">
+    Are you sure you want to delete
+   </p>
+   <p class="text-center text-gray-900 font-bold text-2xl mb-4">
+    {{ selectedEmployee.name }}?
+   </p>
+   <p class="text-center text-gray-500 text-sm font-medium">
+    This action cannot be undone.
+   </p>
+  </div>
+  <!-- Footer -->
+  <div class="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
+   <button (click)="closeModal()" class="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-semibold" type="button">
+    Cancel
+   </button>
+   <button (click)="onDeleteEmployee()" class="flex-1 px-6 py-3.5 bg-gradient-to-r from-red-500 to-pink-500 text-white rounded-xl hover:shadow-lg transition-all font-bold" type="button">
+    Delete
+   </button>
+  </div>
+ </div>
+</div>
