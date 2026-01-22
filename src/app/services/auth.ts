@@ -37,10 +37,6 @@ export interface CreateUserRequest {
   lastName: string;
   contactNo: string;
   alternateContactNo?: string;
-  bloodGroup: string;
-  completeAddress: string;
-  dateOfBirth: string;
-  gender: string;
   city: string;
   country: string;
   zip: string;

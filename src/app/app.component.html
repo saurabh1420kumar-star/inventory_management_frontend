@@ -2,28 +2,35 @@
 
   @if (!isAuthPage) {
 
-    <!-- ================= LAYOUT ================= -->
-    <ion-split-pane contentId="main" when="lg">
+    <!-- ========== MOBILE MENU ========== -->
+    <ion-menu
+      *ngIf="!isDesktop"
+      contentId="main"
+      type="overlay">
+      <app-sidebar
+        (toggleSidebar)="toggleMobileMenu()">
+      </app-sidebar>
+    </ion-menu>
 
-      <!-- SIDEBAR (FEATURE GUARDED) -->
-      <ion-menu contentId="main" type="overlay" [class.collapsed]="sidebarCollapsed">
-        <app-sidebar 
-          *appAcl="{ anyFeature: true }"
-          [collapsed]="sidebarCollapsed"
-          (toggleSidebar)="onSidebarToggle()">
-        </app-sidebar>
-      </ion-menu>
+    <!-- ========== DESKTOP LAYOUT ========== -->
+    <div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed">
 
-      <!-- MAIN CONTENT -->
-      <div class="ion-page" id="main">
+      <!-- Desktop Sidebar -->
+      <app-sidebar
+        *ngIf="isDesktop"
+        [collapsed]="sidebarCollapsed"
+        (toggleSidebar)="onSidebarToggle()">
+      </app-sidebar>
+
+      <!-- Main Content -->
+      <div class="ion-page main-content" id="main">
         <ion-router-outlet></ion-router-outlet>
       </div>
 
-    </ion-split-pane>
+    </div>
 
   } @else {
 
-    <!-- AUTH PAGES (login, signup, etc.) -->
     <ion-router-outlet></ion-router-outlet>
 
   }

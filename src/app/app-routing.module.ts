@@ -22,11 +22,6 @@ const routes: Routes = [
     canActivate: [AuthGuard] // Protected route
   },
   {
-    path: 'pending-approvals',
-    loadChildren: () => import('./pending-approvals/pending-approvals.module').then(m => m.PendingApprovalsPageModule),
-    canActivate: [AuthGuard] // Protected route
-  },
-  {
     path: 'master-inventory',
     loadChildren: () => import('./master-inventory/master-inventory.module').then(m => m.MasterInventoryPageModule),
     canActivate: [AuthGuard] // Protected route
@@ -55,7 +50,12 @@ const routes: Routes = [
   {
     path: 'machine-inventory',
     loadChildren: () => import('./machine-inventory/machine-inventory.module').then( m => m.MachineInventoryPageModule)
-  }
+  },
+  {
+    path: 'hr-department',
+    loadChildren: () => import('./hr-department/hr-department.module').then( m => m.HrDepartmentPageModule)
+  },
+
 
 ];
 

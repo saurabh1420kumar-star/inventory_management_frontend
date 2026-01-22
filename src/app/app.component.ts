@@ -1,7 +1,8 @@
-import { Component } from '@angular/core';
+import { Component, EventEmitter, HostListener, Input, Output } from '@angular/core';
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { Auth } from './services/auth';
+import { MenuController } from '@ionic/angular';
 
 @Component({
   selector: 'app-root',
@@ -19,7 +20,7 @@ export class AppComponent {
    * true  → Auth pages (login, signup, etc.)
    * false → App pages (dashboard, others)
    */
-  isAuthPage = true; // ✅ default TRUE to avoid sidebar flash
+  isAuthPage = false; // ✅ default TRUE to avoid sidebar flash
 
   /**
    * Sidebar collapsed state
@@ -27,10 +28,12 @@ export class AppComponent {
    * true  → Collapsed (60px)
    */
   sidebarCollapsed = false;
+  isDesktop = window.innerWidth >= 992;
 
   constructor(
     private router: Router,
-    private auth: Auth
+    private auth: Auth,
+    private menuController: MenuController
   ) {
 
     // 🔁 Listen to route changes
@@ -67,15 +70,22 @@ export class AppComponent {
     }
   }
 
-  /**
-   * Handle sidebar toggle - just flip the state
-   */
-  onSidebarToggle(): void {
+  @HostListener('window:resize')
+  onResize() {
+    this.isDesktop = window.innerWidth >= 992;
+  }
+
+  onSidebarToggle() {
     this.sidebarCollapsed = !this.sidebarCollapsed;
+  }
+
+  toggleMobileMenu(): void {
+    this.menuController.toggle();
   }
 
   logout(): void {
     this.auth.logout();        // ✅ clear storage
     this.router.navigateByUrl('/login');
   }
+
 }

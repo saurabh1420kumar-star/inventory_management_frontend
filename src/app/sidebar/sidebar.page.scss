@@ -1,10 +1,18 @@
+*{
+  font-family: sans-serif;
+}
+
 .sidebar-content {
   --background: var(--ion-card-background, #ffffff);
+  width: 330px;
+  transition: width 0.25s ease;
   
   .sidebar-container {
     height: 100%;
     display: flex;
     flex-direction: column;
+    width: 100%;
+    overflow: hidden;
   }
 
   /* ========================= */
@@ -30,6 +38,7 @@
       font-weight: 700;
       color: var(--ion-color-primary-contrast);
       flex-shrink: 0;
+      transition: all 0.2s ease;
     }
 
     .brand-text {
@@ -47,17 +56,11 @@
       --padding-start: 4px;
       --padding-end: 4px;
       margin: 0;
+      flex-shrink: 0;
       
       ion-icon {
         font-size: 20px;
       }
-    }
-  }
-
-  &.collapsed {
-    .brand {
-      justify-content: center;
-      padding: 12px 8px;
     }
   }
 
@@ -113,24 +116,6 @@
     }
   }
 
-  &.collapsed {
-    .menu-list {
-      ion-item {
-        --padding-start: 0;
-        --padding-end: 0;
-        justify-content: center;
-        
-        ion-icon[slot="start"] {
-          margin-right: 0;
-        }
-      }
-      
-      ion-accordion div[slot="content"] {
-        display: none;
-      }
-    }
-  }
-
   /* ========================= */
   /* FOOTER */
   /* ========================= */
@@ -167,11 +152,119 @@
     }
   }
 
+  /* ========================= */
+  /* COLLAPSED STATE */
+  /* ========================= */
   &.collapsed {
+    width: 80px;
+    
+    .brand {
+      justify-content: center;
+      padding: 12px 8px;
+      
+      .logo {
+        display: none;
+      }
+      
+      .brand-text {
+        display: none;
+      }
+    }
+
+    .menu-list {
+      ion-item {
+        --padding-start: 0;
+        --padding-end: 0;
+        justify-content: center;
+        
+        ion-icon[slot="start"] {
+          margin-right: 0;
+          margin-inline-end: 0 !important;
+        }
+      }
+      
+      /* Hide accordion content */
+      ion-accordion div[slot="content"] {
+        display: none;
+      }
+      
+      /* Disable accordion functionality visually */
+      ion-accordion-group {
+        ion-accordion {
+          /* Make accordion non-interactive when collapsed */
+          pointer-events: none;
+          
+          ion-item[slot="header"] {
+            pointer-events: auto; /* Allow clicking but won't expand */
+            
+            /* Force override to hide chevron */
+            &::after {
+              display: none !important;
+            }
+          }
+        }
+      }
+    }
+
     .sidebar-footer {
       .user-info {
         justify-content: center;
+        
+        .user-details {
+          display: none;
+        }
       }
     }
+    
+    /* Hide all labels */
+    ion-label {
+      display: none !important;
+    }
   }
+}
+
+/* ============================= */
+/* Global override for accordion chevrons when collapsed */
+/* ============================= */
+.sidebar-content.collapsed {
+  /* Target the accordion item specifically */
+  ion-accordion {
+    ion-item {
+      /* Remove the detail icon slot space */
+      --detail-icon-opacity: 0 !important;
+      --detail-icon-font-size: 0 !important;
+    }
+  }
+  
+  /* Hide the chevron using CSS variables */
+  --ion-item-detail-icon-opacity: 0;
+}
+
+/* ============================= */
+/* SMOOTH FADE FOR TEXT */
+/* ============================= */
+.brand-text,
+ion-label,
+.user-details {
+  opacity: 1;
+  transform: translateX(0);
+  transition:
+    opacity 0.2s ease,
+    transform 0.2s ease;
+  white-space: nowrap;
+}
+
+/* ============================= */
+/* TRANSITIONS */
+/* ============================= */
+ion-item {
+  transition: justify-content 0.2s ease;
+}
+
+.logo {
+  transition: all 0.2s ease;
+}
+
+.sidebar-footer {
+  transition: align-items 0.2s ease;
 }

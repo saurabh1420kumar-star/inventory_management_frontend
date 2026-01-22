@@ -12,12 +12,8 @@
         <h2>Nectar</h2>
       </div>
 
-      <ion-button
-        fill="clear"
-        class="menu-toggle"
-        (click)="onToggleSidebar()">
-        <ion-icon
-          [name]="isCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'">
+      <ion-button fill="clear" class="menu-toggle" (click)="onToggleSidebar()">
+        <ion-icon [name]="isCollapsed ? 'chevron-forward-outline' : 'chevron-back-outline'">
         </ion-icon>
       </ion-button>
     </div>
@@ -34,7 +30,7 @@
           <ion-label>Dashboard</ion-label>
         </ion-item>
 
-        <ion-accordion-group *appAcl="{ features: ['ACCOUNTS_MASTER', 'ACCOUNTS_TRANSACTION'] }">
+        <ion-accordion-group *appAcl="{ features: ['ACCOUNTS', 'ACCOUNTS_TRANSACTION'] }">
           <ion-accordion>
             <ion-item slot="header" button>
               <ion-icon name="reader-outline" slot="start"></ion-icon>
@@ -42,7 +38,7 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'ACCOUNTS_MASTER'" routerLink="/accounts-master">
+              <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master">
                 <ion-label>Master</ion-label>
               </ion-item>
               <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction">
@@ -52,7 +48,7 @@
           </ion-accordion>
         </ion-accordion-group>
 
-        <ion-accordion-group *appAcl="{ features: ['HR_DEPT', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
+        <ion-accordion-group *appAcl="{ features: ['HR', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
           <ion-accordion>
             <ion-item slot="header" button>
               <ion-icon name="people-outline" slot="start"></ion-icon>
@@ -60,7 +56,7 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'HR_DEPT'" routerLink="/hr/dept-master">
+              <ion-item *appAcl="'HR'" routerLink="/hr-department">
                 <ion-label>Department Master</ion-label>
               </ion-item>
               <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master">
@@ -73,7 +69,22 @@
           </ion-accordion>
         </ion-accordion-group>
 
-        <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTER', 'INVENTORY_TXN'] }">
+        <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="business-outline" slot="start"></ion-icon>
+              <ion-label>DISTRIBUTOR</ion-label>
+            </ion-item>
+
+            <div slot="content">
+              <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/">
+                <ion-label>Distributor Master</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+
+        <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
           <ion-accordion>
             <ion-item slot="header" button>
               <ion-icon name="cube-outline" slot="start"></ion-icon>
@@ -81,10 +92,10 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'INVENTORY_MASTER'" routerLink="/master-inventory">
+              <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory">
                 <ion-label>Master Inventory</ion-label>
               </ion-item>
-              <ion-item *appAcl="'INVENTORY_TXN'" routerLink="/machine-inventory">
+              <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory">
                 <ion-label>Machine Parts</ion-label>
               </ion-item>
             </div>

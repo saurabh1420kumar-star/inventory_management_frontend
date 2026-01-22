@@ -467,96 +467,6 @@
      </p>
     </div>
 
-    <!-- Feature Access -->
-<div>
-  <label class="block text-sm font-semibold text-gray-700 mb-3">
-    Feature Access *
-  </label>
-  <div class="grid grid-cols-2 gap-3">
-    <!-- Dashboard -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-dashboard" 
-        formControlName="featureDashboard"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-dashboard" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        Dashboard
-      </label>
-    </div>
-
-    <!-- Accounts -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-accounts" 
-        formControlName="featureAccounts"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-accounts" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        Accounts
-      </label>
-    </div>
-
-    <!-- HR -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-hr" 
-        formControlName="featureHR"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-hr" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        HR
-      </label>
-    </div>
-
-    <!-- Inventory -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-inventory" 
-        formControlName="featureInventory"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-inventory" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        Inventory
-      </label>
-    </div>
-
-    <!-- Transaction -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-transaction" 
-        formControlName="featureTransaction"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-transaction" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        Transaction
-      </label>
-    </div>
-
-    <!-- Distributor -->
-    <div class="flex items-center gap-3 px-4 py-3 border-2 border-gray-200 rounded-xl hover:border-blue-300 transition-all bg-white">
-      <input 
-        type="checkbox" 
-        id="feature-distributor" 
-        formControlName="featureDistributor"
-        class="w-5 h-5 text-blue-500 border-2 border-gray-300 rounded focus:ring-2 focus:ring-blue-400 cursor-pointer"
-      />
-      <label for="feature-distributor" class="text-sm font-medium text-gray-700 cursor-pointer select-none flex-1">
-        Distributor
-      </label>
-    </div>
-  </div>
-  <p *ngIf="employeeForm.get('featureAccess')?.invalid && employeeForm.get('featureAccess')?.touched" 
-     class="text-red-500 text-xs mt-2 font-medium">
-    Please select at least one feature access
-  </p>
-</div>
-
     <!-- Complete Address -->
     <div>
      <label class="block text-sm font-semibold text-gray-700 mb-2">
@@ -795,7 +705,7 @@
      Cancel
     </button>
     <button [disabled]="isLoading" class="flex-1 px-6 py-3.5 bg-gradient-to-r from-blue-500 to-teal-400 text-white rounded-xl hover:shadow-lg transition-all font-semibold disabled:opacity-50 disabled:cursor-not-allowed" type="submit">
-     <span *ngIf="!isLoading">
+     <span *ngIf="!isLoading" class="text-white">
       Save Changes
      </span>
      <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
