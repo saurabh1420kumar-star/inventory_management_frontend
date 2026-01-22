@@ -36,7 +36,7 @@ export interface CreateUserRequest {
   firstName: string;
   lastName: string;
   contactNo: string;
-  alternateContactNo: string;
+  alternateContactNo?: string;
   bloodGroup: string;
   completeAddress: string;
   dateOfBirth: string;
@@ -45,6 +45,10 @@ export interface CreateUserRequest {
   country: string;
   zip: string;
   roleType: string;
+  dateOfBirth: string; // ✅ Added (required)
+  gender: string; // ✅ Added (required)
+  bloodGroup?: string; // ✅ Added (optional but API may require it)
+  completeAddress: string; // ✅ Added (required)
 }
 
 export interface CreateUserResponse {
