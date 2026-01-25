@@ -1,6 +1,6 @@
 export const environment = {
   production: true,
-  apiUrl: 'http://localhost:8080',
-  permissionsUrl: 'http://localhost:8080/api/permissions',
-  hrUrl: 'http://localhost:8080/api/hr',
+  apiUrl: 'https://inventorymanagement-backend-w7r9.onrender.com',
+  permissionsUrl: 'https://inventorymanagement-backend-w7r9.onrender.com/api/permissions',
+  hrUrl: 'https://inventorymanagement-backend-w7r9.onrender.com/api/hr',
 };
