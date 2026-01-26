@@ -1,398 +1,438 @@
-<ion-content class="bg-[#F8F9FD]">
-  <div class="min-h-screen pb-10">
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Accounts</span> Ledger
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="handleRefresh()" class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
 
-    <div class="bg-white">
-      <div class="px-6 py-4 relative z-20">
-        <label class="block text-sm font-medium text-gray-500 mb-1.5">Select Ledger Account</label>
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <!-- Hero Banner -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+        <div class="relative px-8 py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Accounts Ledger</h1>
+              <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="book-outline" class="text-lg"></ion-icon>
+                Track Transactions, Purchases & Sales
+              </p>
+            </div>
+            
+            <div class="flex flex-wrap gap-3">
+              <button *ngIf="selectedAccount" (click)="isFormModalOpen = true" 
+                class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
+                <ion-icon name="add-circle-outline" class="text-xl"></ion-icon>
+                New Transaction
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Selector Card -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">Select Ledger Account</label>
         <div class="relative">
           <button (click)="isAccountSelectorOpen = !isAccountSelectorOpen"
-            class="w-full flex items-center justify-between px-4 py-2.5 bg-white border border-gray-300 rounded-md shadow-sm hover:border-gray-400 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all">
+            class="w-full flex items-center justify-between px-4 py-3.5 bg-slate-50 hover:bg-white border border-slate-200 rounded-xl shadow-sm hover:border-emerald-400 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
             <div class="flex items-center gap-3">
-              <div class="w-8 h-8 rounded bg-gray-100 flex items-center justify-center">
-                <ion-icon name="business-outline" class="text-lg text-gray-600"></ion-icon>
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <ion-icon name="business-outline" class="text-xl text-emerald-600"></ion-icon>
               </div>
               <div class="text-left">
-                <div class="font-semibold text-gray-900 text-sm">
+                <div class="font-semibold text-slate-800">
                   {{ selectedAccount ? selectedAccount.name : 'Select an account' }}
                 </div>
-                <div *ngIf="selectedAccount" class="text-xs text-gray-500">
+                <div *ngIf="selectedAccount" class="text-xs text-slate-500">
                   {{ selectedAccount.accountCode }}
                 </div>
               </div>
             </div>
-            <ion-icon name="chevron-down-outline" class="text-gray-400 text-base"></ion-icon>
+            <ion-icon [ngClass]="{'rotate-180': isAccountSelectorOpen}" name="chevron-down-outline" class="text-slate-400 text-lg transition-transform"></ion-icon>
           </button>
 
           <div *ngIf="isAccountSelectorOpen"
-            class="absolute top-full left-0 mt-1 w-full bg-white border border-gray-200 rounded-md shadow-lg max-h-60 overflow-y-auto z-30">
+            class="absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
             <div *ngFor="let account of ledgerAccounts" (click)="handleSelectAccount(account)"
-              class="px-4 py-2.5 hover:bg-gray-50 cursor-pointer flex justify-between items-center border-b border-gray-50 last:border-0">
+              class="px-4 py-3 hover:bg-emerald-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0 transition-colors">
               <div>
-                <div class="font-medium text-gray-900 text-sm">{{ account.name }}</div>
-                <div class="text-xs text-gray-500">{{ account.accountCode }}</div>
+                <div class="font-semibold text-slate-800">{{ account.name }}</div>
+                <div class="text-xs text-slate-500">{{ account.accountCode }}</div>
               </div>
+              <ion-icon *ngIf="selectedAccount?.id === account.id" name="checkmark-circle" class="text-emerald-500 text-xl"></ion-icon>
             </div>
           </div>
         </div>
       </div>
 
-      <div *ngIf="selectedAccount"
-        class="grid grid-cols-1 md:grid-cols-2 gap-6 px-6 pb-6 pt-2 border-b border-gray-100">
-        <div class="border border-gray-100 rounded-lg p-5 bg-white">
-          <div
-            class="text-[11px] font-bold text-gray-400 uppercase mb-3 tracking-wider px-2 py-1 bg-gray-50 inline-block rounded">
-            FROM</div>
-          <h3 class="font-bold text-base text-gray-900 mb-3">{{ selectedAccount.fromParty.name }}</h3>
-          <div class="space-y-2 text-sm text-gray-600">
+      <!-- Party Info Cards (FROM / TO) -->
+      <div *ngIf="selectedAccount" class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-slate-100 rounded-full mb-4">
+            <ion-icon name="arrow-forward-outline" class="text-slate-500"></ion-icon>
+            <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">FROM</span>
+          </div>
+          <h3 class="font-bold text-lg text-slate-800 mb-3">{{ selectedAccount.fromParty.name }}</h3>
+          <div class="space-y-2 text-sm text-slate-600">
             <div class="flex items-start gap-2.5">
-              <ion-icon name="location-outline" class="text-gray-400 mt-0.5 shrink-0"></ion-icon>
+              <ion-icon name="location-outline" class="text-slate-400 mt-0.5 shrink-0"></ion-icon>
               <div class="leading-relaxed">
                 <div>{{ selectedAccount.fromParty.address }}</div>
-                <div>{{ selectedAccount.fromParty.city }}, {{ selectedAccount.fromParty.state }} - {{
-                  selectedAccount.fromParty.pincode }}</div>
+                <div>{{ selectedAccount.fromParty.city }}, {{ selectedAccount.fromParty.state }} - {{ selectedAccount.fromParty.pincode }}</div>
               </div>
             </div>
-            <div class="flex items-center gap-2.5 mt-3 pt-3 border-t border-gray-50">
-              <div class="flex items-center gap-2 mr-4">
-                <ion-icon name="call-outline" class="text-gray-400 text-xs"></ion-icon>
+            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+              <div class="flex items-center gap-2">
+                <ion-icon name="call-outline" class="text-slate-400"></ion-icon>
                 <span class="text-xs">{{ selectedAccount.fromParty.phone }}</span>
               </div>
               <div class="flex items-center gap-2">
-                <ion-icon name="mail-outline" class="text-gray-400 text-xs"></ion-icon>
+                <ion-icon name="mail-outline" class="text-slate-400"></ion-icon>
                 <span class="text-xs truncate">{{ selectedAccount.fromParty.email }}</span>
               </div>
             </div>
-            <div class="flex items-center gap-2.5 pt-2">
-              <ion-icon name="document-text-outline" class="text-gray-400 text-xs"></ion-icon>
-              <span class="text-xs text-gray-500">GSTIN: {{ selectedAccount.fromParty.gstin }}</span>
+            <div class="flex items-center gap-2 pt-2">
+              <ion-icon name="document-text-outline" class="text-slate-400"></ion-icon>
+              <span class="text-xs text-slate-500">GSTIN: {{ selectedAccount.fromParty.gstin }}</span>
             </div>
           </div>
         </div>
 
-        <div class="border border-gray-100 rounded-lg p-5 bg-white">
-          <div
-            class="text-[11px] font-bold text-emerald-500 uppercase mb-3 tracking-wider px-2 py-1 bg-emerald-50 inline-block rounded">
-            TO</div>
-          <h3 class="font-bold text-base text-gray-900 mb-3">{{ selectedAccount.toParty.name }}</h3>
-          <div class="space-y-2 text-sm text-gray-600">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100 hover:shadow-md hover:border-emerald-200 transition-all">
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-emerald-50 rounded-full mb-4">
+            <ion-icon name="arrow-back-outline" class="text-emerald-500"></ion-icon>
+            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider">TO</span>
+          </div>
+          <h3 class="font-bold text-lg text-slate-800 mb-3">{{ selectedAccount.toParty.name }}</h3>
+          <div class="space-y-2 text-sm text-slate-600">
             <div class="flex items-start gap-2.5">
-              <ion-icon name="location-outline" class="text-gray-400 mt-0.5 shrink-0"></ion-icon>
+              <ion-icon name="location-outline" class="text-slate-400 mt-0.5 shrink-0"></ion-icon>
               <div class="leading-relaxed">
                 <div>{{ selectedAccount.toParty.address }}</div>
-                <div>{{ selectedAccount.toParty.city }}, {{ selectedAccount.toParty.state }} - {{
-                  selectedAccount.toParty.pincode }}</div>
+                <div>{{ selectedAccount.toParty.city }}, {{ selectedAccount.toParty.state }} - {{ selectedAccount.toParty.pincode }}</div>
               </div>
             </div>
-            <div class="flex items-center gap-2.5 mt-3 pt-3 border-t border-gray-50">
-              <div class="flex items-center gap-2 mr-4">
-                <ion-icon name="call-outline" class="text-gray-400 text-xs"></ion-icon>
+            <div class="flex items-center gap-4 mt-3 pt-3 border-t border-slate-100">
+              <div class="flex items-center gap-2">
+                <ion-icon name="call-outline" class="text-slate-400"></ion-icon>
                 <span class="text-xs">{{ selectedAccount.toParty.phone }}</span>
               </div>
               <div class="flex items-center gap-2">
-                <ion-icon name="mail-outline" class="text-gray-400 text-xs"></ion-icon>
+                <ion-icon name="mail-outline" class="text-slate-400"></ion-icon>
                 <span class="text-xs truncate">{{ selectedAccount.toParty.email }}</span>
               </div>
             </div>
-            <div class="flex items-center gap-2.5 pt-2">
-              <ion-icon name="document-text-outline" class="text-gray-400 text-xs"></ion-icon>
-              <span class="text-xs text-gray-500">GSTIN: {{ selectedAccount.toParty.gstin }}</span>
+            <div class="flex items-center gap-2 pt-2">
+              <ion-icon name="document-text-outline" class="text-slate-400"></ion-icon>
+              <span class="text-xs text-slate-500">GSTIN: {{ selectedAccount.toParty.gstin }}</span>
             </div>
           </div>
         </div>
       </div>
-    </div>
 
-    <div class="px-6 mt-6">
-
-      <div class="flex flex-col md:flex-row md:items-center justify-between gap-4 mb-6">
-        <div class="flex items-center gap-4">
-          <div class="w-12 h-12 bg-[#1F2937] rounded-lg flex items-center justify-center shadow-sm shrink-0">
-            <ion-icon name="book-outline" class="text-white text-2xl"></ion-icon>
-          </div>
-          <div *ngIf="selectedAccount">
-            <h1 class="text-xl font-bold text-gray-900">{{ selectedAccount.name }} - Ledger</h1>
-            <p class="text-sm text-gray-500">Track all product transactions, purchases, and sales</p>
-          </div>
-          <div *ngIf="!selectedAccount">
-            <h1 class="text-xl font-bold text-gray-900">Ledger</h1>
-            <p class="text-sm text-gray-500">Select an account to view ledger details</p>
-          </div>
-        </div>
-
-        <div *ngIf="selectedAccount" class="flex items-center gap-3">
-          <button
-            class="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-50 shadow-sm transition-colors">
-            <ion-icon name="settings-outline" class="text-base"></ion-icon>
-            Actions
-          </button>
-          <button (click)="handleRefresh()"
-            class="px-3 py-2 bg-white border border-gray-200 text-gray-700 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-50 shadow-sm transition-colors">
-            <ion-icon name="refresh-outline" class="text-base"></ion-icon>
-            Refresh
-          </button>
-          <button (click)="isFormModalOpen = true"
-            class="px-3 py-2 bg-[#1F2937] text-white rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-800 shadow-sm transition-colors">
-            <ion-icon name="add-outline" class="text-base"></ion-icon>
-            New Transaction
-          </button>
-        </div>
-      </div>
-
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
-        <div class="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100">
-          <div class="flex justify-between items-start mb-3">
-            <span class="text-sm font-medium text-gray-500">Total Debits</span>
-            <div class="w-8 h-8 rounded-full bg-red-50 flex items-center justify-center">
-              <ion-icon name="arrow-down-outline" class="text-red-500 text-base rotate-45"></ion-icon>
+      <!-- Stats Cards -->
+      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-red-100 hover:shadow-md hover:border-red-200 transition-all group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-red-50 flex items-center justify-center text-red-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="arrow-down-outline" class="text-2xl rotate-45"></ion-icon>
             </div>
           </div>
-          <div class="text-2xl font-bold text-red-600 tracking-tight">{{ formatCurrency(summary.totalDebits) }}</div>
-          <div class="text-xs text-gray-400 mt-1">All outgoing transactions</div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">Total Debits</h3>
+          <p class="text-2xl font-bold text-red-600">{{ formatCurrency(summary.totalDebits) }}</p>
+          <p class="text-xs text-slate-400 mt-1">All outgoing transactions</p>
         </div>
 
-        <div class="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100">
-          <div class="flex justify-between items-start mb-3">
-            <span class="text-sm font-medium text-gray-500">Total Credits</span>
-            <div class="w-8 h-8 rounded-full bg-emerald-50 flex items-center justify-center">
-              <ion-icon name="arrow-up-outline" class="text-emerald-500 text-base rotate-45"></ion-icon>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-emerald-100 hover:shadow-md hover:border-emerald-200 transition-all group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="arrow-up-outline" class="text-2xl rotate-45"></ion-icon>
             </div>
           </div>
-          <div class="text-2xl font-bold text-emerald-600 tracking-tight">{{ formatCurrency(summary.totalCredits) }}
-          </div>
-          <div class="text-xs text-gray-400 mt-1">All incoming transactions</div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">Total Credits</h3>
+          <p class="text-2xl font-bold text-emerald-600">{{ formatCurrency(summary.totalCredits) }}</p>
+          <p class="text-xs text-slate-400 mt-1">All incoming transactions</p>
         </div>
 
-        <div class="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100">
-          <div class="flex justify-between items-start mb-3">
-            <span class="text-sm font-medium text-gray-500">Net Balance</span>
-            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <ion-icon name="swap-vertical-outline" class="text-gray-600 text-base"></ion-icon>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100 hover:shadow-md hover:border-slate-200 transition-all group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-slate-50 flex items-center justify-center text-slate-600 group-hover:scale-110 transition-transform">
+              <ion-icon name="swap-vertical-outline" class="text-2xl"></ion-icon>
             </div>
           </div>
-          <div class="text-2xl font-bold text-gray-900 tracking-tight">{{ formatCurrency(summary.netBalance) }}</div>
-          <div class="text-xs text-gray-400 mt-1 flex items-center gap-1">
+          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">Net Balance</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ formatCurrency(summary.netBalance) }}</p>
+          <p class="text-xs text-slate-400 mt-1 flex items-center gap-1">
             <ion-icon *ngIf="summary.netBalance > 0" name="trending-up-outline" class="text-emerald-500"></ion-icon>
             <ion-icon *ngIf="summary.netBalance < 0" name="trending-down-outline" class="text-red-500"></ion-icon>
             Credits minus debits
-          </div>
+          </p>
         </div>
 
-        <div class="bg-white rounded-xl p-5 shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100">
-          <div class="flex justify-between items-start mb-3">
-            <span class="text-sm font-medium text-gray-500">Closing Balance</span>
-            <div class="w-8 h-8 rounded-full bg-gray-100 flex items-center justify-center">
-              <ion-icon name="analytics-outline" class="text-gray-600 text-base"></ion-icon>
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-blue-100 hover:shadow-md hover:border-blue-200 transition-all group">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center text-blue-500 group-hover:scale-110 transition-transform">
+              <ion-icon name="analytics-outline" class="text-2xl"></ion-icon>
             </div>
           </div>
-          <div class="text-2xl font-bold text-gray-900 tracking-tight">{{ formatCurrency(summary.closingBalance) }}
-          </div>
-          <div class="text-xs text-gray-400 mt-1">{{ summary.transactionCount }} transactions</div>
+          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">Closing Balance</h3>
+          <p class="text-2xl font-bold text-slate-800">{{ formatCurrency(summary.closingBalance) }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ summary.transactionCount }} transactions</p>
         </div>
       </div>
 
-      <div class="bg-white rounded-xl shadow-[0_1px_3px_rgba(0,0,0,0.05)] border border-gray-100 overflow-hidden">
-
-        <div class="p-4 border-b border-gray-100 flex flex-col md:flex-row gap-3 items-center justify-between">
-          <div class="relative w-full md:w-96">
-            <ion-icon name="search-outline"
-              class="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400 text-lg"></ion-icon>
+      <!-- Search + Filter Section -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+          <div class="flex-1 w-full relative">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
             <input type="text" [(ngModel)]="searchQuery" placeholder="Search by description, reference, or category..."
-              class="w-full pl-10 pr-4 py-2 bg-gray-50 border border-gray-200 rounded-md text-sm focus:outline-none focus:border-blue-500 focus:bg-white transition-colors">
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200">
           </div>
 
-          <div class="flex items-center gap-3 w-full md:w-auto z-10">
-            <div class="relative">
-              <button (click)="isTypeDropdownOpen = !isTypeDropdownOpen; isDateDropdownOpen = false"
-                class="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors min-w-[120px] justify-between">
-                <div class="flex items-center gap-2">
-                  <ion-icon name="funnel-outline" class="text-base"></ion-icon>
-                  <span>{{ typeFilter === 'all' ? 'All Types' : (typeFilter | titlecase) }}</span>
-                </div>
-                <ion-icon name="chevron-down-outline" class="text-gray-400"></ion-icon>
+          <div class="flex flex-wrap items-center gap-3">
+            <!-- Type Filter Buttons -->
+            <div class="flex gap-2">
+              <button (click)="typeFilter = 'all'" 
+                [class]="typeFilter === 'all' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                class="px-4 py-3 rounded-xl font-semibold text-sm transition-all">
+                All
               </button>
-              <div *ngIf="isTypeDropdownOpen"
-                class="absolute top-full right-0 mt-1 w-40 bg-white border border-gray-200 rounded-md shadow-lg py-1 z-20">
-                <div class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                  (click)="typeFilter = 'all'; isTypeDropdownOpen = false">All Types</div>
-                <div class="border-t border-gray-100 my-1"></div>
-                <div class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                  (click)="typeFilter = 'sale'; isTypeDropdownOpen = false">Sale</div>
-                <div class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                  (click)="typeFilter = 'purchase'; isTypeDropdownOpen = false">Purchase</div>
-                <div class="px-4 py-2 text-sm text-gray-700 hover:bg-gray-50 cursor-pointer"
-                  (click)="typeFilter = 'return'; isTypeDropdownOpen = false">Return</div>
-              </div>
+              <button (click)="typeFilter = 'sale'" 
+                [class]="typeFilter === 'sale' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                class="px-4 py-3 rounded-xl font-semibold text-sm transition-all">
+                Sale
+              </button>
+              <button (click)="typeFilter = 'purchase'" 
+                [class]="typeFilter === 'purchase' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                class="px-4 py-3 rounded-xl font-semibold text-sm transition-all">
+                Purchase
+              </button>
+              <button (click)="typeFilter = 'return'" 
+                [class]="typeFilter === 'return' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+                class="px-4 py-3 rounded-xl font-semibold text-sm transition-all">
+                Return
+              </button>
             </div>
 
+            <!-- Date Filter -->
             <div class="relative">
-              <button (click)="isDateDropdownOpen = !isDateDropdownOpen; isTypeDropdownOpen = false"
-                class="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors min-w-[140px] justify-between">
-                <div class="flex items-center gap-2">
-                  <ion-icon name="calendar-outline" class="text-base"></ion-icon>
-                  <span class="truncate max-w-[100px]">{{ dateRangeLabel }}</span>
-                </div>
-                <ion-icon *ngIf="!startDate && !endDate" name="chevron-down-outline" class="text-gray-400"></ion-icon>
-                <ion-icon *ngIf="startDate || endDate" name="close-outline" class="text-gray-400 hover:text-gray-600"
+              <button (click)="isDateDropdownOpen = !isDateDropdownOpen"
+                class="flex items-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-sm text-slate-600 transition-all">
+                <ion-icon name="calendar-outline" class="text-lg"></ion-icon>
+                <span class="truncate max-w-[100px]">{{ dateRangeLabel }}</span>
+                <ion-icon *ngIf="startDate || endDate" name="close-outline" class="text-slate-400 hover:text-slate-600"
                   (click)="clearDateFilter($event)"></ion-icon>
               </button>
               <div *ngIf="isDateDropdownOpen"
-                class="absolute top-full right-0 mt-1 w-64 bg-white border border-gray-200 rounded-md shadow-lg p-4 z-20">
+                class="absolute top-full right-0 mt-2 w-72 bg-white border border-slate-200 rounded-xl shadow-xl p-4 z-50">
                 <div class="space-y-3">
                   <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">From</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">From</label>
                     <input type="date" [(ngModel)]="startDate"
-                      class="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-500">
+                      class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-400">
                   </div>
                   <div>
-                    <label class="block text-xs font-medium text-gray-500 mb-1">To</label>
+                    <label class="block text-xs font-bold text-slate-500 uppercase mb-1">To</label>
                     <input type="date" [(ngModel)]="endDate"
-                      class="w-full px-3 py-2 border border-gray-200 rounded text-sm focus:outline-none focus:border-blue-500">
+                      class="w-full px-3 py-2 border border-slate-200 rounded-lg text-sm focus:outline-none focus:border-emerald-400">
                   </div>
                   <button (click)="applyDateFilter()"
-                    class="w-full py-2 bg-[#1F2937] text-white rounded text-sm font-medium hover:bg-gray-800 transition-colors">Apply</button>
+                    class="w-full py-2.5 bg-emerald-500 text-white rounded-lg text-sm font-semibold hover:bg-emerald-600 transition-colors">Apply Filter</button>
                 </div>
               </div>
             </div>
 
+            <!-- Export Button -->
             <button (click)="handleExport()"
-              class="px-3 py-2 bg-white border border-gray-200 text-gray-600 rounded-md text-sm font-medium flex items-center gap-2 hover:bg-gray-50 transition-colors ml-auto md:ml-0">
-              <ion-icon name="download-outline" class="text-base"></ion-icon>
+              class="flex items-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-sm text-slate-600 transition-all">
+              <ion-icon name="download-outline" class="text-lg"></ion-icon>
               Export
             </button>
           </div>
         </div>
+      </div>
 
-        <div class="overflow-x-auto">
-          <table class="w-full whitespace-nowrap">
-            <thead class="bg-gray-50 border-b border-gray-100">
-              <tr class="text-xs font-semibold tracking-wide text-left text-gray-500 uppercase">
-                <th class="px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors" (click)="handleSort('date')">
-                  <div class="flex items-center gap-1">Date <ion-icon *ngIf="sortField === 'date'"
-                      [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon></div>
-                </th>
-                <th class="px-4 py-3">Reference</th>
-                <th class="px-4 py-3 cursor-pointer hover:bg-gray-100 transition-colors"
-                  (click)="handleSort('description')">
-                  <div class="flex items-center gap-1">Description <ion-icon *ngIf="sortField === 'description'"
-                      [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon></div>
-                </th>
-                <th class="px-4 py-3 text-center">Type</th>
-                <th class="px-4 py-3 text-right cursor-pointer hover:bg-gray-100 transition-colors"
-                  (click)="handleSort('debit')">
-                  <div class="flex items-center justify-end gap-1">Debit <ion-icon *ngIf="sortField === 'debit'"
-                      [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon></div>
-                </th>
-                <th class="px-4 py-3 text-right cursor-pointer hover:bg-gray-100 transition-colors"
-                  (click)="handleSort('credit')">
-                  <div class="flex items-center justify-end gap-1">Credit <ion-icon *ngIf="sortField === 'credit'"
-                      [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon></div>
-                </th>
-                <th class="px-4 py-3 text-right cursor-pointer hover:bg-gray-100 transition-colors"
-                  (click)="handleSort('balance')">
-                  <div class="flex items-center justify-end gap-1">Balance <ion-icon *ngIf="sortField === 'balance'"
-                      [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon></div>
-                </th>
-                <th class="px-4 py-3 text-center">Actions</th>
-              </tr>
-            </thead>
-            <tbody class="divide-y divide-gray-50 bg-white">
-              <tr *ngIf="!selectedAccount">
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500 italic">Please select an account to view
-                  transactions.</td>
-              </tr>
-              <tr *ngIf="selectedAccount && paginatedTransactions.length === 0">
-                <td colspan="8" class="px-4 py-8 text-center text-gray-500 italic">No transactions found matching
-                  filters.</td>
-              </tr>
-
-              <tr *ngFor="let transaction of paginatedTransactions"
-                class="text-sm text-gray-700 hover:bg-gray-[2px] transition-colors">
-                <td class="px-4 py-3">{{ formatDate(transaction.date) }}</td>
-                <td class="px-4 py-3 font-mono text-gray-600">{{ transaction.reference }}</td>
-                <td class="px-4 py-3">
-                  <div class="font-medium text-gray-900">{{ transaction.description }}</div>
-                  <div class="text-xs text-gray-400 mt-0.5">{{ transaction.category }}</div>
-                </td>
-                <td class="px-4 py-3 text-center">
-                  <span [class]="getTransactionTypeConfig(transaction.type).className"
-                    class="px-2.5 py-0.5 rounded-full text-[11px] font-semibold border inline-flex items-center gap-1">
-                    <ion-icon [name]="getTransactionTypeConfig(transaction.type).icon" class="text-[10px]"></ion-icon>
-                    {{ getTransactionTypeConfig(transaction.type).label }}
-                  </span>
-                </td>
-                <td class="px-4 py-3 text-right font-medium" [class.text-red-600]="transaction.debit > 0"
-                  [class.text-gray-300]="transaction.debit === 0">
-                  {{ transaction.debit > 0 ? formatCurrency(transaction.debit) : '—' }}
-                </td>
-                <td class="px-4 py-3 text-right font-medium" [class.text-emerald-600]="transaction.credit > 0"
-                  [class.text-gray-300]="transaction.credit === 0">
-                  {{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}
-                </td>
-                <td class="px-4 py-3 text-right font-bold text-gray-900">{{ formatCurrency(transaction.balance) }}</td>
-                <td class="px-4 py-3 text-center">
-                  <button (click)="handleViewDetails(transaction)"
-                    class="text-gray-400 hover:text-gray-600 p-1 rounded-full hover:bg-gray-100 transition-colors">
-                    <ion-icon name="ellipsis-vertical-outline" class="text-lg"></ion-icon>
-                  </button>
-                </td>
-              </tr>
-            </tbody>
-          </table>
-        </div>
-
-        <div class="px-4 py-3 border-t border-gray-100 bg-white flex items-center justify-between text-sm text-gray-500"
-          *ngIf="selectedAccount && sortedTransactions.length > 0">
-          <div *ngIf="!selectedAccount || sortedTransactions.length === 0"></div>
-          <div class="flex items-center gap-4 ml-auto">
-            <div class="flex items-center gap-2">
-              <span>Rows per page:</span>
-              <select [(ngModel)]="rowsPerPage" (change)="currentPage = 1"
-                class="bg-white border border-gray-200 rounded px-2 py-1 text-sm focus:outline-none focus:border-blue-500 cursor-pointer">
-                <option *ngFor="let opt of rowsPerPageOptions" [value]="opt">{{ opt }}</option>
-              </select>
+      <!-- Data Table -->
+      <div *ngIf="selectedAccount && paginatedTransactions.length > 0" class="hidden lg:block bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden mb-6">
+        <div class="grid grid-cols-8 gap-4 px-6 py-4 bg-slate-50 border-b font-bold text-xs text-slate-600 uppercase tracking-wide">
+          <div class="cursor-pointer hover:text-emerald-600 transition-colors" (click)="handleSort('date')">
+            <div class="flex items-center gap-1">Date 
+              <ion-icon *ngIf="sortField === 'date'" [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
             </div>
-            <div class="flex items-center gap-2">
-              <span>{{ (currentPage - 1) * rowsPerPage + 1 }}-{{ Math.min(currentPage * rowsPerPage,
-                sortedTransactions.length) }} of {{ sortedTransactions.length }}</span>
+          </div>
+          <div>Reference</div>
+          <div class="col-span-2 cursor-pointer hover:text-emerald-600 transition-colors" (click)="handleSort('description')">
+            <div class="flex items-center gap-1">Description 
+              <ion-icon *ngIf="sortField === 'description'" [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
             </div>
-            <div class="flex items-center">
-              <button (click)="changePage(-1)" [disabled]="currentPage === 1"
-                class="p-1 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors">
-                <ion-icon name="chevron-back-outline" class="text-xl"></ion-icon>
-              </button>
-              <button (click)="changePage(1)" [disabled]="currentPage === totalPages"
-                class="p-1 text-gray-500 hover:text-gray-700 disabled:text-gray-300 disabled:cursor-not-allowed transition-colors">
-                <ion-icon name="chevron-forward-outline" class="text-xl"></ion-icon>
-              </button>
+          </div>
+          <div class="text-center">Type</div>
+          <div class="text-right cursor-pointer hover:text-emerald-600 transition-colors" (click)="handleSort('debit')">
+            <div class="flex items-center justify-end gap-1">Debit 
+              <ion-icon *ngIf="sortField === 'debit'" [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </div>
+          </div>
+          <div class="text-right cursor-pointer hover:text-emerald-600 transition-colors" (click)="handleSort('credit')">
+            <div class="flex items-center justify-end gap-1">Credit 
+              <ion-icon *ngIf="sortField === 'credit'" [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+            </div>
+          </div>
+          <div class="text-right cursor-pointer hover:text-emerald-600 transition-colors" (click)="handleSort('balance')">
+            <div class="flex items-center justify-end gap-1">Balance 
+              <ion-icon *ngIf="sortField === 'balance'" [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
             </div>
           </div>
         </div>
-      </div>
-    </div>
 
-  </div> <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-sm">
+        <div *ngFor="let transaction of paginatedTransactions" class="grid grid-cols-8 gap-4 px-6 py-5 items-center hover:bg-slate-50 transition-colors border-b border-slate-100">
+          <div class="text-sm text-slate-700">{{ formatDate(transaction.date) }}</div>
+          <div class="font-mono text-sm bg-slate-50 px-3 py-1 rounded-lg border border-slate-200 truncate">{{ transaction.reference }}</div>
+          <div class="col-span-2">
+            <div class="font-semibold text-slate-800">{{ transaction.description }}</div>
+            <div class="text-xs text-slate-400 mt-0.5">{{ transaction.category }}</div>
+          </div>
+          <div class="text-center">
+            <span [class]="getTransactionTypeConfig(transaction.type).className"
+              class="px-2.5 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
+              <ion-icon [name]="getTransactionTypeConfig(transaction.type).icon" class="text-xs"></ion-icon>
+              {{ getTransactionTypeConfig(transaction.type).label }}
+            </span>
+          </div>
+          <div class="text-right font-medium" [class.text-red-600]="transaction.debit > 0" [class.text-slate-300]="transaction.debit === 0">
+            {{ transaction.debit > 0 ? formatCurrency(transaction.debit) : '—' }}
+          </div>
+          <div class="text-right font-medium" [class.text-emerald-600]="transaction.credit > 0" [class.text-slate-300]="transaction.credit === 0">
+            {{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}
+          </div>
+          <div class="text-right">
+            <span class="font-bold text-slate-800">{{ formatCurrency(transaction.balance) }}</span>
+            <button (click)="handleViewDetails(transaction)" class="ml-2 text-slate-400 hover:text-slate-600 p-1 rounded-full hover:bg-slate-100 transition-colors">
+              <ion-icon name="ellipsis-vertical-outline" class="text-lg"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- Mobile Cards View -->
+      <div class="lg:hidden grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
+        <div *ngFor="let transaction of paginatedTransactions" class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-md hover:border-emerald-200 transition-all p-6">
+          <div class="flex items-start justify-between mb-4">
+            <div>
+              <h3 class="text-lg font-bold text-slate-800">{{ transaction.description }}</h3>
+              <p class="text-xs font-mono bg-slate-50 px-2 py-1 rounded border border-slate-200 mt-1">
+                {{ transaction.reference }}
+              </p>
+            </div>
+            <span [class]="getTransactionTypeConfig(transaction.type).className"
+              class="px-2.5 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
+              <ion-icon [name]="getTransactionTypeConfig(transaction.type).icon" class="text-xs"></ion-icon>
+              {{ getTransactionTypeConfig(transaction.type).label }}
+            </span>
+          </div>
+
+          <div class="grid grid-cols-2 gap-3 mb-4">
+            <div class="bg-red-50 rounded-lg p-3 border border-red-100">
+              <p class="text-xs font-bold text-red-600 uppercase">Debit</p>
+              <p class="text-lg font-bold text-red-600">{{ transaction.debit > 0 ? formatCurrency(transaction.debit) : '—' }}</p>
+            </div>
+            <div class="bg-emerald-50 rounded-lg p-3 border border-emerald-100">
+              <p class="text-xs font-bold text-emerald-600 uppercase">Credit</p>
+              <p class="text-lg font-bold text-emerald-600">{{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}</p>
+            </div>
+          </div>
+
+          <div class="flex items-center justify-between pt-3 border-t border-slate-100">
+            <div class="text-sm text-slate-500">{{ formatDate(transaction.date) }}</div>
+            <div class="font-bold text-slate-800">Balance: {{ formatCurrency(transaction.balance) }}</div>
+          </div>
+
+          <button (click)="handleViewDetails(transaction)" class="w-full mt-4 px-4 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-lg transition-colors">
+            View Details
+          </button>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="!selectedAccount" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="folder-open-outline" class="text-3xl text-slate-400"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">No Account Selected</h3>
+        <p class="text-slate-500">Please select an account above to view transactions.</p>
+      </div>
+
+      <div *ngIf="selectedAccount && paginatedTransactions.length === 0" class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+        <div class="w-16 h-16 bg-slate-100 rounded-2xl flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="search-outline" class="text-3xl text-slate-400"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-800 mb-2">No Transactions Found</h3>
+        <p class="text-slate-500">No transactions match your current filters.</p>
+      </div>
+
+      <!-- Pagination -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 flex items-center justify-between" *ngIf="selectedAccount && sortedTransactions.length > 0">
+        <div class="flex items-center gap-2 text-sm text-slate-600">
+          <span>Rows per page:</span>
+          <select [(ngModel)]="rowsPerPage" (change)="currentPage = 1"
+            class="bg-slate-50 border border-slate-200 rounded-lg px-3 py-2 text-sm focus:outline-none focus:border-emerald-400 cursor-pointer">
+            <option *ngFor="let opt of rowsPerPageOptions" [value]="opt">{{ opt }}</option>
+          </select>
+        </div>
+        <div class="flex items-center gap-4">
+          <span class="text-sm text-slate-600">{{ (currentPage - 1) * rowsPerPage + 1 }}-{{ Math.min(currentPage * rowsPerPage, sortedTransactions.length) }} of {{ sortedTransactions.length }}</span>
+          <div class="flex items-center gap-1">
+            <button (click)="changePage(-1)" [disabled]="currentPage === 1"
+              class="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 disabled:text-slate-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-lg transition-colors">
+              <ion-icon name="chevron-back-outline" class="text-xl"></ion-icon>
+            </button>
+            <button (click)="changePage(1)" [disabled]="currentPage === totalPages"
+              class="p-2 text-slate-500 hover:text-emerald-600 hover:bg-emerald-50 disabled:text-slate-300 disabled:cursor-not-allowed disabled:hover:bg-transparent rounded-lg transition-colors">
+              <ion-icon name="chevron-forward-outline" class="text-xl"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>  <!-- New Transaction Modal -->
+  <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-sm">
     <ng-template>
       <div class="bg-white h-full flex flex-col">
-        <div class="flex items-center justify-between p-4 border-b border-gray-100">
-          <h2 class="text-lg font-bold text-gray-900">New Transaction</h2>
-          <button (click)="isFormModalOpen = false" class="text-gray-400 hover:text-gray-600">
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+          <h2 class="text-lg font-bold text-white">New Transaction</h2>
+          <button (click)="isFormModalOpen = false" class="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/20 transition-colors">
             <ion-icon name="close-outline" class="text-2xl"></ion-icon>
           </button>
         </div>
-        <ion-content class="bg-gray-50">
-          <form (ngSubmit)="handleAddTransaction()" class="p-4 space-y-4">
+        <ion-content class="bg-slate-50">
+          <form (ngSubmit)="handleAddTransaction()" class="p-5 space-y-4">
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Date <span
-                    class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Date <span class="text-red-500">*</span></label>
                 <input type="date" [(ngModel)]="formData.date" name="date" required
-                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Type <span
-                    class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Type <span class="text-red-500">*</span></label>
                 <select [(ngModel)]="formData.type" name="type" required
-                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
                   <option value="purchase">Purchase</option>
                   <option value="sale">Sale</option>
                   <option value="return">Return</option>
@@ -401,115 +441,118 @@
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Reference <span
-                  class="text-red-500">*</span></label>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Reference <span class="text-red-500">*</span></label>
               <div class="flex gap-2">
                 <input type="text" [(ngModel)]="formData.reference" name="reference" required
-                  class="flex-1 px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                  class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
                 <button type="button" (click)="generateReference()"
-                  class="px-3 py-2 bg-gray-100 text-gray-600 rounded-md text-sm font-medium hover:bg-gray-200 transition-colors">Generate</button>
+                  class="px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">Generate</button>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Description <span
-                  class="text-red-500">*</span></label>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Description <span class="text-red-500">*</span></label>
               <input type="text" [(ngModel)]="formData.description" name="description" required
-                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Amount <span
-                    class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Amount <span class="text-red-500">*</span></label>
                 <input type="number" [(ngModel)]="formData.amount" name="amount" required min="0.01" step="0.01"
-                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm font-mono focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500"
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
                   placeholder="0.00">
               </div>
               <div>
-                <label class="block text-sm font-medium text-gray-700 mb-1">Category <span
-                    class="text-red-500">*</span></label>
+                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Category <span class="text-red-500">*</span></label>
                 <select [(ngModel)]="formData.category" name="category" required
-                  class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500">
+                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
                   <option value="" disabled selected>Select category</option>
                   <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
                 </select>
               </div>
             </div>
             <div>
-              <label class="block text-sm font-medium text-gray-700 mb-1">Notes</label>
+              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Notes</label>
               <textarea [(ngModel)]="formData.notes" name="notes" rows="3"
-                class="w-full px-3 py-2 bg-white border border-gray-300 rounded-md text-sm focus:outline-none focus:ring-1 focus:ring-blue-500 focus:border-blue-500 resize-none"></textarea>
+                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all resize-none"></textarea>
             </div>
           </form>
         </ion-content>
-        <div class="p-4 border-t border-gray-100 flex gap-3 bg-white">
+        <div class="p-5 border-t border-slate-100 flex gap-3 bg-white">
           <button (click)="isFormModalOpen = false"
-            class="flex-1 px-4 py-2.5 bg-white border border-gray-300 text-gray-700 rounded-md text-sm font-medium hover:bg-gray-50 transition-colors">Cancel</button>
+            class="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
           <button (click)="handleAddTransaction()"
-            class="flex-1 px-4 py-2.5 bg-[#1F2937] text-white rounded-md text-sm font-medium hover:bg-gray-800 transition-colors">Save
-            Transaction</button>
+            class="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors shadow-lg">Save Transaction</button>
         </div>
       </div>
     </ng-template>
   </ion-modal>
 
+  <!-- Transaction Details Modal -->
   <ion-modal [isOpen]="isDetailsModalOpen" (didDismiss)="isDetailsModalOpen = false" class="modal-sm items-center">
     <ng-template>
-      <div class="bg-white rounded-xl shadow-xl overflow-hidden max-w-md w-full m-auto">
-        <div class="flex items-center justify-between p-4 border-b border-gray-100 bg-gray-50">
-          <h2 class="text-base font-bold text-gray-900">Transaction Details</h2>
-          <button (click)="isDetailsModalOpen = false" class="text-gray-400 hover:text-gray-600">
-            <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      <div class="bg-white rounded-2xl shadow-xl overflow-hidden max-w-md w-full m-auto">
+        <div class="flex items-center justify-between p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+          <h2 class="text-lg font-bold text-white">Transaction Details</h2>
+          <button (click)="isDetailsModalOpen = false" class="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/20 transition-colors">
+            <ion-icon name="close-outline" class="text-2xl"></ion-icon>
           </button>
         </div>
         <div class="p-6" *ngIf="selectedTransaction">
-          <div class="flex justify-between items-start mb-4">
+          <div class="flex justify-between items-start mb-6">
             <div>
-              <div class="text-sm text-gray-500 mb-1">Reference</div>
-              <div class="font-mono font-medium text-lg">{{ selectedTransaction.reference }}</div>
+              <div class="text-xs font-bold text-slate-500 uppercase mb-1">Reference</div>
+              <div class="font-mono font-semibold text-lg text-slate-800">{{ selectedTransaction.reference }}</div>
             </div>
             <span [class]="getTransactionTypeConfig(selectedTransaction.type).className"
-              class="px-3 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
+              class="px-3 py-1.5 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
               <ion-icon [name]="getTransactionTypeConfig(selectedTransaction.type).icon"></ion-icon>
               {{ getTransactionTypeConfig(selectedTransaction.type).label }}
             </span>
           </div>
           <div class="space-y-4">
             <div>
-              <div class="text-sm text-gray-500 mb-1">Description</div>
-              <div class="font-medium text-gray-900">{{ selectedTransaction.description }}</div>
+              <div class="text-xs font-bold text-slate-500 uppercase mb-1">Description</div>
+              <div class="font-medium text-slate-800">{{ selectedTransaction.description }}</div>
             </div>
             <div class="grid grid-cols-2 gap-4">
               <div>
-                <div class="text-sm text-gray-500 mb-1">Date</div>
-                <div>{{ formatDate(selectedTransaction.date) }}</div>
+                <div class="text-xs font-bold text-slate-500 uppercase mb-1">Date</div>
+                <div class="text-slate-700">{{ formatDate(selectedTransaction.date) }}</div>
               </div>
               <div>
-                <div class="text-sm text-gray-500 mb-1">Category</div>
-                <div>{{ selectedTransaction.category }}</div>
+                <div class="text-xs font-bold text-slate-500 uppercase mb-1">Category</div>
+                <div class="text-slate-700">{{ selectedTransaction.category }}</div>
               </div>
             </div>
-            <div class="bg-gray-50 p-4 rounded-lg border border-gray-100 space-y-2">
+            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100 space-y-3">
               <div class="flex justify-between text-sm">
-                <span class="text-gray-500">Debit</span>
-                <span [class]="selectedTransaction.debit > 0 ? 'text-red-600 font-medium' : 'text-gray-400'">{{
-                  selectedTransaction.debit > 0 ? formatCurrency(selectedTransaction.debit) : '—' }}</span>
+                <span class="text-slate-500 font-medium">Debit</span>
+                <span [class]="selectedTransaction.debit > 0 ? 'text-red-600 font-bold' : 'text-slate-400'">
+                  {{ selectedTransaction.debit > 0 ? formatCurrency(selectedTransaction.debit) : '—' }}
+                </span>
               </div>
               <div class="flex justify-between text-sm">
-                <span class="text-gray-500">Credit</span>
-                <span [class]="selectedTransaction.credit > 0 ? 'text-emerald-600 font-medium' : 'text-gray-400'">{{
-                  selectedTransaction.credit > 0 ? formatCurrency(selectedTransaction.credit) : '—' }}</span>
+                <span class="text-slate-500 font-medium">Credit</span>
+                <span [class]="selectedTransaction.credit > 0 ? 'text-emerald-600 font-bold' : 'text-slate-400'">
+                  {{ selectedTransaction.credit > 0 ? formatCurrency(selectedTransaction.credit) : '—' }}
+                </span>
               </div>
-              <div class="border-t border-gray-200 pt-2 flex justify-between items-center">
-                <span class="font-semibold text-gray-900">Resulting Balance</span>
-                <span class="text-lg font-bold text-gray-900">{{ formatCurrency(selectedTransaction.balance) }}</span>
+              <div class="border-t border-slate-200 pt-3 flex justify-between items-center">
+                <span class="font-bold text-slate-800">Resulting Balance</span>
+                <span class="text-xl font-bold text-slate-800">{{ formatCurrency(selectedTransaction.balance) }}</span>
               </div>
             </div>
             <div *ngIf="selectedTransaction.notes">
-              <div class="text-sm text-gray-500 mb-1">Notes</div>
-              <div class="text-sm text-gray-700 bg-gray-50 p-3 rounded border border-gray-100 italic">{{
-                selectedTransaction.notes }}</div>
+              <div class="text-xs font-bold text-slate-500 uppercase mb-1">Notes</div>
+              <div class="text-sm text-slate-600 bg-slate-50 p-4 rounded-xl border border-slate-100 italic">
+                {{ selectedTransaction.notes }}
+              </div>
             </div>
           </div>
+        </div>
+        <div class="p-5 border-t border-slate-100 bg-slate-50">
+          <button (click)="isDetailsModalOpen = false"
+            class="w-full px-4 py-3 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors">Close</button>
         </div>
       </div>
     </ng-template>

@@ -37,7 +37,12 @@ import {
   analyticsOutline,
   chevronBackOutline,
   chevronForwardOutline,
-  funnelOutline
+  funnelOutline,
+  addCircleOutline,
+  checkmarkCircle,
+  arrowForwardOutline,
+  arrowBackOutline,
+  menuOutline
 } from 'ionicons/icons';
 
 // Interfaces needed for the view
@@ -148,7 +153,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-001',
       fromParty: {
         id: 'p1',
-        name: 'Your Company Pvt. Ltd.',
+        name: 'Nectar Pvt. Ltd.',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -203,6 +208,467 @@ export class AccountsMasterPage implements OnInit {
           balance: 57650.00,
           category: 'Returns'
         },
+        {
+          id: '4',
+          date: '2024-01-25',
+          description: 'Sale - Electronics Package',
+          reference: 'INV-1002',
+          type: 'sale',
+          debit: 0,
+          credit: 15200.00,
+          balance: 72850.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '5',
+          date: '2024-02-02',
+          description: 'Purchase - Raw Materials',
+          reference: 'PO-2001',
+          type: 'purchase',
+          debit: 22000.00,
+          credit: 0,
+          balance: 50850.00,
+          category: 'Office Supplies'
+        },
+        {
+          id: '6',
+          date: '2024-02-10',
+          description: 'Sale - Software License',
+          reference: 'INV-1003',
+          type: 'sale',
+          debit: 0,
+          credit: 35000.00,
+          balance: 85850.00,
+          category: 'Services'
+        },
+        {
+          id: '7',
+          date: '2024-02-18',
+          description: 'Adjustment - Inventory Correction',
+          reference: 'ADJ-001',
+          type: 'adjustment',
+          debit: 1200.00,
+          credit: 0,
+          balance: 84650.00,
+          category: 'Adjustments'
+        },
+        {
+          id: '8',
+          date: '2024-02-25',
+          description: 'Sale - Hardware Components',
+          reference: 'INV-1004',
+          type: 'sale',
+          debit: 0,
+          credit: 18500.00,
+          balance: 103150.00,
+          category: 'Product Sales'
+        },
+      ],
+    },
+    {
+      id: '2',
+      name: 'TechFlow Solutions',
+      accountCode: 'ACC-002',
+      fromParty: {
+        id: 'p1',
+        name: 'Your Company Pvt. Ltd.',
+        address: '123, Business Park, Sector 62',
+        city: 'Noida',
+        state: 'Uttar Pradesh',
+        pincode: '201301',
+        phone: '+91 120 4567890',
+        email: 'accounts@yourcompany.com',
+        gstin: '09AAACY1234F1Z5',
+      },
+      toParty: {
+        id: 'p3',
+        name: 'TechFlow Solutions Pvt. Ltd.',
+        address: '789, Tech Hub, Electronic City',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        pincode: '560100',
+        phone: '+91 80 12345678',
+        email: 'finance@techflow.in',
+        gstin: '29AABCT1234H1ZP',
+      },
+      openingBalance: 75000,
+      transactions: [
+        {
+          id: '1',
+          date: '2024-01-01',
+          description: 'Opening Balance',
+          reference: 'OB-2024-TF',
+          type: 'opening',
+          debit: 0,
+          credit: 75000.00,
+          balance: 75000.00,
+          category: 'Opening'
+        },
+        {
+          id: '2',
+          date: '2024-01-15',
+          description: 'Sale - Cloud Services Annual',
+          reference: 'INV-2001',
+          type: 'sale',
+          debit: 0,
+          credit: 120000.00,
+          balance: 195000.00,
+          category: 'Services'
+        },
+        {
+          id: '3',
+          date: '2024-01-28',
+          description: 'Purchase - Server Equipment',
+          reference: 'PO-3001',
+          type: 'purchase',
+          debit: 45000.00,
+          credit: 0,
+          balance: 150000.00,
+          category: 'Office Supplies'
+        },
+        {
+          id: '4',
+          date: '2024-02-05',
+          description: 'Sale - API Integration Package',
+          reference: 'INV-2002',
+          type: 'sale',
+          debit: 0,
+          credit: 28000.00,
+          balance: 178000.00,
+          category: 'Services'
+        },
+        {
+          id: '5',
+          date: '2024-02-12',
+          description: 'Return - Faulty Hardware',
+          reference: 'RET-002',
+          type: 'return',
+          debit: 5500.00,
+          credit: 0,
+          balance: 172500.00,
+          category: 'Returns'
+        },
+        {
+          id: '6',
+          date: '2024-02-20',
+          description: 'Sale - Support Contract Q1',
+          reference: 'INV-2003',
+          type: 'sale',
+          debit: 0,
+          credit: 45000.00,
+          balance: 217500.00,
+          category: 'Services'
+        },
+      ],
+    },
+    {
+      id: '3',
+      name: 'GlobalMart Retail',
+      accountCode: 'ACC-003',
+      fromParty: {
+        id: 'p1',
+        name: 'Your Company Pvt. Ltd.',
+        address: '123, Business Park, Sector 62',
+        city: 'Noida',
+        state: 'Uttar Pradesh',
+        pincode: '201301',
+        phone: '+91 120 4567890',
+        email: 'accounts@yourcompany.com',
+        gstin: '09AAACY1234F1Z5',
+      },
+      toParty: {
+        id: 'p4',
+        name: 'GlobalMart Retail India Ltd.',
+        address: '321, Commerce Tower, Andheri East',
+        city: 'Mumbai',
+        state: 'Maharashtra',
+        pincode: '400069',
+        phone: '+91 22 87654321',
+        email: 'accounts@globalmart.com',
+        gstin: '27AABCG9876M1ZH',
+      },
+      openingBalance: 125000,
+      transactions: [
+        {
+          id: '1',
+          date: '2024-01-01',
+          description: 'Opening Balance',
+          reference: 'OB-2024-GM',
+          type: 'opening',
+          debit: 0,
+          credit: 125000.00,
+          balance: 125000.00,
+          category: 'Opening'
+        },
+        {
+          id: '2',
+          date: '2024-01-10',
+          description: 'Sale - Bulk Order Electronics',
+          reference: 'INV-3001',
+          type: 'sale',
+          debit: 0,
+          credit: 250000.00,
+          balance: 375000.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '3',
+          date: '2024-01-20',
+          description: 'Purchase - Display Units',
+          reference: 'PO-4001',
+          type: 'purchase',
+          debit: 35000.00,
+          credit: 0,
+          balance: 340000.00,
+          category: 'Office Supplies'
+        },
+        {
+          id: '4',
+          date: '2024-01-30',
+          description: 'Return - Damaged Goods',
+          reference: 'RET-003',
+          type: 'return',
+          debit: 12500.00,
+          credit: 0,
+          balance: 327500.00,
+          category: 'Returns'
+        },
+        {
+          id: '5',
+          date: '2024-02-08',
+          description: 'Sale - Fashion Accessories',
+          reference: 'INV-3002',
+          type: 'sale',
+          debit: 0,
+          credit: 85000.00,
+          balance: 412500.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '6',
+          date: '2024-02-15',
+          description: 'Sale - Home Appliances',
+          reference: 'INV-3003',
+          type: 'sale',
+          debit: 0,
+          credit: 175000.00,
+          balance: 587500.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '7',
+          date: '2024-02-22',
+          description: 'Adjustment - Price Correction',
+          reference: 'ADJ-002',
+          type: 'adjustment',
+          debit: 0,
+          credit: 5000.00,
+          balance: 592500.00,
+          category: 'Adjustments'
+        },
+      ],
+    },
+    {
+      id: '4',
+      name: 'BuildRight Construction',
+      accountCode: 'ACC-004',
+      fromParty: {
+        id: 'p1',
+        name: 'Your Company Pvt. Ltd.',
+        address: '123, Business Park, Sector 62',
+        city: 'Noida',
+        state: 'Uttar Pradesh',
+        pincode: '201301',
+        phone: '+91 120 4567890',
+        email: 'accounts@yourcompany.com',
+        gstin: '09AAACY1234F1Z5',
+      },
+      toParty: {
+        id: 'p5',
+        name: 'BuildRight Construction Co.',
+        address: '555, Builder Complex, Whitefield',
+        city: 'Bangalore',
+        state: 'Karnataka',
+        pincode: '560066',
+        phone: '+91 80 55667788',
+        email: 'billing@buildright.in',
+        gstin: '29AABCB5566K1ZQ',
+      },
+      openingBalance: 200000,
+      transactions: [
+        {
+          id: '1',
+          date: '2024-01-01',
+          description: 'Opening Balance',
+          reference: 'OB-2024-BR',
+          type: 'opening',
+          debit: 0,
+          credit: 200000.00,
+          balance: 200000.00,
+          category: 'Opening'
+        },
+        {
+          id: '2',
+          date: '2024-01-12',
+          description: 'Sale - Industrial Equipment',
+          reference: 'INV-4001',
+          type: 'sale',
+          debit: 0,
+          credit: 450000.00,
+          balance: 650000.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '3',
+          date: '2024-01-22',
+          description: 'Purchase - Safety Gear',
+          reference: 'PO-5001',
+          type: 'purchase',
+          debit: 28000.00,
+          credit: 0,
+          balance: 622000.00,
+          category: 'Office Supplies'
+        },
+        {
+          id: '4',
+          date: '2024-02-01',
+          description: 'Sale - Construction Materials',
+          reference: 'INV-4002',
+          type: 'sale',
+          debit: 0,
+          credit: 320000.00,
+          balance: 942000.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '5',
+          date: '2024-02-14',
+          description: 'Return - Incorrect Specifications',
+          reference: 'RET-004',
+          type: 'return',
+          debit: 45000.00,
+          credit: 0,
+          balance: 897000.00,
+          category: 'Returns'
+        },
+      ],
+    },
+    {
+      id: '5',
+      name: 'MediCare Pharma',
+      accountCode: 'ACC-005',
+      fromParty: {
+        id: 'p1',
+        name: 'Your Company Pvt. Ltd.',
+        address: '123, Business Park, Sector 62',
+        city: 'Noida',
+        state: 'Uttar Pradesh',
+        pincode: '201301',
+        phone: '+91 120 4567890',
+        email: 'accounts@yourcompany.com',
+        gstin: '09AAACY1234F1Z5',
+      },
+      toParty: {
+        id: 'p6',
+        name: 'MediCare Pharmaceuticals Ltd.',
+        address: '100, Pharma City, Jubilee Hills',
+        city: 'Hyderabad',
+        state: 'Telangana',
+        pincode: '500033',
+        phone: '+91 40 99887766',
+        email: 'finance@medicare.co.in',
+        gstin: '36AABCM9988J1ZR',
+      },
+      openingBalance: 90000,
+      transactions: [
+        {
+          id: '1',
+          date: '2024-01-01',
+          description: 'Opening Balance',
+          reference: 'OB-2024-MC',
+          type: 'opening',
+          debit: 0,
+          credit: 90000.00,
+          balance: 90000.00,
+          category: 'Opening'
+        },
+        {
+          id: '2',
+          date: '2024-01-08',
+          description: 'Sale - Medical Supplies Q1',
+          reference: 'INV-5001',
+          type: 'sale',
+          debit: 0,
+          credit: 180000.00,
+          balance: 270000.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '3',
+          date: '2024-01-18',
+          description: 'Sale - Lab Equipment',
+          reference: 'INV-5002',
+          type: 'sale',
+          debit: 0,
+          credit: 95000.00,
+          balance: 365000.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '4',
+          date: '2024-01-28',
+          description: 'Purchase - Packaging Materials',
+          reference: 'PO-6001',
+          type: 'purchase',
+          debit: 15000.00,
+          credit: 0,
+          balance: 350000.00,
+          category: 'Office Supplies'
+        },
+        {
+          id: '5',
+          date: '2024-02-05',
+          description: 'Return - Expired Stock',
+          reference: 'RET-005',
+          type: 'return',
+          debit: 8500.00,
+          credit: 0,
+          balance: 341500.00,
+          category: 'Returns'
+        },
+        {
+          id: '6',
+          date: '2024-02-12',
+          description: 'Sale - Diagnostic Kits',
+          reference: 'INV-5003',
+          type: 'sale',
+          debit: 0,
+          credit: 125000.00,
+          balance: 466500.00,
+          category: 'Product Sales'
+        },
+        {
+          id: '7',
+          date: '2024-02-20',
+          description: 'Adjustment - Stock Reconciliation',
+          reference: 'ADJ-003',
+          type: 'adjustment',
+          debit: 3500.00,
+          credit: 0,
+          balance: 463000.00,
+          category: 'Adjustments'
+        },
+        {
+          id: '8',
+          date: '2024-02-28',
+          description: 'Sale - Surgical Instruments',
+          reference: 'INV-5004',
+          type: 'sale',
+          debit: 0,
+          credit: 210000.00,
+          balance: 673000.00,
+          category: 'Product Sales'
+        },
       ],
     }
   ];
@@ -214,6 +680,7 @@ export class AccountsMasterPage implements OnInit {
       'settings-outline': settingsOutline,
       'refresh-outline': refreshOutline,
       'add-outline': addOutline,
+      'add-circle-outline': addCircleOutline,
       'download-outline': downloadOutline,
       'search-outline': searchOutline,
       'filter-outline': filterOutline,
@@ -228,8 +695,12 @@ export class AccountsMasterPage implements OnInit {
       // Summary card icons used in images
       'arrow-down-outline': arrowDownOutline, // Debits
       'arrow-up-outline': arrowUpOutline,     // Credits
-      'swap-vertical-outline': scaleOutline, // Net Balance (using scale as swap isn't exact match but close)
+      'arrow-forward-outline': arrowForwardOutline,
+      'arrow-back-outline': arrowBackOutline,
+      'swap-vertical-outline': swapVerticalOutline, // Net Balance
       'analytics-outline': analyticsOutline, // Closing Balance waveform
+      'trending-up-outline': trendingUpOutline,
+      'trending-down-outline': trendingDownOutline,
       // Transaction type icons
       'cart-outline': cartOutline,
       'cash-outline': cashOutline,
@@ -241,7 +712,9 @@ export class AccountsMasterPage implements OnInit {
       'mail-outline': mailOutline,
       'document-text-outline': documentTextOutline,
       'business-outline': businessOutline,
-      'copy-outline': copyOutline
+      'copy-outline': copyOutline,
+      'checkmark-circle': checkmarkCircle,
+      'menu-outline': menuOutline
     });
   }
 
