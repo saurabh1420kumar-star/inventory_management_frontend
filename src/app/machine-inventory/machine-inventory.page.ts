@@ -50,6 +50,8 @@ export class MachineInventoryPage implements OnInit {
   addForm!: FormGroup;
   editForm!: FormGroup;
   selectedPartId: number | null = null;
+  currentPage = 1;
+  itemsPerPage = 6;
 
   filterTabs = [
     { key: 'all', label: 'All' },
@@ -97,6 +99,48 @@ export class MachineInventoryPage implements OnInit {
 
       return s && c;
     });
+    this.resetPagination();
+  }
+
+  /* ---------- PAGINATION ---------- */
+  get paginatedMachines(): InventoryItem[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredMachines.slice(startIndex, endIndex);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredMachines.length / this.itemsPerPage);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get showPagination(): boolean {
+    return this.filteredMachines.length > this.itemsPerPage;
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  resetPagination() {
+    this.currentPage = 1;
   }
 
   get statCards() {
@@ -138,6 +182,7 @@ export class MachineInventoryPage implements OnInit {
       next: () => {
         this.closeAddModal();
         this.loadMachines();
+        this.resetPagination();
         this.addForm.reset({
           category: 'MACHINE',
           condition: 'NEW',
@@ -221,4 +266,4 @@ export class MachineInventoryPage implements OnInit {
       }
     });
   }
-}
+  Math = Math;}

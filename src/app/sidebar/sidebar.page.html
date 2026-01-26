@@ -27,7 +27,7 @@
 
       <ion-list lines="none" class="menu-list">
 
-        <ion-item routerLink="/dashboard">
+        <ion-item routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
           <ion-icon name="albums-outline" slot="start"></ion-icon>
           <ion-label>Dashboard</ion-label>
         </ion-item>
@@ -40,10 +40,10 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master">
+              <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master" routerLinkActive="active">
                 <ion-label>Master</ion-label>
               </ion-item>
-              <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction">
+              <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction" routerLinkActive="active">
                 <ion-label>Transaction</ion-label>
               </ion-item>
             </div>
@@ -58,13 +58,13 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'HR'" routerLink="/hr-department">
+              <ion-item *appAcl="'HR'" routerLink="/hr-department" routerLinkActive="active">
                 <ion-label>Department Master</ion-label>
               </ion-item>
-              <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master">
+              <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master" routerLinkActive="active">
                 <ion-label>Designation Master</ion-label>
               </ion-item>
-              <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master">
+              <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master" routerLinkActive="active">
                 <ion-label>Employee Master</ion-label>
               </ion-item>
             </div>
@@ -79,7 +79,7 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor">
+              <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor" routerLinkActive="active">
                 <ion-label>Distributor Master</ion-label>
               </ion-item>
             </div>
@@ -94,27 +94,27 @@
             </ion-item>
 
             <div slot="content">
-              <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory">
+              <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory" routerLinkActive="active">
                 <ion-label>Master Inventory</ion-label>
               </ion-item>
-              <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory">
+              <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory" routerLinkActive="active">
                 <ion-label>Machine Parts</ion-label>
               </ion-item>
             </div>
           </ion-accordion>
         </ion-accordion-group>
 
-        <ion-item *appAcl="'COMPLAINTS'" routerLink="/complaints">
+        <ion-item *appAcl="'COMPLAINTS'" routerLink="/complaints" routerLinkActive="active">
           <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
           <ion-label>Complaints & Feedback</ion-label>
         </ion-item>
 
-        <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights">
+        <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active">
           <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
           <ion-label>User Rights</ion-label>
         </ion-item>
 
-        <ion-item *appAcl="'OPERATIONS'" routerLink="/operations">
+        <ion-item *appAcl="'OPERATIONS'" routerLink="/operations" routerLinkActive="active">
           <ion-icon name="document-text-outline" slot="start"></ion-icon>
           <ion-label>Operations</ion-label>
         </ion-item>

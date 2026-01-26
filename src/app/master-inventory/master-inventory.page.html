@@ -120,7 +120,7 @@
 
       <!-- INVENTORY LIST -->
       <div *ngIf="filteredInventory.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let item of filteredInventory" class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 overflow-hidden group">
+        <div *ngFor="let item of paginatedInventory" class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 overflow-hidden group">
           
           <!-- Image -->
           <div class="relative overflow-hidden bg-slate-100 h-48">
@@ -208,7 +208,42 @@
         </div>
       </div>
 
-      <!-- EMPTY STATE -->
+      <!-- PAGINATION -->
+      <div *ngIf="showPagination" class="flex items-center justify-between mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
+        <!-- Pagination Info -->
+        <div class="text-sm text-gray-600 font-medium">
+          Showing
+          <span class="font-bold text-emerald-600">
+            {{ (currentPage - 1) * itemsPerPage + 1 }}
+          </span>
+          to
+          <span class="font-bold text-emerald-600">
+            {{ Math.min(currentPage * itemsPerPage, filteredInventory.length) }}
+          </span>
+          of
+          <span class="font-bold text-emerald-600">
+            {{ filteredInventory.length }}
+          </span>
+          items
+        </div>
+        <!-- Pagination Controls -->
+        <div class="flex items-center gap-2">
+          <!-- Previous Button -->
+          <button (click)="previousPage()" [disabled]="currentPage === 1" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+          </button>
+          <!-- Page Numbers -->
+          <div class="flex gap-2">
+            <button (click)="goToPage(page)" *ngFor="let page of pages" [class.bg-gradient-to-r]="currentPage === page" [class.bg-gray-100]="currentPage !== page" [class.from-emerald-400]="currentPage === page" [class.hover:bg-gray-200]="currentPage !== page" [class.shadow-md]="currentPage === page" [class.text-gray-700]="currentPage !== page" [class.text-white]="currentPage === page" [class.to-teal-500]="currentPage === page" class="min-w-[44px] px-4 py-2.5 rounded-xl transition-all font-bold text-sm">
+              {{ page }}
+            </button>
+          </div>
+          <!-- Next Button -->
+          <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
       <div *ngIf="!isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
         <div class="flex flex-col items-center justify-center">
           <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center shadow-sm mb-4">

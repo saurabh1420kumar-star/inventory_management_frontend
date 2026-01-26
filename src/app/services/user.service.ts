@@ -91,6 +91,34 @@ export class UserService {
   }
 
   /**
+   * Reject/Suspend user by user ID
+   * @param userId User ID to reject/suspend
+   * @returns Observable of any response
+   */
+  rejectUser(userId: number): Observable<any> {
+    return this.http.delete<any>(
+      `${environment.permissionsUrl}/user_suspend/${userId}`
+    ).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
+   * Delete user by user ID
+   * @param userId User ID to delete
+   * @returns Observable of any response
+   */
+  deleteUser(userId: number): Observable<any> {
+    return this.http.delete<any>(
+      `${environment.permissionsUrl}/user_delete/${userId}`
+    ).pipe(
+      retry(1),
+      catchError(this.handleError)
+    );
+  }
+
+  /**
    * Handle HTTP errors
    * @param error HttpErrorResponse
    * @returns Error observable

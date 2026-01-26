@@ -111,6 +111,8 @@ export class MasterInventoryPage implements OnInit {
   isLoading = false;
   errorMessage = '';
   selectedItem: DisplayInventoryItem | null = null;
+  currentPage = 1;
+  itemsPerPage = 6;
   /* ---------- FORM ---------- */
   addForm: FormGroup;
   editForm: FormGroup;
@@ -166,6 +168,72 @@ export class MasterInventoryPage implements OnInit {
     });
   }
 
+  /* ---------- GET INDUSTRY-STANDARD IMAGE FOR ITEM ---------- */
+  getImageUrlForItem(itemName: string, category: ItemCategory): string {
+    const name = itemName.toLowerCase().trim();
+    
+    // Raw Materials - Diverse Industrial/Manufacturing images
+    const rawMaterials: { [key: string]: string } = {
+      'steel': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'rod': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'metal': 'https://images.unsplash.com/photo-1513828583688-c52646db42da?w=400&h=400&fit=crop',
+      'aluminum': 'https://images.unsplash.com/photo-1513828583688-c52646db42da?w=400&h=400&fit=crop',
+      'copper': 'https://images.unsplash.com/photo-1581092162562-40ff08a55b84?w=400&h=400&fit=crop',
+      'plastic': 'https://images.unsplash.com/photo-1578926314433-beab894d83da?w=400&h=400&fit=crop',
+      'plastic pellets': 'https://images.unsplash.com/photo-1578926314433-beab894d83da?w=400&h=400&fit=crop',
+      'resin': 'https://images.unsplash.com/photo-1578926314433-beab894d83da?w=400&h=400&fit=crop',
+      'fabric': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
+      'rubber': 'https://images.unsplash.com/photo-1578926314433-beab894d83da?w=400&h=400&fit=crop',
+      'glass': 'https://images.unsplash.com/photo-1551878745-acf28c019540?w=400&h=400&fit=crop',
+      'cement': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'wood': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
+      'leather': 'https://images.unsplash.com/photo-1548036328-c9fa89d128fa?w=400&h=400&fit=crop',
+      'paint': 'https://images.unsplash.com/photo-1578500494198-246f612d03b3?w=400&h=400&fit=crop',
+      'chemical': 'https://images.unsplash.com/photo-1576091160550-112173faf976?w=400&h=400&fit=crop',
+      'yarn': 'https://images.unsplash.com/photo-1599643478518-a784e5dc4c8f?w=400&h=400&fit=crop',
+      'wire': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+    };
+
+    // Finished Products - Diverse Consumer/Industrial products
+    const finishedProducts: { [key: string]: string } = {
+      'machine': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'pump': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'motor': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'gear': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'bearing': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'valve': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'pipe': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'fitting': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'fastener': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'bolt': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'screw': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+      'electronic': 'https://images.unsplash.com/photo-1518664006714-d8ca9d53ee8d?w=400&h=400&fit=crop',
+      'sensor': 'https://images.unsplash.com/photo-1518664006714-d8ca9d53ee8d?w=400&h=400&fit=crop',
+      'controller': 'https://images.unsplash.com/photo-1518664006714-d8ca9d53ee8d?w=400&h=400&fit=crop',
+      'switch': 'https://images.unsplash.com/photo-1518664006714-d8ca9d53ee8d?w=400&h=400&fit=crop',
+      'component': 'https://images.unsplash.com/photo-1518664006714-d8ca9d53ee8d?w=400&h=400&fit=crop',
+      'assembly': 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop',
+      'circuit': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
+      'board': 'https://images.unsplash.com/photo-1558618666-fcd25c85cd64?w=400&h=400&fit=crop',
+      'tool': 'https://images.unsplash.com/photo-1550355291-bbee04a92027?w=400&h=400&fit=crop',
+      'part': 'https://images.unsplash.com/photo-1565043666747-69f6646db940?w=400&h=400&fit=crop',
+    };
+
+    const imageMap = category === 'raw_material' ? rawMaterials : finishedProducts;
+    
+    // Check for exact or partial matches
+    for (const [key, url] of Object.entries(imageMap)) {
+      if (name.includes(key)) {
+        return url;
+      }
+    }
+
+    // Default images based on category
+    return category === 'raw_material'
+      ? 'https://images.unsplash.com/photo-1513828583688-c52646db42da?w=400&h=400&fit=crop'
+      : 'https://images.unsplash.com/photo-1581092918056-0c4c3acd3789?w=400&h=400&fit=crop';
+  }
+
   /* ---------- MAP API ITEM ---------- */
   mapToDisplayItem(item: ApiInventoryItem): DisplayInventoryItem {
     let status: ItemStatus = 'in_stock';
@@ -192,7 +260,7 @@ export class MasterInventoryPage implements OnInit {
       lowStock: isLowStock,
       materialCode: (item as any).materialCode,
       minimumThreshold,
-      imageUrl: 'https://via.placeholder.com/300x300.png?text=No+Image'
+      imageUrl: this.getImageUrlForItem(item.name, category)
     };
   }
 
@@ -219,6 +287,47 @@ export class MasterInventoryPage implements OnInit {
       { label: 'Finished Products', value: this.stats.finishedProducts },
       { label: 'Total Value', value: '₹' + this.stats.totalValue.toFixed(2) }
     ];
+  }
+
+  /* ---------- PAGINATION ---------- */
+  get paginatedInventory(): DisplayInventoryItem[] {
+    const startIndex = (this.currentPage - 1) * this.itemsPerPage;
+    const endIndex = startIndex + this.itemsPerPage;
+    return this.filteredInventory.slice(startIndex, endIndex);
+  }
+
+  get totalPages(): number {
+    return Math.ceil(this.filteredInventory.length / this.itemsPerPage);
+  }
+
+  get pages(): number[] {
+    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  }
+
+  get showPagination(): boolean {
+    return this.filteredInventory.length > this.itemsPerPage;
+  }
+
+  goToPage(page: number) {
+    if (page >= 1 && page <= this.totalPages) {
+      this.currentPage = page;
+    }
+  }
+
+  nextPage() {
+    if (this.currentPage < this.totalPages) {
+      this.currentPage++;
+    }
+  }
+
+  previousPage() {
+    if (this.currentPage > 1) {
+      this.currentPage--;
+    }
+  }
+
+  resetPagination() {
+    this.currentPage = 1;
   }
 
   /* ---------- FILTER ---------- */
@@ -291,6 +400,7 @@ export class MasterInventoryPage implements OnInit {
     this.inventoryService.createItem(payload).subscribe({
       next: (created) => {
         this.inventory.unshift(this.mapToDisplayItem(created));
+        this.resetPagination();
         this.closeAddModal();
         alert('Item added successfully!');
       },
@@ -363,7 +473,19 @@ export class MasterInventoryPage implements OnInit {
     });
   }
 
+  onSearchChange(event: any) {
+    this.searchTerm = event.target.value || '';
+    this.resetPagination();
+  }
+
+  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product') {
+    this.activeTab = tab;
+    this.resetPagination();
+  }
+
   refreshInventory() {
     this.loadInventory();
   }
+
+  Math = Math;
 }

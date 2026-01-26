@@ -72,4 +72,11 @@ export class DistributorService {
       `${this.baseUrl}/distributors/${id}`
     );
   }
+
+  // NEW: get sales persons list
+  getSalesPersons(): Observable<ApiResponse<any[]>> {
+    return this.http.get<ApiResponse<any[]>>(
+      `${this.baseUrl}/hrmaster/salespersons`
+    );
+  }
 }

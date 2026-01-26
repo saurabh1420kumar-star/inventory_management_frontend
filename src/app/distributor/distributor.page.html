@@ -1,333 +1,385 @@
-<!-- distributor-master.component.html -->
-<ion-header>
-  <ion-toolbar class="px-6 py-2">
-    <div class="flex justify-between items-center">
-      <div>
-        <h1 class="text-2xl font-bold m-0">Distributor Master</h1>
-        <p class="text-sm text-gray-500 m-0">Manage and track all your distributor records</p>
-      </div>
-      <ion-button (click)="openAddModal()" class="add-btn">
-        <ion-icon slot="start" name="add-outline"></ion-icon>
-        Add Distributor
-      </ion-button>
-    </div>
+<!-- Main Container with Gradient Theme -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Distributor </span> Master
+    </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <ion-content class="ion-padding">
-  <!-- Stats Cards -->
-  <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-    <div class="stat-card bg-blue-50 border-blue-200">
-      <div class="flex items-center gap-3">
-        <div class="icon-wrapper bg-blue-500">
-          <ion-icon name="business-outline" class="text-white"></ion-icon>
-        </div>
-        <div>
-          <div class="text-3xl font-bold text-blue-700">{{ totalDistributors }}</div>
-          <div class="text-sm text-gray-600">Total Distributors</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-card bg-green-50 border-green-200">
-      <div class="flex items-center gap-3">
-        <div class="icon-wrapper bg-green-500">
-          <ion-icon name="person-outline" class="text-white"></ion-icon>
-        </div>
-        <div>
-          <div class="text-3xl font-bold text-green-700">{{ totalAssignedPersons }}</div>
-          <div class="text-sm text-gray-600">Assigned Persons</div>
-        </div>
-      </div>
-    </div>
-
-    <div class="stat-card bg-orange-50 border-orange-200">
-      <div class="flex items-center gap-3">
-        <div class="icon-wrapper bg-orange-500">
-          <ion-icon name="business-outline" class="text-white"></ion-icon>
-        </div>
-        <div>
-          <div class="text-3xl font-bold text-orange-700">{{ totalDistributorTypes }}</div>
-          <div class="text-sm text-gray-600">Distributor Types</div>
-        </div>
-      </div>
-    </div>
-  </div>
-
-  <!-- Search Bar -->
-  <ion-searchbar
-    [(ngModel)]="searchQuery"
-    (ionInput)="onSearchChange($event)"
-    placeholder="Search by name, person, phone, or address..."
-    class="custom-searchbar mb-4"
-  ></ion-searchbar>
-
-  <!-- Distributor Cards Grid -->
-  <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
-    <div *ngFor="let distributor of filteredDistributors" 
-         class="distributor-card" 
-         (click)="openDetailsModal(distributor)">
-      <div class="card-header">
-        <div class="icon-wrapper-card bg-blue-500">
-          <ion-icon name="business-outline" class="text-white text-2xl"></ion-icon>
-        </div>
-      </div>
-      
-      <div class="card-body">
-        <h3 class="text-lg font-semibold mb-2">{{ distributor.name }}</h3>
-        <ion-badge class="mb-3" color="primary">{{ distributor.distributorType }}</ion-badge>
-        
-        <div class="space-y-2">
-          <div class="flex items-center gap-2 text-sm text-gray-600">
-            <ion-icon name="person-outline" class="text-base"></ion-icon>
-            <span>{{ distributor.assignedPerson }}</span>
-          </div>
-          
-          <div class="flex items-center gap-2 text-sm text-gray-600">
-            <ion-icon name="call-outline" class="text-base"></ion-icon>
-            <span>{{ distributor.contact }}</span>
-          </div>
-          
-          <div class="flex items-start gap-2 text-sm text-gray-600">
-            <ion-icon name="location-outline" class="text-base mt-0.5"></ion-icon>
-            <span class="line-clamp-2">{{ distributor.address }}</span>
+  <div class="flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-8">
+    <!-- Fixed Header Section -->
+    <div class="flex-shrink-0 p-5">
+      <div class="max-w-7xl mx-auto">
+        <!-- Gradient Banner Container -->
+        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-2xl p-10">
+          <!-- Top Section: Title and Buttons -->
+          <div class="flex items-center justify-between mb-6">
+            <!-- Left: Title with Badge -->
+            <div>
+              <h1 class="text-2xl font-bold mb-4">
+                <span class="text-emerald-600">Distributor</span>
+                <span class="text-white">Management</span>
+              </h1>
+              <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+                <ion-icon class="text-white text-sm" name="shield-checkmark-outline"></ion-icon>
+                <span class="text-white text-sm font-medium">Manage and track all distributor records</span>
+              </div>
+            </div>
+            <!-- Right: Action Buttons -->
+            <div class="flex items-center gap-3">
+              <button (click)="openAddModal()" class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
+                <ion-icon class="text-xl" name="add-outline"></ion-icon>
+                <span>Add Distributor</span>
+              </button>
+            </div>
           </div>
         </div>
+
+        <!-- Search and Stats Section -->
+        <div class="mb-8">
+          <div class="flex gap-4 mt-6 mb-6">
+            <!-- Search Input -->
+            <div class="flex-1 relative">
+              <ion-icon class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl pointer-events-none z-10" name="search-outline"></ion-icon>
+              <input 
+                (input)="onSearchChange($event)" 
+                [value]="searchQuery" 
+                class="w-full pl-12 pr-4 py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium" 
+                placeholder="Search by name, person, phone, or address..." 
+                type="text"
+              />
+            </div>
+          </div>
+
+          <!-- Stats Cards -->
+          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+            <!-- Card: Total Distributors -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-blue-500 font-medium text-sm">Total Distributors</span>
+                <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <ion-icon class="text-lg" name="business-outline"></ion-icon>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-slate-800">{{ totalDistributors }}</div>
+            </div>
+
+            <!-- Card: Assigned Persons -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-emerald-500 font-medium text-sm">Sales Persons</span>
+                <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                  <ion-icon class="text-lg" name="person-outline"></ion-icon>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-slate-800">{{ totalAssignedPersons }}</div>
+            </div>
+
+            <!-- Card: Distributor Types -->
+            <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-2">
+                <span class="text-orange-500 font-medium text-sm">Distributor Types</span>
+                <div class="p-2 bg-orange-50 rounded-lg text-orange-600">
+                  <ion-icon class="text-lg" name="layers-outline"></ion-icon>
+                </div>
+              </div>
+              <div class="text-3xl font-bold text-slate-800">{{ totalDistributorTypes }}</div>
+            </div>
+          </div>
+        </div>
       </div>
     </div>
-  </div>
 
-  <!-- Empty State -->
-  <div *ngIf="filteredDistributors.length === 0" class="text-center py-16">
-    <ion-icon name="business-outline" class="text-6xl text-gray-300 mb-4"></ion-icon>
-    <p class="text-gray-500">
-      {{ searchQuery ? 'No distributors found. Try adjusting your search query' : 'No distributors found' }}
-    </p>
-    <ion-button *ngIf="!searchQuery" (click)="openAddModal()" class="mt-4">
-      <ion-icon slot="start" name="add-outline"></ion-icon>
-      Add Distributor
-    </ion-button>
+    <!-- Scrollable Distributor Cards Section -->
+    <div class="flex-1 overflow-auto px-5">
+      <div class="max-w-7xl mx-auto">
+        <!-- Distributor Cards Grid -->
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+          <div *ngFor="let distributor of filteredDistributors" 
+               class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer overflow-hidden"
+               (click)="openDetailsModal(distributor)">
+            <!-- Card Header with Gradient -->
+            <div class="bg-gradient-to-r from-emerald-400 to-teal-400 p-4">
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <ion-icon name="business-outline" class="text-white text-2xl"></ion-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <h3 class="text-white font-bold truncate">{{ distributor.name }}</h3>
+                  <span class="inline-block px-2 py-0.5 bg-white/20 rounded-full text-white text-xs">{{ distributor.distributorType }}</span>
+                </div>
+              </div>
+            </div>
+            
+            <!-- Card Body -->
+            <div class="p-4 space-y-3">
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
+                <span class="truncate">{{ distributor.assignedPerson }}</span>
+              </div>
+              
+              <div class="flex items-center gap-2 text-sm text-gray-600">
+                <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
+                <span>{{ distributor.contact }}</span>
+              </div>
+              
+              <div class="flex items-start gap-2 text-sm text-gray-600">
+                <ion-icon name="location-outline" class="text-emerald-500 mt-0.5"></ion-icon>
+                <span class="line-clamp-2">{{ distributor.address }}</span>
+              </div>
+            </div>
+
+            <!-- Card Footer -->
+            <div class="px-4 pb-4">
+              <button class="w-full py-2 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-lg text-sm font-medium transition-colors">
+                View Details
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredDistributors.length === 0" class="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+            <ion-icon name="business-outline" class="text-4xl text-slate-400"></ion-icon>
+          </div>
+          <p class="text-slate-500 mb-4">
+            {{ searchQuery ? 'No distributors found. Try adjusting your search query' : 'No distributors found' }}
+          </p>
+          <button *ngIf="!searchQuery" (click)="openAddModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold">
+            <ion-icon name="add-outline"></ion-icon>
+            Add Distributor
+          </button>
+        </div>
+      </div>
+    </div>
   </div>
 </ion-content>
 
 <!-- Add/Edit Modal -->
 <ion-modal [isOpen]="showAddModal" (didDismiss)="closeAddModal()">
   <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <div class="flex items-center gap-3 px-4 py-2">
-          <div class="icon-wrapper bg-blue-500">
-            <ion-icon name="add-outline" class="text-white"></ion-icon>
-          </div>
-          <ion-title>Add New Distributor</ion-title>
-        </div>
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+        <ion-title class="text-white font-bold">Add New Distributor</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeAddModal()" class="text-white">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding">
-      <form [formGroup]="distributorForm" (ngSubmit)="onSubmitForm()">
+    <ion-content class="ion-padding bg-slate-50">
+      <form [formGroup]="distributorForm" (ngSubmit)="onSubmitForm()" class="max-w-7xl mx-auto">
         <!-- Basic Information -->
-        <div class="section-header">
-          <ion-icon name="business-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Basic Information</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Distributor Name *</ion-label>
-            <ion-input
-              formControlName="name"
-              placeholder="Enter distributor name"
-              class="custom-input"
-            ></ion-input>
-            <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('name') }}
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="business-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Basic Information</h3>
           </div>
 
-          <div>
-            <ion-label class="form-label">Assigned Person *</ion-label>
-            <ion-input
-              formControlName="assignedPerson"
-              placeholder="Enter assigned person name"
-              class="custom-input"
-            ></ion-input>
-            <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('assignedPerson') }}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Distributor Name *</label>
+              <ion-input
+                formControlName="name"
+                placeholder="Enter distributor name"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('name') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Type of Distributor *</ion-label>
-            <ion-select
-              formControlName="distributorType"
-              placeholder="Select distributor type"
-              class="custom-select"
-            >
-              <ion-select-option value="Wholesale">Wholesale</ion-select-option>
-              <ion-select-option value="Retail">Retail</ion-select-option>
-              <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
-              <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
-            </ion-select>
-            <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('distributorType') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person *</label>
+              <ion-select
+                formControlName="assignedPerson"
+                placeholder="Select a sales person"
+                class="custom-select"
+                [disabled]="salesPersons.length === 0"
+              >
+                <ion-select-option *ngFor="let person of salesPersons" 
+                  [value]="(person.firstName || '') + ' ' + (person.lastName || '')">
+                  {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
+                </ion-select-option>
+              </ion-select>
+              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">
+                Loading sales persons...
+              </div>
+              <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('assignedPerson') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Type of Company *</ion-label>
-            <ion-select
-              formControlName="companyType"
-              placeholder="Select company type"
-              class="custom-select"
-            >
-              <ion-select-option value="Private Limited">Private Limited</ion-select-option>
-              <ion-select-option value="LLP">LLP</ion-select-option>
-              <ion-select-option value="Partnership">Partnership</ion-select-option>
-              <ion-select-option value="Proprietorship">Proprietorship</ion-select-option>
-            </ion-select>
-            <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('companyType') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Type of Distributor *</label>
+              <ion-select
+                formControlName="distributorType"
+                placeholder="Select distributor type"
+                class="custom-select"
+              >
+                <ion-select-option value="Wholesale">Wholesale</ion-select-option>
+                <ion-select-option value="Retail">Retail</ion-select-option>
+                <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
+                <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('distributorType') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Type of Company *</label>
+              <ion-select
+                formControlName="companyType"
+                placeholder="Select company type"
+                class="custom-select"
+              >
+                <ion-select-option value="Private Limited">Private Limited</ion-select-option>
+                <ion-select-option value="LLP">LLP</ion-select-option>
+                <ion-select-option value="Partnership">Partnership</ion-select-option>
+                <ion-select-option value="Proprietorship">Proprietorship</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('companyType') }}
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Contact Information -->
-        <div class="section-header">
-          <ion-icon name="call-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Contact Information</h3>
-        </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="call-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Contact Information</h3>
+          </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Email Address *</ion-label>
-            <ion-input
-              formControlName="email"
-              type="email"
-              placeholder="email@example.com"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="mail-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('email')?.invalid && distributorForm.get('email')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('email') }}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Email Address *</label>
+              <ion-input
+                formControlName="email"
+                type="email"
+                placeholder="email@example.com"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('email')?.invalid && distributorForm.get('email')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('email') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Contact Number *</ion-label>
-            <ion-input
-              formControlName="contact"
-              type="tel"
-              placeholder="Enter contact number"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="call-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('contact')?.invalid && distributorForm.get('contact')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('contact') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Contact Number *</label>
+              <ion-input
+                formControlName="contact"
+                type="tel"
+                placeholder="Enter contact number"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('contact')?.invalid && distributorForm.get('contact')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('contact') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Alternate Contact</ion-label>
-            <ion-input
-              formControlName="alternateContact"
-              type="tel"
-              placeholder="Enter alternate contact"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="call-outline"></ion-icon>
-            </ion-input>
-          </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Alternate Contact</label>
+              <ion-input
+                formControlName="alternateContact"
+                type="tel"
+                placeholder="Enter alternate contact"
+                class="custom-input"
+              ></ion-input>
+            </div>
 
-          <div class="md:col-span-2">
-            <ion-label class="form-label">Address *</ion-label>
-            <ion-textarea
-              formControlName="address"
-              placeholder="Enter full address"
-              rows="3"
-              class="custom-textarea"
-            >
-              <ion-icon slot="start" name="location-outline"></ion-icon>
-            </ion-textarea>
-            <div *ngIf="distributorForm.get('address')?.invalid && distributorForm.get('address')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('address') }}
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Address *</label>
+              <ion-textarea
+                formControlName="address"
+                placeholder="Enter full address"
+                rows="3"
+                class="custom-textarea"
+              ></ion-textarea>
+              <div *ngIf="distributorForm.get('address')?.invalid && distributorForm.get('address')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('address') }}
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Legal Documents -->
-        <div class="section-header">
-          <ion-icon name="document-text-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Legal Documents</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Aadhar Number *</ion-label>
-            <ion-input
-              formControlName="aadharNo"
-              placeholder="XXXX XXXX XXXX"
-              maxlength="12"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="card-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('aadharNo') }}
-            </div>
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="document-text-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Legal Documents</h3>
           </div>
 
-          <div>
-            <ion-label class="form-label">PAN Number *</ion-label>
-            <ion-input
-              formControlName="panNo"
-              placeholder="ABCDE1234F"
-              maxlength="10"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="document-text-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('panNo') }}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Aadhar Number *</label>
+              <ion-input
+                formControlName="aadharNo"
+                placeholder="XXXX XXXX XXXX"
+                maxlength="12"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('aadharNo') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">GST Number *</ion-label>
-            <ion-input
-              formControlName="gstNo"
-              placeholder="22AAAAA0000A1Z5"
-              maxlength="15"
-              class="custom-input"
-            >
-              <ion-icon slot="start" name="document-text-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" 
-                 class="error-message">
-              {{ getErrorMessage('gstNo') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">PAN Number *</label>
+              <ion-input
+                formControlName="panNo"
+                placeholder="ABCDE1234F"
+                maxlength="10"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('panNo') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
+              <ion-input
+                formControlName="gstNo"
+                placeholder="22AAAAA0000A1Z5"
+                maxlength="15"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('gstNo') }}
+              </div>
             </div>
           </div>
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-3 justify-end mt-6">
-          <ion-button (click)="closeAddModal()" fill="outline" color="medium">
+        <div class="flex gap-3 justify-end">
+          <button type="button" (click)="closeAddModal()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
             Cancel
-          </ion-button>
-          <ion-button type="submit" color="primary">
+          </button>
+          <button type="submit" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg">
             Add Distributor
-          </ion-button>
+          </button>
         </div>
       </form>
     </ion-content>
@@ -337,286 +389,327 @@
 <!-- Details Modal -->
 <ion-modal [isOpen]="showDetailsModal" (didDismiss)="closeDetailsModal()">
   <ng-template>
-    <ion-header>
-      <ion-toolbar>
-        <div class="flex items-center justify-between px-4">
-          <div class="flex items-center gap-3 py-2">
-            <div class="icon-wrapper bg-blue-500">
-              <ion-icon name="business-outline" class="text-white"></ion-icon>
-            </div>
-            <ion-title>Distributor Details</ion-title>
-          </div>
-          <ion-button (click)="closeDetailsModal()" fill="clear">
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+        <ion-title class="text-white font-bold">Distributor Details</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeDetailsModal()" class="text-white">
             <ion-icon slot="icon-only" name="close-outline"></ion-icon>
           </ion-button>
-        </div>
+        </ion-buttons>
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding" *ngIf="selectedDistributor && !isEditing">
-      <!-- Header -->
-      <div class="details-header mb-6">
-        <div class="flex items-start justify-between mb-4">
-          <div class="flex items-center gap-4">
-            <div class="icon-wrapper-large bg-blue-500">
-              <ion-icon name="business-outline" class="text-white text-3xl"></ion-icon>
-            </div>
-            <div>
-              <h2 class="text-xl font-bold mb-2">{{ selectedDistributor.name }}</h2>
-              <div class="flex gap-2">
-                <ion-badge color="primary">{{ selectedDistributor.distributorType }}</ion-badge>
-                <ion-badge color="secondary">{{ selectedDistributor.companyType }}</ion-badge>
+    <ion-content class="ion-padding bg-slate-50" *ngIf="selectedDistributor && !isEditing">
+      <div class="max-w-7xl mx-auto">
+        <!-- Header Card -->
+        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl p-6 mb-4 text-white">
+          <div class="flex items-start justify-between">
+            <div class="flex items-center gap-4">
+              <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ion-icon name="business-outline" class="text-white text-3xl"></ion-icon>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold mb-2">{{ selectedDistributor.name }}</h2>
+                <div class="flex gap-2">
+                  <span class="px-3 py-1 bg-white/20 rounded-full text-sm">{{ selectedDistributor.distributorType }}</span>
+                  <span class="px-3 py-1 bg-white/20 rounded-full text-sm">{{ selectedDistributor.companyType }}</span>
+                </div>
               </div>
             </div>
-          </div>
-          <ion-button (click)="onEditDistributor()" class="edit-btn">
-            <ion-icon slot="start" name="create-outline"></ion-icon>
-            Edit
-          </ion-button>
-        </div>
-      </div>
-
-      <!-- Contact Information -->
-      <div class="details-section mb-6">
-        <div class="section-header mb-4">
-          <ion-icon name="call-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Contact Information</h3>
-        </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div class="detail-item">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="person-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Assigned Person</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.assignedPerson }}</p>
-          </div>
-
-          <div class="detail-item">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="mail-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Email Address</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.email }}</p>
-          </div>
-
-          <div class="detail-item">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="call-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Contact Number</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.contact }}</p>
-          </div>
-
-          <div class="detail-item">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="call-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Alternate Contact</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.alternateContact || 'N/A' }}</p>
-          </div>
-
-          <div class="detail-item md:col-span-2">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="location-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Address</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.address }}</p>
+            <button (click)="onEditDistributor()" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all">
+              <ion-icon name="create-outline"></ion-icon>
+              Edit
+            </button>
+            <button (click)="openDeleteConfirmModal()" class="flex items-center gap-2 px-4 py-2 bg-red-500/30 hover:bg-red-500/40 rounded-xl transition-all text-red-600">
+              <ion-icon name="trash-outline"></ion-icon>
+              Delete
+            </button>
           </div>
         </div>
-      </div>
 
-      <!-- Legal Documents -->
-      <div class="details-section mb-6">
-        <div class="section-header mb-4">
-          <ion-icon name="document-text-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Legal Documents</h3>
+        <!-- Contact Information -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="call-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Contact Information</h3>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-slate-500 font-medium">Assigned Person</span>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.assignedPerson }}</p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <ion-icon name="mail-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-slate-500 font-medium">Email Address</span>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.email }}</p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-slate-500 font-medium">Contact Number</span>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.contact }}</p>
+            </div>
+
+            <div class="p-3 bg-slate-50 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-slate-500 font-medium">Alternate Contact</span>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.alternateContact || 'N/A' }}</p>
+            </div>
+
+            <div class="md:col-span-2 p-3 bg-slate-50 rounded-xl">
+              <div class="flex items-center gap-2 mb-1">
+                <ion-icon name="location-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-slate-500 font-medium">Address</span>
+              </div>
+              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.address }}</p>
+            </div>
+          </div>
         </div>
-        
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-          <div class="detail-item bg-gray-50 p-3 rounded-lg">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="card-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">Aadhar Number</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.aadharNo }}</p>
-          </div>
 
-          <div class="detail-item bg-gray-50 p-3 rounded-lg">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="document-text-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">PAN Number</span>
-            </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.panNo }}</p>
+        <!-- Legal Documents -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="document-text-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Legal Documents</h3>
           </div>
-
-          <div class="detail-item bg-gray-50 p-3 rounded-lg">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="document-text-outline" class="text-gray-400"></ion-icon>
-              <span class="text-xs text-gray-500">GST Number</span>
+          
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
+              <div class="flex items-center gap-2 mb-2">
+                <ion-icon name="card-outline" class="text-blue-500"></ion-icon>
+                <span class="text-xs text-blue-600 font-medium">Aadhar Number</span>
+              </div>
+              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.aadharNo }}</p>
             </div>
-            <p class="text-sm font-medium m-0">{{ selectedDistributor.gstNo }}</p>
+
+            <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
+              <div class="flex items-center gap-2 mb-2">
+                <ion-icon name="document-text-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-xs text-emerald-600 font-medium">PAN Number</span>
+              </div>
+              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.panNo }}</p>
+            </div>
+
+            <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
+              <div class="flex items-center gap-2 mb-2">
+                <ion-icon name="document-text-outline" class="text-orange-500"></ion-icon>
+                <span class="text-xs text-orange-600 font-medium">GST Number</span>
+              </div>
+              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.gstNo }}</p>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Metadata -->
-      <div class="flex items-center gap-2 text-sm text-gray-500 mb-6">
-        <ion-icon name="calendar-outline"></ion-icon>
-        <span>Added on {{ formatDate(selectedDistributor.createdAt) }}</span>
-      </div>
+        <!-- Metadata -->
+        <div class="flex items-center gap-2 text-sm text-slate-500 mb-4 justify-center">
+          <ion-icon name="calendar-outline"></ion-icon>
+          <span>Added on {{ formatDate(selectedDistributor.createdAt) }}</span>
+        </div>
 
-      <!-- Close Button -->
-      <div class="flex justify-end">
-        <ion-button (click)="closeDetailsModal()" fill="outline" color="medium">
-          Close
-        </ion-button>
+        <!-- Close Button -->
+        <div class="flex justify-center">
+          <button (click)="closeDetailsModal()" class="px-8 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
+            Close
+          </button>
+        </div>
       </div>
     </ion-content>
 
     <!-- Edit Form in Details Modal -->
-    <ion-content class="ion-padding" *ngIf="isEditing">
-      <form [formGroup]="distributorForm" (ngSubmit)="onSubmitForm()">
-        <!-- Same form structure as Add Modal -->
-        <div class="section-header">
-          <ion-icon name="business-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Basic Information</h3>
-        </div>
+    <ion-content class="ion-padding bg-slate-50" *ngIf="isEditing">
+      <form [formGroup]="distributorForm" (ngSubmit)="onSubmitForm()" class="max-w-7xl mx-auto">
+        <!-- Basic Information -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="business-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Basic Information</h3>
+          </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Distributor Name *</ion-label>
-            <ion-input formControlName="name" placeholder="Enter distributor name" class="custom-input"></ion-input>
-            <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" class="error-message">
-              {{ getErrorMessage('name') }}
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Distributor Name *</label>
+              <ion-input formControlName="name" placeholder="Enter distributor name" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('name') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Assigned Person *</ion-label>
-            <ion-input formControlName="assignedPerson" placeholder="Enter assigned person name" class="custom-input"></ion-input>
-            <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="error-message">
-              {{ getErrorMessage('assignedPerson') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
+              <ion-select formControlName="assignedPerson" placeholder="Select a sales person" class="custom-select" [disabled]="salesPersons.length === 0">
+                <ion-select-option *ngFor="let person of salesPersons" [value]="(person.firstName || '') + ' ' + (person.lastName || '')">
+                  {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
+                </ion-select-option>
+              </ion-select>
+              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">
+                Loading sales persons...
+              </div>
+              <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('assignedPerson') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Type of Distributor *</ion-label>
-            <ion-select formControlName="distributorType" placeholder="Select distributor type" class="custom-select">
-              <ion-select-option value="Wholesale">Wholesale</ion-select-option>
-              <ion-select-option value="Retail">Retail</ion-select-option>
-              <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
-              <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
-            </ion-select>
-            <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" class="error-message">
-              {{ getErrorMessage('distributorType') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Type of Distributor *</label>
+              <ion-select formControlName="distributorType" placeholder="Select distributor type" class="custom-select">
+                <ion-select-option value="Wholesale">Wholesale</ion-select-option>
+                <ion-select-option value="Retail">Retail</ion-select-option>
+                <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
+                <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('distributorType') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">Type of Company *</ion-label>
-            <ion-select formControlName="companyType" placeholder="Select company type" class="custom-select">
-              <ion-select-option value="Private Limited">Private Limited</ion-select-option>
-              <ion-select-option value="LLP">LLP</ion-select-option>
-              <ion-select-option value="Partnership">Partnership</ion-select-option>
-              <ion-select-option value="Proprietorship">Proprietorship</ion-select-option>
-            </ion-select>
-            <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" class="error-message">
-              {{ getErrorMessage('companyType') }}
-            </div>
-          </div>
-        </div>
-
-        <div class="section-header">
-          <ion-icon name="call-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Contact Information</h3>
-        </div>
-
-        <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Email Address *</ion-label>
-            <ion-input formControlName="email" type="email" placeholder="email@example.com" class="custom-input">
-              <ion-icon slot="start" name="mail-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('email')?.invalid && distributorForm.get('email')?.touched" class="error-message">
-              {{ getErrorMessage('email') }}
-            </div>
-          </div>
-
-          <div>
-            <ion-label class="form-label">Contact Number *</ion-label>
-            <ion-input formControlName="contact" type="tel" placeholder="Enter contact number" class="custom-input">
-              <ion-icon slot="start" name="call-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('contact')?.invalid && distributorForm.get('contact')?.touched" class="error-message">
-              {{ getErrorMessage('contact') }}
-            </div>
-          </div>
-
-          <div>
-            <ion-label class="form-label">Alternate Contact</ion-label>
-            <ion-input formControlName="alternateContact" type="tel" placeholder="Enter alternate contact" class="custom-input">
-              <ion-icon slot="start" name="call-outline"></ion-icon>
-            </ion-input>
-          </div>
-
-          <div class="md:col-span-2">
-            <ion-label class="form-label">Address *</ion-label>
-            <ion-textarea formControlName="address" placeholder="Enter full address" rows="3" class="custom-textarea">
-              <ion-icon slot="start" name="location-outline"></ion-icon>
-            </ion-textarea>
-            <div *ngIf="distributorForm.get('address')?.invalid && distributorForm.get('address')?.touched" class="error-message">
-              {{ getErrorMessage('address') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Type of Company *</label>
+              <ion-select formControlName="companyType" placeholder="Select company type" class="custom-select">
+                <ion-select-option value="Private Limited">Private Limited</ion-select-option>
+                <ion-select-option value="LLP">LLP</ion-select-option>
+                <ion-select-option value="Partnership">Partnership</ion-select-option>
+                <ion-select-option value="Proprietorship">Proprietorship</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('companyType') }}
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="section-header">
-          <ion-icon name="document-text-outline" class="text-blue-500"></ion-icon>
-          <h3 class="text-base font-semibold text-blue-600 m-0">Legal Documents</h3>
+        <!-- Contact Information -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="call-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Contact Information</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Email Address *</label>
+              <ion-input formControlName="email" type="email" placeholder="email@example.com" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('email')?.invalid && distributorForm.get('email')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('email') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Contact Number *</label>
+              <ion-input formControlName="contact" type="tel" placeholder="Enter contact number" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('contact')?.invalid && distributorForm.get('contact')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('contact') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Alternate Contact</label>
+              <ion-input formControlName="alternateContact" type="tel" placeholder="Enter alternate contact" class="custom-input"></ion-input>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Address *</label>
+              <ion-textarea formControlName="address" placeholder="Enter full address" rows="3" class="custom-textarea"></ion-textarea>
+              <div *ngIf="distributorForm.get('address')?.invalid && distributorForm.get('address')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('address') }}
+              </div>
+            </div>
+          </div>
         </div>
 
-        <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-          <div>
-            <ion-label class="form-label">Aadhar Number *</ion-label>
-            <ion-input formControlName="aadharNo" placeholder="XXXX XXXX XXXX" maxlength="12" class="custom-input">
-              <ion-icon slot="start" name="card-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" class="error-message">
-              {{ getErrorMessage('aadharNo') }}
-            </div>
+        <!-- Legal Documents -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="document-text-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Legal Documents</h3>
           </div>
 
-          <div>
-            <ion-label class="form-label">PAN Number *</ion-label>
-            <ion-input formControlName="panNo" placeholder="ABCDE1234F" maxlength="10" class="custom-input">
-              <ion-icon slot="start" name="document-text-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" class="error-message">
-              {{ getErrorMessage('panNo') }}
+          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Aadhar Number *</label>
+              <ion-input formControlName="aadharNo" placeholder="XXXX XXXX XXXX" maxlength="12" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('aadharNo') }}
+              </div>
             </div>
-          </div>
 
-          <div>
-            <ion-label class="form-label">GST Number *</ion-label>
-            <ion-input formControlName="gstNo" placeholder="22AAAAA0000A1Z5" maxlength="15" class="custom-input">
-              <ion-icon slot="start" name="document-text-outline"></ion-icon>
-            </ion-input>
-            <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" class="error-message">
-              {{ getErrorMessage('gstNo') }}
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">PAN Number *</label>
+              <ion-input formControlName="panNo" placeholder="ABCDE1234F" maxlength="10" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('panNo') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
+              <ion-input formControlName="gstNo" placeholder="22AAAAA0000A1Z5" maxlength="15" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('gstNo') }}
+              </div>
             </div>
           </div>
         </div>
 
-        <div class="flex gap-3 justify-end mt-6">
-          <ion-button (click)="cancelEdit()" fill="outline" color="medium">
+        <!-- Actions -->
+        <div class="flex gap-3 justify-end">
+          <button type="button" (click)="cancelEdit()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
             Cancel
-          </ion-button>
-          <ion-button type="submit" color="primary">
+          </button>
+          <button type="submit" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg">
             Update Distributor
-          </ion-button>
+          </button>
         </div>
       </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- Delete Confirmation Modal -->
+<ion-modal [isOpen]="showDeleteConfirmModal" (didDismiss)="closeDeleteConfirmModal()">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar class="bg-red-500">
+        <ion-title class="text-white font-bold">Confirm Delete</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeDeleteConfirmModal()" class="text-white">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+
+    <ion-content class="ion-padding">
+      <div class="flex flex-col items-center justify-center py-12">
+        <div class="w-20 h-20 rounded-full bg-red-100 flex items-center justify-center mb-6">
+          <ion-icon name="trash-outline" class="text-4xl text-red-600"></ion-icon>
+        </div>
+        
+        <h2 class="text-xl font-bold text-slate-800 mb-2">Delete Distributor?</h2>
+        <p class="text-center text-slate-600 mb-6" *ngIf="selectedDistributor">
+          Are you sure you want to delete <strong>{{ selectedDistributor.name }}</strong>? This action cannot be undone.
+        </p>
+
+        <div class="flex gap-3 w-full max-w-sm">
+          <button type="button" (click)="closeDeleteConfirmModal()" class="flex-1 px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
+            Cancel
+          </button>
+          <button type="button" (click)="confirmDelete()" class="flex-1 px-6 py-3 bg-red-500 text-white rounded-xl hover:bg-red-600 transition-all font-semibold">
+            Delete
+          </button>
+        </div>
+      </div>
     </ion-content>
   </ng-template>
 </ion-modal>

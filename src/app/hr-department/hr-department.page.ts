@@ -32,7 +32,7 @@ interface Employee {
 }
 
 type EmployeeStatus = 'All' | 'Pending' | 'Active' | 'Rejected';
-type ModalType = 'add' | 'edit' | 'view' | 'delete' | null;
+type ModalType = 'add' | 'edit' | 'view' | 'delete' | 'reject' | null;
 
 interface RoleType {
   value: string;
@@ -198,6 +198,7 @@ export class HrDepartmentPage implements OnInit {
         return 'Pending';
       case 'REJECTED':
       case 'INACTIVE':
+      case 'SUSPENDED':
         return 'Rejected';
       default:
         return 'Pending';
@@ -340,6 +341,11 @@ export class HrDepartmentPage implements OnInit {
 
   openDeleteModal(employee: Employee) {
     this.activeModal = 'delete';
+    this.selectedEmployee = employee;
+  }
+
+  openRejectModal(employee: Employee) {
+    this.activeModal = 'reject';
     this.selectedEmployee = employee;
   }
 
@@ -486,11 +492,35 @@ export class HrDepartmentPage implements OnInit {
 
   onDeleteEmployee() {
     if (this.selectedEmployee) {
-      this.employees = this.employees.filter(emp => emp.id !== this.selectedEmployee!.id);
-      this.closeModal();
-      if (this.paginatedEmployees.length === 0 && this.currentPage > 1) {
-        this.currentPage--;
-      }
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      const userId = Number(this.selectedEmployee.id);
+      console.log('Deleting user:', userId);
+
+      this.userService.deleteUser(userId).subscribe({
+        next: (response) => {
+          console.log('User deleted successfully:', response);
+          
+          this.successMessage = 'Employee deleted successfully!';
+          this.employees = this.employees.filter(emp => emp.id !== this.selectedEmployee!.id);
+          this.isLoading = false;
+
+          if (this.paginatedEmployees.length === 0 && this.currentPage > 1) {
+            this.currentPage--;
+          }
+
+          setTimeout(() => {
+            this.closeModal();
+          }, 1500);
+        },
+        error: (error) => {
+          this.errorMessage = error.message || 'Failed to delete employee. Please try again.';
+          this.isLoading = false;
+          console.error('Error deleting user:', error);
+        }
+      });
     }
   }
 
@@ -528,10 +558,35 @@ export class HrDepartmentPage implements OnInit {
 
   onRejectEmployee() {
     if (this.selectedEmployee) {
-      this.employees = this.employees.map(emp =>
-        emp.id === this.selectedEmployee!.id ? { ...emp, status: 'Rejected' as const } : emp
-      );
-      this.closeModal();
+      this.isLoading = true;
+      this.errorMessage = '';
+      this.successMessage = '';
+
+      const userId = Number(this.selectedEmployee.id);
+
+      console.log('Rejecting/Suspending user:', userId);
+
+      this.userService.rejectUser(userId).subscribe({
+        next: (response) => {
+          console.log('User rejected successfully:', response);
+          
+          this.successMessage = 'Employee rejected successfully!';
+          // Update local employee status
+          this.employees = this.employees.map(emp =>
+            emp.id === this.selectedEmployee!.id ? { ...emp, status: 'Rejected' as const } : emp
+          );
+          this.isLoading = false;
+
+          setTimeout(() => {
+            this.closeModal();
+          }, 1500);
+        },
+        error: (error) => {
+          this.errorMessage = error.message || 'Failed to reject employee. Please try again.';
+          this.isLoading = false;
+          console.error('Error rejecting employee:', error);
+        }
+      });
     }
   }
 

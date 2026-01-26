@@ -68,14 +68,30 @@
           </button>
 
           <div *ngIf="isAccountSelectorOpen"
-            class="absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-60 overflow-y-auto z-50">
-            <div *ngFor="let account of ledgerAccounts" (click)="handleSelectAccount(account)"
-              class="px-4 py-3 hover:bg-emerald-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0 transition-colors">
-              <div>
-                <div class="font-semibold text-slate-800">{{ account.name }}</div>
-                <div class="text-xs text-slate-500">{{ account.accountCode }}</div>
+            class="absolute top-full left-0 mt-2 w-full bg-white border border-slate-200 rounded-xl shadow-xl max-h-96 overflow-hidden z-50 flex flex-col">
+            
+            <!-- Search Input in Dropdown -->
+            <div class="sticky top-0 p-3 border-b border-slate-100 bg-white">
+              <div class="relative">
+                <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg"></ion-icon>
+                <input type="text" [(ngModel)]="accountSearchQuery" placeholder="Search accounts..."
+                  class="w-full bg-slate-50 hover:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 rounded-lg py-2 pl-10 pr-4 outline-none transition-all text-sm">
               </div>
-              <ion-icon *ngIf="selectedAccount?.id === account.id" name="checkmark-circle" class="text-emerald-500 text-xl"></ion-icon>
+            </div>
+
+            <!-- Accounts List -->
+            <div class="overflow-y-auto flex-1">
+              <div *ngFor="let account of filteredAccounts" (click)="handleSelectAccount(account)"
+                class="px-4 py-3 hover:bg-emerald-50 cursor-pointer flex justify-between items-center border-b border-slate-50 last:border-0 transition-colors">
+                <div>
+                  <div class="font-semibold text-slate-800">{{ account.name }}</div>
+                  <div class="text-xs text-slate-500">{{ account.accountCode }}</div>
+                </div>
+                <ion-icon *ngIf="selectedAccount?.id === account.id" name="checkmark-circle" class="text-emerald-500 text-xl"></ion-icon>
+              </div>
+              <div *ngIf="filteredAccounts.length === 0" class="px-4 py-8 text-center">
+                <p class="text-sm text-slate-500">No accounts found</p>
+              </div>
             </div>
           </div>
         </div>

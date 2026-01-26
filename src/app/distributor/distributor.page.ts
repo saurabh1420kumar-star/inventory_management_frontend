@@ -52,10 +52,12 @@ export class DistributorPage implements OnInit {
   distributors: Distributor[] = [];
   filteredDistributors: Distributor[] = [];
   searchQuery: string = '';
+  salesPersons: any[] = [];
 
   // Modal states
   showAddModal: boolean = false;
   showDetailsModal: boolean = false;
+  showDeleteConfirmModal: boolean = false;
   isEditing: boolean = false;
   selectedDistributor: Distributor | null = null;
 
@@ -94,6 +96,7 @@ export class DistributorPage implements OnInit {
 
   ngOnInit() {
     this.initializeForm();
+    this.fetchSalesPersons();
     this.fetchDistributors();
   }
 
@@ -148,6 +151,30 @@ export class DistributorPage implements OnInit {
       gstNumber: formData.gstNo,
       status: 'ACTIVE'
     };
+  }
+
+  // Fetch Sales Persons for dropdown
+  fetchSalesPersons() {
+    this.distributorService.getSalesPersons().subscribe({
+      next: (response: any) => {
+        console.log('Sales persons response:', response);
+        
+        // Handle both array and wrapped response formats
+        let salesData = Array.isArray(response) ? response : (response?.data || []);
+        
+        if (Array.isArray(salesData)) {
+          this.salesPersons = salesData;
+          console.log('Sales persons loaded:', this.salesPersons);
+        } else {
+          console.error('Invalid sales persons response format', response);
+          this.salesPersons = [];
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load sales persons', err);
+        this.salesPersons = [];
+      }
+    });
   }
 
   // API Method 1: Get All Distributors
@@ -335,6 +362,20 @@ export class DistributorPage implements OnInit {
     this.distributorForm.reset();
   }
 
+  // Delete confirmation
+  openDeleteConfirmModal() {
+    this.showDeleteConfirmModal = true;
+  }
+
+  closeDeleteConfirmModal() {
+    this.showDeleteConfirmModal = false;
+  }
+
+  confirmDelete() {
+    this.closeDeleteConfirmModal();
+    this.deleteSelectedDistributor();
+  }
+
   // API Method 5: Delete Distributor
   deleteSelectedDistributor() {
     if (!this.selectedDistributor) return;
@@ -353,6 +394,7 @@ export class DistributorPage implements OnInit {
           this.filteredDistributors = [...this.distributors];
           this.calculateStats();
           this.closeDetailsModal();
+          alert('Distributor deleted successfully!');
         }
         this.isLoading = false;
       },

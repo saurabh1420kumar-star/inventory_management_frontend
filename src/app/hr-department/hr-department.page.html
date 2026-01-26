@@ -215,6 +215,10 @@
        <ion-icon class="text-emerald-600 text-lg group-hover:scale-110 transition-transform" name="create-outline">
        </ion-icon>
       </button>
+      <button (click)="openRejectModal(employee)" *ngIf="employee.status === 'Pending'" class="flex-1 flex items-center justify-center p-2.5 rounded-xl bg-amber-50 hover:bg-amber-100 transition-colors group" title="Reject Employee">
+       <ion-icon class="text-amber-600 text-lg group-hover:scale-110 transition-transform" name="close-circle-outline">
+       </ion-icon>
+      </button>
       <button (click)="openDeleteModal(employee)" class="flex-1 flex items-center justify-center p-2.5 rounded-xl bg-red-50 hover:bg-red-100 transition-colors group">
        <ion-icon class="text-red-600 text-lg group-hover:scale-110 transition-transform" name="trash-outline">
        </ion-icon>
@@ -827,6 +831,71 @@
    </div>
    <button (click)="closeModal()" *ngIf="selectedEmployee.status !== 'Pending'" class="w-full px-6 py-3.5 bg-gray-200 text-gray-700 rounded-xl hover:bg-gray-300 transition-all font-bold" type="button">
     Close
+   </button>
+  </div>
+ </div>
+ <!-- ❌ Reject Employee Modal -->
+ <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'reject' && selectedEmployee" class="bg-white rounded-3xl w-full max-w-md overflow-hidden shadow-2xl animate-slideUp">
+  <!-- Header -->
+  <div class="bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-5">
+   <div class="flex items-center justify-between">
+    <h2 class="text-2xl font-bold text-white">
+     Reject Employee
+    </h2>
+    <button (click)="closeModal()" class="p-2 hover:bg-white/20 rounded-xl transition-colors" type="button">
+     <ion-icon class="text-2xl text-white" name="close-outline">
+     </ion-icon>
+    </button>
+   </div>
+  </div>
+  <!-- Content -->
+  <div class="p-6 bg-white">
+   <!-- Success Message -->
+   <div *ngIf="successMessage" class="mb-4 p-4 bg-green-50 border-l-4 border-green-500 rounded-lg">
+    <p class="text-green-700 font-medium">
+     {{ successMessage }}
+    </p>
+   </div>
+   <!-- Error Message -->
+   <div *ngIf="errorMessage" class="mb-4 p-4 bg-red-50 border-l-4 border-red-500 rounded-lg">
+    <p class="text-red-700 font-medium">
+     {{ errorMessage }}
+    </p>
+   </div>
+   <div class="flex items-center justify-center mb-6">
+    <div class="w-20 h-20 bg-gradient-to-br from-amber-100 to-orange-100 rounded-2xl flex items-center justify-center shadow-lg">
+     <ion-icon class="text-5xl text-amber-600" name="alert-circle">
+     </ion-icon>
+    </div>
+   </div>
+   <p class="text-center text-gray-700 text-lg mb-2 font-semibold">
+    Are you sure you want to reject
+   </p>
+   <p class="text-center text-gray-900 font-bold text-2xl mb-4">
+    {{ selectedEmployee.name }}?
+   </p>
+   <p class="text-center text-gray-500 text-sm font-medium">
+    This employee's status will be changed to Rejected.
+   </p>
+  </div>
+  <!-- Footer -->
+  <div class="flex gap-3 p-6 border-t border-gray-100 bg-gray-50">
+   <button (click)="closeModal()" [disabled]="isLoading" class="flex-1 px-6 py-3.5 border-2 border-gray-300 text-gray-700 rounded-xl hover:bg-gray-100 transition-all font-semibold disabled:opacity-50" type="button">
+    Cancel
+   </button>
+   <button (click)="onRejectEmployee()" [disabled]="isLoading" class="flex-1 px-6 py-3.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white rounded-xl hover:shadow-lg transition-all font-bold disabled:opacity-50 disabled:cursor-not-allowed" type="button">
+    <span *ngIf="!isLoading">
+     Reject
+    </span>
+    <span *ngIf="isLoading" class="flex items-center justify-center gap-2">
+     <svg class="animate-spin h-5 w-5" fill="none" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
+      <circle class="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" stroke-width="4">
+      </circle>
+      <path class="opacity-75" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z" fill="currentColor">
+      </path>
+     </svg>
+     Rejecting...
+    </span>
    </button>
   </div>
  </div>

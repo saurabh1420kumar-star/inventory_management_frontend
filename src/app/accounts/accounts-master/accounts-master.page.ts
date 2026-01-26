@@ -122,6 +122,7 @@ export class AccountsMasterPage implements OnInit {
 
   // UI State toggles
   isAccountSelectorOpen: boolean = false;
+  accountSearchQuery: string = '';
   isTypeDropdownOpen: boolean = false;
   isDateDropdownOpen: boolean = false;
 
@@ -159,7 +160,7 @@ export class AccountsMasterPage implements OnInit {
         state: 'Uttar Pradesh',
         pincode: '201301',
         phone: '+91 120 4567890',
-        email: 'accounts@yourcompany.com',
+        email: 'accounts@nectar.com',
         gstin: '09AAACY1234F1Z5',
       },
       toParty: {
@@ -271,13 +272,13 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-002',
       fromParty: {
         id: 'p1',
-        name: 'Your Company Pvt. Ltd.',
+        name: 'Nectar Pvt. Ltd.',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
         pincode: '201301',
         phone: '+91 120 4567890',
-        email: 'accounts@yourcompany.com',
+        email: 'accounts@nectar.com',
         gstin: '09AAACY1234F1Z5',
       },
       toParty: {
@@ -831,12 +832,25 @@ export class AccountsMasterPage implements OnInit {
     return 'Date Range';
   }
 
+  get filteredAccounts(): LedgerAccount[] {
+    if (!this.accountSearchQuery.trim()) {
+      return this.ledgerAccounts;
+    }
+    const query = this.accountSearchQuery.toLowerCase();
+    return this.ledgerAccounts.filter(account =>
+      account.name.toLowerCase().includes(query) ||
+      account.accountCode.toLowerCase().includes(query) ||
+      account.toParty.name.toLowerCase().includes(query)
+    );
+  }
+
 
   // --- UI Actions ---
 
   handleSelectAccount(account: LedgerAccount) {
     this.selectedAccount = account;
     this.isAccountSelectorOpen = false;
+    this.accountSearchQuery = ''; // Clear search
     // Reset filters on new account selection
     this.resetFilters();
     this.showToast(`Selected ${account.name}`);
@@ -947,10 +961,10 @@ export class AccountsMasterPage implements OnInit {
   // --- Utility Methods for Template ---
 
   formatCurrency(amount: number): string {
-    // Matches the image format: $58,500.00
-    return new Intl.NumberFormat('en-US', {
+    // Matches the image format: ₹58,500.00
+    return new Intl.NumberFormat('en-IN', {
       style: 'currency',
-      currency: 'USD',
+      currency: 'INR',
       minimumFractionDigits: 2,
     }).format(amount);
   }
