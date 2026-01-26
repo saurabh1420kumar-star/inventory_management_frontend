@@ -62,7 +62,7 @@ export class UserService {
       .set('roleType', roleType);
 
     return this.http.post(
-      `${environment.apiUrl}/api/admin/roles/assign-user`,
+      `${environment.apiUrl}/admin/roles/assign-user`,
       null,
       { 
         params,

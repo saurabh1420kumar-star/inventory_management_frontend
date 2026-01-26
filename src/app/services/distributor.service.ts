@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../environments/environment';
 
 export interface DistributorDto {
   id: number;
@@ -30,13 +31,13 @@ export interface ApiResponse<T> {
   providedIn: 'root'
 })
 export class DistributorService {
-  private readonly baseUrl = 'http://localhost:8080/api';
+  private readonly baseUrl = environment.distributorUrl;
 
   constructor(private http: HttpClient) {}
 
   getAllDistributors(): Observable<ApiResponse<DistributorDto[]>> {
     return this.http.get<ApiResponse<DistributorDto[]>>(
-      `${this.baseUrl}/distributors`
+      this.baseUrl
     );
   }
 
@@ -44,7 +45,7 @@ export class DistributorService {
     payload: any
   ): Observable<ApiResponse<DistributorDto>> {
     return this.http.post<ApiResponse<DistributorDto>>(
-      `${this.baseUrl}/distributors/create-distributor`,
+      `${this.baseUrl}/create-distributor`,
       payload
     );
   }
@@ -54,29 +55,26 @@ export class DistributorService {
     payload: any
   ): Observable<ApiResponse<DistributorDto>> {
     return this.http.put<ApiResponse<DistributorDto>>(
-      `${this.baseUrl}/distributors/${id}`,
+      `${this.baseUrl}/${id}`,
       payload
     );
   }
 
-  // NEW: get distributor by id
   getDistributorById(id: number): Observable<ApiResponse<DistributorDto>> {
     return this.http.get<ApiResponse<DistributorDto>>(
-      `${this.baseUrl}/distributors/${id}`
+      `${this.baseUrl}/${id}`
     );
   }
 
-  // NEW: delete distributor by id
   deleteDistributor(id: number): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(
-      `${this.baseUrl}/distributors/${id}`
+      `${this.baseUrl}/${id}`
     );
   }
 
-  // NEW: get sales persons list
   getSalesPersons(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
-      `${this.baseUrl}/hrmaster/salespersons`
+      `${environment.apiUrl}/hrmaster/salespersons`
     );
   }
 }

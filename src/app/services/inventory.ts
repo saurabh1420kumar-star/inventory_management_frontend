@@ -2,6 +2,7 @@ import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, forkJoin } from 'rxjs';
 import { map } from 'rxjs/operators';
+import { environment } from '../../environments/environment';
 
 export interface InventoryItem {
   id: number;
@@ -43,9 +44,9 @@ export interface InventoryItem {
 })
 export class InventoryService {
 
-  private rawMaterialsUrl = 'http://localhost:8080/api/inventory/raw-materials';
-  private finishedProductsUrl = 'http://localhost:8080/api/inventory/finished-products';
-  private machinePartsUrl = 'http://localhost:8080/api/inventory/machine-parts';
+  private rawMaterialsUrl = `${environment.inventoryUrl}/raw-materials`;
+  private finishedProductsUrl = `${environment.inventoryUrl}/finished-products`;
+  private machinePartsUrl = `${environment.inventoryUrl}/machine-parts`;
 
   constructor(private http: HttpClient) {}
 

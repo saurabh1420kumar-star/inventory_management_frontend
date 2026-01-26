@@ -71,7 +71,7 @@ export class Auth {
     const body: LoginRequest = { username, password };
 
     return this.http
-      .post<LoginResponse>(`${this.apiUrl}/api/auth/login`, body)
+      .post<LoginResponse>(`${this.apiUrl}/auth/login`, body)
       .pipe(
         tap((res) => {
           // ===== STORE AUTH DATA =====
@@ -97,7 +97,7 @@ export class Auth {
   // ---------------- SIGNUP ----------------
   createUser(payload: CreateUserRequest): Observable<CreateUserResponse> {
     return this.http.post<CreateUserResponse>(
-      `${this.apiUrl}/api/createUsers`,
+      `${this.apiUrl}/createUsers`,
       payload
     );
   }
@@ -151,7 +151,7 @@ export class Auth {
   logoutApi(): Observable<any> {
   const token = this.getToken();
 
-  return this.http.post(`${this.apiUrl}/api/auth/logout`, { token });
+  return this.http.post(`${this.apiUrl}/auth/logout`, { token });
 }
 
 

@@ -4,9 +4,11 @@
 
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080',
+  apiUrl: 'http://localhost:8080/api',
   permissionsUrl: 'http://localhost:8080/api/permissions',
   hrUrl: 'http://localhost:8080/api/hr',
+  inventoryUrl: 'http://localhost:8080/api/inventory',
+  distributorUrl: 'http://localhost:8080/api/distributors',
 };
 
 
