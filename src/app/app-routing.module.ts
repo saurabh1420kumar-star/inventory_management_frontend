@@ -54,7 +54,11 @@ const routes: Routes = [
   {
     path: 'hr-department',
     loadChildren: () => import('./hr-department/hr-department.module').then( m => m.HrDepartmentPageModule)
+  },  {
+    path: 'distributor',
+    loadChildren: () => import('./distributor/distributor.module').then( m => m.DistributorPageModule)
   },
+
 
 
 ];
