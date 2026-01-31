@@ -49,17 +49,19 @@ const routes: Routes = [
   },
   {
     path: 'machine-inventory',
-    loadChildren: () => import('./machine-inventory/machine-inventory.module').then( m => m.MachineInventoryPageModule)
+    loadChildren: () => import('./machine-inventory/machine-inventory.module').then( m => m.MachineInventoryPageModule),
+    canActivate: [AuthGuard]
   },
   {
     path: 'hr-department',
-    loadChildren: () => import('./hr-department/hr-department.module').then( m => m.HrDepartmentPageModule)
-  },  {
-    path: 'distributor',
-    loadChildren: () => import('./distributor/distributor.module').then( m => m.DistributorPageModule)
+    loadChildren: () => import('./hr-department/hr-department.module').then( m => m.HrDepartmentPageModule),
+    canActivate: [AuthGuard]
   },
-
-
+  {
+    path: 'distributor',
+    loadChildren: () => import('./distributor/distributor.module').then( m => m.DistributorPageModule),
+    canActivate: [AuthGuard]
+  },
 
 ];
 

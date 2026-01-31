@@ -44,9 +44,9 @@ export interface InventoryItem {
 })
 export class InventoryService {
 
-  private rawMaterialsUrl = `${environment.inventoryUrl}/raw-materials`;
-  private finishedProductsUrl = `${environment.inventoryUrl}/finished-products`;
-  private machinePartsUrl = `${environment.inventoryUrl}/machine-parts`;
+  private rawMaterialsUrl = `${environment.productsUrl}/raw-materials`;
+  private finishedProductsUrl = `${environment.productsUrl}/finished-products`;
+  private machinePartsUrl = `${environment.productsUrl}/machine-parts`;
 
   constructor(private http: HttpClient) {}
 
@@ -55,7 +55,7 @@ export class InventoryService {
   // =======================================
   getAllItems(): Observable<InventoryItem[]> {
     const raw$ = this.http.get<InventoryItem[]>(
-      `${this.rawMaterialsUrl}/get-all-materials`
+      `${this.rawMaterialsUrl}`
     ).pipe(map(items =>
       items.map(i => ({
         ...i,
@@ -64,7 +64,7 @@ export class InventoryService {
     ));
 
     const finished$ = this.http.get<InventoryItem[]>(
-      `${this.finishedProductsUrl}/get-all-items`
+      `${this.finishedProductsUrl}`
     ).pipe(map(items =>
       items.map(i => ({
         ...i,
@@ -82,7 +82,7 @@ export class InventoryService {
   // =======================================
   getMachineParts(): Observable<InventoryItem[]> {
     return this.http.get<InventoryItem[]>(
-      `${this.machinePartsUrl}/get-all-parts`
+      `${this.machinePartsUrl}`
     ).pipe(
       map(items =>
         items.map(item => ({
@@ -104,21 +104,21 @@ export class InventoryService {
     // raw or finished → routed correctly
     if (item.category === 'raw_material') {
       return this.http.post<InventoryItem>(
-        `${this.rawMaterialsUrl}/create`,
+        `${this.rawMaterialsUrl}`,
         item
       );
     }
 
     if (item.category === 'finished_product') {
       return this.http.post<InventoryItem>(
-        `${this.finishedProductsUrl}/create`,
+        `${this.finishedProductsUrl}`,
         item
       );
     }
 
     // Anything else → machine parts
     return this.http.post<InventoryItem>(
-      `${this.machinePartsUrl}/create-part`,
+      `${this.machinePartsUrl}`,
       item
     );
   }
@@ -129,20 +129,20 @@ export class InventoryService {
   updateItem(id: number, item: Partial<InventoryItem>): Observable<InventoryItem> {
     if (item.category === 'raw_material') {
       return this.http.put<InventoryItem>(
-        `${this.rawMaterialsUrl}/edit-material/${id}`,
+        `${this.rawMaterialsUrl}/${id}`,
         item
       );
     }
 
     if (item.category === 'finished_product') {
       return this.http.put<InventoryItem>(
-        `${this.finishedProductsUrl}/update/${id}`,
+        `${this.finishedProductsUrl}/${id}`,
         item
       );
     }
 
     return this.http.put<InventoryItem>(
-      `${this.machinePartsUrl}/edit-part/${id}`,
+      `${this.machinePartsUrl}/${id}`,
       item
     );
   }
@@ -153,18 +153,18 @@ export class InventoryService {
   deleteItem(id: number, category: InventoryItem['category']): Observable<void> {
     if (category === 'raw_material') {
       return this.http.delete<void>(
-        `${this.rawMaterialsUrl}/delete-material/${id}`
+        `${this.rawMaterialsUrl}/${id}`
       );
     }
 
     if (category === 'finished_product') {
       return this.http.delete<void>(
-        `${this.finishedProductsUrl}/delete-item/${id}`
+        `${this.finishedProductsUrl}/${id}`
       );
     }
 
     return this.http.delete<void>(
-      `${this.machinePartsUrl}/delete-part/${id}`
+      `${this.machinePartsUrl}/${id}`
     );
   }
 }

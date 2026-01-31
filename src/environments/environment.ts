@@ -7,8 +7,9 @@ export const environment = {
   apiUrl: 'http://localhost:8080/api',
   permissionsUrl: 'http://localhost:8080/api/permissions',
   hrUrl: 'http://localhost:8080/api/hr',
-  inventoryUrl: 'http://localhost:8080/api/inventory',
+  productsUrl: 'http://localhost:8080/api/products',
   distributorUrl: 'http://localhost:8080/api/distributors',
+  ledgerUrl: 'http://localhost:8080/api/ledger',
 };
 
 
