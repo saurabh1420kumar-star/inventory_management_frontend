@@ -1,4 +1,4 @@
-*{
+* {
   font-family: sans-serif;
 }
 
@@ -6,7 +6,7 @@
   --background: var(--ion-card-background, #ffffff);
   width: 330px;
   transition: width 0.25s ease;
-  
+
   .sidebar-container {
     height: 100%;
     display: flex;
@@ -43,7 +43,7 @@
 
     .brand-text {
       flex: 1;
-      
+
       h2 {
         margin: 0;
         font-size: 16px;
@@ -57,7 +57,7 @@
       --padding-end: 4px;
       margin: 0;
       flex-shrink: 0;
-      
+
       ion-icon {
         font-size: 20px;
       }
@@ -91,12 +91,22 @@
 
       &.item-router-link-active,
       &.active {
-        --background: rgba(var(--ion-color-primary-rgb), 0.18);
+        --background: linear-gradient(90deg, rgba(var(--ion-color-primary-rgb), 0.12) 0%, rgba(var(--ion-color-primary-rgb), 0.06) 100%);
         --color: var(--ion-color-primary);
         font-weight: 600;
-        border-left: 3px solid var(--ion-color-primary);
-        --padding-start: 9px;
-        box-shadow: inset 0 0 0 1px rgba(var(--ion-color-primary-rgb), 0.3);
+        position: relative;
+
+        &::before {
+          content: '';
+          position: absolute;
+          top: 0;
+          right: 0;
+          bottom: 0;
+          left: 0;
+          background: linear-gradient(90deg, rgba(var(--ion-color-primary-rgb), 0.08) 0%, transparent 100%);
+          border-radius: var(--border-radius);
+          pointer-events: none;
+        }
       }
 
       ion-icon[slot="start"] {
@@ -127,7 +137,7 @@
     padding: 12px;
     border-top: 1px solid var(--ion-border-color, #e5e7eb);
     margin-top: auto;
-    
+
     .user-info {
       display: flex;
       align-items: center;
@@ -161,15 +171,15 @@
   /* ========================= */
   &.collapsed {
     width: 80px;
-    
+
     .brand {
       justify-content: center;
       padding: 12px 8px;
-      
+
       .logo {
         display: none;
       }
-      
+
       .brand-text {
         display: none;
       }
@@ -180,29 +190,38 @@
         --padding-start: 0;
         --padding-end: 0;
         justify-content: center;
-        
+
         ion-icon[slot="start"] {
           margin-right: 0;
           margin-inline-end: 0 !important;
         }
       }
-      
+
       /* Hide accordion content */
       ion-accordion div[slot="content"] {
         display: none;
       }
-      
+
       /* Disable accordion functionality visually */
       ion-accordion-group {
         ion-accordion {
           /* Make accordion non-interactive when collapsed */
           pointer-events: none;
-          
+
           ion-item[slot="header"] {
-            pointer-events: auto; /* Allow clicking but won't expand */
-            
+            pointer-events: auto;
+            /* Allow clicking but won't expand */
+            justify-content: center;
+
             /* Force override to hide chevron */
             &::after {
+              display: none !important;
+            }
+
+            /* Hide detail icon completely */
+            --detail-icon-opacity: 0 !important;
+
+            ion-icon[slot="end"] {
               display: none !important;
             }
           }
@@ -213,13 +232,13 @@
     .sidebar-footer {
       .user-info {
         justify-content: center;
-        
+
         .user-details {
           display: none;
         }
       }
     }
-    
+
     /* Hide all labels */
     ion-label {
       display: none !important;
@@ -231,6 +250,7 @@
 /* Global override for accordion chevrons when collapsed */
 /* ============================= */
 .sidebar-content.collapsed {
+
   /* Target the accordion item specifically */
   ion-accordion {
     ion-item {
@@ -238,10 +258,21 @@
       --detail-icon-opacity: 0 !important;
       --detail-icon-font-size: 0 !important;
     }
+
+    /* Hide toggle icon completely */
+    .ion-accordion-toggle-icon,
+    [slot="end"] {
+      display: none !important;
+    }
   }
-  
+
   /* Hide the chevron using CSS variables */
   --ion-item-detail-icon-opacity: 0;
+
+  /* Remove any chevron indicators */
+  ion-accordion-group ion-accordion {
+    --ion-color-step-550: transparent;
+  }
 }
 
 /* ============================= */
@@ -271,4 +302,23 @@ ion-item {
 
 .sidebar-footer {
   transition: align-items 0.2s ease;
+}
+/* ============================= */
+/* FORCE HIDE CHEVRONS IN COLLAPSED STATE */
+/* ============================= */
+.sidebar-content.collapsed {
+  ion-accordion-group ion-accordion ion-item[slot="header"] {
+    .ion-accordion-toggle-icon,
+    ion-icon[slot="end"] {
+      display: none !important;
+      opacity: 0 !important;
+      visibility: hidden !important;
+      width: 0 !important;
+      height: 0 !important;
+    }
+  }
+  
+  .accordion-toggle-icon {
+    display: none !important;
+  }
 }

@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
+import { LedgerService, LedgerDto, ApiResponse } from '../../services/accountsLedger.service';
 import { addIcons } from 'ionicons';
 import {
   bookOutline,
@@ -105,6 +106,10 @@ interface LedgerSummary {
 export class AccountsMasterPage implements OnInit {
   Math = Math; // Expose Math to template
 
+  // API Data properties
+  apiAccounts: LedgerDto[] = [];
+  isLoadingAccounts: boolean = false;
+
   // State used in view
   selectedAccount: LedgerAccount | null = null; // Start null to match Image 0
   searchQuery: string = '';
@@ -154,7 +159,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-001',
       fromParty: {
         id: 'p1',
-        name: 'Nectar Pvt. Ltd.',
+        name: 'Nectar private limited',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -272,7 +277,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-002',
       fromParty: {
         id: 'p1',
-        name: 'Nectar Pvt. Ltd.',
+        name: 'Nectar private limited',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -368,7 +373,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-003',
       fromParty: {
         id: 'p1',
-        name: 'Your Company Pvt. Ltd.',
+        name: 'Nectar private limited',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -475,7 +480,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-004',
       fromParty: {
         id: 'p1',
-        name: 'Your Company Pvt. Ltd.',
+        name: 'Nectar private limited',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -560,7 +565,7 @@ export class AccountsMasterPage implements OnInit {
       accountCode: 'ACC-005',
       fromParty: {
         id: 'p1',
-        name: 'Your Company Pvt. Ltd.',
+        name: 'Nectar private limited',
         address: '123, Business Park, Sector 62',
         city: 'Noida',
         state: 'Uttar Pradesh',
@@ -674,7 +679,10 @@ export class AccountsMasterPage implements OnInit {
     }
   ];
 
-  constructor(private toastController: ToastController) {
+  constructor(
+    private toastController: ToastController,
+    private ledgerService: LedgerService
+  ) {
     // Add specific icons shown in the images
     addIcons({
       'book-outline': bookOutline,
@@ -720,10 +728,134 @@ export class AccountsMasterPage implements OnInit {
   }
 
   ngOnInit() {
+    // Fetch accounts from API on initialization
+    this.loadAccountsFromApi();
+
     // Uncomment below to auto-select the account on load for development purposes
     // if (this.ledgerAccounts.length > 0) {
     //   this.handleSelectAccount(this.ledgerAccounts[0]);
     // }
+  }
+
+  // --- API Methods ---
+
+  loadAccountsFromApi() {
+    this.isLoadingAccounts = true;
+    this.ledgerService.getAllLedgers().subscribe({
+      next: (response: ApiResponse<LedgerDto[]>) => {
+        if (response.success && response.data) {
+          this.apiAccounts = response.data;
+          console.log('Accounts loaded successfully:', this.apiAccounts);
+          this.showToast(`${this.apiAccounts.length} accounts loaded successfully`, 'success');
+        } else {
+          this.showToast('Failed to load accounts: ' + response.message, 'warning');
+        }
+        this.isLoadingAccounts = false;
+      },
+      error: (error) => {
+        console.error('Error loading accounts:', error);
+        this.showToast('Error loading accounts from server', 'danger');
+        this.isLoadingAccounts = false;
+      }
+    });
+  }
+
+  // Map API LedgerDto to UI LedgerAccount structure
+  mapApiAccountsToLedgerAccounts(apiAccounts: LedgerDto[]): LedgerAccount[] {
+    return apiAccounts.map(apiAccount => ({
+      id: apiAccount.id.toString(),
+      name: apiAccount.accountName,
+      accountCode: apiAccount.accountNumber,
+      fromParty: {
+        id: 'company-' + apiAccount.companyId,
+        name: 'Nectar private limited', // Hardcoded as per request
+        address: 'Company Address',
+        city: 'City',
+        state: 'State',
+        pincode: '000000',
+        phone: '+91 000 0000000',
+        email: 'company@example.com',
+        gstin: 'GSTIN000000'
+      },
+      toParty: {
+        id: 'distributor-' + apiAccount.distributorId,
+        name: apiAccount.accountName, // Using account name as party name
+        address: 'Distributor Address',
+        city: 'City',
+        state: 'State',
+        pincode: '000000',
+        phone: '+91 000 0000000',
+        email: 'distributor@example.com',
+        gstin: 'GSTIN000000'
+      },
+      openingBalance: apiAccount.currentBalance || 0,
+      transactions: this.generateMockTransactions(apiAccount.currentBalance || 0, apiAccount.id)
+    }));
+  }
+
+  // Generate mock transactions for demonstration
+  generateMockTransactions(currentBalance: number, accountId: number): Transaction[] {
+    const transactions: Transaction[] = [];
+    const openingBalance = Math.max(currentBalance - 50000, 0);
+    let runningBalance = openingBalance;
+
+    // Opening balance transaction
+    transactions.push({
+      id: `${accountId}-0`,
+      date: '2024-01-01',
+      description: 'Opening Balance',
+      reference: `OB-2024-${accountId}`,
+      type: 'opening',
+      debit: 0,
+      credit: openingBalance,
+      balance: runningBalance,
+      category: 'Opening'
+    });
+
+    // Generate 5-8 random transactions
+    const transactionCount = Math.floor(Math.random() * 4) + 5;
+    const startDate = new Date('2024-01-01');
+    const dayIncrement = Math.floor(365 / transactionCount);
+
+    const transactionTypes: Transaction['type'][] = ['sale', 'purchase', 'return', 'adjustment'];
+    const descriptions = {
+      sale: ['Product Sales', 'Service Revenue', 'Bulk Order', 'Monthly Sales', 'Quarterly Revenue'],
+      purchase: ['Inventory Purchase', 'Raw Materials', 'Office Supplies', 'Equipment Purchase', 'Stock Replenishment'],
+      return: ['Product Return', 'Damaged Goods', 'Quality Issue', 'Wrong Item', 'Customer Return'],
+      adjustment: ['Price Correction', 'Stock Reconciliation', 'Accounting Adjustment', 'Balance Correction', 'System Adjustment']
+    };
+
+    for (let i = 0; i < transactionCount; i++) {
+      const transDate = new Date(startDate);
+      transDate.setDate(startDate.getDate() + (i + 1) * dayIncrement + Math.floor(Math.random() * 5));
+
+      const type = transactionTypes[Math.floor(Math.random() * transactionTypes.length)];
+      const isDebit = type === 'purchase' || type === 'return' || (type === 'adjustment' && Math.random() > 0.5);
+      const amount = Math.floor(Math.random() * 30000) + 5000;
+
+      const debit = isDebit ? amount : 0;
+      const credit = !isDebit ? amount : 0;
+      runningBalance = runningBalance - debit + credit;
+
+      const descList = descriptions[type as keyof typeof descriptions];
+      const description = descList[Math.floor(Math.random() * descList.length)];
+
+      transactions.push({
+        id: `${accountId}-${i + 1}`,
+        date: transDate.toISOString().split('T')[0],
+        description: description,
+        reference: `${type.substring(0, 3).toUpperCase()}-${1000 + i}`,
+        type: type,
+        debit: debit,
+        credit: credit,
+        balance: runningBalance,
+        category: type === 'sale' ? 'Product Sales' :
+          type === 'purchase' ? 'Office Supplies' :
+            type === 'return' ? 'Returns' : 'Adjustments'
+      });
+    }
+
+    return transactions;
   }
 
   // --- Computed Properties ---
@@ -833,14 +965,18 @@ export class AccountsMasterPage implements OnInit {
   }
 
   get filteredAccounts(): LedgerAccount[] {
+    // Use API accounts if available, otherwise fallback to mock ledgerAccounts
+    const accountsToFilter = this.apiAccounts.length > 0
+      ? this.mapApiAccountsToLedgerAccounts(this.apiAccounts)
+      : this.ledgerAccounts;
+
     if (!this.accountSearchQuery.trim()) {
-      return this.ledgerAccounts;
+      return accountsToFilter;
     }
     const query = this.accountSearchQuery.toLowerCase();
-    return this.ledgerAccounts.filter(account =>
+    return accountsToFilter.filter(account =>
       account.name.toLowerCase().includes(query) ||
-      account.accountCode.toLowerCase().includes(query) ||
-      account.toParty.name.toLowerCase().includes(query)
+      account.accountCode.toLowerCase().includes(query)
     );
   }
 
@@ -871,13 +1007,89 @@ export class AccountsMasterPage implements OnInit {
   }
 
   handleRefresh() {
-    // Simulate refresh
-    this.showToast('Data refreshed successfully', 'success');
+    // Refresh accounts from API
+    this.loadAccountsFromApi();
   }
 
   handleExport() {
-    this.showToast('Exporting data...', 'primary');
-    // Actual export logic omitted for brevity
+    if (!this.selectedAccount) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+
+    try {
+      const transactions = this.filteredTransactions;
+
+      if (transactions.length === 0) {
+        this.showToast('No transactions to export', 'warning');
+        return;
+      }
+
+      // Company Information Header
+      const companyInfo = [
+        `Account Ledger Export - ${this.selectedAccount.name}`,
+        `Account Code: ${this.selectedAccount.accountCode}`,
+        `Export Date: ${new Date().toLocaleString()}`,
+        '',
+        'FROM PARTY:',
+        `Name: ${this.selectedAccount.fromParty.name}`,
+        `Address: ${this.selectedAccount.fromParty.address}`,
+        `City: ${this.selectedAccount.fromParty.city}, ${this.selectedAccount.fromParty.state} - ${this.selectedAccount.fromParty.pincode}`,
+        `Phone: ${this.selectedAccount.fromParty.phone || 'N/A'}`,
+        `Email: ${this.selectedAccount.fromParty.email || 'N/A'}`,
+        `GSTIN: ${this.selectedAccount.fromParty.gstin || 'N/A'}`,
+        '',
+        'TO PARTY:',
+        `Name: ${this.selectedAccount.toParty.name}`,
+        `Address: ${this.selectedAccount.toParty.address}`,
+        `City: ${this.selectedAccount.toParty.city}, ${this.selectedAccount.toParty.state} - ${this.selectedAccount.toParty.pincode}`,
+        `Phone: ${this.selectedAccount.toParty.phone || 'N/A'}`,
+        `Email: ${this.selectedAccount.toParty.email || 'N/A'}`,
+        `GSTIN: ${this.selectedAccount.toParty.gstin || 'N/A'}`,
+        '',
+        `Opening Balance: ${this.formatCurrency(this.selectedAccount.openingBalance)}`,
+        `Total Transactions: ${transactions.length}`,
+        '',
+        ''
+      ];
+
+      const headers = ['Date', 'Reference', 'Description', 'Type', 'Category', 'Debit', 'Credit', 'Balance', 'Notes'];
+
+      const rows = transactions.map(t => [
+        t.date,
+        t.reference,
+        t.description,
+        t.type,
+        t.category,
+        t.debit.toString(),
+        t.credit.toString(),
+        t.balance.toString(),
+        t.notes || ''
+      ]);
+
+      const csvContent = [
+        ...companyInfo,
+        headers.join(','),
+        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
+      ].join('\n');
+
+      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+      const link = document.createElement('a');
+      const url = URL.createObjectURL(blob);
+
+      link.setAttribute('href', url);
+      link.setAttribute('download', `${this.selectedAccount.name}_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
+      link.style.visibility = 'hidden';
+
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+
+      this.showToast('Transactions exported successfully', 'success');
+    } catch (error) {
+      console.error('Export error:', error);
+      this.showToast('Failed to export transactions', 'danger');
+    }
   }
 
   applyDateFilter() {
