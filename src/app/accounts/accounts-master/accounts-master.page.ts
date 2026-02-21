@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { LedgerService, LedgerDto, ApiResponse } from '../../services/accountsLedger.service';
@@ -43,7 +43,11 @@ import {
   checkmarkCircle,
   arrowForwardOutline,
   arrowBackOutline,
-  menuOutline
+  menuOutline,
+  trashOutline,
+  createOutline,
+  warningOutline,
+  receiptOutline
 } from 'ionicons/icons';
 
 // Interfaces needed for the view
@@ -96,6 +100,7 @@ interface LedgerSummary {
   selector: 'app-accounts-master',
   templateUrl: './accounts-master.page.html',
   styleUrls: ['./accounts-master.page.scss'],
+  encapsulation: ViewEncapsulation.None,
   imports: [
     CommonModule,
     FormsModule,
@@ -134,6 +139,7 @@ export class AccountsMasterPage implements OnInit {
   // Modal states
   isFormModalOpen: boolean = false;
   isDetailsModalOpen: boolean = false;
+  isConfirmDeleteOpen: boolean = false;
   selectedTransaction: Transaction | null = null;
 
   // Form data for new transaction
@@ -681,7 +687,8 @@ export class AccountsMasterPage implements OnInit {
 
   constructor(
     private toastController: ToastController,
-    private ledgerService: LedgerService
+    private ledgerService: LedgerService,
+    private elementRef: ElementRef
   ) {
     // Add specific icons shown in the images
     addIcons({
@@ -723,7 +730,11 @@ export class AccountsMasterPage implements OnInit {
       'business-outline': businessOutline,
       'copy-outline': copyOutline,
       'checkmark-circle': checkmarkCircle,
-      'menu-outline': menuOutline
+      'menu-outline': menuOutline,
+      'trash-outline': trashOutline,
+      'create-outline': createOutline,
+      'warning-outline': warningOutline,
+      'receipt-outline': receiptOutline
     });
   }
 
@@ -735,6 +746,26 @@ export class AccountsMasterPage implements OnInit {
     // if (this.ledgerAccounts.length > 0) {
     //   this.handleSelectAccount(this.ledgerAccounts[0]);
     // }
+  }
+
+  /** Close all dropdowns when clicking outside */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    const target = event.target as HTMLElement;
+    // Close account selector if it's open and click is outside
+    if (this.isAccountSelectorOpen) {
+      const selectorEl = this.elementRef.nativeElement.querySelector('.account-selector-wrap');
+      if (selectorEl && !selectorEl.contains(target)) {
+        this.isAccountSelectorOpen = false;
+      }
+    }
+    // Close date dropdown if it's open and click is outside
+    if (this.isDateDropdownOpen) {
+      const dateEl = this.elementRef.nativeElement.querySelector('.date-filter-wrap');
+      if (dateEl && !dateEl.contains(target)) {
+        this.isDateDropdownOpen = false;
+      }
+    }
   }
 
   // --- API Methods ---
@@ -1004,6 +1035,34 @@ export class AccountsMasterPage implements OnInit {
   handleViewDetails(transaction: Transaction) {
     this.selectedTransaction = transaction;
     this.isDetailsModalOpen = true;
+  }
+
+  handleDeleteTransaction() {
+    this.isConfirmDeleteOpen = true;
+  }
+
+  confirmDeleteTransaction() {
+    if (!this.selectedTransaction || !this.selectedAccount) {
+      this.isConfirmDeleteOpen = false;
+      return;
+    }
+
+    const idx = this.selectedAccount.transactions.findIndex(
+      t => t.reference === this.selectedTransaction!.reference
+    );
+
+    if (idx > -1) {
+      this.selectedAccount.transactions.splice(idx, 1);
+      this.showToast('Transaction deleted successfully', 'success');
+    }
+
+    this.isConfirmDeleteOpen = false;
+    this.isDetailsModalOpen = false;
+    this.selectedTransaction = null;
+  }
+
+  cancelDelete() {
+    this.isConfirmDeleteOpen = false;
   }
 
   handleRefresh() {

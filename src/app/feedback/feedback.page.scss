@@ -1,3 +1,36 @@
+/* ============================================
+   FEEDBACK PAGE — Mobile-First Responsive
+   ============================================ */
+
+/* ====== KEYFRAME ANIMATIONS ====== */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+/* ====== ANIMATION CLASSES ====== */
+
+.fb-animate {
+  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.fb-card-animate {
+  opacity: 0;
+  animation: scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.18s; }
+  &:nth-child(3) { animation-delay: 0.26s; }
+}
+
+/* ====== BASE STYLES ====== */
+
 ion-card {
   max-width: 700px;
   margin: auto;
@@ -14,4 +47,49 @@ ion-card {
   font-size: 12px;
   text-align: right;
   color: var(--ion-color-medium);
+}
+
+/* ====== MOBILE RESPONSIVE ====== */
+
+@media (max-width: 640px) {
+  // Radio group cards — tighter on mobile
+  ion-radio-group {
+    label {
+      padding: 0.75rem !important;
+
+      ion-radio {
+        margin-right: 0.5rem !important;
+      }
+
+      .w-8 {
+        width: 1.5rem !important;
+        height: 1.5rem !important;
+      }
+
+      span {
+        font-size: 0.8rem !important;
+      }
+    }
+  }
+
+  // Form field labels
+  .group label {
+    font-size: 0.65rem !important;
+    margin-bottom: 0.375rem !important;
+  }
+
+  // Reduce textarea rows
+  ion-textarea {
+    min-height: 100px !important;
+  }
+
+  // Submit buttons
+  .flex-col.sm\:flex-row {
+    gap: 0.5rem !important;
+
+    ion-button {
+      height: 2.75rem !important;
+      font-size: 0.875rem !important;
+    }
+  }
 }

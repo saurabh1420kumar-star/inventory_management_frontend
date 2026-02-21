@@ -1,4 +1,42 @@
-/* app.component.scss */
+/* ============================================
+   DASHBOARD PAGE — Mobile-First Responsive
+   ============================================ */
+
+/* ====== KEYFRAME ANIMATIONS ====== */
+
+@keyframes fadeInUp {
+  from { opacity: 0; transform: translateY(20px); }
+  to   { opacity: 1; transform: translateY(0); }
+}
+
+@keyframes scaleIn {
+  from { opacity: 0; transform: scale(0.92); }
+  to   { opacity: 1; transform: scale(1); }
+}
+
+@keyframes slideInRight {
+  from { opacity: 0; transform: translateX(16px); }
+  to   { opacity: 1; transform: translateX(0); }
+}
+
+/* ====== ANIMATION CLASSES ====== */
+
+.dash-animate {
+  animation: fadeInUp 0.6s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+}
+
+.dash-card-animate {
+  opacity: 0;
+  animation: scaleIn 0.5s cubic-bezier(0.22, 1, 0.36, 1) forwards;
+
+  &:nth-child(1) { animation-delay: 0.1s; }
+  &:nth-child(2) { animation-delay: 0.18s; }
+  &:nth-child(3) { animation-delay: 0.26s; }
+  &:nth-child(4) { animation-delay: 0.34s; }
+}
+
+/* ====== BASE STYLES (kept from original) ====== */
+
 ion-menu {
   --width: 260px;
   --background: #ffffff;
@@ -54,7 +92,6 @@ ion-item ion-icon[slot='start'] {
   --color: #1d4ed8;
   font-weight: 600;
 }
-
 
 /* dashboard.page.scss */
 .dashboard-content {
@@ -153,28 +190,6 @@ ion-item ion-icon[slot='start'] {
 }
 
 .legend {
-  margin-top: 12px;
-  font-size: 13px;
-  color: #6b7280;
-}
-
-.dot {
-  display: inline-block;
-  width: 10px;
-  height: 10px;
-  border-radius: 999px;
-  margin: 0 4px 0 12px;
-}
-
-.revenue-dot {
-  background: #2f80ed;
-}
-
-.expenses-dot {
-  background: #00c9a7;
-}
-
-.legend {
   margin-top: 16px;
   text-align: center;
   font-size: 13px;
@@ -190,9 +205,41 @@ ion-item ion-icon[slot='start'] {
 }
 
 .revenue-dot {
-  background: #3b82f6; // Vibrant blue
+  background: #3b82f6;
 }
 
 .expenses-dot {
-  background: #10b981; // Vibrant green
+  background: #10b981;
+}
+
+/* ============================================
+   MOBILE RESPONSIVE OVERRIDES
+   ============================================ */
+
+@media (max-width: 640px) {
+  // Chart responsive height
+  apx-chart {
+    .apexcharts-canvas {
+      max-height: 220px !important;
+    }
+  }
+
+  // Quick action buttons : smaller padding
+  .grid-cols-2 button {
+    padding: 0.75rem !important;
+
+    .w-10 {
+      width: 2rem !important;
+      height: 2rem !important;
+    }
+
+    span {
+      font-size: 0.75rem !important;
+    }
+  }
+}
+
+@media (max-width: 359px) {
+  // Very small screens — stats stack to 1 col
+  // Handled by Tailwind grid-cols-2 but might overflow
 }

@@ -1,0 +1,245 @@
+<!-- Order Details - Modern Interactive Timeline -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Order </span> Details
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="page-wrapper">
+
+    <!-- ========== HERO BANNER ========== -->
+    <div class="hero-banner">
+      <div class="hero-bg"></div>
+      <div class="hero-content">
+        <div class="hero-text">
+          <h1 class="hero-title">
+            <span class="text-light">Order</span>
+            <span class="text-white"> Tracking</span>
+          </h1>
+          <div class="hero-badge">
+            <ion-icon name="shield-checkmark-outline" class="badge-icon"></ion-icon>
+            <span>Track and manage all distributor orders</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SEARCH + FILTERS ========== -->
+    <div class="controls-section">
+      <!-- Search Bar -->
+      <div class="search-wrapper">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input 
+          (input)="onSearchChange($event)" 
+          [value]="searchQuery" 
+          class="search-input" 
+          placeholder="Search orders or distributors..." 
+          type="text"
+        />
+      </div>
+
+      <!-- Filter Chips -->
+      <div class="filter-chips">
+        <button 
+          *ngFor="let f of [
+            { key: 'all', label: 'All', icon: 'cube-outline' },
+            { key: 'pending', label: 'In Progress', icon: 'time-outline' },
+            { key: 'completed', label: 'Completed', icon: 'checkmark-circle' },
+            { key: 'cancelled', label: 'Cancelled', icon: 'close-circle' }
+          ]"
+          (click)="onFilterChange(f.key)" 
+          [class.active]="filterStatus === f.key"
+          [attr.data-filter]="f.key"
+          class="filter-chip">
+          <ion-icon [name]="f.icon"></ion-icon>
+          <span>{{ f.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STAT CARDS ========== -->
+    <div class="stats-grid">
+      <div class="stat-card stat-total">
+        <div class="stat-icon-wrap">
+          <ion-icon name="cart-outline"></ion-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Total Orders</span>
+          <span class="stat-value">{{ totalOrders }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-progress">
+        <div class="stat-icon-wrap">
+          <ion-icon name="time-outline"></ion-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">In Progress</span>
+          <span class="stat-value">{{ pendingOrders }}</span>
+        </div>
+      </div>
+
+      <div class="stat-card stat-done">
+        <div class="stat-icon-wrap">
+          <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        </div>
+        <div class="stat-info">
+          <span class="stat-label">Completed</span>
+          <span class="stat-value">{{ completedOrders }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== ORDER CARDS ========== -->
+    <div class="orders-list">
+      <div *ngFor="let order of filteredOrders; let i = index" 
+           class="order-card"
+           [class.expanded]="order.expanded"
+           [style.animation-delay]="i * 80 + 'ms'">
+
+        <!-- Card Header (clickable) -->
+        <div class="order-header" (click)="toggleOrder(order)">
+          <div class="order-header-left">
+            <div class="order-avatar" [attr.data-status]="getOrderStatus(order)">
+              <ion-icon name="cart-outline"></ion-icon>
+            </div>
+            <div class="order-meta">
+              <h3 class="order-number">{{ order.orderNumber }}</h3>
+              <span class="order-distributor">
+                <ion-icon name="business-outline"></ion-icon>
+                {{ order.distributorName }}
+              </span>
+            </div>
+          </div>
+          <div class="order-header-right">
+            <span class="status-badge" [attr.data-status]="getOrderStatus(order)">
+              <span class="status-badge-full">{{ getOrderStatus(order) }}</span>
+              <span class="status-badge-short">{{ getShortStatus(order) }}</span>
+            </span>
+            <ion-icon 
+              [name]="order.expanded ? 'chevron-up-outline' : 'chevron-down-outline'" 
+              class="expand-icon">
+            </ion-icon>
+          </div>
+        </div>
+
+        <!-- Mini Info Bar -->
+        <div class="order-info-bar">
+          <div class="info-item">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>{{ order.orderDate }}</span>
+          </div>
+          <div class="info-item">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span class="amount">₹{{ order.totalAmount | number }}</span>
+          </div>
+          <div class="info-item progress-info">
+            <div class="mini-progress-bar">
+              <div class="mini-progress-fill" [style.width.%]="getProgressPercentage(order)"
+                   [attr.data-status]="getOrderStatus(order)"></div>
+            </div>
+            <span class="progress-text">{{ getProgressPercentage(order) }}%</span>
+          </div>
+        </div>
+
+        <!-- ========== TIMELINE (Expandable) ========== -->
+        <div class="timeline-container" *ngIf="order.expanded">
+          <div class="timeline">
+            <div *ngFor="let step of order.steps; let si = index; let last = last" 
+                 class="timeline-step"
+                 [attr.data-status]="step.status"
+                 [style.animation-delay]="si * 60 + 'ms'">
+
+              <!-- Step Indicator -->
+              <div class="step-indicator">
+                <div class="step-dot" [attr.data-status]="step.status">
+                  <ion-icon [name]="getStepIcon(step)"></ion-icon>
+                </div>
+                <div *ngIf="!last" class="step-connector" [attr.data-status]="step.status"></div>
+              </div>
+
+              <!-- Step Content -->
+              <div class="step-content">
+                <div class="step-header">
+                  <div class="step-label-wrap">
+                    <ion-icon [name]="getStepLabelIcon(step)" class="step-label-icon" [attr.data-status]="step.status"></ion-icon>
+                    <h4 class="step-label">{{ step.label }}</h4>
+                  </div>
+                  <span *ngIf="step.date" class="step-date">{{ step.date }}</span>
+                </div>
+                <p *ngIf="step.remarks" class="step-remarks">{{ step.remarks }}</p>
+
+                <!-- Assigned Person Info -->
+                <div *ngIf="step.assignedPerson" class="step-person-info" [attr.data-status]="step.status">
+                  <div class="person-header">
+                    <ion-icon name="person-outline" class="person-icon"></ion-icon>
+                    <span class="person-label">Assigned To</span>
+                  </div>
+                  <div class="person-details">
+                    <div class="person-name">{{ step.assignedPerson.name }}</div>
+                    <div class="person-role">{{ step.assignedPerson.role }}</div>
+                    <div class="person-contact-row">
+                      <span class="person-contact">
+                        <ion-icon name="call-outline"></ion-icon>
+                        {{ step.assignedPerson.contact }}
+                      </span>
+                      <span class="person-email">
+                        <ion-icon name="mail-outline"></ion-icon>
+                        {{ step.assignedPerson.email }}
+                      </span>
+                    </div>
+                  </div>
+                </div>
+
+                <!-- Download Button -->
+                <button *ngIf="step.hasDownload && step.status !== 'cancelled' && step.status !== 'pending'"
+                        class="step-download-btn"
+                        (click)="onDownloadDocument(step, order)">
+                  <ion-icon name="download-outline"></ion-icon>
+                  <span>{{ step.downloadLabel }}</span>
+                </button>
+
+                <!-- Order Received Action Buttons -->
+                <div *ngIf="step.hasAction && step.status !== 'cancelled' && step.actionResponse === null && step.status !== 'pending'"
+                     class="step-action-buttons">
+                  <span class="action-label">Have you received this order?</span>
+                  <div class="action-btn-group">
+                    <button class="action-btn action-yes" (click)="onOrderReceivedAction(order, 'yes')">
+                      <ion-icon name="checkmark-circle"></ion-icon>
+                      YES
+                    </button>
+                    <button class="action-btn action-no" (click)="onOrderReceivedAction(order, 'no')">
+                      <ion-icon name="close-circle"></ion-icon>
+                      NO
+                    </button>
+                  </div>
+                </div>
+
+                <span class="step-status-tag" [attr.data-status]="step.status">
+                  <ion-icon [name]="getStepIcon(step)" class="tag-icon"></ion-icon>
+                  {{ step.status === 'in-progress' ? 'In Progress' : (step.status | titlecase) }}
+                </span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredOrders.length === 0" class="empty-state">
+        <div class="empty-icon-wrap">
+          <ion-icon name="cart-outline"></ion-icon>
+        </div>
+        <h3>No Orders Found</h3>
+        <p>{{ searchQuery ? 'Try adjusting your search query' : 'No orders available' }}</p>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

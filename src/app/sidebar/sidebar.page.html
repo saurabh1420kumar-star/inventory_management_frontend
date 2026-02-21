@@ -27,94 +27,117 @@
 
       <ion-list lines="none" class="menu-list">
 
-        <ion-item routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }">
+        <!-- ===== DASHBOARD (Both mobile & desktop) ===== -->
+        <ion-item routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="onMenuItemClick()">
           <ion-icon name="albums-outline" slot="start"></ion-icon>
           <ion-label>Dashboard</ion-label>
         </ion-item>
 
-        <ion-accordion-group *appAcl="{ features: ['ACCOUNTS', 'ACCOUNTS_TRANSACTION'] }">
-          <ion-accordion>
-            <ion-item slot="header" button>
-              <ion-icon name="reader-outline" slot="start"></ion-icon>
-              <ion-label>Accounts</ion-label>
-            </ion-item>
-
-            <div slot="content">
-              <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master" routerLinkActive="active">
-                <ion-label>Master</ion-label>
+        <!-- ===== ACCOUNTS (Desktop only) ===== -->
+        <ng-container *ngIf="isDesktop">
+          <ion-accordion-group *appAcl="{ features: ['ACCOUNTS', 'ACCOUNTS_TRANSACTION'] }">
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="reader-outline" slot="start"></ion-icon>
+                <ion-label>Accounts</ion-label>
               </ion-item>
-              <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction" routerLinkActive="active">
-                <ion-label>Transaction</ion-label>
-              </ion-item>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
 
-        <ion-accordion-group *appAcl="{ features: ['HR', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
-          <ion-accordion>
-            <ion-item slot="header" button>
-              <ion-icon name="people-outline" slot="start"></ion-icon>
-              <ion-label>Human Resources</ion-label>
-            </ion-item>
+              <div slot="content">
+                <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Master</ion-label>
+                </ion-item>
+                <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Transaction</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
 
-            <div slot="content">
-              <ion-item *appAcl="'HR'" routerLink="/hr-department" routerLinkActive="active">
-                <ion-label>Department Master</ion-label>
+        <!-- ===== HUMAN RESOURCES (Desktop only) ===== -->
+        <ng-container *ngIf="isDesktop">
+          <ion-accordion-group *appAcl="{ features: ['HR', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="people-outline" slot="start"></ion-icon>
+                <ion-label>Human Resources</ion-label>
               </ion-item>
-              <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master" routerLinkActive="active">
-                <ion-label>Designation Master</ion-label>
-              </ion-item>
-              <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master" routerLinkActive="active">
-                <ion-label>Employee Master</ion-label>
-              </ion-item>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
 
-        <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
-          <ion-accordion>
-            <ion-item slot="header" button>
-              <ion-icon name="business-outline" slot="start"></ion-icon>
-              <ion-label>Distributor</ion-label>
-            </ion-item>
+              <div slot="content">
+                <ion-item *appAcl="'HR'" routerLink="/hr-department" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Department Master</ion-label>
+                </ion-item>
+                <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Designation Master</ion-label>
+                </ion-item>
+                <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Employee Master</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
 
-            <div slot="content">
-              <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor" routerLinkActive="active">
-                <ion-label>Distributor Master</ion-label>
+        <!-- ===== DISTRIBUTOR (Mobile only) ===== -->
+        <ng-container *ngIf="isMobile">
+          <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="business-outline" slot="start"></ion-icon>
+                <ion-label>Distributor</ion-label>
               </ion-item>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
 
-        <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
-          <ion-accordion>
-            <ion-item slot="header" button>
-              <ion-icon name="cube-outline" slot="start"></ion-icon>
-              <ion-label>Inventory</ion-label>
-            </ion-item>
+              <div slot="content">
+                <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Distributor Master</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
 
-            <div slot="content">
-              <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory" routerLinkActive="active">
-                <ion-label>Master Inventory</ion-label>
+        <!-- ===== INVENTORY (Desktop only) ===== -->
+        <ng-container *ngIf="isDesktop">
+          <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="cube-outline" slot="start"></ion-icon>
+                <ion-label>Inventory</ion-label>
               </ion-item>
-              <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory" routerLinkActive="active">
-                <ion-label>Machine Parts</ion-label>
-              </ion-item>
-            </div>
-          </ion-accordion>
-        </ion-accordion-group>
 
-        <ion-item *appAcl="'COMPLAINT'" routerLink="/complaints" routerLinkActive="active">
+              <div slot="content">
+                <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Master Inventory</ion-label>
+                </ion-item>
+                <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Machine Parts</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
+
+        <!-- ===== ORDER TRACKING (Both mobile & desktop) ===== -->
+        <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/order-details" routerLinkActive="active" (click)="onMenuItemClick()">
+          <ion-icon name="document-text-outline" slot="start"></ion-icon>
+          <ion-label>Order Tracking</ion-label>
+        </ion-item>
+
+        <!-- ===== COMPLAINTS & FEEDBACK (Both mobile & desktop) ===== -->
+        <ion-item *appAcl="'COMPLAINT'" routerLink="/complaints" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
           <ion-label>Complaints & Feedback</ion-label>
         </ion-item>
 
-        <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active">
-          <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
-          <ion-label>User Rights</ion-label>
-        </ion-item>
+        <!-- ===== USER RIGHTS (Desktop only) ===== -->
+        <ng-container *ngIf="isDesktop">
+          <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active" (click)="onMenuItemClick()">
+            <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+            <ion-label>User Rights</ion-label>
+          </ion-item>
+        </ng-container>
 
-        <ion-item *appAcl="'OPERATIONS'" routerLink="/operations" routerLinkActive="active">
+        <ion-item *appAcl="'OPERATIONS'" routerLink="/operations" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="document-text-outline" slot="start"></ion-icon>
           <ion-label>Operations</ion-label>
         </ion-item>
@@ -127,15 +150,15 @@
     <!-- ========================= -->
     <div class="sidebar-footer">
       <div class="user-info">
-        <ion-icon name="person-sharp"></ion-icon>
+        <div class="user-avatar-wrap">
+          <ion-icon name="person-sharp" class="user-avatar"></ion-icon>
+        </div>
         <div class="user-details">
           <p class="user-greeting">Hi, {{ userName }}</p>
           <span class="user-role">{{ userRole }}</span>
         </div>
+        <app-logout class="logout-btn"></app-logout>
       </div>
-
-      <!-- 🚀 This calls API logout -->
-      <app-logout></app-logout>
     </div>
 
   </div>
