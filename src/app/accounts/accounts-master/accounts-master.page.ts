@@ -3,6 +3,7 @@ import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { LedgerService, LedgerDto, ApiResponse } from '../../services/accountsLedger.service';
+import { Toast as ToastService } from '../../services/toast';
 import { addIcons } from 'ionicons';
 import {
   bookOutline,
@@ -688,7 +689,8 @@ export class AccountsMasterPage implements OnInit {
   constructor(
     private toastController: ToastController,
     private ledgerService: LedgerService,
-    private elementRef: ElementRef
+    private elementRef: ElementRef,
+    private toastSvc: ToastService
   ) {
     // Add specific icons shown in the images
     addIcons({
@@ -1288,14 +1290,11 @@ export class AccountsMasterPage implements OnInit {
     };
   }
 
-  async showToast(message: string, color: string = 'dark') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom',
-      cssClass: 'text-sm'
-    });
-    toast.present();
+  async showToast(message: string, color: string = 'success') {
+    const validColors: ('success' | 'danger' | 'warning')[] = ['success', 'danger', 'warning'];
+    const mapped = validColors.includes(color as any)
+      ? (color as 'success' | 'danger' | 'warning')
+      : 'success';
+    await this.toastSvc.present(message, mapped);
   }
 }

@@ -163,6 +163,7 @@
   <!-- Mobile FAB: Add Distributor -->
   <button class="mobile-fab" (click)="openAddModal()">
     <ion-icon name="add-outline"></ion-icon>
+    <span>New Distributor</span>
   </button>
 </ion-content>
 
@@ -408,113 +409,113 @@
     <ion-content class="ion-padding bg-slate-50" *ngIf="selectedDistributor && !isEditing">
       <div class="max-w-7xl mx-auto">
         <!-- Header Card -->
-        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-3 sm:mb-4 text-white">
-          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
-            <div class="flex items-center gap-3 sm:gap-4">
-              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <ion-icon name="business-outline" class="text-white text-2xl sm:text-3xl"></ion-icon>
+        <div class="detail-header-card">
+          <div class="detail-header-top">
+            <div class="detail-header-info">
+              <div class="detail-avatar">
+                <ion-icon name="business-outline"></ion-icon>
               </div>
-              <div>
-                <h2 class="text-lg sm:text-xl font-bold mb-1 sm:mb-2">{{ selectedDistributor.name }}</h2>
-                <div class="flex flex-wrap gap-1.5 sm:gap-2">
-                  <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs sm:text-sm">{{ selectedDistributor.distributorType }}</span>
-                  <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs sm:text-sm">{{ selectedDistributor.companyType }}</span>
+              <div class="detail-header-text">
+                <h2 class="detail-name">{{ selectedDistributor.name }}</h2>
+                <div class="detail-badges">
+                  <span class="detail-badge">{{ selectedDistributor.distributorType }}</span>
+                  <span class="detail-badge">{{ selectedDistributor.companyType }}</span>
                 </div>
               </div>
             </div>
-            <div class="flex gap-2 w-full sm:w-auto">
-              <button (click)="onEditDistributor()" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all text-sm">
-                <ion-icon name="create-outline"></ion-icon>
-                Edit
-              </button>
-              <button (click)="openDeleteConfirmModal()" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-500/30 hover:bg-red-500/40 rounded-xl transition-all text-red-600 text-sm">
-                <ion-icon name="trash-outline"></ion-icon>
-                Delete
-              </button>
-            </div>
+          </div>
+          <div class="detail-actions">
+            <button (click)="onEditDistributor()" class="detail-btn detail-btn-edit">
+              <ion-icon name="create-outline"></ion-icon>
+              <span>Edit</span>
+            </button>
+            <button (click)="openDeleteConfirmModal()" class="detail-btn detail-btn-delete">
+              <ion-icon name="trash-outline"></ion-icon>
+              <span>Delete</span>
+            </button>
           </div>
         </div>
 
         <!-- Contact Information -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
-          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+        <div class="detail-section">
+          <div class="detail-section-header">
             <ion-icon name="call-outline" class="text-emerald-500 text-xl"></ion-icon>
-            <h3 class="text-base font-semibold text-slate-700 m-0">Contact Information</h3>
+            <h3>Contact Information</h3>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div class="p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center gap-2 mb-1">
+          <div class="detail-grid">
+            <div class="detail-field">
+              <div class="detail-field-label">
                 <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-slate-500 font-medium">Assigned Person</span>
+                <span>Assigned Person</span>
               </div>
-              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.assignedPerson }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.assignedPerson }}</p>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center gap-2 mb-1">
+            <div class="detail-field">
+              <div class="detail-field-label">
                 <ion-icon name="mail-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-slate-500 font-medium">Email Address</span>
+                <span>Email Address</span>
               </div>
-              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.email }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.email }}</p>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center gap-2 mb-1">
+            <div class="detail-field">
+              <div class="detail-field-label">
                 <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-slate-500 font-medium">Contact Number</span>
+                <span>Contact Number</span>
               </div>
-              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.contact }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.contact }}</p>
             </div>
 
-            <div class="p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center gap-2 mb-1">
+            <div class="detail-field">
+              <div class="detail-field-label">
                 <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-slate-500 font-medium">Alternate Contact</span>
+                <span>Alternate Contact</span>
               </div>
-              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.alternateContact || 'N/A' }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.alternateContact || 'N/A' }}</p>
             </div>
 
-            <div class="md:col-span-2 p-3 bg-slate-50 rounded-xl">
-              <div class="flex items-center gap-2 mb-1">
+            <div class="detail-field detail-field-full">
+              <div class="detail-field-label">
                 <ion-icon name="location-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-slate-500 font-medium">Address</span>
+                <span>Address</span>
               </div>
-              <p class="text-sm font-semibold text-slate-700 m-0">{{ selectedDistributor.address }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.address }}</p>
             </div>
           </div>
         </div>
 
         <!-- Legal Documents -->
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
-          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+        <div class="detail-section">
+          <div class="detail-section-header">
             <ion-icon name="document-text-outline" class="text-emerald-500 text-xl"></ion-icon>
-            <h3 class="text-base font-semibold text-slate-700 m-0">Legal Documents</h3>
+            <h3>Legal Documents</h3>
           </div>
           
-          <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div class="p-4 bg-blue-50 rounded-xl border border-blue-100">
-              <div class="flex items-center gap-2 mb-2">
-                <ion-icon name="card-outline" class="text-blue-500"></ion-icon>
-                <span class="text-xs text-blue-600 font-medium">Aadhar Number</span>
+          <div class="detail-docs-grid">
+            <div class="detail-doc-card detail-doc-blue">
+              <div class="detail-field-label">
+                <ion-icon name="card-outline"></ion-icon>
+                <span>Aadhar Number</span>
               </div>
-              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.aadharNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.aadharNo }}</p>
             </div>
 
-            <div class="p-4 bg-emerald-50 rounded-xl border border-emerald-100">
-              <div class="flex items-center gap-2 mb-2">
-                <ion-icon name="document-text-outline" class="text-emerald-500"></ion-icon>
-                <span class="text-xs text-emerald-600 font-medium">PAN Number</span>
+            <div class="detail-doc-card detail-doc-green">
+              <div class="detail-field-label">
+                <ion-icon name="document-text-outline"></ion-icon>
+                <span>PAN Number</span>
               </div>
-              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.panNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.panNo }}</p>
             </div>
 
-            <div class="p-4 bg-orange-50 rounded-xl border border-orange-100">
-              <div class="flex items-center gap-2 mb-2">
-                <ion-icon name="document-text-outline" class="text-orange-500"></ion-icon>
-                <span class="text-xs text-orange-600 font-medium">GST Number</span>
+            <div class="detail-doc-card detail-doc-orange">
+              <div class="detail-field-label">
+                <ion-icon name="document-text-outline"></ion-icon>
+                <span>GST Number</span>
               </div>
-              <p class="text-sm font-bold text-slate-800 m-0">{{ selectedDistributor.gstNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.gstNo }}</p>
             </div>
           </div>
         </div>

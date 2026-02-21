@@ -41,6 +41,150 @@
 @tailwind components;
 @tailwind utilities;
 
+// ============================================================
+// Modern Toast — Global Styles
+// ============================================================
+
+@keyframes toastFlyInRight {
+  0% {
+    opacity: 0;
+    transform: translateX(120%) scale(0.88);
+  }
+  55% {
+    opacity: 1;
+    transform: translateX(-10px) scale(1.02);
+  }
+  75% {
+    transform: translateX(5px) scale(0.99);
+  }
+  100% {
+    opacity: 1;
+    transform: translateX(0) scale(1);
+  }
+}
+
+// ---- Host positioning & size ----
+ion-toast.modern-toast {
+  --width: 380px;
+  --min-width: 300px;
+  --max-width: 400px;
+  --border-radius: 16px;
+  --box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22), 0 4px 16px rgba(0, 0, 0, 0.12);
+  position: fixed !important;
+  top: 20px !important;
+  right: 16px !important;
+  left: auto !important;
+  bottom: auto !important;
+  width: 380px !important;
+  max-width: calc(100vw - 32px) !important;
+  inset-inline-start: auto !important;
+  inset-inline-end: 16px !important;
+  animation: toastFlyInRight 0.5s cubic-bezier(0.22, 1, 0.36, 1) both !important;
+}
+
+// ---- Container (shadow part) ----
+ion-toast.modern-toast::part(container) {
+  padding: 14px 4px 14px 16px;
+  gap: 10px;
+  border-radius: 16px;
+  backdrop-filter: blur(12px);
+  -webkit-backdrop-filter: blur(12px);
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+// ---- Icon ----
+ion-toast.modern-toast::part(icon) {
+  font-size: 26px;
+  flex-shrink: 0;
+}
+
+// ---- Message ----
+ion-toast.modern-toast::part(message) {
+  font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', system-ui, sans-serif;
+  font-size: 0.85rem;
+  font-weight: 600;
+  line-height: 1.5;
+  letter-spacing: 0.1px;
+  flex: 1;
+}
+
+// ---- Close button ----
+ion-toast.modern-toast::part(button) {
+  font-size: 20px;
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  flex-shrink: 0;
+  align-self: flex-start;
+  margin-top: 2px;
+  margin-right: 6px;
+  transition: background 0.2s ease, opacity 0.2s ease;
+  opacity: 0.75;
+}
+ion-toast.modern-toast::part(button):hover {
+  opacity: 1;
+  background: rgba(255, 255, 255, 0.18);
+}
+ion-toast.modern-toast::part(button):active {
+  opacity: 0.9;
+  transform: scale(0.92);
+}
+
+// ---- Success ----
+ion-toast.modern-toast-success {
+  --background: linear-gradient(135deg, #059669 0%, #10b981 100%);
+  --color: #ecfdf5;
+}
+ion-toast.modern-toast-success::part(container) {
+  background: linear-gradient(135deg, rgba(5, 150, 105, 0.97) 0%, rgba(16, 185, 129, 0.97) 100%);
+  border-left: 4px solid #34d399;
+  color: #ecfdf5;
+}
+ion-toast.modern-toast-success::part(button) {
+  color: #a7f3d0;
+}
+
+// ---- Danger ----
+ion-toast.modern-toast-danger {
+  --background: linear-gradient(135deg, #dc2626 0%, #ef4444 100%);
+  --color: #fef2f2;
+}
+ion-toast.modern-toast-danger::part(container) {
+  background: linear-gradient(135deg, rgba(220, 38, 38, 0.97) 0%, rgba(239, 68, 68, 0.97) 100%);
+  border-left: 4px solid #fca5a5;
+  color: #fef2f2;
+}
+ion-toast.modern-toast-danger::part(button) {
+  color: #fecaca;
+}
+
+// ---- Warning ----
+ion-toast.modern-toast-warning {
+  --background: linear-gradient(135deg, #d97706 0%, #f59e0b 100%);
+  --color: #fffbeb;
+}
+ion-toast.modern-toast-warning::part(container) {
+  background: linear-gradient(135deg, rgba(217, 119, 6, 0.97) 0%, rgba(245, 158, 11, 0.97) 100%);
+  border-left: 4px solid #fde68a;
+  color: #fffbeb;
+}
+ion-toast.modern-toast-warning::part(button) {
+  color: #fde68a;
+}
+
+// ---- Mobile tweaks ----
+@media (max-width: 480px) {
+  ion-toast.modern-toast {
+    right: 10px !important;
+    inset-inline-end: 10px !important;
+    top: 12px !important;
+    width: calc(100vw - 20px) !important;
+    --width: calc(100vw - 20px);
+    --min-width: unset;
+    --max-width: calc(100vw - 20px);
+  }
+}
+
 @import "@ionic/angular/css/core.css";
 @import "@ionic/angular/css/normalize.css";
 @import "@ionic/angular/css/structure.css";

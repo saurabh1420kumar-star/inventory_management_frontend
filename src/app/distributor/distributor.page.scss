@@ -204,30 +204,38 @@ ion-modal {
 .mobile-fab {
   position: fixed;
   bottom: calc(24px + var(--safe-area-bottom));
-  right: 20px;
-  width: 56px;
-  height: 56px;
-  border-radius: 16px;
-  background: linear-gradient(135deg, #34d399 0%, #0ea5e9 100%);
-  color: white;
-  display: none;                       // hidden by default
+  right: 16px;
+  height: 50px;
+  padding: 0 20px;
+  border-radius: 25px;
+  background: #ffffff;
+  color: #10b981;
+  display: none;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 8px 32px rgba(16, 185, 129, 0.4);
+  gap: 8px;
+  box-shadow: 0 4px 20px rgba(0, 0, 0, 0.15), 0 0 0 1px rgba(16, 185, 129, 0.15);
   z-index: 100;
-  border: none;
+  border: 2px solid #10b981;
   cursor: pointer;
-  animation: bounceIn 0.55s ease-out, pulseGlow 2.5s ease-in-out infinite 0.55s;
-  transition: transform 0.18s ease;
+  animation: bounceIn 0.55s ease-out;
+  transition: transform 0.18s ease, box-shadow 0.25s ease;
   -webkit-tap-highlight-color: transparent;
 
   &:active {
-    transform: scale(0.86);
+    transform: scale(0.92);
   }
 
   ion-icon {
-    font-size: 26px;
-    filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.15));
+    font-size: 22px;
+    font-weight: bold;
+  }
+
+  span {
+    font-size: 14px;
+    font-weight: 700;
+    letter-spacing: 0.2px;
+    white-space: nowrap;
   }
 }
 
@@ -239,6 +247,230 @@ ion-modal {
   animation: shimmer 1.4s ease infinite;
   border-radius: 16px;
   height: 200px;
+}
+
+// ====== DETAIL MODAL STYLES ======
+
+.detail-header-card {
+  background: linear-gradient(135deg, #34d399 0%, #2dd4bf 40%, #3b82f6 100%);
+  border-radius: 20px;
+  padding: 20px;
+  margin-bottom: 16px;
+  color: #fff;
+}
+
+.detail-header-top {
+  margin-bottom: 16px;
+}
+
+.detail-header-info {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+}
+
+.detail-avatar {
+  width: 52px;
+  height: 52px;
+  border-radius: 50%;
+  background: rgba(255, 255, 255, 0.2);
+  backdrop-filter: blur(8px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon {
+    font-size: 26px;
+    color: #fff;
+  }
+}
+
+.detail-header-text {
+  flex: 1;
+  min-width: 0;
+}
+
+.detail-name {
+  font-size: 1.15rem;
+  font-weight: 800;
+  margin: 0 0 8px;
+  color: #fff;
+  word-break: break-word;
+}
+
+.detail-badges {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.detail-badge {
+  display: inline-block;
+  padding: 3px 12px;
+  background: rgba(255, 255, 255, 0.22);
+  backdrop-filter: blur(4px);
+  border-radius: 20px;
+  font-size: 0.7rem;
+  font-weight: 600;
+  color: #fff;
+  border: 1px solid rgba(255, 255, 255, 0.18);
+}
+
+.detail-actions {
+  display: flex;
+  gap: 10px;
+}
+
+.detail-btn {
+  flex: 1;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 10px 16px;
+  border-radius: 14px;
+  font-size: 0.85rem;
+  font-weight: 700;
+  border: none;
+  cursor: pointer;
+  transition: all 0.2s ease;
+
+  ion-icon {
+    font-size: 18px;
+  }
+}
+
+.detail-btn-edit {
+  background: rgba(255, 255, 255, 0.95);
+  color: #059669;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+
+  &:active {
+    transform: scale(0.96);
+    background: #fff;
+  }
+}
+
+.detail-btn-delete {
+  background: #fef2f2;
+  color: #dc2626;
+  border: 1px solid #fecaca;
+  box-shadow: 0 2px 8px rgba(220, 38, 38, 0.08);
+
+  &:active {
+    transform: scale(0.96);
+    background: #fee2e2;
+  }
+}
+
+// ---- Detail Sections ----
+
+.detail-section {
+  background: #fff;
+  border-radius: 18px;
+  padding: 18px;
+  margin-bottom: 14px;
+  border: 1px solid #f1f5f9;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.04);
+}
+
+.detail-section-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 14px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid #f1f5f9;
+
+  h3 {
+    margin: 0;
+    font-size: 0.95rem;
+    font-weight: 700;
+    color: #334155;
+  }
+}
+
+.detail-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.detail-field {
+  padding: 12px 14px;
+  background: #f8fafc;
+  border-radius: 14px;
+  border: 1px solid #f1f5f9;
+}
+
+.detail-field-full {
+  grid-column: 1 / -1;
+}
+
+.detail-field-label {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 4px;
+
+  ion-icon {
+    font-size: 15px;
+  }
+
+  span {
+    font-size: 0.72rem;
+    font-weight: 600;
+    color: #94a3b8;
+    text-transform: uppercase;
+    letter-spacing: 0.3px;
+  }
+}
+
+.detail-field-value {
+  margin: 0;
+  font-size: 0.88rem;
+  font-weight: 600;
+  color: #334155;
+  word-break: break-word;
+}
+
+// ---- Legal Document Cards ----
+
+.detail-docs-grid {
+  display: grid;
+  grid-template-columns: 1fr;
+  gap: 10px;
+}
+
+.detail-doc-card {
+  padding: 14px;
+  border-radius: 14px;
+  border: 1px solid;
+}
+
+.detail-doc-blue {
+  background: #eff6ff;
+  border-color: #bfdbfe;
+
+  .detail-field-label ion-icon { color: #3b82f6; }
+  .detail-field-label span { color: #2563eb; }
+}
+
+.detail-doc-green {
+  background: #ecfdf5;
+  border-color: #a7f3d0;
+
+  .detail-field-label ion-icon { color: #10b981; }
+  .detail-field-label span { color: #059669; }
+}
+
+.detail-doc-orange {
+  background: #fff7ed;
+  border-color: #fed7aa;
+
+  .detail-field-label ion-icon { color: #f59e0b; }
+  .detail-field-label span { color: #d97706; }
 }
 
 // ==========================================================
@@ -262,10 +494,54 @@ ion-modal {
     }
 
     ion-content.ion-padding {
-      --padding-start: 12px;
-      --padding-end: 12px;
-      --padding-top: 12px;
+      --padding-start: 14px;
+      --padding-end: 14px;
+      --padding-top: 8px;
     }
+  }
+
+  // Detail header card mobile
+  .detail-header-card {
+    border-radius: 16px;
+    padding: 16px;
+    margin-bottom: 12px;
+  }
+
+  .detail-avatar {
+    width: 44px;
+    height: 44px;
+
+    ion-icon { font-size: 22px; }
+  }
+
+  .detail-name {
+    font-size: 1.05rem;
+  }
+
+  .detail-actions {
+    gap: 8px;
+  }
+
+  .detail-btn {
+    padding: 10px 12px;
+    border-radius: 12px;
+    font-size: 0.82rem;
+  }
+
+  .detail-section {
+    padding: 14px;
+    border-radius: 14px;
+    margin-bottom: 10px;
+  }
+
+  .detail-field {
+    padding: 10px 12px;
+    border-radius: 12px;
+  }
+
+  .detail-doc-card {
+    padding: 12px;
+    border-radius: 12px;
   }
 }
 
@@ -280,5 +556,21 @@ ion-modal {
 @media (min-width: 641px) {
   .mobile-fab {
     display: none !important;
+  }
+
+  .detail-grid {
+    grid-template-columns: repeat(2, 1fr);
+  }
+
+  .detail-docs-grid {
+    grid-template-columns: repeat(3, 1fr);
+  }
+
+  .detail-header-card {
+    padding: 24px;
+  }
+
+  .detail-section {
+    padding: 24px;
   }
 }
