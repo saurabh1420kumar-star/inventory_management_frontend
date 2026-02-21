@@ -3,6 +3,8 @@ import { Router } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 import { Auth } from '../services/auth';
+import { addIcons } from 'ionicons';
+import { logOutOutline } from 'ionicons/icons';
 
 @Component({
   selector: 'app-logout',
@@ -13,7 +15,9 @@ import { Auth } from '../services/auth';
 })
 export class LogoutComponent {
 
-  constructor(private auth: Auth, private router: Router) {}
+  constructor(private auth: Auth, private router: Router) {
+    addIcons({ 'log-out-outline': logOutOutline });
+  }
 
   logout() {
     this.auth.logoutApi().subscribe({

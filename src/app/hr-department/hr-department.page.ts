@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { User } from '../models/user.model';
@@ -112,7 +112,8 @@ export class HrDepartmentPage implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private userService: UserService,
-    private auth: Auth
+    private auth: Auth,
+    private elementRef: ElementRef
   ) {
     this.employeeForm = this.formBuilder.group({
       id: [''],
@@ -143,6 +144,17 @@ export class HrDepartmentPage implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+  }
+
+  /** Close status dropdown when clicking outside */
+  @HostListener('document:click', ['$event'])
+  onDocumentClick(event: MouseEvent) {
+    if (this.showStatusDropdown) {
+      const dropdownEl = this.elementRef.nativeElement.querySelector('.status-dropdown-wrap');
+      if (dropdownEl && !dropdownEl.contains(event.target as HTMLElement)) {
+        this.showStatusDropdown = false;
+      }
+    }
   }
 
   loadUsers() {

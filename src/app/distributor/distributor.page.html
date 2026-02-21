@@ -11,27 +11,27 @@
 </ion-header>
 
 <ion-content class="ion-padding">
-  <div class="flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-8">
+  <div class="flex flex-col bg-gradient-to-br from-gray-50 to-blue-50 min-h-full pb-20 sm:pb-8">
     <!-- Fixed Header Section -->
-    <div class="flex-shrink-0 p-5">
+    <div class="flex-shrink-0 px-3 sm:px-5 pt-3 sm:pt-5">
       <div class="max-w-7xl mx-auto">
         <!-- Gradient Banner Container -->
-        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-2xl p-10">
+        <div class="animate-banner bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 lg:p-10">
           <!-- Top Section: Title and Buttons -->
-          <div class="flex items-center justify-between mb-6">
+          <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3 mb-4 sm:mb-6">
             <!-- Left: Title with Badge -->
             <div>
-              <h1 class="text-2xl font-bold mb-4">
+              <h1 class="text-lg sm:text-2xl font-bold mb-2 sm:mb-4">
                 <span class="text-emerald-600">Distributor</span>
                 <span class="text-white">Management</span>
               </h1>
-              <div class="inline-flex items-center gap-2 px-4 py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
-                <ion-icon class="text-white text-sm" name="shield-checkmark-outline"></ion-icon>
-                <span class="text-white text-sm font-medium">Manage and track all distributor records</span>
+              <div class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+                <ion-icon class="text-white text-xs sm:text-sm" name="shield-checkmark-outline"></ion-icon>
+                <span class="text-white text-xs sm:text-sm font-medium">Manage and track all distributor records</span>
               </div>
             </div>
-            <!-- Right: Action Buttons -->
-            <div class="flex items-center gap-3">
+            <!-- Right: Action Buttons (hidden on mobile — use FAB) -->
+            <div class="hidden sm:flex items-center gap-3">
               <button (click)="openAddModal()" class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
                 <ion-icon class="text-xl" name="add-outline"></ion-icon>
                 <span>Add Distributor</span>
@@ -42,53 +42,53 @@
 
         <!-- Search and Stats Section -->
         <div class="mb-8">
-          <div class="flex gap-4 mt-6 mb-6">
+          <div class="animate-search flex gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6">
             <!-- Search Input -->
             <div class="flex-1 relative">
-              <ion-icon class="absolute left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-xl pointer-events-none z-10" name="search-outline"></ion-icon>
+              <ion-icon class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg sm:text-xl pointer-events-none z-10" name="search-outline"></ion-icon>
               <input 
                 (input)="onSearchChange($event)" 
                 [value]="searchQuery" 
-                class="w-full pl-12 pr-4 py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium" 
-                placeholder="Search by name, person, phone, or address..." 
+                class="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium text-sm sm:text-base" 
+                placeholder="Search distributors..." 
                 type="text"
               />
             </div>
           </div>
 
           <!-- Stats Cards -->
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+          <div class="stats-grid grid grid-cols-2 lg:grid-cols-3 gap-2 sm:gap-4">
             <!-- Card: Total Distributors -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-blue-500 font-medium text-sm">Total Distributors</span>
-                <div class="p-2 bg-blue-50 rounded-lg text-blue-600">
-                  <ion-icon class="text-lg" name="business-outline"></ion-icon>
+            <div class="stat-animate bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-blue-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-1 sm:mb-2">
+                <span class="text-blue-500 font-medium text-xs sm:text-sm">Total Distributors</span>
+                <div class="p-1.5 sm:p-2 bg-blue-50 rounded-lg text-blue-600">
+                  <ion-icon class="text-sm sm:text-lg" name="business-outline"></ion-icon>
                 </div>
               </div>
-              <div class="text-3xl font-bold text-slate-800">{{ totalDistributors }}</div>
+              <div class="text-xl sm:text-3xl font-bold text-slate-800">{{ totalDistributors }}</div>
             </div>
 
             <!-- Card: Assigned Persons -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-emerald-100 hover:shadow-md transition-all">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-emerald-500 font-medium text-sm">Sales Persons</span>
-                <div class="p-2 bg-emerald-50 rounded-lg text-emerald-600">
-                  <ion-icon class="text-lg" name="person-outline"></ion-icon>
+            <div class="stat-animate bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-emerald-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-1 sm:mb-2">
+                <span class="text-emerald-500 font-medium text-xs sm:text-sm">Sales Persons</span>
+                <div class="p-1.5 sm:p-2 bg-emerald-50 rounded-lg text-emerald-600">
+                  <ion-icon class="text-sm sm:text-lg" name="person-outline"></ion-icon>
                 </div>
               </div>
-              <div class="text-3xl font-bold text-slate-800">{{ totalAssignedPersons }}</div>
+              <div class="text-xl sm:text-3xl font-bold text-slate-800">{{ totalAssignedPersons }}</div>
             </div>
 
             <!-- Card: Distributor Types -->
-            <div class="bg-white p-5 rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all">
-              <div class="flex items-center justify-between mb-2">
-                <span class="text-orange-500 font-medium text-sm">Distributor Types</span>
-                <div class="p-2 bg-orange-50 rounded-lg text-orange-600">
-                  <ion-icon class="text-lg" name="layers-outline"></ion-icon>
+            <div class="stat-animate bg-white p-3 sm:p-5 rounded-xl sm:rounded-2xl shadow-sm border border-orange-100 hover:shadow-md transition-all">
+              <div class="flex items-center justify-between mb-1 sm:mb-2">
+                <span class="text-orange-500 font-medium text-xs sm:text-sm">Distributor Types</span>
+                <div class="p-1.5 sm:p-2 bg-orange-50 rounded-lg text-orange-600">
+                  <ion-icon class="text-sm sm:text-lg" name="layers-outline"></ion-icon>
                 </div>
               </div>
-              <div class="text-3xl font-bold text-slate-800">{{ totalDistributorTypes }}</div>
+              <div class="text-xl sm:text-3xl font-bold text-slate-800">{{ totalDistributorTypes }}</div>
             </div>
           </div>
         </div>
@@ -96,47 +96,47 @@
     </div>
 
     <!-- Scrollable Distributor Cards Section -->
-    <div class="flex-1 overflow-auto px-5">
+    <div class="flex-1 overflow-auto px-3 sm:px-5">
       <div class="max-w-7xl mx-auto">
         <!-- Distributor Cards Grid -->
-        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-4">
+        <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4">
           <div *ngFor="let distributor of filteredDistributors" 
-               class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer overflow-hidden"
+               class="card-stagger touch-card bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100 hover:shadow-lg hover:border-emerald-200 transition-all cursor-pointer overflow-hidden"
                (click)="openDetailsModal(distributor)">
             <!-- Card Header with Gradient -->
-            <div class="bg-gradient-to-r from-emerald-400 to-teal-400 p-4">
-              <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                  <ion-icon name="business-outline" class="text-white text-2xl"></ion-icon>
+            <div class="bg-gradient-to-r from-emerald-400 to-teal-400 p-3 sm:p-4">
+              <div class="flex items-center gap-2.5 sm:gap-3">
+                <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                  <ion-icon name="business-outline" class="text-white text-xl sm:text-2xl"></ion-icon>
                 </div>
                 <div class="flex-1 min-w-0">
-                  <h3 class="text-white font-bold truncate">{{ distributor.name }}</h3>
-                  <span class="inline-block px-2 py-0.5 bg-white/20 rounded-full text-white text-xs">{{ distributor.distributorType }}</span>
+                  <h3 class="text-white font-bold truncate text-sm sm:text-base">{{ distributor.name }}</h3>
+                  <span class="inline-block px-2 py-0.5 bg-white/20 rounded-full text-white text-[0.65rem] sm:text-xs">{{ distributor.distributorType }}</span>
                 </div>
               </div>
             </div>
             
             <!-- Card Body -->
-            <div class="p-4 space-y-3">
-              <div class="flex items-center gap-2 text-sm text-gray-600">
-                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
+            <div class="p-3 sm:p-4 space-y-2 sm:space-y-3">
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                <ion-icon name="person-outline" class="text-emerald-500 text-sm sm:text-base"></ion-icon>
                 <span class="truncate">{{ distributor.assignedPerson }}</span>
               </div>
               
-              <div class="flex items-center gap-2 text-sm text-gray-600">
-                <ion-icon name="call-outline" class="text-emerald-500"></ion-icon>
+              <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
+                <ion-icon name="call-outline" class="text-emerald-500 text-sm sm:text-base"></ion-icon>
                 <span>{{ distributor.contact }}</span>
               </div>
               
-              <div class="flex items-start gap-2 text-sm text-gray-600">
-                <ion-icon name="location-outline" class="text-emerald-500 mt-0.5"></ion-icon>
+              <div class="flex items-start gap-2 text-xs sm:text-sm text-gray-600">
+                <ion-icon name="location-outline" class="text-emerald-500 mt-0.5 text-sm sm:text-base"></ion-icon>
                 <span class="line-clamp-2">{{ distributor.address }}</span>
               </div>
             </div>
 
             <!-- Card Footer -->
-            <div class="px-4 pb-4">
-              <button class="w-full py-2 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-lg text-sm font-medium transition-colors">
+            <div class="px-3 sm:px-4 pb-3 sm:pb-4">
+              <button class="w-full py-2 bg-slate-50 hover:bg-emerald-50 text-slate-600 hover:text-emerald-600 rounded-lg text-xs sm:text-sm font-medium transition-colors">
                 View Details
               </button>
             </div>
@@ -144,9 +144,9 @@
         </div>
 
         <!-- Empty State -->
-        <div *ngIf="filteredDistributors.length === 0" class="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-100">
-          <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-            <ion-icon name="business-outline" class="text-4xl text-slate-400"></ion-icon>
+        <div *ngIf="filteredDistributors.length === 0" class="text-center py-10 sm:py-16 px-4 bg-white rounded-xl sm:rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-16 h-16 sm:w-20 sm:h-20 mx-auto mb-3 sm:mb-4 rounded-full bg-slate-100 flex items-center justify-center">
+            <ion-icon name="business-outline" class="text-3xl sm:text-4xl text-slate-400"></ion-icon>
           </div>
           <p class="text-slate-500 mb-4">
             {{ searchQuery ? 'No distributors found. Try adjusting your search query' : 'No distributors found' }}
@@ -159,6 +159,11 @@
       </div>
     </div>
   </div>
+
+  <!-- Mobile FAB: Add Distributor -->
+  <button class="mobile-fab" (click)="openAddModal()">
+    <ion-icon name="add-outline"></ion-icon>
+  </button>
 </ion-content>
 
 <!-- Add/Edit Modal -->
@@ -373,11 +378,11 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-3 justify-end">
-          <button type="button" (click)="closeAddModal()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
+        <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+          <button type="button" (click)="closeAddModal()" class="w-full sm:w-auto px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium text-center">
             Cancel
           </button>
-          <button type="submit" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg">
+          <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg text-center">
             Add Distributor
           </button>
         </div>
@@ -403,28 +408,30 @@
     <ion-content class="ion-padding bg-slate-50" *ngIf="selectedDistributor && !isEditing">
       <div class="max-w-7xl mx-auto">
         <!-- Header Card -->
-        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl p-6 mb-4 text-white">
-          <div class="flex items-start justify-between">
-            <div class="flex items-center gap-4">
-              <div class="w-16 h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
-                <ion-icon name="business-outline" class="text-white text-3xl"></ion-icon>
+        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-xl sm:rounded-2xl p-4 sm:p-6 mb-3 sm:mb-4 text-white">
+          <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3">
+            <div class="flex items-center gap-3 sm:gap-4">
+              <div class="w-12 h-12 sm:w-16 sm:h-16 rounded-full bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ion-icon name="business-outline" class="text-white text-2xl sm:text-3xl"></ion-icon>
               </div>
               <div>
-                <h2 class="text-xl font-bold mb-2">{{ selectedDistributor.name }}</h2>
-                <div class="flex gap-2">
-                  <span class="px-3 py-1 bg-white/20 rounded-full text-sm">{{ selectedDistributor.distributorType }}</span>
-                  <span class="px-3 py-1 bg-white/20 rounded-full text-sm">{{ selectedDistributor.companyType }}</span>
+                <h2 class="text-lg sm:text-xl font-bold mb-1 sm:mb-2">{{ selectedDistributor.name }}</h2>
+                <div class="flex flex-wrap gap-1.5 sm:gap-2">
+                  <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs sm:text-sm">{{ selectedDistributor.distributorType }}</span>
+                  <span class="px-2 sm:px-3 py-0.5 sm:py-1 bg-white/20 rounded-full text-xs sm:text-sm">{{ selectedDistributor.companyType }}</span>
                 </div>
               </div>
             </div>
-            <button (click)="onEditDistributor()" class="flex items-center gap-2 px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all">
-              <ion-icon name="create-outline"></ion-icon>
-              Edit
-            </button>
-            <button (click)="openDeleteConfirmModal()" class="flex items-center gap-2 px-4 py-2 bg-red-500/30 hover:bg-red-500/40 rounded-xl transition-all text-red-600">
-              <ion-icon name="trash-outline"></ion-icon>
-              Delete
-            </button>
+            <div class="flex gap-2 w-full sm:w-auto">
+              <button (click)="onEditDistributor()" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-white/20 hover:bg-white/30 rounded-xl transition-all text-sm">
+                <ion-icon name="create-outline"></ion-icon>
+                Edit
+              </button>
+              <button (click)="openDeleteConfirmModal()" class="flex-1 sm:flex-initial flex items-center justify-center gap-2 px-3 sm:px-4 py-2 bg-red-500/30 hover:bg-red-500/40 rounded-xl transition-all text-red-600 text-sm">
+                <ion-icon name="trash-outline"></ion-icon>
+                Delete
+              </button>
+            </div>
           </div>
         </div>
 
@@ -663,11 +670,11 @@
         </div>
 
         <!-- Actions -->
-        <div class="flex gap-3 justify-end">
-          <button type="button" (click)="cancelEdit()" class="px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium">
+        <div class="flex flex-col-reverse sm:flex-row gap-2 sm:gap-3 sm:justify-end">
+          <button type="button" (click)="cancelEdit()" class="w-full sm:w-auto px-6 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium text-center">
             Cancel
           </button>
-          <button type="submit" class="px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg">
+          <button type="submit" class="w-full sm:w-auto px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg text-center">
             Update Distributor
           </button>
         </div>

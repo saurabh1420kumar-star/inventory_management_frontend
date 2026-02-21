@@ -1,6 +1,6 @@
 // sidebar.page.ts
 
-import { Component, OnInit, HostBinding, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostBinding, HostListener, Input, Output, EventEmitter } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '../services/auth';
 import { CommonModule } from '@angular/common';
@@ -8,6 +8,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { AclDirective } from '../acl/acl.directive';
 import { LogoutComponent } from '../logout/logout.component';
+import { Capacitor } from '@capacitor/core';
 
 @Component({
   selector: 'app-sidebar',
@@ -23,10 +24,11 @@ import { LogoutComponent } from '../logout/logout.component';
     AclDirective,
   ],
 })
-export class SidebarPage implements OnInit {
+export class SidebarPage implements OnInit, OnDestroy {
 
   userName: string | null = null;
   userRole: string | null = null;
+  isMobile: boolean = false;
 
   // Accept collapsed state from parent
   @Input() collapsed = false;
@@ -44,6 +46,8 @@ export class SidebarPage implements OnInit {
     return this.collapsed;
   }
 
+  private static readonly MOBILE_BREAKPOINT = 768;
+
   constructor(
     private auth: Auth,
     private router: Router
@@ -52,11 +56,33 @@ export class SidebarPage implements OnInit {
   ngOnInit() {
     this.userName = this.auth.getUsername();
     this.userRole = this.auth.getRoleType();
+    this.checkMobile();
   }
-onToggleSidebar() {
-  this.toggleSidebar.emit();
-}
 
+  ngOnDestroy() {}
+
+  @HostListener('window:resize')
+  onResize() {
+    this.checkMobile();
+  }
+
+  get isDesktop(): boolean {
+    return !this.isMobile;
+  }
+
+  private checkMobile() {
+    this.isMobile = Capacitor.isNativePlatform() || window.innerWidth < SidebarPage.MOBILE_BREAKPOINT;
+  }
+
+  onToggleSidebar() {
+    this.toggleSidebar.emit();
+  }
+
+  onMenuItemClick() {
+    if (this.isMobile) {
+      this.toggleSidebar.emit();
+    }
+  }
 
   logout() {
     this.auth.logout?.();

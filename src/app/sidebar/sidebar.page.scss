@@ -137,31 +137,54 @@
     padding: 12px;
     border-top: 1px solid var(--ion-border-color, #e5e7eb);
     margin-top: auto;
+    background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%);
 
     .user-info {
       display: flex;
       align-items: center;
       gap: 10px;
-      margin-bottom: 8px;
+
+      .user-avatar-wrap {
+        width: 38px;
+        height: 38px;
+        border-radius: 12px;
+        background: linear-gradient(135deg, #10b981, #059669);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+        flex-shrink: 0;
+        box-shadow: 0 2px 8px rgba(16, 185, 129, 0.25);
+      }
 
       .user-avatar {
-        font-size: 32px;
-        color: var(--ion-color-medium);
+        font-size: 20px;
+        color: #fff;
       }
 
       .user-details {
         flex: 1;
+        min-width: 0;
 
         .user-greeting {
           margin: 0;
           font-size: 13px;
-          font-weight: 600;
+          font-weight: 700;
+          color: var(--ion-text-color, #1e293b);
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
 
         .user-role {
           font-size: 11px;
           color: var(--ion-color-medium);
+          font-weight: 500;
         }
+      }
+
+      .logout-btn {
+        flex-shrink: 0;
+        margin-left: auto;
       }
     }
   }
@@ -234,6 +257,10 @@
         justify-content: center;
 
         .user-details {
+          display: none;
+        }
+
+        .logout-btn {
           display: none;
         }
       }

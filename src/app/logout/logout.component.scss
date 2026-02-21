@@ -1,21 +1,35 @@
-.logout-wrapper {
+.logout-native-btn {
   display: flex;
   align-items: center;
-  gap: 8px;
-}
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: none;
+  background: linear-gradient(135deg, #fef2f2, #fee2e2);
+  color: #ef4444;
+  cursor: pointer;
+  transition: all 0.25s ease;
+  flex-shrink: 0;
 
-.user-info {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
+  ion-icon {
+    font-size: 20px;
+    color: #ef4444;
+    pointer-events: none;
+  }
 
-.user-details p {
-  margin: 0;
-  font-weight: 500;
-}
+  &:hover {
+    background: linear-gradient(135deg, #fee2e2, #fecaca);
+    color: #dc2626;
+    transform: scale(1.08);
+    box-shadow: 0 3px 12px rgba(239, 68, 68, 0.25);
 
-small {
-  font-size: 11px;
-  color: var(--ion-color-medium);
+    ion-icon {
+      color: #dc2626;
+    }
+  }
+
+  &:active {
+    transform: scale(0.95);
+  }
 }
