@@ -113,6 +113,9 @@ export class MasterInventoryPage implements OnInit {
   selectedItem: DisplayInventoryItem | null = null;
   currentPage = 1;
   itemsPerPage = 6;
+  selectedCategory: 'raw_material' | 'finished_product' | null = null;
+  rawMaterials: DisplayInventoryItem[] = [];
+  finishedProducts: DisplayInventoryItem[] = [];
   /* ---------- FORM ---------- */
   addForm: FormGroup;
   editForm: FormGroup;
@@ -129,9 +132,11 @@ export class MasterInventoryPage implements OnInit {
     private inventoryService: InventoryService
   ) {
     this.addForm = this.fb.group({
+      category: ['', Validators.required],
       name: ['', Validators.required],
       materialCode: ['', Validators.required],
       unit: ['KG', Validators.required],
+      subUnit: ['KG'],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -140,6 +145,7 @@ export class MasterInventoryPage implements OnInit {
       name: ['', Validators.required],
       materialCode: ['', Validators.required],
       unit: ['KG', Validators.required],
+      subUnit: ['KG'],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -379,13 +385,20 @@ export class MasterInventoryPage implements OnInit {
     this.isAddModalOpen = true;
   }
 
+  onCategoryChange(category: 'raw_material' | 'finished_product') {
+    this.selectedCategory = category;
+    this.addForm.patchValue({ category });
+  }
+
   closeAddModal() {
     this.isAddModalOpen = false;
     this.previewImage = null;
     this.selectedImageFile = null;
+    this.selectedCategory = null;
 
     this.addForm.reset({
       unit: 'KG',
+      subUnit: 'KG',
       quantity: 0,
       minimumThreshold: 0
     });
@@ -393,9 +406,12 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- ADD ITEM ---------- */
   addItem() {
-    if (this.addForm.invalid) return;
+    if (this.addForm.invalid || !this.selectedCategory) return;
 
-    const payload = this.addForm.value;
+    const payload = {
+      ...this.addForm.value,
+      category: this.selectedCategory
+    };
 
     this.inventoryService.createItem(payload).subscribe({
       next: (created) => {
@@ -435,6 +451,7 @@ export class MasterInventoryPage implements OnInit {
     this.selectedItem = null;
     this.editForm.reset({
       unit: 'KG',
+      subUnit: 'KG',
       quantity: 0,
       minimumThreshold: 0
     });
@@ -471,6 +488,36 @@ export class MasterInventoryPage implements OnInit {
       },
       error: () => alert('Delete failed')
     });
+  }
+
+  /* ---------- SUB-UNIT OPTIONS ---------- */
+  subUnitOptionsMap: { [key: string]: { value: string; label: string }[] } = {
+    'KG': [
+      { value: 'KG', label: 'Kilogram (KG)' },
+      { value: 'GRAM', label: 'Gram' },
+      { value: 'MILLIGRAM', label: 'Milligram' }
+    ],
+    'LITER': [
+      { value: 'LITER', label: 'Liter' },
+      { value: 'MILLILITER', label: 'Milliliter' }
+    ]
+  };
+
+  getSubUnits(unit: string): { value: string; label: string }[] {
+    return this.subUnitOptionsMap[unit] || [];
+  }
+
+  hasSubUnits(unit: string): boolean {
+    return !!this.subUnitOptionsMap[unit];
+  }
+
+  onUnitChange(unit: string, form: FormGroup) {
+    const subUnits = this.getSubUnits(unit);
+    if (subUnits.length > 0) {
+      form.patchValue({ subUnit: subUnits[0].value });
+    } else {
+      form.patchValue({ subUnit: '' });
+    }
   }
 
   onSearchChange(event: any) {

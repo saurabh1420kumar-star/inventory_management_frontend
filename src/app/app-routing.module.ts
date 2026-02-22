@@ -27,6 +27,11 @@ const routes: Routes = [
     canActivate: [AuthGuard] // Protected route
   },
   {
+    path: 'unit-master',
+    loadChildren: () => import('./unit-master/unit-master.module').then(m => m.UnitMasterPageModule),
+    canActivate: [AuthGuard] // Protected route
+  },
+  {
     path: 'complaints',
     loadChildren: () => import('./feedback/feedback.module').then(m => m.FeedbackPageModule),
     canActivate: [AuthGuard] // Protected route
@@ -67,6 +72,16 @@ const routes: Routes = [
     loadChildren: () => import('./order-details/order-details.module').then( m => m.OrderDetailsPageModule),
     canActivate: [AuthGuard]
   },
+  {
+    path: 'sales',
+    loadChildren: () => import('./sales/sales.module').then(m => m.SalesPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'sales-distributor',
+    loadChildren: () => import('./sales-distributor/sales-distributor.module').then(m => m.SalesDistributorPageModule),
+    canActivate: [AuthGuard]
+  }
 
 ];
 

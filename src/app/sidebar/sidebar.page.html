@@ -95,6 +95,22 @@
             </ion-accordion>
           </ion-accordion-group>
         </ng-container>
+        <ng-container *ngIf="isMobile">
+        <ion-accordion-group *appAcl="{ features: ['SALES'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="trending-up-outline" slot="start"></ion-icon>
+              <ion-label>Sales</ion-label>
+            </ion-item>
+
+            <div slot="content">
+              <ion-item *appAcl="'SALES'" routerLink="/sales" routerLinkActive="active">
+                <ion-label>Sales Management</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
+        </ng-container>
 
         <!-- ===== INVENTORY (Desktop only) ===== -->
         <ng-container *ngIf="isDesktop">
@@ -108,6 +124,9 @@
               <div slot="content">
                 <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/master-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-label>Master Inventory</ion-label>
+                </ion-item>
+                <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/unit-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-label>Unit Master</ion-label>
                 </ion-item>
                 <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/machine-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-label>Machine Parts</ion-label>

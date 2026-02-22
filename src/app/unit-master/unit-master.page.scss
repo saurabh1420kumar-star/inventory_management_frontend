@@ -1,0 +1,76 @@
+/* Unit Master Page Styles */
+
+:host {
+  --ion-background-color: #f8fafc;
+}
+
+/* Status Badge Styles */
+.badge-active {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #dcfce7;
+  color: #166534;
+}
+
+.badge-inactive {
+  display: inline-block;
+  padding: 0.25rem 0.75rem;
+  border-radius: 9999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background-color: #f1f5f9;
+  color: #475569;
+}
+
+/* Modal Custom Styles */
+::ng-deep .custom-modal {
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 24px 24px 0 0;
+}
+
+/* Smooth transitions */
+ion-modal {
+  --backdrop-opacity: 0.4;
+}
+
+/* Animation for list items */
+.unit-card {
+  animation: slideIn 0.3s ease-out;
+}
+
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* Focus states */
+input:focus,
+ion-input:focus,
+ion-select:focus {
+  outline: none;
+}
+
+/* Responsive adjustments */
+@media (max-width: 640px) {
+  .stat-card {
+    padding: 1rem;
+  }
+
+  h1 {
+    font-size: 1.5rem;
+  }
+
+  .unit-card {
+    padding: 1rem;
+  }
+}
