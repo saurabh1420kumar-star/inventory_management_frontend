@@ -5,6 +5,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
+import { Auth } from '../services/auth';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -59,6 +60,8 @@ export class DashboardPage implements OnInit {
     name: 'John Doe'
   };
 
+  isDistributor = false;
+
   currentDate = new Date();
 
   statsCards: StatsCard[] = [
@@ -107,10 +110,16 @@ export class DashboardPage implements OnInit {
   public chartOptions: Partial<ChartOptions> | undefined;
   selectedChartType: 'line' | 'bar' = 'line';
 
-  constructor() {}
+  constructor(private auth: Auth) {}
 
   ngOnInit() {
+    this.checkUserRole();
     this.initializeChart();
+  }
+
+  checkUserRole() {
+    const roleType = this.auth.getRoleType();
+    this.isDistributor = roleType === 'DISTRIBUTOR' || roleType === 'SALES';
   }
 
   initializeChart() {

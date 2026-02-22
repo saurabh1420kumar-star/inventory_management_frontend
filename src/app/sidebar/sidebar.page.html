@@ -33,8 +33,8 @@
           <ion-label>Dashboard</ion-label>
         </ion-item>
 
-        <!-- ===== ACCOUNTS (Desktop only) ===== -->
-        <ng-container *ngIf="isDesktop">
+        <!-- ===== ACCOUNTS (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
           <ion-accordion-group *appAcl="{ features: ['ACCOUNTS', 'ACCOUNTS_TRANSACTION'] }">
             <ion-accordion>
               <ion-item slot="header" button>
@@ -54,8 +54,8 @@
           </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== HUMAN RESOURCES (Desktop only) ===== -->
-        <ng-container *ngIf="isDesktop">
+        <!-- ===== HUMAN RESOURCES (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
           <ion-accordion-group *appAcl="{ features: ['HR', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
             <ion-accordion>
               <ion-item slot="header" button>
@@ -78,8 +78,8 @@
           </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== DISTRIBUTOR (Mobile only) ===== -->
-        <ng-container *ngIf="isMobile">
+        <!-- ===== DISTRIBUTOR (Mobile only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isMobile || isAdmin">
           <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
             <ion-accordion>
               <ion-item slot="header" button>
@@ -95,7 +95,7 @@
             </ion-accordion>
           </ion-accordion-group>
         </ng-container>
-        <ng-container *ngIf="isMobile">
+        <ng-container *ngIf="isMobile || isAdmin">
         <ion-accordion-group *appAcl="{ features: ['SALES'] }">
           <ion-accordion>
             <ion-item slot="header" button>
@@ -112,8 +112,8 @@
         </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== INVENTORY (Desktop only) ===== -->
-        <ng-container *ngIf="isDesktop">
+        <!-- ===== INVENTORY (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
           <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
             <ion-accordion>
               <ion-item slot="header" button>
@@ -148,8 +148,8 @@
           <ion-label>Complaints & Feedback</ion-label>
         </ion-item>
 
-        <!-- ===== USER RIGHTS (Desktop only) ===== -->
-        <ng-container *ngIf="isDesktop">
+        <!-- ===== USER RIGHTS (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
           <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active" (click)="onMenuItemClick()">
             <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
             <ion-label>User Rights</ion-label>
