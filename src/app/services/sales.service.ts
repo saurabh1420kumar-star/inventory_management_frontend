@@ -20,6 +20,7 @@ export interface Distributor {
 })
 export class SalesService {
   private apiUrl = `${environment.apiUrl}/distributors`;
+  private salesMappingUrl = `${environment.apiUrl}/sales-mapping`;
 
   constructor(private http: HttpClient) { }
 
@@ -45,5 +46,9 @@ export class SalesService {
 
   toggleDistributorStatus(id: string): Observable<Distributor> {
     return this.http.patch<Distributor>(`${this.apiUrl}/${id}/toggle-status`, {});
+  }
+
+  getSalesMapping(): Observable<any> {
+    return this.http.get<any>(this.salesMappingUrl);
   }
 }

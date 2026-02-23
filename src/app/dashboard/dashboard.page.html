@@ -16,7 +16,173 @@
 </ion-header>
 
 <ion-content class="bg-slate-50">
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20 sm:pb-20">
+  <!-- DISTRIBUTOR DASHBOARD -->
+  <div *ngIf="isDistributor" class="min-h-screen bg-slate-50 pb-20 sm:pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+      
+      <!-- HEADER -->
+      <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-4xl font-bold text-slate-800 mb-2">FY 2025 - 2026</h1>
+        <p class="text-slate-500">Sales & Distribution Dashboard</p>
+      </div>
+
+      <!-- DISTRIBUTOR STATS CARDS -->
+      <div class="grid grid-cols-2 lg:grid-cols-2 gap-4 sm:gap-6 mb-8">
+        
+        <!-- Vol MTD -->
+        <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl p-6 sm:p-8 text-white shadow-lg">
+          <p class="text-sm font-medium opacity-90 mb-2">Vol MTD</p>
+          <p class="text-3xl sm:text-4xl font-bold mb-4">0.00 MT</p>
+          <div class="flex items-center gap-2 text-sm opacity-80">
+            <ion-icon name="trending-down-outline"></ion-icon>
+            <span>Month to Date</span>
+          </div>
+        </div>
+
+        <!-- Vol YTD -->
+        <div class="bg-gradient-to-br from-emerald-400 to-emerald-500 rounded-2xl p-6 sm:p-8 text-white shadow-lg">
+          <p class="text-sm font-medium opacity-90 mb-2">Vol YTD</p>
+          <p class="text-3xl sm:text-4xl font-bold mb-4">42.00 MT</p>
+          <div class="flex items-center gap-2 text-sm opacity-80">
+            <ion-icon name="stats-chart-outline"></ion-icon>
+            <span>Year to Date</span>
+          </div>
+        </div>
+
+        <!-- Value MTD -->
+        <div class="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
+          <p class="text-sm font-medium text-slate-600 mb-2">Value MTD</p>
+          <p class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">Rs 0.00 L</p>
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Value this Month</span>
+          </div>
+        </div>
+
+        <!-- Value YTD -->
+        <div class="bg-gradient-to-br from-slate-100 to-slate-200 rounded-2xl p-6 sm:p-8 shadow-lg">
+          <p class="text-sm font-medium text-slate-600 mb-2">Value YTD</p>
+          <p class="text-3xl sm:text-4xl font-bold text-slate-800 mb-4">Rs 8.02 L</p>
+          <div class="flex items-center gap-2 text-sm text-slate-500">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span>Value Year to Date</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ADDITIONAL METRICS -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-6 mb-8">
+        
+        <!-- Total O/S -->
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+          <p class="text-slate-500 text-xs font-bold uppercase mb-2">Total O/S</p>
+          <p class="text-2xl sm:text-3xl font-bold text-slate-800">RS 1.22 L</p>
+        </div>
+
+        <!-- Coll MTD -->
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+          <p class="text-slate-500 text-xs font-bold uppercase mb-2">Coll MTD</p>
+          <p class="text-2xl sm:text-3xl font-bold text-slate-800">RS 0.00 L</p>
+        </div>
+
+        <!-- Total OD -->
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+          <p class="text-slate-500 text-xs font-bold uppercase mb-2">Total OD</p>
+          <p class="text-2xl sm:text-3xl font-bold text-slate-800">RS 1.22 L</p>
+        </div>
+
+        <!-- Coll YTD -->
+        <div class="bg-white rounded-xl sm:rounded-2xl p-4 sm:p-6 shadow-sm border border-slate-100">
+          <p class="text-slate-500 text-xs font-bold uppercase mb-2">Coll YTD</p>
+          <p class="text-2xl sm:text-3xl font-bold text-slate-800">RS 6.45 L</p>
+        </div>
+      </div>
+
+      <!-- DISTRIBUTOR QUICK ACTIONS -->
+      <div class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 overflow-hidden">
+        <div class="px-6 py-4 border-b border-slate-100 flex items-center gap-3">
+          <div class="bg-emerald-50 p-2 rounded-lg">
+            <ion-icon name="grid-outline" class="text-emerald-500 text-xl"></ion-icon>
+          </div>
+          <div>
+            <h3 class="font-bold text-slate-800">Distributor Quick Actions</h3>
+            <p class="text-slate-400 text-xs">Access important features</p>
+          </div>
+        </div>
+        
+        <div class="p-6 grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-4 gap-4">
+          
+          <!-- Payment Due -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="time-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Payment Due</span>
+          </button>
+
+          <!-- Account Statement -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="person-circle-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Account Statement</span>
+          </button>
+
+          <!-- Copy Of Invoice -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="receipt-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Copy Of Invoice</span>
+          </button>
+
+          <!-- Order Status -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="truck-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Order Status</span>
+          </button>
+
+          <!-- Pending Order Report -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="document-text-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Pending Order</span>
+          </button>
+
+          <!-- Dispatch Report -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="person-circle-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Dispatch Report</span>
+          </button>
+
+          <!-- Summarized A/C Statement -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="person-circle-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Summarized A/C</span>
+          </button>
+
+          <!-- Balance Confirmation -->
+          <button class="flex flex-col items-center justify-center p-6 bg-white border-2 border-slate-100 hover:border-emerald-300 hover:shadow-md rounded-xl transition-all group">
+            <div class="w-12 h-12 bg-emerald-50 rounded-lg flex items-center justify-center mb-3 group-hover:scale-110 transition-transform">
+              <ion-icon name="checkmark-circle-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <span class="text-sm font-semibold text-slate-700 text-center">Balance Confirm</span>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ADMIN DASHBOARD (DEFAULT) -->
+  <div *ngIf="!isDistributor" class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20 sm:pb-20">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
       
       <!-- HERO CARD -->

@@ -70,6 +70,10 @@ export class SidebarPage implements OnInit, OnDestroy {
     return !this.isMobile;
   }
 
+  get isAdmin(): boolean {
+    return this.userRole === 'ADMIN' || this.userRole === 'SUPER_ADMIN';
+  }
+
   private checkMobile() {
     this.isMobile = Capacitor.isNativePlatform() || window.innerWidth < SidebarPage.MOBILE_BREAKPOINT;
   }
