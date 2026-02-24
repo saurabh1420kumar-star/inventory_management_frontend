@@ -3,6 +3,8 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
+// ============= DISTRIBUTOR MODELS =============
+
 export interface DistributorDto {
   id: number;
   name: string;
@@ -21,6 +23,31 @@ export interface DistributorDto {
   updatedOn: string;
 }
 
+/**
+ * DISTRIBUTOR CREATION REQUEST
+ * Used when creating a new distributor account with credentials
+ */
+export interface CreateDistributorRequest {
+  name: string;
+  assignedPerson: string;
+  distributorType: string;
+  companyType: string;
+  contactEmail: string;
+  phoneNumber: string;
+  alternateContact?: string;
+  address: string;
+  aadhaarNumber: string;
+  panNumber: string;
+  gstNumber: string;
+  status: string;
+  creditLimit: boolean;
+  username: string;
+  password: string;
+}
+
+/**
+ * GENERIC API RESPONSE WRAPPER
+ */
 export interface ApiResponse<T> {
   success: boolean;
   message: string;
@@ -41,8 +68,13 @@ export class DistributorService {
     );
   }
 
+  /**
+   * Create a new distributor account with credentials
+   * @param payload CreateDistributorRequest object with all required fields
+   * @returns Observable<ApiResponse<DistributorDto>>
+   */
   createDistributor(
-    payload: any
+    payload: CreateDistributorRequest
   ): Observable<ApiResponse<DistributorDto>> {
     return this.http.post<ApiResponse<DistributorDto>>(
       `${this.baseUrl}/create-distributor`,

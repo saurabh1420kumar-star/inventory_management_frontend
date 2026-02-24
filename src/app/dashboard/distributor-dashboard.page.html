@@ -1,0 +1,370 @@
+<ion-content class="ion-padding bg-slate-50">
+  <div class="max-w-6xl mx-auto">
+    <!-- Header -->
+    <div class="mb-8">
+      <h1 class="text-3xl font-bold text-slate-900 mb-2">Distributor Dashboard</h1>
+      <p class="text-slate-600">{{ fiscalYear }}</p>
+    </div>
+
+    <!-- Tab Selector -->
+    <div class="flex gap-4 mb-6 border-b border-slate-200">
+      <button
+        (click)="switchTab('dashboard')"
+        [class.active]="activeTab === 'dashboard'"
+        class="pb-3 px-2 font-semibold transition-all"
+        [ngClass]="activeTab === 'dashboard' ? 'text-emerald-500 border-b-2 border-emerald-500' : 'text-slate-600'">
+        Dashboard
+      </button>
+      <button
+        (click)="switchTab('operations')"
+        [class.active]="activeTab === 'operations'"
+        class="pb-3 px-2 font-semibold transition-all"
+        [ngClass]="activeTab === 'operations' ? 'text-emerald-500 border-b-2 border-emerald-500' : 'text-slate-600'">
+        Operations
+      </button>
+    </div>
+
+    <!-- Dashboard Tab -->
+    <div *ngIf="activeTab === 'dashboard'">
+      <!-- Metric Cards Row 1 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4 mb-6">
+        <!-- Volume MTD Card -->
+        <div class="bg-gradient-to-br from-emerald-400 to-emerald-600 rounded-2xl p-6 text-white shadow-lg">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-sm font-medium opacity-90">Vol MTD</p>
+              <p class="text-4xl font-bold">{{ periodData.volMTD }}</p>
+            </div>
+            <ion-icon name="trending-up-outline" class="text-3xl opacity-80"></ion-icon>
+          </div>
+          <div class="pt-4 border-t border-white border-opacity-30">
+            <p class="text-sm opacity-90">Value MTD</p>
+            <p class="text-xl font-semibold">{{ periodData.valueMTD }}</p>
+          </div>
+        </div>
+
+        <!-- Volume YTD Card -->
+        <div class="bg-gradient-to-br from-emerald-500 to-emerald-700 rounded-2xl p-6 text-white shadow-lg">
+          <div class="flex justify-between items-start mb-4">
+            <div>
+              <p class="text-sm font-medium opacity-90">Vol YTD</p>
+              <p class="text-4xl font-bold">{{ periodData.volYTD }}</p>
+            </div>
+            <ion-icon name="stats-chart-outline" class="text-3xl opacity-80"></ion-icon>
+          </div>
+          <div class="pt-4 border-t border-white border-opacity-30">
+            <p class="text-sm opacity-90">Value YTD</p>
+            <p class="text-xl font-semibold">{{ periodData.valueYTD }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Metric Cards Row 2 -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <!-- Total Orders Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-slate-600">Total O/S</h3>
+            <span class="text-emerald-500 text-2xl">
+              <ion-icon name="business-outline"></ion-icon>
+            </span>
+          </div>
+          <p class="text-3xl font-bold text-slate-900">{{ periodData.totalOrders }}</p>
+          <div class="mt-4 flex items-center gap-2 text-sm text-emerald-600">
+            <ion-icon name="arrow-up-outline" class="text-lg"></ion-icon>
+            <span>View Details</span>
+          </div>
+        </div>
+
+        <!-- Call MTD/YTD Card -->
+        <div class="bg-white rounded-2xl p-6 shadow-sm border border-slate-100">
+          <div class="flex items-center justify-between mb-4">
+            <h3 class="text-sm font-semibold text-slate-600">Call Metrics</h3>
+            <span class="text-blue-500 text-2xl">
+              <ion-icon name="checkmark-done-outline"></ion-icon>
+            </span>
+          </div>
+          <div class="grid grid-cols-2 gap-4">
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Call MTD</p>
+              <p class="text-2xl font-bold text-slate-900">{{ periodData.callMTD }}</p>
+            </div>
+            <div>
+              <p class="text-xs text-slate-500 mb-1">Call YTD</p>
+              <p class="text-2xl font-bold text-slate-900">{{ periodData.callYTD }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Operations Tab -->
+    <div *ngIf="activeTab === 'operations'">
+      <div class="space-y-6">
+        <!-- Payment & Collections Menu -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+          <button
+            (click)="toggleMenu('payment')"
+            class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-blue-50">
+                <svg class="w-6 h-6 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M0 0h24v24H0z" fill="none"/>
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-2 15l-5-5 1.41-1.41L10 14.17l7.59-7.59L19 8l-9 9z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-bold text-slate-900">Payment & Collections</h3>
+                <p class="text-sm text-slate-500">Manage payments and track collections</p>
+              </div>
+            </div>
+            <ion-icon [name]="expandedMenu === 'payment' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400"></ion-icon>
+          </button>
+
+          <div *ngIf="expandedMenu === 'payment'" class="border-t border-slate-100 p-4 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-blue-100">
+                  <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M6 2c-1.1 0-2 .9-2 2v4c0 1.1.9 2 2 2h2v2H4c-1.1 0-2 .9-2 2v8c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2v-8c0-1.1-.9-2-2-2h-4v-2h2c1.1 0 2-.9 2-2V4c0-1.1-.9-2-2-2h-4V0h-2v2H6z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Payment Due</p>
+                  <p class="text-xs text-slate-500">View outstanding payments</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-blue-100">
+                  <svg class="w-5 h-5 text-blue-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 18c-4.41 0-8-3.59-8-8s3.59-8 8-8 8 3.59 8 8-3.59 8-8 8zm3.5-9c.83 0 1.5-.67 1.5-1.5S16.33 8 15.5 8 14 8.67 14 9.5s.67 1.5 1.5 1.5zm-7 0c.83 0 1.5-.67 1.5-1.5S9.83 8 9 8 7.5 8.67 7.5 9.5 8.17 11 9 11z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Collection Status</p>
+                  <p class="text-xs text-slate-500">Track collection progress</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Orders & Dispatch Menu -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+          <button
+            (click)="toggleMenu('orders')"
+            class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-orange-50">
+                <svg class="w-6 h-6 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M16 0H2C.9 0 0 .9 0 2v15h2V2h14V0zm3 4H5c-1.1 0-2 .9-2 2v15c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-bold text-slate-900">Orders & Dispatch</h3>
+                <p class="text-sm text-slate-500">Place and track your orders</p>
+              </div>
+            </div>
+            <ion-icon [name]="expandedMenu === 'orders' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400"></ion-icon>
+          </button>
+
+          <div *ngIf="expandedMenu === 'orders'" class="border-t border-slate-100 p-4 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-orange-100">
+                  <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M16 0H2C.9 0 0 .9 0 2v15h2V2h14V0zm3 4H5c-1.1 0-2 .9-2 2v15c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V6c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Order Status</p>
+                  <p class="text-xs text-slate-500">Check order delivery status</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-orange-100">
+                  <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M18 18.5a1.5 1.5 0 0 1-1.5-1.5 1.5 1.5 0 0 1 1.5-1.5 1.5 1.5 0 0 1 1.5 1.5 1.5 1.5 0 0 1-1.5 1.5m1.5-9l1.96 2.5H17V9.5M17 8h4.84L20 2H7v7h10zm-11 11c-1.66 0-3 1.34-3 3s1.34 3 3 3 3-1.34 3-3-1.34-3-3-3z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Dispatch Report</p>
+                  <p class="text-xs text-slate-500">View dispatch schedule</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-orange-100">
+                  <svg class="w-5 h-5 text-orange-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Pending Orders</p>
+                  <p class="text-xs text-slate-500">View pending order report</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Reports Menu -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+          <button
+            (click)="toggleMenu('reports')"
+            class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-purple-50">
+                <svg class="w-6 h-6 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M9 21H5c-1.1 0-2-.9-2-2V5c0-1.1.9-2 2-2h4V2H5c-2.2 0-4 1.8-4 4v14c0 2.2 1.8 4 4 4h4v-3zm9-10H9v5h9v-5zm0-4h-3V2h-2v5h-3v2h3v5h2v-5h3V7z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-bold text-slate-900">Reports</h3>
+                <p class="text-sm text-slate-500">View business reports</p>
+              </div>
+            </div>
+            <ion-icon [name]="expandedMenu === 'reports' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400"></ion-icon>
+          </button>
+
+          <div *ngIf="expandedMenu === 'reports'" class="border-t border-slate-100 p-4 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-purple-100">
+                  <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M8 16h8v2H8zm0-4h8v2H8zm6-10H6c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h12c1.1 0 2-.9 2-2V8l-6-6z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Pending Report</p>
+                  <p class="text-xs text-slate-500">Pending orders summary</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-purple-100">
+                  <svg class="w-5 h-5 text-purple-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M5 9.2h3V19H5zM10.6 5h2.8v14h-2.8zm5.6 8H19v6h-2.8z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Sales Report</p>
+                  <p class="text-xs text-slate-500">Monthly sales analysis</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Services Menu -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+          <button
+            (click)="toggleMenu('account')"
+            class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-green-50">
+                <svg class="w-6 h-6 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm0 3c1.66 0 3 1.34 3 3s-1.34 3-3 3-3-1.34-3-3 1.34-3 3-3zm0 14.2c-2.5 0-4.71-1.28-6-3.22.03-1.99 4-3.08 6-3.08 1.99 0 5.97 1.09 6 3.08-1.29 1.94-3.5 3.22-6 3.22z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-bold text-slate-900">Account Services</h3>
+                <p class="text-sm text-slate-500">Manage your account</p>
+              </div>
+            </div>
+            <ion-icon [name]="expandedMenu === 'account' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400"></ion-icon>
+          </button>
+
+          <div *ngIf="expandedMenu === 'account'" class="border-t border-slate-100 p-4 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-green-100">
+                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2c-5.33 4.55-8 8.48-8 11.8 0 4.98 3.8 8.2 8 8.2s8-3.22 8-8.2c0-3.32-2.67-7.25-8-11.8z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Account Statement</p>
+                  <p class="text-xs text-slate-500">View account history</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-green-100">
+                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M9 16.17L4.83 12l-1.42 1.41L9 19 21 7l-1.41-1.41L9 16.17z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Balance Confirmation</p>
+                  <p class="text-xs text-slate-500">Confirm account balance</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-green-100">
+                  <svg class="w-5 h-5 text-green-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm1 15h-2v-2h2v2zm0-4h-2V7h2v6z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Summarized A/C</p>
+                  <p class="text-xs text-slate-500">Summary of account</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- Documents Menu -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100">
+          <button
+            (click)="toggleMenu('documents')"
+            class="w-full flex items-center justify-between p-4 hover:bg-slate-50 transition-colors">
+            <div class="flex items-center gap-4">
+              <div class="w-12 h-12 flex items-center justify-center rounded-lg bg-red-50">
+                <svg class="w-6 h-6 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                  <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H5V5h14v14z"/>
+                </svg>
+              </div>
+              <div class="text-left">
+                <h3 class="font-bold text-slate-900">Documents</h3>
+                <p class="text-sm text-slate-500">Download your documents</p>
+              </div>
+            </div>
+            <ion-icon [name]="expandedMenu === 'documents' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400"></ion-icon>
+          </button>
+
+          <div *ngIf="expandedMenu === 'documents'" class="border-t border-slate-100 p-4 bg-slate-50">
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-red-100">
+                  <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M19 3H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Copy Of Invoice</p>
+                  <p class="text-xs text-slate-500">Download invoice copy</p>
+                </div>
+              </button>
+              <button class="flex items-center gap-3 p-3 rounded-lg hover:bg-white transition-colors text-left group">
+                <span class="flex-shrink-0 w-10 h-10 flex items-center justify-center rounded-lg group-hover:bg-red-100">
+                  <svg class="w-5 h-5 text-red-600" fill="currentColor" viewBox="0 0 24 24">
+                    <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8l-6-6z"/>
+                  </svg>
+                </span>
+                <div>
+                  <p class="font-medium text-slate-900 text-sm">Official Documents</p>
+                  <p class="text-xs text-slate-500">Access official documents</p>
+                </div>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<style scoped>
+  :host {
+    --ion-background-color: #f8fafc;
+  }
+</style>

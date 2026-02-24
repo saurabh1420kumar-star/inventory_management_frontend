@@ -1,0 +1,41 @@
+:host {
+  --ion-background-color: #f8fafc;
+  --ion-text-color: #0f172a;
+}
+
+ion-content {
+  --background: #f8fafc;
+}
+
+.metric-card {
+  transition: all 0.3s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.tab-button {
+  position: relative;
+  overflow: hidden;
+
+  &.active {
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      width: 100%;
+      height: 3px;
+      background: linear-gradient(90deg, #10b981, #059669);
+    }
+  }
+}
+
+/* Responsive adjustments */
+@media (max-width: 768px) {
+  .grid {
+    grid-template-columns: 1fr !important;
+  }
+}

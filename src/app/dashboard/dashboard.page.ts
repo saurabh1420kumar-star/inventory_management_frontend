@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Auth } from '../services/auth';
+import { DistributorDashboardPage } from './distributor-dashboard.page';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -51,7 +52,8 @@ interface StatsCard {
     CommonModule,
     FormsModule,
     IonicModule,
-    NgApexchartsModule
+    NgApexchartsModule,
+    DistributorDashboardPage
   ],
 })
 export class DashboardPage implements OnInit {
@@ -119,7 +121,8 @@ export class DashboardPage implements OnInit {
 
   checkUserRole() {
     const roleType = this.auth.getRoleType();
-    this.isDistributor = roleType === 'DISTRIBUTOR' || roleType === 'SALES';
+    // Check for both uppercase and lowercase versions
+    this.isDistributor = roleType?.toUpperCase() === 'DISTRIBUTOR' || roleType?.toUpperCase() === 'SALES';
   }
 
   initializeChart() {

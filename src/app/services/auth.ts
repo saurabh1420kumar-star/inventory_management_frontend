@@ -2,6 +2,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, tap } from 'rxjs';
+import { Platform } from '@ionic/angular';
 import { environment } from '../../environments/environment';
 
 // ---------------- LOGIN MODELS ----------------
@@ -58,13 +59,67 @@ export interface CreateUserResponse {
   username: string;
 }
 
+// ============= DISTRIBUTOR SIGNUP MODELS =============
+/**
+ * DISTRIBUTOR CREATION REQUEST
+ * Used when creating a new distributor account with login credentials
+ * 
+ * Fields:
+ * - name: Distributor company/contact name
+ * - assignedPerson: Sales executive assigned to this distributor
+ * - distributorType: Type of distributor (e.g., "Wholesale")
+ * - companyType: Type of company (e.g., "LLC", "Pvt Ltd")
+ * - contactEmail: Distributor email address
+ * - phoneNumber: Primary contact number
+ * - alternateContact: Secondary contact number (optional)
+ * - address: Full business address
+ * - aadhaarNumber: Aadhar identification number
+ * - panNumber: PAN (Permanent Account Number)
+ * - gstNumber: GST registration number
+ * - status: Account status (e.g., "ACTIVE")
+ * - creditLimit: Whether credit limit is enabled
+ * - username: Login username for distributor portal
+ * - password: Login password for distributor portal
+ */
+export interface CreateDistributorRequest {
+  name: string;
+  assignedPerson: string;
+  distributorType: string;
+  companyType: string;
+  contactEmail: string;
+  phoneNumber: string;
+  alternateContact?: string;
+  address: string;
+  aadhaarNumber: string;
+  panNumber: string;
+  gstNumber: string;
+  status: string;
+  creditLimit: boolean;
+  username: string;
+  password: string;
+}
+
+export interface CreateDistributorResponse {
+  id: number;
+  name: string;
+  assignedPerson: string;
+  distributorType: string;
+  companyType: string;
+  contactEmail: string;
+  phoneNumber: string;
+  address: string;
+  status: string;
+  createdOn: string;
+  message?: string;
+}
+
 @Injectable({
   providedIn: 'root',
 })
 export class Auth {
   private apiUrl = environment.apiUrl;
 
-  constructor(private http: HttpClient) {}
+  constructor(private http: HttpClient, private platform: Platform) {}
 
   // ---------------- LOGIN ----------------
   login(username: string, password: string): Observable<LoginResponse> {
@@ -98,6 +153,20 @@ export class Auth {
   createUser(payload: CreateUserRequest): Observable<CreateUserResponse> {
     return this.http.post<CreateUserResponse>(
       `${this.apiUrl}/createUsers`,
+      payload
+    );
+  }
+
+  /**
+   * CREATE DISTRIBUTOR ACCOUNT
+   * Creates a new distributor account with login credentials
+   * 
+   * @param payload CreateDistributorRequest with distributor details
+   * @returns Observable<CreateDistributorResponse>
+   */
+  createDistributor(payload: CreateDistributorRequest): Observable<CreateDistributorResponse> {
+    return this.http.post<CreateDistributorResponse>(
+      `${this.apiUrl}/distributors/create-distributor`,
       payload
     );
   }
@@ -161,5 +230,69 @@ export class Auth {
       return true;
     }
     return this.getFeatureNames().includes(featureName);
+  }
+
+  // ============ PLATFORM & DEVICE HELPERS ============
+  /**
+   * Detect if user is on mobile platform
+   */
+  isMobileDevice(): boolean {
+    return this.platform.is('android') || this.platform.is('ios');
+  }
+
+  /**
+   * Detect if user is on desktop platform
+   */
+  isDesktopDevice(): boolean {
+    return this.platform.is('desktop') || (!this.platform.is('android') && !this.platform.is('ios'));
+  }
+
+  /**
+   * Validate if a role can login on the current platform
+   * 
+   * PLATFORM RULES:
+   * - ADMIN: Can login on both MOBILE and DESKTOP
+   * - SUPER_ADMIN: Can login on both MOBILE and DESKTOP
+   * - DISTRIBUTOR: Can login on MOBILE only
+   * - SALES: Can login on MOBILE only
+   * - Other roles (USER, etc.): Can login on DESKTOP only
+   */
+  canLoginOnCurrentPlatform(roleType: string): boolean {
+    const role = roleType?.toUpperCase() || '';
+    const isMobile = this.isMobileDevice();
+
+    // ADMIN and SUPER_ADMIN can login on both platforms
+    if (role === 'ADMIN' || role === 'SUPER_ADMIN') {
+      return true;
+    }
+
+    // DISTRIBUTOR and SALES can only login on mobile
+    if ((role === 'DISTRIBUTOR' || role === 'SALES') && isMobile) {
+      return true;
+    }
+
+    // Other users (USER, etc.) can only login on desktop
+    if (!isMobile && (role === 'USER' || role === 'MANAGER' || role === 'OPERATOR')) {
+      return true;
+    }
+
+    return false;
+  }
+
+  /**
+   * Get platform-specific error message for invalid login attempt
+   */
+  getPlatformErrorMessage(roleType: string): string {
+    const role = roleType?.toUpperCase() || '';
+    const isMobile = this.isMobileDevice();
+    const deviceType = isMobile ? 'mobile' : 'desktop';
+
+    if (role === 'DISTRIBUTOR' || role === 'SALES') {
+      return `${role} users can only login on mobile devices. Please switch to the mobile app.`;
+    } else if (role === 'USER' || role === 'MANAGER' || role === 'OPERATOR') {
+      return `Your account is only accessible on desktop. Please use a desktop browser to login.`;
+    }
+
+    return `Your account cannot be accessed on ${deviceType} platform.`;
   }
 }

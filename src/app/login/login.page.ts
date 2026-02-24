@@ -3,7 +3,7 @@
 import { Component } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, Platform } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
 
 import { Auth } from '../services/auth';
@@ -30,7 +30,8 @@ export class LoginPage {
     private fb: FormBuilder,
     private toast: Toast,
     private router: Router,
-    private auth: Auth
+    private auth: Auth,
+    private platform: Platform
   ) {
     this.loginForm = this.fb.group({
       username: [
@@ -72,13 +73,12 @@ export class LoginPage {
           'success'
         );
 
-        // 🔥 ROLE-BASED NAVIGATION
-        this.navigateByRole(res.roleType);
+        this.router.navigateByUrl('/dashboard', { replaceUrl: true });
       },
 
       error: async (err) => {
         this.loading = false;
-        console.error('Login error:', err);
+        console.error('[LOGIN] Login error:', err);
 
         const backendMsg = err?.error?.message || err?.error?.error;
 
@@ -96,28 +96,7 @@ export class LoginPage {
     });
   }
 
-  /**
-   * Navigate user based on their role after successful login
-   */
-  private navigateByRole(roleType: string) {
-    switch (roleType) {
-      case 'SUPER_ADMIN':
-        // SUPER_ADMIN → Pending Approvals
-        this.router.navigateByUrl('/pending-approvals', { replaceUrl: true });
-        break;
 
-      case 'ADMIN':
-        // ADMIN → Dashboard (no pending approvals access)
-        this.router.navigateByUrl('/dashboard', { replaceUrl: true });
-        break;
-
-      case 'USER':
-      default:
-        // Regular users → Dashboard
-        this.router.navigateByUrl('/dashboard', { replaceUrl: true });
-        break;
-    }
-  }
 
   goToSignup() {
     this.router.navigateByUrl('/signup');

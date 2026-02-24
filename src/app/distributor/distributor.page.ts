@@ -16,7 +16,8 @@ import {
   calendarOutline,
   createOutline,
   closeOutline,
-  trashOutline
+  trashOutline,
+  lockClosedOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto } from '../services/distributor.service';
 
@@ -30,9 +31,16 @@ interface Distributor {
   contact: string;
   alternateContact?: string;
   address: string;
-  aadharNo: string;
-  panNo: string;
-  gstNo: string;
+  aadhaarNumber: string;
+  panNumber: string;
+  gstNumber: string;
+  status?: string;
+  creditLimit?: boolean;
+  username?: string;
+  password?: string;
+  accountNumber?: string;
+  ifsc?: string;
+  accountName?: string;
   createdAt: string;
 }
 
@@ -70,6 +78,9 @@ export class DistributorPage implements OnInit {
 
   // Loading state
   isLoading: boolean = false;
+  
+  // Password visibility toggle
+  showPassword: boolean = false;
 
   constructor(
     private fb: FormBuilder,
@@ -90,7 +101,8 @@ export class DistributorPage implements OnInit {
       'calendar-outline': calendarOutline,
       'create-outline': createOutline,
       'close-outline': closeOutline,
-      'trash-outline': trashOutline
+      'trash-outline': trashOutline,
+      'lock-closed-outline': lockClosedOutline
     });
   }
 
@@ -110,9 +122,15 @@ export class DistributorPage implements OnInit {
       contact: ['', [Validators.required, Validators.minLength(10)]],
       alternateContact: [''],
       address: ['', [Validators.required]],
-      aadharNo: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(12)]],
-      panNo: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
-      gstNo: ['', [Validators.required, Validators.minLength(15), Validators.maxLength(15)]]
+      aadhaarNumber: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(12)]],
+      panNumber: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
+      gstNumber: ['', [Validators.required, Validators.minLength(15), Validators.maxLength(15)]],
+      creditLimit: [false],
+      username: [''],
+      password: [''],
+      accountNumber: [''],
+      ifsc: [''],
+      accountName: ['']
     });
   }
 
@@ -128,9 +146,12 @@ export class DistributorPage implements OnInit {
       contact: dto.phoneNumber,
       alternateContact: dto.alternateContact || '',
       address: dto.address,
-      aadharNo: dto.aadhaarNumber,
-      panNo: dto.panNumber,
-      gstNo: dto.gstNumber,
+      aadhaarNumber: dto.aadhaarNumber,
+      panNumber: dto.panNumber,
+      gstNumber: dto.gstNumber,
+      accountNumber: (dto as any).accountNumber || '',
+      ifsc: (dto as any).ifsc || '',
+      accountName: (dto as any).accountName || '',
       createdAt: dto.createdOn
     };
   }
@@ -146,10 +167,16 @@ export class DistributorPage implements OnInit {
       phoneNumber: formData.contact,
       alternateContact: formData.alternateContact || '',
       address: formData.address,
-      aadhaarNumber: formData.aadharNo,
-      panNumber: formData.panNo,
-      gstNumber: formData.gstNo,
-      status: 'ACTIVE'
+      aadhaarNumber: formData.aadhaarNumber,
+      panNumber: formData.panNumber,
+      gstNumber: formData.gstNumber,
+      status: 'ACTIVE',
+      creditLimit: formData.creditLimit || false,
+      username: formData.username || '',
+      password: formData.password || '',
+      accountNumber: formData.accountNumber || '',
+      ifsc: formData.ifsc || '',
+      accountName: formData.accountName || ''
     };
   }
 
@@ -281,9 +308,12 @@ export class DistributorPage implements OnInit {
         contact: this.selectedDistributor.contact,
         alternateContact: this.selectedDistributor.alternateContact,
         address: this.selectedDistributor.address,
-        aadharNo: this.selectedDistributor.aadharNo,
-        panNo: this.selectedDistributor.panNo,
-        gstNo: this.selectedDistributor.gstNo
+        aadhaarNumber: this.selectedDistributor.aadhaarNumber,
+        panNumber: this.selectedDistributor.panNumber,
+        gstNumber: this.selectedDistributor.gstNumber,
+        accountNumber: this.selectedDistributor.accountNumber,
+        ifsc: this.selectedDistributor.ifsc,
+        accountName: this.selectedDistributor.accountName
       });
     }
   }
@@ -434,9 +464,12 @@ export class DistributorPage implements OnInit {
       email: 'Email',
       contact: 'Contact number',
       address: 'Address',
-      aadharNo: 'Aadhar number',
-      panNo: 'PAN number',
-      gstNo: 'GST number'
+      aadhaarNumber: 'Aadhar number',
+      panNumber: 'PAN number',
+      gstNumber: 'GST number',
+      accountNumber: 'Account number',
+      ifsc: 'IFSC code',
+      accountName: 'Account holder name'
     };
     return labels[fieldName] || fieldName;
   }

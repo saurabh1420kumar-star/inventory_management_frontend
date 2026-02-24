@@ -337,42 +337,144 @@
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Aadhar Number *</label>
               <ion-input
-                formControlName="aadharNo"
+                formControlName="aadhaarNumber"
                 placeholder="XXXX XXXX XXXX"
                 maxlength="12"
                 class="custom-input"
               ></ion-input>
-              <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" 
+              <div *ngIf="distributorForm.get('aadhaarNumber')?.invalid && distributorForm.get('aadhaarNumber')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('aadharNo') }}
+                {{ getErrorMessage('aadhaarNumber') }}
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">PAN Number *</label>
               <ion-input
-                formControlName="panNo"
+                formControlName="panNumber"
                 placeholder="ABCDE1234F"
                 maxlength="10"
                 class="custom-input"
               ></ion-input>
-              <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" 
+              <div *ngIf="distributorForm.get('panNumber')?.invalid && distributorForm.get('panNumber')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('panNo') }}
+                {{ getErrorMessage('panNumber') }}
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
               <ion-input
-                formControlName="gstNo"
+                formControlName="gstNumber"
                 placeholder="22AAAAA0000A1Z5"
                 maxlength="15"
                 class="custom-input"
               ></ion-input>
-              <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" 
+              <div *ngIf="distributorForm.get('gstNumber')?.invalid && distributorForm.get('gstNumber')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('gstNo') }}
+                {{ getErrorMessage('gstNumber') }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Account Credentials -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="lock-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Account Credentials</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+              <ion-input
+                formControlName="username"
+                type="text"
+                placeholder="Enter username"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('username')?.invalid && distributorForm.get('username')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('username') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+              <ion-input
+                formControlName="password"
+                [type]="showPassword ? 'text' : 'password'"
+                placeholder="Enter password"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('password')?.invalid && distributorForm.get('password')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('password') }}
+              </div>
+            </div>
+          </div>
+
+          <div class="flex items-center gap-3 mt-4">
+            <input 
+              type="checkbox" 
+              formControlName="creditLimit"
+              id="creditLimit"
+              class="w-4 h-4 rounded text-emerald-500"
+            />
+            <label for="creditLimit" class="text-sm font-medium text-slate-600">
+              Enable Credit Limit
+            </label>
+          </div>
+        </div>
+
+        <!-- Bank Details -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="card-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Bank Details</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Account Number</label>
+              <ion-input
+                formControlName="accountNumber"
+                type="text"
+                placeholder="Enter account number"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('accountNumber')?.invalid && distributorForm.get('accountNumber')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('accountNumber') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">IFSC Code</label>
+              <ion-input
+                formControlName="ifsc"
+                type="text"
+                placeholder="Enter IFSC code"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('ifsc')?.invalid && distributorForm.get('ifsc')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('ifsc') }}
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Account Holder Name</label>
+              <ion-input
+                formControlName="accountName"
+                type="text"
+                placeholder="Enter account holder name"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('accountName')?.invalid && distributorForm.get('accountName')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('accountName') }}
               </div>
             </div>
           </div>
@@ -499,7 +601,7 @@
                 <ion-icon name="card-outline"></ion-icon>
                 <span>Aadhar Number</span>
               </div>
-              <p class="detail-field-value font-bold">{{ selectedDistributor.aadharNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.aadhaarNumber }}</p>
             </div>
 
             <div class="detail-doc-card detail-doc-green">
@@ -507,7 +609,7 @@
                 <ion-icon name="document-text-outline"></ion-icon>
                 <span>PAN Number</span>
               </div>
-              <p class="detail-field-value font-bold">{{ selectedDistributor.panNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.panNumber }}</p>
             </div>
 
             <div class="detail-doc-card detail-doc-orange">
@@ -515,7 +617,41 @@
                 <ion-icon name="document-text-outline"></ion-icon>
                 <span>GST Number</span>
               </div>
-              <p class="detail-field-value font-bold">{{ selectedDistributor.gstNo }}</p>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.gstNumber }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Account Details -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="card-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Bank Account Details</h3>
+          </div>
+          
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div class="detail-doc-card detail-doc-blue">
+              <div class="detail-field-label">
+                <ion-icon name="card-outline"></ion-icon>
+                <span>Account Number</span>
+              </div>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.accountNumber || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-doc-card detail-doc-purple">
+              <div class="detail-field-label">
+                <ion-icon name="card-outline"></ion-icon>
+                <span>IFSC Code</span>
+              </div>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.ifsc || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-doc-card detail-doc-indigo">
+              <div class="detail-field-label">
+                <ion-icon name="person-outline"></ion-icon>
+                <span>Account Holder Name</span>
+              </div>
+              <p class="detail-field-value font-bold">{{ selectedDistributor.accountName || 'N/A' }}</p>
             </div>
           </div>
         </div>
@@ -646,25 +782,77 @@
           <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Aadhar Number *</label>
-              <ion-input formControlName="aadharNo" placeholder="XXXX XXXX XXXX" maxlength="12" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('aadharNo')?.invalid && distributorForm.get('aadharNo')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('aadharNo') }}
+              <ion-input formControlName="aadhaarNumber" placeholder="XXXX XXXX XXXX" maxlength="12" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('aadhaarNumber')?.invalid && distributorForm.get('aadhaarNumber')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('aadhaarNumber') }}
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">PAN Number *</label>
-              <ion-input formControlName="panNo" placeholder="ABCDE1234F" maxlength="10" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('panNo')?.invalid && distributorForm.get('panNo')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('panNo') }}
+              <ion-input formControlName="panNumber" placeholder="ABCDE1234F" maxlength="10" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('panNumber')?.invalid && distributorForm.get('panNumber')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('panNumber') }}
               </div>
             </div>
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
-              <ion-input formControlName="gstNo" placeholder="22AAAAA0000A1Z5" maxlength="15" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('gstNo')?.invalid && distributorForm.get('gstNo')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('gstNo') }}
+              <ion-input formControlName="gstNumber" placeholder="22AAAAA0000A1Z5" maxlength="15" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('gstNumber')?.invalid && distributorForm.get('gstNumber')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('gstNumber') }}
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Bank Account Details -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="card-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Bank Details</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Account Number</label>
+              <ion-input 
+                formControlName="accountNumber" 
+                type="text" 
+                placeholder="Enter account number" 
+                class="custom-input">
+              </ion-input>
+              <div *ngIf="distributorForm.get('accountNumber')?.invalid && distributorForm.get('accountNumber')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('accountNumber') }}
+              </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">IFSC Code</label>
+              <ion-input 
+                formControlName="ifsc" 
+                type="text" 
+                placeholder="Enter IFSC code" 
+                class="custom-input">
+              </ion-input>
+              <div *ngIf="distributorForm.get('ifsc')?.invalid && distributorForm.get('ifsc')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('ifsc') }}
+              </div>
+            </div>
+
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Account Name</label>
+              <ion-input 
+                formControlName="accountName" 
+                type="text" 
+                placeholder="Enter account holder name" 
+                class="custom-input">
+              </ion-input>
+              <div *ngIf="distributorForm.get('accountName')?.invalid && distributorForm.get('accountName')?.touched" 
+                   class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('accountName') }}
               </div>
             </div>
           </div>
