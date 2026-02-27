@@ -148,13 +148,13 @@
           <ion-label>Complaints & Feedback</ion-label>
         </ion-item>
 
-        <!-- ===== USER RIGHTS (Desktop only, or for all screens if admin) ===== -->
-        <ng-container *ngIf="isDesktop || isAdmin">
+        <!-- ===== USER RIGHTS (hidden) ===== -->
+        <!-- <ng-container *ngIf="isDesktop || isAdmin">
           <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active" (click)="onMenuItemClick()">
             <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
             <ion-label>User Rights</ion-label>
           </ion-item>
-        </ng-container>
+        </ng-container> -->
 
         <ion-item *appAcl="'OPERATIONS'" routerLink="/operations" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="document-text-outline" slot="start"></ion-icon>

@@ -23,35 +23,7 @@ $shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
 $radius: 16px;
 $radius-lg: 24px;
 
-// ---------- Animations ----------
-@keyframes fadeInUp {
-  from { opacity: 0; transform: translateY(16px); }
-  to   { opacity: 1; transform: translateY(0); }
-}
-@keyframes slideIn {
-  from { opacity: 0; transform: translateX(-12px); }
-  to   { opacity: 1; transform: translateX(0); }
-}
-@keyframes pulse-glow {
-  0%, 100% { box-shadow: 0 0 0 0 rgba($blue, 0.4); }
-  50%      { box-shadow: 0 0 0 8px rgba($blue, 0); }
-}
-@keyframes shimmer {
-  0%   { background-position: -200% 0; }
-  100% { background-position: 200% 0; }
-}
-@keyframes expandTimeline {
-  from { opacity: 0; max-height: 0; transform: scaleY(0.95); }
-  to   { opacity: 1; max-height: 2000px; transform: scaleY(1); }
-}
-@keyframes cardPop {
-  0%   { transform: scale(0.98); opacity: 0.8; }
-  60%  { transform: scale(1.005); }
-  100% { transform: scale(1); opacity: 1; }
-}
-@keyframes progressFill {
-  from { width: 0%; }
-}
+// Keyframes are defined in global.scss
 
 // ---------- Page Wrapper ----------
 .page-wrapper {
@@ -853,256 +825,93 @@ $radius-lg: 24px;
   }
 }
 
-// ---------- Scrollbar ----------
-::-webkit-scrollbar { width: 5px; height: 5px; }
-::-webkit-scrollbar-track { background: transparent; }
-::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
-  border-radius: 999px;
-  &:hover { background: #94a3b8; }
-}
-
 // ============================================================
 // Responsive Breakpoints
 // ============================================================
 
-// Small mobile (< 360px)
-@media (max-width: 359px) {
-  .page-wrapper { padding: 6px; }
-  .hero-banner {
-    margin-bottom: 14px;
-    min-height: 100px;
-    border-radius: 16px;
-    .hero-content { padding: 18px 14px; }
-  }
-  .hero-title { font-size: 1.2rem !important; }
-  .hero-badge { font-size: 0.7rem; padding: 4px 12px; }
-
-  .controls-section { margin-bottom: 14px; }
-  .search-wrapper .search-input { padding: 12px 14px 12px 42px; font-size: 0.82rem; border-radius: 12px; }
-  .search-wrapper .search-icon { left: 14px; font-size: 18px; }
-
-  .stats-grid { grid-template-columns: 1fr; gap: 6px; margin-bottom: 16px; }
-  .stat-card {
-    padding: 10px 12px;
-    flex-direction: row;
-    gap: 10px;
-    border-radius: 12px;
-
-    .stat-icon-wrap { width: 36px; height: 36px; font-size: 17px; border-radius: 10px; }
-    .stat-info { flex-direction: row; align-items: center; justify-content: space-between; flex: 1; }
-    .stat-label { font-size: 0.68rem; }
-    .stat-value { font-size: 1.2rem !important; }
-  }
-
-  .order-card { border-radius: 12px; }
-  .order-header {
-    padding: 10px;
-    gap: 6px;
-  }
-  .order-avatar { width: 34px; height: 34px; font-size: 17px; border-radius: 9px; }
-  .order-meta {
-    .order-number { font-size: 0.82rem; }
-    .order-distributor { font-size: 0.68rem; }
-  }
-  .order-header-right { gap: 5px; }
-  .status-badge {
-    padding: 3px 7px;
-    font-size: 0.58rem;
-  }
-  .expand-icon { font-size: 17px; }
-
-  .order-info-bar {
-    grid-template-columns: auto auto 1fr;
-    padding: 8px 10px;
-    gap: 8px;
-    .info-item { font-size: 0.7rem; gap: 3px; }
-    .info-item ion-icon { font-size: 13px; }
-    .mini-progress-bar { width: 44px; height: 5px; }
-    .progress-text { font-size: 0.66rem; min-width: 24px; }
-  }
-
-  .timeline-container { padding: 12px 10px 10px; }
-  .timeline-step { gap: 8px; }
-  .step-dot { width: 28px; height: 28px; ion-icon { font-size: 13px; } }
-  .step-connector { min-height: 22px; width: 2px; }
-  .step-label-wrap { gap: 4px; }
-  .step-label-icon { font-size: 13px; }
-  .step-label { font-size: 0.75rem; }
-  .step-date { font-size: 0.62rem; }
-  .step-remarks { font-size: 0.7rem; margin: 2px 0 4px; }
-  .step-person-info {
-    padding: 8px;
-    border-radius: 8px;
-    margin: 6px 0;
-    .person-header .person-label { font-size: 0.62rem; }
-    .person-details .person-name { font-size: 0.76rem; }
-    .person-details .person-role { font-size: 0.68rem; margin-bottom: 4px; }
-    .person-contact-row { gap: 2px; }
-    .person-contact, .person-email { font-size: 0.62rem !important; }
-  }
-  .step-download-btn { font-size: 0.68rem; padding: 5px 10px; border-radius: 8px; }
-  .step-action-buttons {
-    padding: 8px;
-    border-radius: 10px;
-    .action-label { font-size: 0.7rem; margin-bottom: 6px; }
-    .action-btn-group { flex-direction: column; gap: 6px; }
-    .action-btn { justify-content: center; width: 100%; padding: 8px 14px; font-size: 0.74rem; }
-  }
-  .step-status-tag { font-size: 0.6rem; padding: 2px 7px; }
-  .step-content { padding-bottom: 14px; }
-  .filter-chip { padding: 6px 11px; font-size: 0.7rem; }
-}
-
-// Mobile (360-479px)
-@media (min-width: 360px) and (max-width: 479px) {
+// Mobile (< 480px)
+@media (max-width: 479px) {
   .page-wrapper { padding: 8px; }
   .hero-banner {
-    margin-bottom: 16px;
-    min-height: 110px;
-    .hero-content { padding: 24px 16px; }
+    margin-bottom: 14px; min-height: 105px;
+    .hero-content { padding: 20px 14px; }
   }
-  .hero-title { font-size: 1.3rem !important; }
-
-  .controls-section { margin-bottom: 16px; }
-  .search-wrapper .search-input { padding: 12px 14px 12px 44px; font-size: 0.85rem; }
-
-  .stats-grid {
-    grid-template-columns: 1fr;
-    gap: 8px;
-    margin-bottom: 18px;
-  }
+  .hero-title { font-size: 1.25rem !important; }
+  .controls-section { margin-bottom: 14px; }
+  .search-wrapper .search-input { padding: 11px 14px 11px 42px; font-size: 0.83rem; border-radius: 12px; }
+  .search-wrapper .search-icon { left: 13px; font-size: 18px; }
+  .filter-chip { padding: 6px 12px; font-size: 0.72rem; }
+  .stats-grid { grid-template-columns: 1fr; gap: 7px; margin-bottom: 16px; }
   .stat-card {
-    flex-direction: row;
-    gap: 12px;
-    padding: 12px 14px;
-    border-radius: 12px;
-
-    .stat-icon-wrap { width: 38px; height: 38px; font-size: 18px; }
+    flex-direction: row; gap: 10px; padding: 11px 13px; border-radius: 12px;
+    .stat-icon-wrap { width: 37px; height: 37px; font-size: 18px; border-radius: 10px; }
     .stat-info { flex-direction: row; align-items: center; justify-content: space-between; flex: 1; }
-    .stat-label { font-size: 0.7rem; }
-    .stat-value { font-size: 1.3rem !important; }
+    .stat-label { font-size: 0.69rem; }
+    .stat-value { font-size: 1.25rem !important; }
   }
-
-  .order-card { border-radius: 14px; }
-  .order-header { padding: 12px; gap: 8px; }
-  .order-avatar { width: 38px; height: 38px; font-size: 19px; border-radius: 10px; }
+  .order-card { border-radius: 13px; }
+  .order-header { padding: 11px; gap: 7px; }
+  .order-avatar { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
   .order-meta {
-    .order-number { font-size: 0.88rem; }
-    .order-distributor { font-size: 0.72rem; }
+    .order-number { font-size: 0.85rem; }
+    .order-distributor { font-size: 0.7rem; }
   }
-  .status-badge {
-    padding: 3px 9px;
-    font-size: 0.62rem;
-  }
-  .expand-icon { font-size: 18px; }
-
+  .status-badge { padding: 3px 8px; font-size: 0.6rem; }
+  .expand-icon { font-size: 17px; }
   .order-info-bar {
-    padding: 9px 12px;
-    gap: 10px;
-    .info-item { font-size: 0.75rem; }
-    .mini-progress-bar { width: 52px; }
-    .progress-text { font-size: 0.68rem; }
+    padding: 8px 11px; gap: 9px;
+    .info-item { font-size: 0.72rem; gap: 3px; }
+    .info-item ion-icon { font-size: 13px; }
+    .mini-progress-bar { width: 48px; height: 5px; }
+    .progress-text { font-size: 0.67rem; min-width: 24px; }
   }
-
-  .timeline-container { padding: 14px 12px; }
-  .timeline-step { gap: 10px; }
-  .step-dot { width: 32px; height: 32px; ion-icon { font-size: 16px; } }
-  .step-connector { min-height: 26px; }
-  .step-label { font-size: 0.8rem; }
-  .step-date { font-size: 0.66rem; }
-  .step-remarks { font-size: 0.72rem; }
+  .timeline-container { padding: 13px 11px 11px; }
+  .timeline-step { gap: 9px; }
+  .step-dot { width: 30px; height: 30px; ion-icon { font-size: 14px; } }
+  .step-connector { min-height: 24px; width: 2px; }
+  .step-label { font-size: 0.78rem; }
+  .step-date { font-size: 0.63rem; }
+  .step-remarks { font-size: 0.71rem; margin: 2px 0 4px; }
   .step-person-info {
-    padding: 9px;
+    padding: 8px; border-radius: 8px; margin: 6px 0;
     .person-contact-row { gap: 3px; }
   }
-  .step-download-btn { font-size: 0.72rem; padding: 6px 12px; }
+  .step-download-btn { font-size: 0.7rem; padding: 5px 11px; border-radius: 8px; }
   .step-action-buttons {
-    padding: 10px;
-    .action-btn-group { gap: 8px; }
-    .action-btn { padding: 8px 16px; font-size: 0.76rem; }
+    padding: 9px; border-radius: 10px;
+    .action-label { font-size: 0.71rem; margin-bottom: 6px; }
+    .action-btn-group { flex-direction: column; gap: 6px; }
+    .action-btn { justify-content: center; width: 100%; padding: 8px 14px; font-size: 0.75rem; }
   }
-  .step-status-tag { font-size: 0.64rem; padding: 2px 8px; }
-  .step-content { padding-bottom: 16px; }
-  .filter-chip { padding: 7px 13px; font-size: 0.72rem; }
+  .step-status-tag { font-size: 0.61rem; padding: 2px 7px; }
+  .step-content { padding-bottom: 15px; }
 }
 
-// Larger phones (480-599px)
-@media (min-width: 480px) and (max-width: 599px) {
-  .page-wrapper { padding: 12px; }
-  .hero-banner .hero-content { padding: 28px 20px; }
-  .hero-title { font-size: 1.4rem !important; }
-
-  .stats-grid {
-    grid-template-columns: repeat(3, 1fr);
-    gap: 8px;
-    margin-bottom: 20px;
+// Tablet & larger phones (480–899px)
+@media (min-width: 480px) and (max-width: 899px) {
+  .page-wrapper { padding: 14px; }
+  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 10px; }
+  .stat-card { padding: 13px 11px; gap: 9px;
+    .stat-icon-wrap { width: 38px; height: 38px; font-size: 19px; }
+    .stat-label { font-size: 0.69rem; }
+    .stat-value { font-size: 1.3rem !important; }
   }
-  .stat-card {
-    padding: 12px 10px;
-    gap: 8px;
-    .stat-icon-wrap { width: 36px; height: 36px; font-size: 18px; }
-    .stat-label { font-size: 0.68rem; }
-    .stat-value { font-size: 1.2rem !important; }
-  }
-
-  .order-card { border-radius: 14px; }
-  .order-header { padding: 14px; }
-  .order-meta .order-number { font-size: 0.92rem; }
-
+  .order-header { padding: 14px 12px; }
   .status-badge {
-    padding: 4px 10px;
-    font-size: 0.64rem;
+    font-size: 0.65rem; padding: 4px 10px;
     .status-badge-short { display: none; }
     .status-badge-full { display: inline; }
   }
-
-  .order-info-bar {
-    padding: 10px 14px;
-    gap: 12px;
-    .mini-progress-bar { width: 70px; }
+  .order-info-bar { padding: 10px 14px; gap: 12px;
+    .mini-progress-bar { width: 72px; }
   }
-
   .timeline-container { padding: 16px 14px; }
-  .step-dot { width: 34px; height: 34px; ion-icon { font-size: 17px; } }
-  .step-label { font-size: 0.82rem; }
-  .step-person-info {
-    .person-contact-row {
-      flex-direction: row;
-      flex-wrap: wrap;
-      gap: 8px;
-    }
-  }
-  .step-content { padding-bottom: 18px; }
+  .step-dot { width: 35px; height: 35px; ion-icon { font-size: 17px; } }
+  .step-person-info .person-contact-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .step-content { padding-bottom: 17px; }
 }
 
-// Tablet (600-899px)
-@media (min-width: 600px) and (max-width: 899px) {
-  .page-wrapper { padding: 18px; }
-  .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 14px; }
-  .stat-card { padding: 16px; }
-
-  .order-header { padding: 16px; }
-  .status-badge {
-    font-size: 0.68rem;
-    padding: 4px 12px;
-    .status-badge-short { display: none; }
-    .status-badge-full { display: inline; }
-  }
-  .order-info-bar {
-    padding: 10px 16px;
-    gap: 14px;
-    .mini-progress-bar { width: 80px; }
-  }
-  .timeline-container { padding: 20px 16px; }
-  .step-dot { width: 38px; height: 38px; }
-  .step-person-info .person-contact-row {
-    flex-direction: row;
-    gap: 12px;
-  }
-}
-
-// Desktop (900px +)
+// Desktop (900px+)
 @media (min-width: 900px) {
   .page-wrapper { padding: 28px 32px; }
   .hero-banner .hero-content { padding: 40px; }
@@ -1110,20 +919,15 @@ $radius-lg: 24px;
   .stats-grid { grid-template-columns: repeat(3, 1fr); gap: 20px; }
   .stat-card { padding: 22px; }
   .stat-value { font-size: 2rem !important; }
-
   .orders-list { max-width: 1200px; }
   .order-header { padding: 20px 24px; }
   .status-badge {
-    font-size: 0.72rem;
-    padding: 5px 14px;
+    font-size: 0.72rem; padding: 5px 14px;
     .status-badge-short { display: none; }
     .status-badge-full { display: inline; }
   }
   .order-info-bar { padding: 12px 24px; gap: 20px; }
   .timeline-container { padding: 24px; }
   .step-dot { width: 42px; height: 42px; }
-  .step-person-info .person-contact-row {
-    flex-direction: row;
-    gap: 16px;
-  }
+  .step-person-info .person-contact-row { flex-direction: row; gap: 16px; }
 }
