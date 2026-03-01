@@ -48,7 +48,10 @@ import {
   trashOutline,
   createOutline,
   warningOutline,
-  receiptOutline
+  receiptOutline,
+  informationCircleOutline,
+  chatbubbleEllipsesOutline,
+  checkmarkCircleOutline
 } from 'ionicons/icons';
 
 // Interfaces needed for the view
@@ -736,7 +739,10 @@ export class AccountsMasterPage implements OnInit {
       'trash-outline': trashOutline,
       'create-outline': createOutline,
       'warning-outline': warningOutline,
-      'receipt-outline': receiptOutline
+      'receipt-outline': receiptOutline,
+      'information-circle-outline': informationCircleOutline,
+      'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline
     });
   }
 

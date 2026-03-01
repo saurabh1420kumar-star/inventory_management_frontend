@@ -1,0 +1,339 @@
+<!-- Logistics - Shipment Tracking & Management -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">Logistics</span> Hub
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="handleRefresh()"
+        class="text-slate-500 hover:text-blue-500 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="logistics-page-wrapper">
+
+    <!-- ========== HERO BANNER ========== -->
+    <div class="logistics-hero">
+      <div class="logistics-hero-bg"></div>
+      <div class="logistics-hero-content">
+        <div class="logistics-hero-text">
+          <h1 class="logistics-hero-title">
+            <span class="text-light">Logistics</span>
+            <span class="text-white"> Hub</span>
+          </h1>
+          <div class="logistics-hero-badge">
+            <ion-icon name="navigate-outline" class="badge-icon"></ion-icon>
+            <span>Track shipments, manage deliveries & monitor logistics</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SEARCH + FILTERS ========== -->
+    <div class="logistics-controls">
+      <div class="logistics-search-wrapper">
+        <ion-icon name="search-outline" class="search-icon"></ion-icon>
+        <input
+          (input)="onSearchChange($event)"
+          [value]="searchQuery"
+          class="logistics-search-input"
+          placeholder="Search shipments, orders or distributors..."
+          type="text"
+        />
+      </div>
+
+      <div class="logistics-filter-chips">
+        <button
+          *ngFor="let f of [
+            { key: 'all', label: 'All', icon: 'layers-outline' },
+            { key: 'in-transit', label: 'In Transit', icon: 'car-outline' },
+            { key: 'delivered', label: 'Delivered', icon: 'checkmark-circle' },
+            { key: 'pending', label: 'Pending', icon: 'time-outline' },
+            { key: 'delayed', label: 'Delayed', icon: 'alert-circle-outline' }
+          ]"
+          (click)="onFilterChange(f.key)"
+          [class.active]="filterStatus === f.key"
+          [attr.data-filter]="f.key"
+          class="logistics-filter-chip">
+          <ion-icon [name]="f.icon"></ion-icon>
+          <span>{{ f.label }}</span>
+        </button>
+      </div>
+    </div>
+
+    <!-- ========== STAT CARDS ========== -->
+    <div class="logistics-stats-grid">
+      <div class="logistics-stat-card logistics-stat-total">
+        <div class="logistics-stat-icon-wrap">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <div class="logistics-stat-info">
+          <span class="logistics-stat-label">Total Shipments</span>
+          <span class="logistics-stat-value">{{ totalShipments }}</span>
+        </div>
+      </div>
+
+      <div class="logistics-stat-card logistics-stat-transit">
+        <div class="logistics-stat-icon-wrap">
+          <ion-icon name="car-outline"></ion-icon>
+        </div>
+        <div class="logistics-stat-info">
+          <span class="logistics-stat-label">In Transit</span>
+          <span class="logistics-stat-value">{{ inTransitCount }}</span>
+        </div>
+      </div>
+
+      <div class="logistics-stat-card logistics-stat-delivered">
+        <div class="logistics-stat-icon-wrap">
+          <ion-icon name="checkmark-done-circle-outline"></ion-icon>
+        </div>
+        <div class="logistics-stat-info">
+          <span class="logistics-stat-label">Delivered</span>
+          <span class="logistics-stat-value">{{ deliveredCount }}</span>
+        </div>
+      </div>
+
+      <div class="logistics-stat-card logistics-stat-delayed">
+        <div class="logistics-stat-icon-wrap">
+          <ion-icon name="alert-circle-outline"></ion-icon>
+        </div>
+        <div class="logistics-stat-info">
+          <span class="logistics-stat-label">Delayed</span>
+          <span class="logistics-stat-value">{{ delayedCount }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- ========== SHIPMENT CARDS ========== -->
+    <div class="logistics-shipment-list">
+      <div *ngFor="let shipment of filteredShipments; let i = index"
+           class="logistics-shipment-card"
+           [class.expanded]="shipment.expanded"
+           [style.animation-delay]="i * 80 + 'ms'">
+
+        <!-- Card Header -->
+        <div class="logistics-shipment-header" (click)="toggleShipment(shipment)">
+          <div class="logistics-shipment-header-left">
+            <div class="logistics-shipment-avatar" [attr.data-status]="shipment.status">
+              <ion-icon [name]="getTransportIcon(shipment.transportMode)"></ion-icon>
+            </div>
+            <div class="logistics-shipment-meta">
+              <h3 class="logistics-shipment-number">{{ shipment.shipmentNumber }}</h3>
+              <span class="logistics-shipment-order">
+                <ion-icon name="cart-outline"></ion-icon>
+                {{ shipment.orderNumber }} &middot; {{ shipment.distributorName }}
+              </span>
+            </div>
+          </div>
+          <div class="logistics-shipment-header-right">
+            <span class="logistics-status-badge" [attr.data-status]="shipment.status">
+              <span class="logistics-badge-full">{{ getStatusLabel(shipment.status) }}</span>
+              <span class="logistics-badge-short">{{ getStatusShortLabel(shipment.status) }}</span>
+            </span>
+            <ion-icon
+              [name]="shipment.expanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+              class="logistics-expand-icon">
+            </ion-icon>
+          </div>
+        </div>
+
+        <!-- Info Bar -->
+        <div class="logistics-info-bar">
+          <div class="logistics-info-item">
+            <ion-icon name="calendar-outline"></ion-icon>
+            <span>{{ shipment.shipmentDate }}</span>
+          </div>
+          <div class="logistics-info-item">
+            <ion-icon name="cash-outline"></ion-icon>
+            <span class="logistics-amount">₹{{ shipment.totalAmount | number }}</span>
+          </div>
+          <div class="logistics-info-item">
+            <ion-icon name="cube-outline"></ion-icon>
+            <span>{{ shipment.totalPackages }} pkgs</span>
+          </div>
+          <div class="logistics-info-item logistics-progress-info">
+            <div class="logistics-mini-progress-bar">
+              <div class="logistics-mini-progress-fill" [style.width.%]="getProgressPercentage(shipment)"
+                   [attr.data-status]="shipment.status"></div>
+            </div>
+            <span class="logistics-progress-text">{{ getProgressPercentage(shipment) }}%</span>
+          </div>
+        </div>
+
+        <!-- ========== EXPANDED DETAILS ========== -->
+        <div class="logistics-expanded-container" *ngIf="shipment.expanded">
+
+          <!-- Route Info -->
+          <div class="logistics-route-card">
+            <div class="logistics-route-row">
+              <div class="logistics-route-point logistics-route-origin">
+                <div class="logistics-route-dot origin-dot"></div>
+                <div class="logistics-route-detail">
+                  <span class="logistics-route-label">Origin</span>
+                  <span class="logistics-route-value">{{ shipment.origin }}</span>
+                </div>
+              </div>
+              <div class="logistics-route-line">
+                <div class="logistics-route-line-fill" [attr.data-status]="shipment.status"></div>
+                <ion-icon [name]="getTransportIcon(shipment.transportMode)" class="logistics-route-transport-icon"></ion-icon>
+              </div>
+              <div class="logistics-route-point logistics-route-dest">
+                <div class="logistics-route-dot dest-dot"></div>
+                <div class="logistics-route-detail">
+                  <span class="logistics-route-label">Destination</span>
+                  <span class="logistics-route-value">{{ shipment.destination }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Shipment Details Grid -->
+          <div class="logistics-detail-grid">
+            <div class="logistics-detail-card">
+              <div class="logistics-detail-icon-wrap blue">
+                <ion-icon name="car-outline"></ion-icon>
+              </div>
+              <div class="logistics-detail-text">
+                <span class="logistics-detail-label">Transport</span>
+                <span class="logistics-detail-value">{{ getTransportLabel(shipment.transportMode) }}</span>
+              </div>
+            </div>
+            <div class="logistics-detail-card" *ngIf="shipment.vehicleNumber">
+              <div class="logistics-detail-icon-wrap violet">
+                <ion-icon name="document-text-outline"></ion-icon>
+              </div>
+              <div class="logistics-detail-text">
+                <span class="logistics-detail-label">Vehicle No.</span>
+                <span class="logistics-detail-value font-mono">{{ shipment.vehicleNumber }}</span>
+              </div>
+            </div>
+            <div class="logistics-detail-card">
+              <div class="logistics-detail-icon-wrap emerald">
+                <ion-icon name="layers-outline"></ion-icon>
+              </div>
+              <div class="logistics-detail-text">
+                <span class="logistics-detail-label">Weight / Pkgs</span>
+                <span class="logistics-detail-value">{{ shipment.totalWeight }} / {{ shipment.totalPackages }} pkgs</span>
+              </div>
+            </div>
+            <div class="logistics-detail-card">
+              <div class="logistics-detail-icon-wrap amber">
+                <ion-icon name="calendar-outline"></ion-icon>
+              </div>
+              <div class="logistics-detail-text">
+                <span class="logistics-detail-label">Expected Delivery</span>
+                <span class="logistics-detail-value">{{ shipment.expectedDelivery }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Driver & Logistics Contact -->
+          <div class="logistics-contacts-row" *ngIf="shipment.driverName || shipment.logisticsContact">
+            <div class="logistics-contact-card" *ngIf="shipment.driverName">
+              <div class="logistics-contact-header">
+                <ion-icon name="person-outline" class="logistics-contact-icon driver"></ion-icon>
+                <span class="logistics-contact-label">Driver</span>
+              </div>
+              <div class="logistics-contact-name">{{ shipment.driverName }}</div>
+              <div class="logistics-contact-info" *ngIf="shipment.driverPhone">
+                <ion-icon name="call-outline"></ion-icon>
+                <span>{{ shipment.driverPhone }}</span>
+              </div>
+            </div>
+            <div class="logistics-contact-card" *ngIf="shipment.logisticsContact">
+              <div class="logistics-contact-header">
+                <ion-icon name="shield-checkmark-outline" class="logistics-contact-icon manager"></ion-icon>
+                <span class="logistics-contact-label">Logistics Manager</span>
+              </div>
+              <div class="logistics-contact-name">{{ shipment.logisticsContact.name }}</div>
+              <div class="logistics-contact-role">{{ shipment.logisticsContact.role }}</div>
+              <div class="logistics-contact-info-row">
+                <div class="logistics-contact-info">
+                  <ion-icon name="call-outline"></ion-icon>
+                  <span>{{ shipment.logisticsContact.phone }}</span>
+                </div>
+                <div class="logistics-contact-info">
+                  <ion-icon name="mail-outline"></ion-icon>
+                  <span>{{ shipment.logisticsContact.email }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- GDN & Actions -->
+          <div class="logistics-actions-bar" *ngIf="shipment.gdnNumber">
+            <div class="logistics-gdn-badge">
+              <ion-icon name="receipt-outline"></ion-icon>
+              <span>GDN: {{ shipment.gdnNumber }}</span>
+            </div>
+            <div class="logistics-action-buttons">
+              <button class="logistics-action-btn download" (click)="onDownloadGDN(shipment)">
+                <ion-icon name="download-outline"></ion-icon>
+                <span>Download GDN</span>
+              </button>
+              <button class="logistics-action-btn print" (click)="onPrintWaybill(shipment)">
+                <ion-icon name="print-outline"></ion-icon>
+                <span>Waybill</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Tracking Timeline -->
+          <div class="logistics-timeline-container">
+            <div class="logistics-timeline-header">
+              <ion-icon name="navigate-outline"></ion-icon>
+              <span>Shipment Tracking Timeline</span>
+            </div>
+            <div class="logistics-timeline">
+              <div *ngFor="let step of shipment.trackingTimeline; let si = index; let last = last"
+                   class="logistics-timeline-step"
+                   [attr.data-status]="step.status"
+                   [style.animation-delay]="si * 60 + 'ms'">
+
+                <div class="logistics-step-indicator">
+                  <div class="logistics-step-dot" [attr.data-status]="step.status">
+                    <ion-icon [name]="getTimelineIcon(step)"></ion-icon>
+                  </div>
+                  <div *ngIf="!last" class="logistics-step-connector" [attr.data-status]="step.status"></div>
+                </div>
+
+                <div class="logistics-step-content">
+                  <div class="logistics-step-header">
+                    <h4 class="logistics-step-label">{{ step.label }}</h4>
+                    <span *ngIf="step.date" class="logistics-step-date">{{ step.date }}</span>
+                  </div>
+                  <div *ngIf="step.location" class="logistics-step-location">
+                    <ion-icon name="location-outline"></ion-icon>
+                    <span>{{ step.location }}</span>
+                  </div>
+                  <p *ngIf="step.remarks" class="logistics-step-remarks">{{ step.remarks }}</p>
+                  <span class="logistics-step-status-tag" [attr.data-status]="step.status">
+                    <ion-icon [name]="getTimelineIcon(step)" class="tag-icon"></ion-icon>
+                    {{ step.status === 'in-progress' ? 'In Progress' : (step.status | titlecase) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Empty State -->
+      <div *ngIf="filteredShipments.length === 0" class="logistics-empty-state">
+        <div class="logistics-empty-icon-wrap">
+          <ion-icon name="cube-outline"></ion-icon>
+        </div>
+        <h3>No Shipments Found</h3>
+        <p>{{ searchQuery ? 'Try adjusting your search query' : 'No shipments available at this time' }}</p>
+      </div>
+    </div>
+
+  </div>
+</ion-content>

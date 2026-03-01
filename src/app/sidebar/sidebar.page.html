@@ -142,6 +142,12 @@
           <ion-label>Order Tracking</ion-label>
         </ion-item>
 
+        <!-- ===== LOGISTICS (Both mobile & desktop) ===== -->
+        <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/logistics" routerLinkActive="active" (click)="onMenuItemClick()">
+          <ion-icon name="navigate-outline" slot="start"></ion-icon>
+          <ion-label>Logistics</ion-label>
+        </ion-item>
+
         <!-- ===== COMPLAINTS & FEEDBACK (Both mobile & desktop) ===== -->
         <ion-item *appAcl="'COMPLAINT'" routerLink="/complaints" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>

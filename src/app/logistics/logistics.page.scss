@@ -1,0 +1,1118 @@
+// ============================================================
+// Logistics Page - Shipment Tracking & Management
+// ============================================================
+
+// ---------- Variables ----------
+$emerald: #10b981;
+$emerald-light: #d1fae5;
+$teal: #14b8a6;
+$blue: #3b82f6;
+$blue-light: #dbeafe;
+$amber: #f59e0b;
+$amber-light: #fef3c7;
+$red: #ef4444;
+$red-light: #fee2e2;
+$violet: #8b5cf6;
+$violet-light: #ede9fe;
+$slate-800: #1e293b;
+$slate-600: #475569;
+$slate-400: #94a3b8;
+$slate-100: #f1f5f9;
+$white: #ffffff;
+$shadow-sm: 0 1px 3px rgba(0,0,0,0.06), 0 1px 2px rgba(0,0,0,0.04);
+$shadow-md: 0 4px 14px rgba(0,0,0,0.08);
+$shadow-lg: 0 10px 30px rgba(0,0,0,0.1);
+$radius: 16px;
+$radius-lg: 24px;
+
+// ---------- Page Wrapper ----------
+.logistics-page-wrapper {
+  min-height: 100%;
+  background: linear-gradient(135deg, #f8fafc 0%, #eff6ff 50%, #f0fdf4 100%);
+  padding: 10px;
+  width: 100%;
+  box-sizing: border-box;
+  overflow-x: hidden;
+}
+
+// ---------- Hero Banner ----------
+.logistics-hero {
+  position: relative;
+  border-radius: $radius-lg;
+  overflow: hidden;
+  margin-bottom: 20px;
+  min-height: 130px;
+  box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.25);
+
+  .logistics-hero-bg {
+    position: absolute;
+    inset: 0;
+    background: linear-gradient(135deg, #34d399 0%, #2dd4bf 40%, #3b82f6 100%);
+    &::after {
+      content: '';
+      position: absolute;
+      inset: 0;
+      background: radial-gradient(circle at 80% 20%, rgba($white, 0.15) 0%, transparent 60%);
+    }
+  }
+
+  .logistics-hero-content {
+    position: relative;
+    z-index: 1;
+    padding: 40px;
+  }
+
+  .logistics-hero-title {
+    font-size: 1.5rem;
+    font-weight: 700;
+    letter-spacing: -0.5px;
+    margin: 0 0 16px;
+    .text-light { color: #059669; }
+    .text-white { color: $white; }
+  }
+
+  .logistics-hero-badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 8px;
+    padding: 6px 16px;
+    background: rgba($white, 0.20);
+    backdrop-filter: blur(8px);
+    -webkit-backdrop-filter: blur(8px);
+    border-radius: 999px;
+    border: 1px solid rgba($white, 0.30);
+    color: $white;
+    font-size: 0.8rem;
+    font-weight: 500;
+
+    .badge-icon { font-size: 14px; opacity: 0.85; }
+  }
+}
+
+// ---------- Controls Section ----------
+.logistics-controls {
+  margin-bottom: 20px;
+}
+
+.logistics-search-wrapper {
+  position: relative;
+  margin-bottom: 14px;
+
+  .search-icon {
+    position: absolute;
+    left: 16px;
+    top: 50%;
+    transform: translateY(-50%);
+    color: $slate-400;
+    font-size: 20px;
+    pointer-events: none;
+    z-index: 1;
+  }
+
+  .logistics-search-input {
+    width: 100%;
+    padding: 14px 16px 14px 48px;
+    background: $white;
+    border: 2px solid transparent;
+    border-radius: 14px;
+    box-shadow: $shadow-sm;
+    font-size: 0.9rem;
+    font-weight: 500;
+    color: $slate-800;
+    outline: none;
+    transition: all 0.25s ease;
+
+    &::placeholder { color: $slate-400; }
+    &:focus {
+      border-color: $emerald;
+      box-shadow: $shadow-md, 0 0 0 3px rgba($emerald, 0.12);
+    }
+  }
+}
+
+.logistics-filter-chips {
+  display: flex;
+  gap: 8px;
+  overflow-x: auto;
+  padding-bottom: 4px;
+  -webkit-overflow-scrolling: touch;
+
+  &::-webkit-scrollbar { display: none; }
+
+  .logistics-filter-chip {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px 16px;
+    border-radius: 999px;
+    border: 1.5px solid #e2e8f0;
+    background: $white;
+    color: $slate-600;
+    font-size: 0.8rem;
+    font-weight: 600;
+    white-space: nowrap;
+    cursor: pointer;
+    transition: all 0.25s cubic-bezier(0.4, 0, 0.2, 1);
+
+    ion-icon { font-size: 16px; }
+
+    &:hover { border-color: $emerald; color: $emerald; }
+
+    &.active {
+      background: $emerald;
+      color: $white;
+      border-color: $emerald;
+      box-shadow: 0 2px 8px rgba($emerald, 0.35);
+      transform: scale(1.02);
+    }
+
+    &.active[data-filter="in-transit"] {
+      background: $blue;
+      border-color: $blue;
+      box-shadow: 0 2px 8px rgba($blue, 0.35);
+    }
+    &.active[data-filter="delayed"] {
+      background: $red;
+      border-color: $red;
+      box-shadow: 0 2px 8px rgba($red, 0.35);
+    }
+    &.active[data-filter="pending"] {
+      background: $amber;
+      border-color: $amber;
+      box-shadow: 0 2px 8px rgba($amber, 0.35);
+    }
+  }
+}
+
+// ---------- Stat Cards ----------
+.logistics-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  gap: 12px;
+  margin-bottom: 24px;
+}
+
+.logistics-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 16px;
+  border-radius: $radius;
+  background: $white;
+  border: 1.5px solid transparent;
+  box-shadow: $shadow-sm;
+  transition: all 0.3s ease;
+  animation: fadeInUp 0.4s ease both;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: $shadow-md;
+  }
+
+  .logistics-stat-icon-wrap {
+    width: 44px;
+    height: 44px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 22px;
+    flex-shrink: 0;
+  }
+
+  .logistics-stat-info {
+    display: flex;
+    flex-direction: column;
+    min-width: 0;
+  }
+
+  .logistics-stat-label {
+    font-size: 0.72rem;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+  }
+
+  .logistics-stat-value {
+    font-size: 1.6rem;
+    font-weight: 800;
+    color: $slate-800;
+    line-height: 1.2;
+  }
+
+  &.logistics-stat-total {
+    border-color: $blue-light;
+    .logistics-stat-icon-wrap { background: $blue-light; color: $blue; }
+    .logistics-stat-label { color: $blue; }
+  }
+  &.logistics-stat-transit {
+    border-color: lighten($teal, 35%);
+    .logistics-stat-icon-wrap { background: lighten($teal, 40%); color: $teal; }
+    .logistics-stat-label { color: $teal; }
+  }
+  &.logistics-stat-delivered {
+    border-color: $emerald-light;
+    .logistics-stat-icon-wrap { background: $emerald-light; color: $emerald; }
+    .logistics-stat-label { color: $emerald; }
+  }
+  &.logistics-stat-delayed {
+    border-color: $red-light;
+    .logistics-stat-icon-wrap { background: $red-light; color: $red; }
+    .logistics-stat-label { color: $red; }
+  }
+}
+
+// ---------- Shipment Cards ----------
+.logistics-shipment-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: 100%;
+}
+
+.logistics-shipment-card {
+  border-radius: $radius;
+  background: $white;
+  border: 1.5px solid #e8ecf1;
+  overflow: hidden;
+  box-shadow: $shadow-sm;
+  transition: all 0.35s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: cardPop 0.45s ease both;
+  width: 100%;
+  box-sizing: border-box;
+
+  &:hover {
+    box-shadow: $shadow-lg;
+    border-color: rgba($emerald, 0.3);
+    transform: translateY(-2px);
+  }
+
+  &:active {
+    transform: scale(0.995);
+  }
+
+  &.expanded {
+    border-color: rgba($emerald, 0.4);
+    box-shadow: $shadow-lg, 0 0 0 3px rgba($emerald, 0.1);
+  }
+}
+
+.logistics-shipment-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 12px;
+  cursor: pointer;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #f1f5f9;
+  transition: background 0.3s ease;
+  gap: 8px;
+
+  &:hover { background: linear-gradient(135deg, #dcfce7 0%, #dbeafe 100%); }
+}
+
+.logistics-shipment-header-left {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+}
+
+.logistics-shipment-avatar {
+  width: 44px;
+  height: 44px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 22px;
+  flex-shrink: 0;
+  background: linear-gradient(135deg, $teal, $emerald);
+  color: $white;
+  box-shadow: 0 3px 8px rgba($emerald, 0.3);
+
+  &[data-status="delivered"] {
+    background: linear-gradient(135deg, $emerald, #059669);
+    box-shadow: 0 3px 8px rgba($emerald, 0.3);
+  }
+  &[data-status="delayed"] {
+    background: linear-gradient(135deg, $red, #f87171);
+    box-shadow: 0 3px 8px rgba($red, 0.3);
+  }
+  &[data-status="pending"] {
+    background: linear-gradient(135deg, $amber, #fbbf24);
+    box-shadow: 0 3px 8px rgba($amber, 0.3);
+  }
+  &[data-status="in-transit"] {
+    background: linear-gradient(135deg, $blue, $teal);
+    box-shadow: 0 3px 8px rgba($blue, 0.3);
+  }
+}
+
+.logistics-shipment-meta {
+  min-width: 0;
+  flex: 1;
+  overflow: hidden;
+
+  .logistics-shipment-number {
+    font-size: 0.92rem;
+    font-weight: 700;
+    color: $slate-800;
+    margin: 0 0 2px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    line-height: 1.3;
+  }
+
+  .logistics-shipment-order {
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    font-size: 0.75rem;
+    color: $slate-400;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    ion-icon { font-size: 13px; flex-shrink: 0; }
+  }
+}
+
+.logistics-shipment-header-right {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-shrink: 0;
+}
+
+.logistics-status-badge {
+  padding: 4px 10px;
+  border-radius: 999px;
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+  white-space: nowrap;
+  flex-shrink: 0;
+
+  .logistics-badge-short { display: inline; }
+  .logistics-badge-full { display: none; }
+
+  &[data-status="delivered"] { background: $emerald-light; color: #047857; }
+  &[data-status="delayed"] { background: $red-light; color: #b91c1c; }
+  &[data-status="in-transit"] { background: $blue-light; color: #1d4ed8; }
+  &[data-status="pending"] { background: $amber-light; color: #92400e; }
+  &[data-status="returned"] { background: $violet-light; color: #6d28d9; }
+}
+
+.logistics-expand-icon {
+  font-size: 20px;
+  color: $slate-400;
+  transition: transform 0.3s ease;
+}
+.logistics-shipment-card.expanded .logistics-expand-icon {
+  transform: rotate(180deg);
+  color: $emerald;
+}
+
+// ---------- Info Bar ----------
+.logistics-info-bar {
+  display: grid;
+  grid-template-columns: auto auto auto 1fr;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 12px;
+  background: #fafbfc;
+  border-bottom: 1px solid #f1f5f9;
+}
+
+.logistics-info-item {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.78rem;
+  color: $slate-600;
+  white-space: nowrap;
+
+  ion-icon {
+    color: $emerald;
+    font-size: 15px;
+    flex-shrink: 0;
+  }
+
+  .logistics-amount { font-weight: 700; color: $slate-800; }
+}
+
+.logistics-progress-info {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  justify-self: end;
+}
+
+.logistics-mini-progress-bar {
+  width: 64px;
+  height: 6px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.logistics-mini-progress-fill {
+  height: 100%;
+  border-radius: 999px;
+  background: linear-gradient(90deg, $emerald, $teal);
+  transition: width 0.8s cubic-bezier(0.4, 0, 0.2, 1);
+  animation: progressFill 1s ease both;
+
+  &[data-status="delayed"] {
+    background: linear-gradient(90deg, $red, #f87171);
+  }
+  &[data-status="in-transit"] {
+    background: linear-gradient(90deg, $blue, $teal);
+  }
+  &[data-status="pending"] {
+    background: linear-gradient(90deg, $amber, #fbbf24);
+  }
+}
+
+.logistics-progress-text {
+  font-size: 0.72rem;
+  font-weight: 700;
+  color: $emerald;
+  min-width: 28px;
+  text-align: right;
+}
+
+// ---------- Expanded Container ----------
+.logistics-expanded-container {
+  padding: 16px 12px 12px;
+  background: linear-gradient(180deg, #fafbfc 0%, $white 100%);
+  animation: expandTimeline 0.4s ease both;
+  transform-origin: top;
+}
+
+// Route Card
+.logistics-route-card {
+  background: linear-gradient(135deg, #f0f9ff, #f0fdf4);
+  border: 1.5px solid rgba($emerald, 0.15);
+  border-radius: 14px;
+  padding: 16px;
+  margin-bottom: 14px;
+}
+
+.logistics-route-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.logistics-route-point {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 0;
+}
+
+.logistics-route-dot {
+  width: 12px;
+  height: 12px;
+  border-radius: 50%;
+  flex-shrink: 0;
+
+  &.origin-dot {
+    background: $emerald;
+    box-shadow: 0 0 0 4px rgba($emerald, 0.2);
+  }
+  &.dest-dot {
+    background: $blue;
+    box-shadow: 0 0 0 4px rgba($blue, 0.2);
+  }
+}
+
+.logistics-route-detail {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.logistics-route-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: $slate-400;
+}
+
+.logistics-route-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $slate-800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logistics-route-line {
+  flex: 0 0 60px;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 999px;
+  position: relative;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+
+  .logistics-route-line-fill {
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    border-radius: 999px;
+
+    &[data-status="in-transit"] {
+      width: 60%;
+      background: linear-gradient(90deg, $emerald, $blue);
+    }
+    &[data-status="delivered"] {
+      width: 100%;
+      background: linear-gradient(90deg, $emerald, $blue);
+    }
+    &[data-status="pending"] {
+      width: 10%;
+      background: $amber;
+    }
+    &[data-status="delayed"] {
+      width: 50%;
+      background: linear-gradient(90deg, $emerald, $red);
+    }
+  }
+
+  .logistics-route-transport-icon {
+    position: relative;
+    z-index: 1;
+    font-size: 18px;
+    color: $emerald;
+    background: $white;
+    border-radius: 50%;
+    padding: 3px;
+    box-shadow: $shadow-sm;
+  }
+}
+
+// Detail Grid
+.logistics-detail-grid {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.logistics-detail-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 12px;
+  background: $white;
+  border: 1px solid #e8ecf1;
+  transition: all 0.2s ease;
+
+  &:hover {
+    border-color: rgba($emerald, 0.2);
+    box-shadow: $shadow-sm;
+  }
+}
+
+.logistics-detail-icon-wrap {
+  width: 36px;
+  height: 36px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  font-size: 18px;
+  flex-shrink: 0;
+
+  &.blue { background: $blue-light; color: $blue; }
+  &.violet { background: $violet-light; color: $violet; }
+  &.emerald { background: $emerald-light; color: $emerald; }
+  &.amber { background: $amber-light; color: $amber; }
+}
+
+.logistics-detail-text {
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+}
+
+.logistics-detail-label {
+  font-size: 0.65rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.3px;
+  color: $slate-400;
+}
+
+.logistics-detail-value {
+  font-size: 0.82rem;
+  font-weight: 600;
+  color: $slate-800;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+// Contacts Row
+.logistics-contacts-row {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.logistics-contact-card {
+  padding: 12px;
+  border-radius: 12px;
+  background: $slate-100;
+  border: 1px solid #e2e8f0;
+  animation: fadeInUp 0.3s ease both;
+}
+
+.logistics-contact-header {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  margin-bottom: 6px;
+
+  .logistics-contact-icon {
+    font-size: 14px;
+    &.driver { color: $blue; }
+    &.manager { color: $emerald; }
+  }
+
+  .logistics-contact-label {
+    font-size: 0.68rem;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.5px;
+    color: $slate-400;
+  }
+}
+
+.logistics-contact-name {
+  font-size: 0.85rem;
+  font-weight: 700;
+  color: $slate-800;
+  margin-bottom: 1px;
+}
+
+.logistics-contact-role {
+  font-size: 0.72rem;
+  font-weight: 500;
+  color: $slate-600;
+  margin-bottom: 6px;
+}
+
+.logistics-contact-info-row {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+}
+
+.logistics-contact-info {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.7rem;
+  color: $slate-400;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+
+  ion-icon {
+    font-size: 12px;
+    color: $emerald;
+    flex-shrink: 0;
+  }
+}
+
+// Actions Bar
+.logistics-actions-bar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 12px;
+  margin-bottom: 14px;
+  border-radius: 12px;
+  background: linear-gradient(135deg, rgba($emerald, 0.04), rgba($blue, 0.04));
+  border: 1.5px solid rgba($emerald, 0.12);
+  flex-wrap: wrap;
+}
+
+.logistics-gdn-badge {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  font-size: 0.78rem;
+  font-weight: 700;
+  color: $slate-800;
+  font-family: monospace;
+
+  ion-icon {
+    font-size: 16px;
+    color: $emerald;
+  }
+}
+
+.logistics-action-buttons {
+  display: flex;
+  gap: 8px;
+}
+
+.logistics-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 7px 14px;
+  border-radius: 10px;
+  border: 1.5px solid transparent;
+  font-size: 0.76rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: all 0.25s ease;
+
+  ion-icon { font-size: 16px; }
+
+  &.download {
+    background: rgba($blue, 0.08);
+    color: $blue;
+    border-color: rgba($blue, 0.2);
+
+    &:hover {
+      background: rgba($blue, 0.14);
+      border-color: rgba($blue, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba($blue, 0.15);
+    }
+  }
+
+  &.print {
+    background: rgba($violet, 0.08);
+    color: $violet;
+    border-color: rgba($violet, 0.2);
+
+    &:hover {
+      background: rgba($violet, 0.14);
+      border-color: rgba($violet, 0.35);
+      transform: translateY(-1px);
+      box-shadow: 0 3px 10px rgba($violet, 0.15);
+    }
+  }
+
+  &:active {
+    transform: scale(0.97);
+  }
+}
+
+// ---------- Timeline ----------
+.logistics-timeline-container {
+  border-radius: 14px;
+  background: $white;
+  border: 1px solid #e8ecf1;
+  overflow: hidden;
+}
+
+.logistics-timeline-header {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 14px;
+  background: linear-gradient(135deg, #f0fdf4 0%, #f0f9ff 100%);
+  border-bottom: 1px solid #e8ecf1;
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $slate-800;
+
+  ion-icon {
+    font-size: 18px;
+    color: $emerald;
+  }
+}
+
+.logistics-timeline {
+  padding: 16px 14px;
+  position: relative;
+}
+
+.logistics-timeline-step {
+  display: flex;
+  gap: 14px;
+  animation: slideIn 0.35s ease both;
+}
+
+.logistics-step-indicator {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  flex-shrink: 0;
+}
+
+.logistics-step-dot {
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 2;
+  transition: all 0.3s ease;
+
+  ion-icon { font-size: 18px; }
+
+  &[data-status="completed"] {
+    background: $emerald-light;
+    ion-icon { color: $emerald; }
+    box-shadow: 0 2px 8px rgba($emerald, 0.2);
+  }
+  &[data-status="in-progress"] {
+    background: $blue-light;
+    ion-icon { color: $blue; }
+    animation: pulse-glow 2s infinite;
+  }
+  &[data-status="pending"] {
+    background: $slate-100;
+    ion-icon { color: #cbd5e1; }
+  }
+}
+
+.logistics-step-connector {
+  width: 3px;
+  flex: 1;
+  min-height: 28px;
+  border-radius: 999px;
+  transition: background 0.3s ease;
+
+  &[data-status="completed"] { background: linear-gradient(180deg, $emerald, rgba($emerald, 0.3)); }
+  &[data-status="in-progress"] {
+    background: linear-gradient(180deg, $blue, rgba($blue, 0.15));
+    background-size: 200% 200%;
+    animation: shimmer 2s linear infinite;
+  }
+  &[data-status="pending"] { background: #e2e8f0; }
+}
+
+.logistics-step-content {
+  flex: 1;
+  padding-bottom: 16px;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.logistics-step-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 3px;
+}
+
+.logistics-step-label {
+  font-size: 0.82rem;
+  font-weight: 700;
+  color: $slate-800;
+  margin: 0;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.logistics-step-date {
+  font-size: 0.7rem;
+  color: $slate-400;
+  font-weight: 500;
+  white-space: nowrap;
+}
+
+.logistics-step-location {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 0.72rem;
+  color: $teal;
+  font-weight: 500;
+  margin-bottom: 2px;
+
+  ion-icon {
+    font-size: 13px;
+    flex-shrink: 0;
+  }
+}
+
+.logistics-step-remarks {
+  font-size: 0.76rem;
+  color: $slate-600;
+  margin: 2px 0 6px;
+  line-height: 1.4;
+}
+
+.logistics-step-status-tag {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.68rem;
+  font-weight: 600;
+
+  .tag-icon { font-size: 12px; }
+
+  &[data-status="completed"] { background: $emerald-light; color: #047857; }
+  &[data-status="in-progress"] { background: $blue-light; color: #1d4ed8; }
+  &[data-status="pending"] { background: $slate-100; color: #94a3b8; }
+}
+
+// ---------- Empty State ----------
+.logistics-empty-state {
+  text-align: center;
+  padding: 48px 24px;
+  background: $white;
+  border-radius: $radius-lg;
+  border: 2px dashed #e2e8f0;
+  animation: fadeInUp 0.5s ease;
+
+  .logistics-empty-icon-wrap {
+    width: 72px;
+    height: 72px;
+    border-radius: 50%;
+    background: $slate-100;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 16px;
+    ion-icon { font-size: 32px; color: $slate-400; }
+  }
+
+  h3 {
+    font-size: 1.1rem;
+    font-weight: 700;
+    color: $slate-800;
+    margin: 0 0 6px;
+  }
+  p {
+    font-size: 0.85rem;
+    color: $slate-400;
+    margin: 0;
+  }
+}
+
+// ============================================================
+// Responsive Breakpoints
+// ============================================================
+
+// Mobile (< 480px)
+@media (max-width: 479px) {
+  .logistics-page-wrapper { padding: 8px; }
+  .logistics-hero {
+    margin-bottom: 14px; min-height: 105px;
+    .logistics-hero-content { padding: 20px 14px; }
+  }
+  .logistics-hero-title { font-size: 1.25rem !important; }
+  .logistics-controls { margin-bottom: 14px; }
+  .logistics-search-wrapper .logistics-search-input { padding: 11px 14px 11px 42px; font-size: 0.83rem; border-radius: 12px; }
+  .logistics-search-wrapper .search-icon { left: 13px; font-size: 18px; }
+  .logistics-filter-chip { padding: 6px 12px; font-size: 0.72rem; }
+  .logistics-stats-grid { grid-template-columns: repeat(2, 1fr); gap: 7px; margin-bottom: 16px; }
+  .logistics-stat-card {
+    flex-direction: row; gap: 10px; padding: 11px 13px; border-radius: 12px;
+    .logistics-stat-icon-wrap { width: 37px; height: 37px; font-size: 18px; border-radius: 10px; }
+    .logistics-stat-label { font-size: 0.69rem; }
+    .logistics-stat-value { font-size: 1.25rem !important; }
+  }
+  .logistics-shipment-card { border-radius: 13px; }
+  .logistics-shipment-header { padding: 11px; gap: 7px; }
+  .logistics-shipment-avatar { width: 36px; height: 36px; font-size: 18px; border-radius: 10px; }
+  .logistics-shipment-meta {
+    .logistics-shipment-number { font-size: 0.85rem; }
+    .logistics-shipment-order { font-size: 0.7rem; }
+  }
+  .logistics-status-badge { padding: 3px 8px; font-size: 0.6rem; }
+  .logistics-expand-icon { font-size: 17px; }
+  .logistics-info-bar {
+    grid-template-columns: auto auto 1fr;
+    padding: 8px 11px; gap: 9px;
+    .logistics-info-item { font-size: 0.72rem; gap: 3px; }
+    .logistics-info-item ion-icon { font-size: 13px; }
+    .logistics-mini-progress-bar { width: 48px; height: 5px; }
+    .logistics-progress-text { font-size: 0.67rem; min-width: 24px; }
+    // Hide packages count on very small screens
+    .logistics-info-item:nth-child(3) { display: none; }
+  }
+  .logistics-expanded-container { padding: 13px 11px 11px; }
+  .logistics-route-row { flex-direction: column; gap: 8px; }
+  .logistics-route-line { width: 100%; height: 4px; flex: 0 0 auto; }
+  .logistics-detail-grid { grid-template-columns: 1fr; gap: 8px; }
+  .logistics-contacts-row { grid-template-columns: 1fr; gap: 8px; }
+  .logistics-timeline-step { gap: 9px; }
+  .logistics-step-dot { width: 30px; height: 30px; ion-icon { font-size: 14px; } }
+  .logistics-step-connector { min-height: 22px; width: 2px; }
+  .logistics-step-label { font-size: 0.78rem; }
+  .logistics-step-date { font-size: 0.63rem; }
+  .logistics-step-remarks { font-size: 0.71rem; margin: 2px 0 4px; }
+  .logistics-step-status-tag { font-size: 0.61rem; padding: 2px 7px; }
+  .logistics-step-content { padding-bottom: 13px; }
+  .logistics-actions-bar { flex-direction: column; align-items: stretch; }
+  .logistics-action-buttons { justify-content: stretch; }
+  .logistics-action-btn { flex: 1; justify-content: center; padding: 8px 12px; font-size: 0.72rem; }
+}
+
+// Tablet & larger phones (480–899px)
+@media (min-width: 480px) and (max-width: 899px) {
+  .logistics-page-wrapper { padding: 14px; }
+  .logistics-stats-grid { grid-template-columns: repeat(4, 1fr); gap: 10px; }
+  .logistics-stat-card { padding: 13px 11px; gap: 9px;
+    .logistics-stat-icon-wrap { width: 38px; height: 38px; font-size: 19px; }
+    .logistics-stat-label { font-size: 0.69rem; }
+    .logistics-stat-value { font-size: 1.3rem !important; }
+  }
+  .logistics-shipment-header { padding: 14px 12px; }
+  .logistics-status-badge {
+    font-size: 0.65rem; padding: 4px 10px;
+    .logistics-badge-short { display: none; }
+    .logistics-badge-full { display: inline; }
+  }
+  .logistics-info-bar { padding: 10px 14px; gap: 12px;
+    .logistics-mini-progress-bar { width: 72px; }
+  }
+  .logistics-expanded-container { padding: 16px 14px; }
+  .logistics-step-dot { width: 33px; height: 33px; ion-icon { font-size: 16px; } }
+  .logistics-contact-info-row { flex-direction: row; flex-wrap: wrap; gap: 8px; }
+  .logistics-step-content { padding-bottom: 15px; }
+}
+
+// Desktop (900px+)
+@media (min-width: 900px) {
+  .logistics-page-wrapper { padding: 28px 32px; }
+  .logistics-hero .logistics-hero-content { padding: 40px; }
+  .logistics-hero-title { font-size: 2rem !important; }
+  .logistics-stats-grid { grid-template-columns: repeat(4, 1fr); gap: 20px; }
+  .logistics-stat-card { padding: 22px; }
+  .logistics-stat-value { font-size: 2rem !important; }
+  .logistics-shipment-list { max-width: 1200px; }
+  .logistics-shipment-header { padding: 20px 24px; }
+  .logistics-status-badge {
+    font-size: 0.72rem; padding: 5px 14px;
+    .logistics-badge-short { display: none; }
+    .logistics-badge-full { display: inline; }
+  }
+  .logistics-info-bar { padding: 12px 24px; gap: 20px; }
+  .logistics-expanded-container { padding: 24px; }
+  .logistics-step-dot { width: 40px; height: 40px; }
+  .logistics-route-line { flex: 0 0 100px; }
+  .logistics-contact-info-row { flex-direction: row; gap: 16px; }
+}

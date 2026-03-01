@@ -387,6 +387,126 @@ ion-modal {
 }
 
 // ============================================================
+// New Transaction Modal - Professional Styles
+// ============================================================
+
+.txn-modal-wrap {
+  animation: fadeInScale 0.3s cubic-bezier(0.22, 1, 0.36, 1) both;
+}
+
+.txn-modal-header {
+  min-height: 90px;
+}
+
+.txn-modal-close-btn {
+  transition: all 0.25s ease;
+  &:hover {
+    transform: scale(1.1);
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+  }
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+// Transaction type selector buttons
+.txn-type-btn {
+  transition: all 0.25s cubic-bezier(0.22, 1, 0.36, 1);
+  border: 1.5px solid transparent;
+  cursor: pointer;
+  
+  &:active {
+    transform: scale(0.95);
+  }
+}
+
+.txn-type-inactive {
+  background: #f8fafc;
+  color: #64748b;
+  border-color: #e2e8f0;
+  
+  &:hover {
+    background: #f1f5f9;
+    border-color: #cbd5e1;
+  }
+}
+
+.txn-type-active-blue {
+  background: #eff6ff;
+  color: #2563eb;
+  border-color: #3b82f6;
+  box-shadow: 0 2px 8px rgba(59, 130, 246, 0.2);
+}
+
+.txn-type-active-emerald {
+  background: #ecfdf5;
+  color: #059669;
+  border-color: #10b981;
+  box-shadow: 0 2px 8px rgba(16, 185, 129, 0.2);
+}
+
+.txn-type-active-amber {
+  background: #fffbeb;
+  color: #d97706;
+  border-color: #f59e0b;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.2);
+}
+
+.txn-type-active-violet {
+  background: #f5f3ff;
+  color: #7c3aed;
+  border-color: #8b5cf6;
+  box-shadow: 0 2px 8px rgba(139, 92, 246, 0.2);
+}
+
+// Uniform field styling
+.txn-field-group {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+
+.txn-field-label {
+  display: flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 0.68rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+  color: #64748b;
+  
+  ion-icon {
+    font-size: 13px;
+  }
+}
+
+.txn-field-input {
+  width: 100%;
+  padding: 10px 14px;
+  background: white;
+  border: 1.5px solid #e2e8f0;
+  border-radius: 12px;
+  font-size: 0.85rem;
+  color: #1e293b;
+  outline: none;
+  transition: all 0.2s ease;
+  
+  &::placeholder {
+    color: #94a3b8;
+  }
+  
+  &:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+  
+  &:hover:not(:focus) {
+    border-color: #cbd5e1;
+  }
+}
+
+// ============================================================
 // Touch Feedback for Mobile
 // ============================================================
 
