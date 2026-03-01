@@ -1,9 +1,9 @@
 export const environment = {
   production: true,
-  apiUrl: 'https://api.imsnectarorigin.com',
-  permissionsUrl: 'https://api.imsnectarorigin.com/permissions',
-  hrUrl: 'https://api.imsnectarorigin.com/hr',
-  productsUrl: 'https://api.imsnectarorigin.com/products',
-  distributorUrl: 'https://api.imsnectarorigin.com/distributors',
-  ledgerUrl: 'https://api.imsnectarorigin.com/ledger',
+  apiUrl: 'https://api.imsnectarorigin.com/api',
+  permissionsUrl: 'https://api.imsnectarorigin.com/api/permissions',
+  hrUrl: 'https://api.imsnectarorigin.com/api/hr',
+  productsUrl: 'https://api.imsnectarorigin.com/api/products',
+  distributorUrl: 'https://api.imsnectarorigin.com/api/distributors',
+  ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
 };
