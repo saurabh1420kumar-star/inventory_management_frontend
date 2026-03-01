@@ -750,7 +750,7 @@ $radius-lg: 24px;
       box-shadow: 0 3px 10px rgba($emerald, 0.3);
 
       &:hover {
-        background: darken($emerald, 8%);
+        background: #059669;
         transform: translateY(-1px);
         box-shadow: 0 5px 15px rgba($emerald, 0.35);
       }
@@ -762,7 +762,7 @@ $radius-lg: 24px;
       box-shadow: 0 3px 10px rgba($red, 0.3);
 
       &:hover {
-        background: darken($red, 8%);
+        background: #dc2626;
         transform: translateY(-1px);
         box-shadow: 0 5px 15px rgba($red, 0.35);
       }

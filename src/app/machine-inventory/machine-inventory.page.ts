@@ -36,8 +36,7 @@ import { InventoryService, InventoryItem } from '../services/inventory';
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonFab, IonFabButton, IonModal, IonInput,
-    IonItem, IonLabel, IonSelect, IonSelectOption,
-    IonSpinner
+    IonItem, IonSelect, IonSelectOption
   ],
 })
 export class MachineInventoryPage implements OnInit {
