@@ -176,6 +176,23 @@ export class Auth {
     localStorage.clear();
   }
 
+  // ---------------- FORGOT PASSWORD ----------------
+  /**
+   * Reset password for a given username.
+   * POST /api/auth/forgot-password/{username}
+   * Body: { newPassword, confirmPassword }
+   */
+  forgotPassword(
+    username: string,
+    newPassword: string,
+    confirmPassword: string
+  ): Observable<any> {
+    return this.http.post(
+      `${this.apiUrl}/auth/forgot-password/${encodeURIComponent(username)}`,
+      { newPassword, confirmPassword }
+    );
+  }
+
   // ---------------- AUTH HELPERS ----------------
   isLoggedIn(): boolean {
     return !!this.getToken();

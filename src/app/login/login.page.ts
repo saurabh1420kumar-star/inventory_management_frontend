@@ -103,7 +103,6 @@ export class LoginPage {
   }
 
   forgotPassword() {
-    console.log('Forgot password clicked');
-    // Implement forgot password logic
+    this.router.navigateByUrl('/forgot-password');
   }
 }

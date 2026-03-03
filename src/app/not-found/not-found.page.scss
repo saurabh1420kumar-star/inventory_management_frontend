@@ -1,0 +1,51 @@
+/* ──────────────────────────────────────────────
+   404 Not Found – Animations
+   ────────────────────────────────────────────── */
+
+ion-content {
+  --background: transparent;
+}
+
+/* ── Entrance ── */
+.animate-fade-up {
+  animation: fadeUp 0.6s cubic-bezier(0.16, 1, 0.3, 1) both;
+}
+
+@keyframes fadeUp {
+  from {
+    opacity: 0;
+    transform: translateY(30px) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+/* ── Floating 404 text ── */
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+@keyframes float {
+  0%, 100% { transform: translateY(0); }
+  50%      { transform: translateY(-12px); }
+}
+
+/* ── Slow bounce for compass icon ── */
+.animate-bounce-slow {
+  animation: bounceSlow 3s ease-in-out infinite;
+}
+
+@keyframes bounceSlow {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25%      { transform: translateY(-6px) rotate(-3deg); }
+  75%      { transform: translateY(4px) rotate(2deg); }
+}
+
+/* ── Clip text gradient support ── */
+.bg-clip-text {
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+}
