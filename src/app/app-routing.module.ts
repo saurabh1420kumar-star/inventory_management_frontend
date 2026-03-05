@@ -92,6 +92,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'dispatch',
+    loadChildren: () => import('./dispatch/dispatch.module').then(m => m.DispatchPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }
