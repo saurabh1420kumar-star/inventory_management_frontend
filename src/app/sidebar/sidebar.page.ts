@@ -76,6 +76,14 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   private checkMobile() {
     this.isMobile = Capacitor.isNativePlatform() || window.innerWidth < SidebarPage.MOBILE_BREAKPOINT;
+    // Debug log
+    console.log('Mobile Check:', {
+      isNativePlatform: Capacitor.isNativePlatform(),
+      windowWidth: window.innerWidth,
+      breakpoint: SidebarPage.MOBILE_BREAKPOINT,
+      isMobile: this.isMobile,
+      userRole: this.userRole
+    });
   }
 
   onToggleSidebar() {

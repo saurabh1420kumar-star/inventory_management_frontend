@@ -1,15 +1,14 @@
 // This file can be replaced during build by using the `fileReplacements` array.
 // `ng build` replaces `environment.ts` with `environment.prod.ts`.
 // The list of file replacements can be found in `angular.json`.
-
 export const environment = {
   production: false,
-  apiUrl: 'http://localhost:8080/api',
-  permissionsUrl: 'http://localhost:8080/api/permissions',
-  hrUrl: 'http://localhost:8080/api/hr',
-  productsUrl: 'http://localhost:8080/api/products',
-  distributorUrl: 'http://localhost:8080/api/distributors',
-  ledgerUrl: 'http://localhost:8080/api/ledger',
+  apiUrl: 'https://api.imsnectarorigin.com/api',
+  permissionsUrl: 'https://api.imsnectarorigin.com/api/permissions',
+  hrUrl: 'https://api.imsnectarorigin.com/api/hr',
+  productsUrl: 'https://api.imsnectarorigin.com/api/products',
+  distributorUrl: 'https://api.imsnectarorigin.com/api/distributors',
+  ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
 };
 
 

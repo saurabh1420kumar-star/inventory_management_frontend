@@ -1,0 +1,68 @@
+ion-input, ion-textarea, ion-select {
+  --padding-start: 0;
+  --padding-end: 0;
+}
+
+.custom-input {
+  --background: rgba(255, 255, 255, 0.95);
+  --border-radius: 0.75rem;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+}
+
+.custom-textarea {
+  --background: rgba(255, 255, 255, 0.95);
+  --border-radius: 0.75rem;
+  --padding-start: 1rem;
+  --padding-end: 1rem;
+  --border-style: solid;
+  --border-color: #e2e8f0;
+  --border-width: 1px;
+}
+
+// Animations
+@keyframes slideIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.card-stagger {
+  animation: slideIn 0.4s ease-out;
+}
+
+// Modal styling
+ion-modal {
+  --height: 90%;
+  --width: 100%;
+
+  @media (min-width: 768px) {
+    --height: auto;
+    --width: 90%;
+    --max-width: 500px;
+  }
+}
+
+// Scrollbar styling
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: #f1f5f9;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #cbd5e1;
+  border-radius: 3px;
+
+  &:hover {
+    background: #94a3b8;
+  }
+}

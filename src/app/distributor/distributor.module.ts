@@ -13,8 +13,8 @@ import { DistributorPage } from './distributor.page';
     CommonModule,
     FormsModule,
     IonicModule,
-    DistributorPageRoutingModule
-  ],
-  // declarations: [DistributorPage]
+    DistributorPageRoutingModule,
+    DistributorPage
+  ]
 })
 export class DistributorPageModule {}

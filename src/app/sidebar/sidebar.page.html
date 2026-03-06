@@ -95,6 +95,25 @@
             </ion-accordion>
           </ion-accordion-group>
         </ng-container>
+
+        <!-- ===== PRODUCT MENU (Distributor login only) ===== -->
+        <ng-container *ngIf="isMobile && userRole === 'DISTRIBUTOR'">
+          <ion-accordion-group>
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="cube-outline" slot="start"></ion-icon>
+                <ion-label>Product</ion-label>
+              </ion-item>
+              <div slot="content">
+                <ion-item routerLink="/distributor-cart" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-icon name="cart-outline" slot="start"></ion-icon>
+                  <ion-label>Shopping Cart</ion-label>
+                </ion-item>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
+
         <ng-container *ngIf="isMobile || isAdmin">
         <ion-accordion-group *appAcl="{ features: ['SALES'] }">
           <ion-accordion>

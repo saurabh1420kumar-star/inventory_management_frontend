@@ -134,7 +134,7 @@ export class Auth {
           localStorage.setItem('auth_token_type', res.type);
           localStorage.setItem('auth_username', res.username);
           localStorage.setItem('auth_user_id', String(res.userId));
-          localStorage.setItem('auth_role_type', res.roleType);
+          localStorage.setItem('auth_role_type', res.roleType?.toUpperCase() || '');
 
           // Store features safely
           localStorage.setItem(
@@ -200,7 +200,8 @@ export class Auth {
 
   // ---------------- ROLE HELPERS ----------------
   getRoleType(): string | null {
-    return localStorage.getItem('auth_role_type');
+    const role = localStorage.getItem('auth_role_type');
+    return role ? role.toUpperCase() : null;
   }
 
   isSuperAdmin(): boolean {

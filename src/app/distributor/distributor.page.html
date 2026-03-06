@@ -820,7 +820,8 @@
                 formControlName="accountNumber" 
                 type="text" 
                 placeholder="Enter account number" 
-                class="custom-input">
+                class="custom-input"
+                [readonly]="true">
               </ion-input>
               <div *ngIf="distributorForm.get('accountNumber')?.invalid && distributorForm.get('accountNumber')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -834,7 +835,8 @@
                 formControlName="ifsc" 
                 type="text" 
                 placeholder="Enter IFSC code" 
-                class="custom-input">
+                class="custom-input"
+                [readonly]="true">
               </ion-input>
               <div *ngIf="distributorForm.get('ifsc')?.invalid && distributorForm.get('ifsc')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -848,7 +850,8 @@
                 formControlName="accountName" 
                 type="text" 
                 placeholder="Enter account holder name" 
-                class="custom-input">
+                class="custom-input"
+                [readonly]="true">
               </ion-input>
               <div *ngIf="distributorForm.get('accountName')?.invalid && distributorForm.get('accountName')?.touched" 
                    class="text-xs text-red-500 mt-1">
