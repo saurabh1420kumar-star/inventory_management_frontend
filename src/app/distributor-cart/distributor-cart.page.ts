@@ -87,9 +87,7 @@ export class DistributorCartPage implements OnInit {
 
   initializeForm() {
     this.orderForm = this.fb.group({
-      deliveryAddress: ['', [Validators.required]],
-      specialInstructions: [''],
-      preferredDeliveryDate: ['', [Validators.required]]
+      deliveryAddress: ['', [Validators.required]]
     });
   }
 
@@ -206,20 +204,24 @@ export class DistributorCartPage implements OnInit {
       return;
     }
 
-    const orderPayload = {
-      items: this.cartItems.map(item => ({
-        productId: item.id,
-        quantity: item.cartQuantity,
-        subtotal: item.subtotal
-      })),
-      totalAmount: this.cartTotal,
-      deliveryAddress: this.orderForm.get('deliveryAddress')?.value,
-      specialInstructions: this.orderForm.get('specialInstructions')?.value,
-      preferredDeliveryDate: this.orderForm.get('preferredDeliveryDate')?.value
-    };
+    if (!this.distributorId) {
+      alert('Distributor ID not found. Please log in again.');
+      return;
+    }
+
+    // Build the payload array expected by POST /cart/placeOrder?distributorId=<id>
+    const orderPayload: CartItemPayload[] = this.cartItems.map(item => ({
+      itemId: (item.sku || item.id.toString()),
+      quantity: item.cartQuantity,
+      name: item.name,
+      sku: (item.sku || item.id.toString()),
+      price: item.price || 0,
+      imageUrl: '',
+      active: true
+    }));
 
     this.isLoading = true;
-    this.cartService.placeOrder(orderPayload).subscribe({
+    this.cartService.placeOrder(this.distributorId, orderPayload).subscribe({
       next: (response) => {
         alert('Order placed successfully!');
         this.cartService.clearCart();
@@ -228,7 +230,8 @@ export class DistributorCartPage implements OnInit {
       },
       error: (err) => {
         console.error('Failed to place order', err);
-        alert('Failed to place order. Please try again.');
+        const msg = err?.error?.message || err?.error?.error || 'Please try again.';
+        alert('Failed to place order: ' + msg);
         this.isLoading = false;
       }
     });

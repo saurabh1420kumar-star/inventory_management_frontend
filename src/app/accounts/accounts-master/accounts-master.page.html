@@ -39,10 +39,10 @@
             </div>
 
             <div class="flex flex-wrap gap-3">
-              <button *ngIf="selectedAccount" (click)="isFormModalOpen = true"
-                class="hero-action-btn touch-press flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
-                <ion-icon name="add-circle-outline" class="text-xl"></ion-icon>
-                New Transaction
+              <button *ngIf="selectedAccount" (click)="downloadProformaInvoice()"
+                class="hero-action-btn touch-press flex items-center gap-2 px-6 py-3 bg-white/20 text-white rounded-xl hover:bg-white/30 transition-all font-semibold shadow-lg hover:shadow-xl border border-white/30 backdrop-blur-sm">
+                <ion-icon name="download-outline" class="text-xl"></ion-icon>
+                Download PI
               </button>
             </div>
           </div>
@@ -252,29 +252,12 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
-            <!-- Type Filter Buttons -->
-            <div class="flex gap-2">
-              <button (click)="typeFilter = 'all'"
-                [class]="typeFilter === 'all' ? 'bg-emerald-500 text-white shadow-md active-filter' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                class="filter-type-btn touch-press px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                All
-              </button>
-              <button (click)="typeFilter = 'sale'"
-                [class]="typeFilter === 'sale' ? 'bg-emerald-500 text-white shadow-md active-filter' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                class="filter-type-btn touch-press px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                Sale
-              </button>
-              <button (click)="typeFilter = 'purchase'"
-                [class]="typeFilter === 'purchase' ? 'bg-emerald-500 text-white shadow-md active-filter' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                class="filter-type-btn touch-press px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                Purchase
-              </button>
-              <button (click)="typeFilter = 'return'"
-                [class]="typeFilter === 'return' ? 'bg-emerald-500 text-white shadow-md active-filter' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
-                class="filter-type-btn touch-press px-4 py-3 rounded-xl font-semibold text-sm transition-all">
-                Return
-              </button>
-            </div>
+            <!-- Update Balance Button -->
+            <button *ngIf="selectedAccount" (click)="isFormModalOpen = true"
+              class="flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+              <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
+              Update Balance
+            </button>
 
             <!-- Date Filter -->
             <div class="relative date-filter-wrap">
@@ -479,87 +462,280 @@
         </div>
       </div>
 
-    </div>
-  </div> <!-- New Transaction Modal -->
-  <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-sm">
-    <ng-template>
-      <div class="bg-white h-full flex flex-col">
-        <div
-          class="flex items-center justify-between p-5 border-b border-slate-100 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
-          <h2 class="text-lg font-bold text-white">New Transaction</h2>
-          <button (click)="isFormModalOpen = false"
-            class="text-white/80 hover:text-white p-1 rounded-full hover:bg-white/20 transition-colors">
-            <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+      <!-- Ready to Dispatch Section -->
+      <div *ngIf="selectedAccount" class="mt-6 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 rounded-2xl shadow-sm border border-emerald-200 p-6">
+        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
+          <div class="flex items-center gap-3">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
+              <ion-icon name="rocket-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+            <div>
+              <h3 class="text-base font-bold text-slate-800">Ready to Dispatch?</h3>
+              <p class="text-xs text-slate-500">Mark this order as ready for dispatch to proceed</p>
+            </div>
+          </div>
+          <button (click)="isDispatchModalOpen = true"
+            class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+            <ion-icon name="send-outline" class="text-lg"></ion-icon>
+            Ready to Dispatch
           </button>
         </div>
-        <ion-content class="bg-slate-50">
-          <form (ngSubmit)="handleAddTransaction()" class="p-5 space-y-4">
-            <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Date <span
-                    class="text-red-500">*</span></label>
+      </div>
+
+    </div>
+  </div> <!-- Update Balance Modal -->
+  <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-xl">
+    <ng-template>
+      <div class="txn-modal-wrap bg-white h-full flex flex-col">
+        <!-- Modal Header -->
+        <div class="txn-modal-header relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-blue-600"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-44 h-44 rounded-full bg-white/10 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-36 h-36 rounded-full bg-emerald-300/15 blur-2xl"></div>
+          <div class="relative p-5 pb-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <ion-icon name="wallet-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div>
+                  <h2 class="text-lg font-bold text-white tracking-tight">Update Balance</h2>
+                  <p class="text-emerald-100 text-xs mt-0.5">Record a credit or debit entry</p>
+                </div>
+              </div>
+              <button (click)="isFormModalOpen = false"
+                class="txn-modal-close-btn w-9 h-9 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-all shadow-md border border-white/30 backdrop-blur-sm">
+                <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+              </button>
+            </div>
+            <div *ngIf="selectedAccount" class="mt-3 flex items-center gap-2 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-lg text-white text-xs font-semibold border border-white/20">
+                <ion-icon name="business-outline" class="text-xs"></ion-icon>
+                {{ selectedAccount.name }}
+              </span>
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/15 backdrop-blur-sm rounded-lg text-white/80 text-xs font-mono border border-white/15">
+                {{ selectedAccount.accountCode }}
+              </span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit / Debit Selector -->
+        <div class="px-6 pt-5 pb-4 bg-white border-b border-slate-100">
+          <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Balance Type</label>
+          <div class="grid grid-cols-2 gap-4">
+            <button type="button" (click)="formData.balanceType = 'credit'"
+              [class]="formData.balanceType === 'credit'
+                ? 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-md ring-2 ring-emerald-200'
+                : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'"
+              class="flex items-center justify-center gap-3 py-4 rounded-xl text-base font-bold transition-all border-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+                [class]="formData.balanceType === 'credit' ? 'bg-emerald-100' : 'bg-slate-100'">
+                <ion-icon name="arrow-up-outline"
+                  [class]="formData.balanceType === 'credit' ? 'text-emerald-600' : 'text-slate-400'"
+                  class="text-xl"></ion-icon>
+              </div>
+              Credit
+            </button>
+            <button type="button" (click)="formData.balanceType = 'debit'"
+              [class]="formData.balanceType === 'debit'
+                ? 'bg-red-50 border-red-400 text-red-700 shadow-md ring-2 ring-red-200'
+                : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'"
+              class="flex items-center justify-center gap-3 py-4 rounded-xl text-base font-bold transition-all border-2">
+              <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+                [class]="formData.balanceType === 'debit' ? 'bg-red-100' : 'bg-slate-100'">
+                <ion-icon name="arrow-down-outline"
+                  [class]="formData.balanceType === 'debit' ? 'text-red-600' : 'text-slate-400'"
+                  class="text-xl"></ion-icon>
+              </div>
+              Debit
+            </button>
+          </div>
+        </div>
+
+        <ion-content class="bg-slate-50/70">
+          <form (ngSubmit)="handleAddTransaction()" class="p-6 space-y-5">
+            <!-- Row 1: Date, Reference, Amount -->
+            <div class="grid grid-cols-3 gap-4">
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="calendar-outline" class="text-blue-400"></ion-icon>
+                  Date <span class="text-red-400">*</span>
+                </label>
                 <input type="date" [(ngModel)]="formData.date" name="date" required
-                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
+                  class="txn-field-input">
               </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Type <span
-                    class="text-red-500">*</span></label>
-                <select [(ngModel)]="formData.type" name="type" required
-                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
-                  <option value="purchase">Purchase</option>
-                  <option value="sale">Sale</option>
-                  <option value="return">Return</option>
-                  <option value="adjustment">Adjustment</option>
-                </select>
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="document-text-outline" class="text-violet-400"></ion-icon>
+                  Reference <span class="text-red-400">*</span>
+                </label>
+                <div class="flex gap-1.5">
+                  <input type="text" [(ngModel)]="formData.reference" name="reference" required
+                    class="txn-field-input font-mono flex-1" placeholder="e.g. CR-1005">
+                  <button type="button" (click)="generateReference()"
+                    class="px-3 py-2.5 bg-emerald-50 text-emerald-600 rounded-xl text-[11px] font-bold hover:bg-emerald-100 border border-emerald-200 transition-colors whitespace-nowrap">
+                    <ion-icon name="refresh-outline" class="text-sm"></ion-icon>
+                  </button>
+                </div>
+              </div>
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="cash-outline" class="text-emerald-500"></ion-icon>
+                  Amount (₹) <span class="text-red-400">*</span>
+                </label>
+                <div class="relative">
+                  <span class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm">₹</span>
+                  <input type="number" [(ngModel)]="formData.amount" name="amount" required min="0.01" step="0.01"
+                    class="txn-field-input pl-8 font-mono" placeholder="0.00">
+                </div>
               </div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Reference <span
-                  class="text-red-500">*</span></label>
-              <div class="flex gap-2">
-                <input type="text" [(ngModel)]="formData.reference" name="reference" required
-                  class="flex-1 px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
-                <button type="button" (click)="generateReference()"
-                  class="px-4 py-3 bg-emerald-50 text-emerald-600 rounded-xl text-sm font-semibold hover:bg-emerald-100 transition-colors">Generate</button>
-              </div>
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Description <span
-                  class="text-red-500">*</span></label>
+
+            <!-- Row 2: Description (full width) -->
+            <div class="txn-field-group">
+              <label class="txn-field-label">
+                <ion-icon name="create-outline" class="text-emerald-400"></ion-icon>
+                Description <span class="text-red-400">*</span>
+              </label>
               <input type="text" [(ngModel)]="formData.description" name="description" required
-                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
+                class="txn-field-input" placeholder="Brief description of the transaction">
             </div>
+
+            <!-- Row 3: Payment Method / Transaction Type -->
+            <div class="txn-field-group">
+              <label class="txn-field-label">
+                <ion-icon name="card-outline" class="text-blue-500"></ion-icon>
+                Transaction Type <span class="text-red-400">*</span>
+              </label>
+              <div class="grid grid-cols-5 gap-3">
+                <button type="button" *ngFor="let pm of paymentMethods"
+                  (click)="formData.paymentMethod = $any(pm.value)"
+                  [class]="formData.paymentMethod === pm.value
+                    ? 'txn-type-btn txn-type-active-' + pm.color
+                    : 'txn-type-btn txn-type-inactive'"
+                  class="flex flex-col items-center gap-1.5 py-3.5 rounded-xl text-xs font-semibold transition-all">
+                  <ion-icon [name]="pm.icon" class="text-xl"></ion-icon>
+                  <span>{{ pm.label }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- RTGS / NEFT → UTR Number -->
+            <div *ngIf="formData.paymentMethod === 'rtgs' || formData.paymentMethod === 'neft'" class="txn-field-group">
+              <label class="txn-field-label">
+                <ion-icon name="document-text-outline" class="text-blue-400"></ion-icon>
+                UTR Number <span class="text-red-400">*</span>
+              </label>
+              <input type="text" [(ngModel)]="formData.utrNumber" name="utrNumber"
+                class="txn-field-input font-mono" placeholder="Enter UTR Number">
+            </div>
+
+            <!-- Cheque → Bank Name + Cheque Number side by side -->
+            <div *ngIf="formData.paymentMethod === 'cheque'" class="grid grid-cols-2 gap-4">
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="business-outline" class="text-amber-500"></ion-icon>
+                  Bank Name <span class="text-red-400">*</span>
+                </label>
+                <input type="text" [(ngModel)]="formData.bankName" name="bankName"
+                  class="txn-field-input" placeholder="Enter Bank Name">
+              </div>
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="document-text-outline" class="text-amber-400"></ion-icon>
+                  Cheque Number <span class="text-red-400">*</span>
+                </label>
+                <input type="text" [(ngModel)]="formData.chequeNumber" name="chequeNumber"
+                  class="txn-field-input font-mono" placeholder="Enter Cheque Number">
+              </div>
+            </div>
+
+            <!-- IMPS / UPI → Transaction Number -->
+            <div *ngIf="formData.paymentMethod === 'imps' || formData.paymentMethod === 'upi'" class="txn-field-group">
+              <label class="txn-field-label">
+                <ion-icon name="receipt-outline" class="text-emerald-400"></ion-icon>
+                Transaction Number <span class="text-red-400">*</span>
+              </label>
+              <input type="text" [(ngModel)]="formData.transactionNumber" name="transactionNumber"
+                class="txn-field-input font-mono" placeholder="Enter Transaction Number">
+            </div>
+
+            <!-- Receipt Upload + Notes side by side -->
             <div class="grid grid-cols-2 gap-4">
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Amount <span
-                    class="text-red-500">*</span></label>
-                <input type="number" [(ngModel)]="formData.amount" name="amount" required min="0.01" step="0.01"
-                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm font-mono focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all"
-                  placeholder="0.00">
+              <!-- Receipt Upload -->
+              <div class="txn-field-group">
+                <label class="txn-field-label">
+                  <ion-icon name="cloud-upload-outline" class="text-slate-400"></ion-icon>
+                  Upload Receipt <span class="text-xs text-slate-400 font-normal ml-1">(optional)</span>
+                </label>
+                <div *ngIf="!receiptFileName"
+                  class="relative border-2 border-dashed border-slate-200 rounded-xl p-6 text-center hover:border-emerald-300 hover:bg-emerald-50/30 transition-all cursor-pointer group">
+                  <input type="file" (change)="onReceiptSelected($event)" accept="image/*,.pdf"
+                    class="absolute inset-0 w-full h-full opacity-0 cursor-pointer">
+                  <div class="flex flex-col items-center gap-2">
+                    <div class="w-10 h-10 rounded-full bg-slate-100 group-hover:bg-emerald-100 flex items-center justify-center transition-colors">
+                      <ion-icon name="cloud-upload-outline" class="text-xl text-slate-400 group-hover:text-emerald-500 transition-colors"></ion-icon>
+                    </div>
+                    <p class="text-xs text-slate-500 font-medium">Tap to upload receipt</p>
+                    <p class="text-[10px] text-slate-400">PDF, JPG, PNG up to 5MB</p>
+                  </div>
+                </div>
+                <div *ngIf="receiptFileName"
+                  class="flex items-center gap-3 p-3 bg-emerald-50 rounded-xl border border-emerald-200">
+                  <div class="w-9 h-9 rounded-lg bg-emerald-100 flex items-center justify-center">
+                    <ion-icon name="image-outline" class="text-emerald-600 text-lg"></ion-icon>
+                  </div>
+                  <div class="flex-1 min-w-0">
+                    <p class="text-sm font-semibold text-slate-700 truncate">{{ receiptFileName }}</p>
+                    <p class="text-[10px] text-emerald-600 font-medium">Ready to upload</p>
+                  </div>
+                  <button type="button" (click)="removeReceipt()"
+                    class="w-8 h-8 rounded-lg bg-red-50 hover:bg-red-100 flex items-center justify-center transition-colors">
+                    <ion-icon name="close-outline" class="text-red-500 text-base"></ion-icon>
+                  </button>
+                </div>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Category <span
-                    class="text-red-500">*</span></label>
-                <select [(ngModel)]="formData.category" name="category" required
-                  class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all">
-                  <option value="" disabled selected>Select category</option>
-                  <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
-                </select>
+
+              <!-- Notes -->
+              <div class="txn-field-group flex flex-col">
+                <label class="txn-field-label">
+                  <ion-icon name="chatbubble-ellipses-outline" class="text-slate-400"></ion-icon>
+                  Notes <span class="text-xs text-slate-400 font-normal ml-1">(optional)</span>
+                </label>
+                <textarea [(ngModel)]="formData.notes" name="notes" rows="4"
+                  class="txn-field-input resize-none flex-1" placeholder="Additional notes or remarks..."></textarea>
               </div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase mb-2">Notes</label>
-              <textarea [(ngModel)]="formData.notes" name="notes" rows="3"
-                class="w-full px-4 py-3 bg-white border border-slate-200 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent transition-all resize-none"></textarea>
+
+            <!-- Info Callout -->
+            <div class="flex items-start gap-3 p-3.5 bg-blue-50/80 rounded-xl border border-blue-200/60">
+              <div class="w-7 h-7 rounded-lg bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ion-icon name="information-circle-outline" class="text-blue-500 text-sm"></ion-icon>
+              </div>
+              <div class="text-xs text-blue-700 leading-relaxed">
+                <span class="font-bold">Tip:</span> This will be recorded as a
+                <strong [class]="formData.balanceType === 'credit' ? 'text-emerald-600' : 'text-red-600'">
+                  {{ formData.balanceType === 'credit' ? 'Credit' : 'Debit' }}
+                </strong>
+                entry for <strong>{{ selectedAccount?.name || 'the selected account' }}</strong>.
+              </div>
             </div>
           </form>
         </ion-content>
-        <div class="p-5 border-t border-slate-100 flex gap-3 bg-white">
+
+        <!-- Footer Actions -->
+        <div class="p-4 border-t border-slate-100 bg-white flex items-center gap-3">
           <button (click)="isFormModalOpen = false"
-            class="flex-1 px-4 py-3 bg-slate-100 text-slate-600 rounded-xl text-sm font-semibold hover:bg-slate-200 transition-colors">Cancel</button>
+            class="flex items-center justify-center gap-2 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-all border border-slate-200">
+            <ion-icon name="close-outline" class="text-base"></ion-icon>
+            Cancel
+          </button>
           <button (click)="handleAddTransaction()"
-            class="flex-1 px-4 py-3 bg-emerald-500 text-white rounded-xl text-sm font-semibold hover:bg-emerald-600 transition-colors shadow-lg">Save
-            Transaction</button>
+            class="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl">
+            <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+            Update Balance
+          </button>
         </div>
       </div>
     </ng-template>
@@ -724,6 +900,37 @@
               class="flex-1 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl text-sm font-semibold transition-all shadow-md">
               <ion-icon name="trash-outline" class="mr-1"></ion-icon>
               Delete
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Ready to Dispatch Confirmation Modal -->
+  <ion-modal [isOpen]="isDispatchModalOpen" (didDismiss)="isDispatchModalOpen = false" class="modal-sm items-center">
+    <ng-template>
+      <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full m-auto">
+        <div class="p-8 text-center">
+          <div class="w-16 h-16 rounded-full bg-emerald-100 flex items-center justify-center mx-auto mb-5">
+            <ion-icon name="rocket-outline" class="text-emerald-500 text-3xl"></ion-icon>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-2">Confirm Ready to Dispatch</h3>
+          <p class="text-sm text-slate-500 leading-relaxed mb-1">
+            Are you sure you want to mark this order as ready for dispatch?
+          </p>
+          <p *ngIf="selectedAccount" class="text-xs font-semibold bg-emerald-50 inline-block px-3 py-1.5 rounded-lg border border-emerald-200 text-emerald-700 mb-6">
+            {{ selectedAccount.name }}
+          </p>
+          <div class="flex gap-3">
+            <button (click)="isDispatchModalOpen = false"
+              class="flex-1 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-semibold transition-all">
+              Cancel
+            </button>
+            <button (click)="confirmReadyToDispatch()"
+              class="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-all shadow-md">
+              <ion-icon name="checkmark-circle-outline" class="mr-1"></ion-icon>
+              Confirm
             </button>
           </div>
         </div>

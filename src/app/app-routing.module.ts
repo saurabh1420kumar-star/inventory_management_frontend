@@ -17,6 +17,10 @@ const routes: Routes = [
     loadChildren: () => import('./signup/signup.module').then(m => m.SignupPageModule)
   },
   {
+    path: 'forgot-password',
+    loadChildren: () => import('./forgot-password/forgot-password.module').then(m => m.ForgotPasswordPageModule)
+  },
+  {
     path: 'dashboard',
     loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule),
     canActivate: [AuthGuard] // Protected route
@@ -86,8 +90,21 @@ const routes: Routes = [
     path: 'distributor-cart',
     loadChildren: () => import('./distributor-cart/distributor-cart.module').then(m => m.DistributorCartPageModule),
     canActivate: [AuthGuard]
+  },
+  {
+      path: 'logistics',
+    loadChildren: () => import('./logistics/logistics.module').then(m => m.LogisticsPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'dispatch',
+    loadChildren: () => import('./dispatch/dispatch.module').then(m => m.DispatchPageModule),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: '**',
+    loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }
-
 ];
 
 @NgModule({

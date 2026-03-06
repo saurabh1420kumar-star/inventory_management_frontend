@@ -48,7 +48,18 @@ import {
   trashOutline,
   createOutline,
   warningOutline,
-  receiptOutline
+  receiptOutline,
+  informationCircleOutline,
+  chatbubbleEllipsesOutline,
+  checkmarkCircleOutline,
+  cloudUploadOutline,
+  eyeOutline,
+  imageOutline,
+  cardOutline,
+  walletOutline,
+  phonePortraitOutline,
+  sendOutline,
+  rocketOutline
 } from 'ionicons/icons';
 
 // Interfaces needed for the view
@@ -69,12 +80,18 @@ interface Transaction {
   date: string; // YYYY-MM-DD format
   description: string;
   reference: string;
-  type: 'purchase' | 'sale' | 'return' | 'adjustment' | 'opening';
+  type: 'purchase' | 'sale' | 'return' | 'adjustment' | 'opening' | 'credit' | 'debit';
   debit: number;
   credit: number;
   balance: number;
   category: string;
   notes?: string;
+  paymentMethod?: 'rtgs' | 'neft' | 'cheque' | 'imps' | 'upi';
+  utrNumber?: string;
+  bankName?: string;
+  chequeNumber?: string;
+  transactionNumber?: string;
+  receiptUrl?: string;
 }
 
 interface LedgerAccount {
@@ -143,20 +160,32 @@ export class AccountsMasterPage implements OnInit {
   isConfirmDeleteOpen: boolean = false;
   selectedTransaction: Transaction | null = null;
 
-  // Form data for new transaction
+  // Form data for new transaction (Update Balance)
   formData = {
     date: new Date().toISOString().split('T')[0],
-    type: 'purchase' as Transaction['type'],
+    balanceType: 'credit' as 'credit' | 'debit',
     description: '',
     reference: '',
     amount: '',
-    category: '',
+    paymentMethod: '' as '' | 'rtgs' | 'neft' | 'cheque' | 'imps' | 'upi',
+    utrNumber: '',
+    bankName: '',
+    chequeNumber: '',
+    transactionNumber: '',
     notes: ''
   };
 
-  categories = [
-    'Product Sales', 'Services', 'Office Supplies', 'Returns', 'Adjustments', 'Opening', 'Other'
+  paymentMethods = [
+    { value: 'rtgs', label: 'RTGS', icon: 'business-outline', color: 'blue' },
+    { value: 'neft', label: 'NEFT', icon: 'swap-vertical-outline', color: 'violet' },
+    { value: 'cheque', label: 'Cheque', icon: 'document-text-outline', color: 'amber' },
+    { value: 'imps', label: 'IMPS', icon: 'phone-portrait-outline', color: 'emerald' },
+    { value: 'upi', label: 'UPI', icon: 'wallet-outline', color: 'teal' },
   ];
+
+  receiptFile: File | null = null;
+  receiptFileName: string = '';
+  isDispatchModalOpen: boolean = false;
 
   // Mock Data - Updated to exactly match Image 1 & 2
   ledgerAccounts: LedgerAccount[] = [
@@ -736,7 +765,18 @@ export class AccountsMasterPage implements OnInit {
       'trash-outline': trashOutline,
       'create-outline': createOutline,
       'warning-outline': warningOutline,
-      'receipt-outline': receiptOutline
+      'receipt-outline': receiptOutline,
+      'information-circle-outline': informationCircleOutline,
+      'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'cloud-upload-outline': cloudUploadOutline,
+      'eye-outline': eyeOutline,
+      'image-outline': imageOutline,
+      'card-outline': cardOutline,
+      'wallet-outline': walletOutline,
+      'phone-portrait-outline': phonePortraitOutline,
+      'send-outline': sendOutline,
+      'rocket-outline': rocketOutline
     });
   }
 
@@ -1186,48 +1226,101 @@ export class AccountsMasterPage implements OnInit {
     }
   }
 
-  // --- Transaction Addition Logic (Simplified) ---
+  // --- Transaction Addition Logic (Update Balance) ---
   handleAddTransaction() {
     if (!this.selectedAccount) return;
 
-    const { date, type, description, reference, amount, category, notes } = this.formData;
+    const { date, balanceType, description, reference, amount, paymentMethod, utrNumber, bankName, chequeNumber, transactionNumber, notes } = this.formData;
 
-    if (!description || !reference || !amount || !category) {
+    if (!description || !reference || !amount || !paymentMethod) {
       this.showToast('Please fill required fields', 'danger');
       return;
     }
 
+    // Validate payment method specific fields
+    if ((paymentMethod === 'rtgs' || paymentMethod === 'neft') && !utrNumber) {
+      this.showToast('Please enter UTR Number', 'danger');
+      return;
+    }
+    if (paymentMethod === 'cheque' && (!bankName || !chequeNumber)) {
+      this.showToast('Please enter Bank Name and Cheque Number', 'danger');
+      return;
+    }
+    if ((paymentMethod === 'imps' || paymentMethod === 'upi') && !transactionNumber) {
+      this.showToast('Please enter Transaction Number', 'danger');
+      return;
+    }
+
     const parsedAmount = parseFloat(amount);
-    const isDebit = ['purchase', 'adjustment', 'return'].includes(type);
+    const isDebit = balanceType === 'debit';
     const debit = isDebit ? parsedAmount : 0;
     const credit = !isDebit ? parsedAmount : 0;
 
-    // Calculate new balance based on the *absolute last* transaction in the unfiltered list
+    // Calculate new balance based on the last transaction
     const lastTransaction = this.transactions[this.transactions.length - 1];
     const previousBalance = lastTransaction ? lastTransaction.balance : this.selectedAccount.openingBalance;
     const newBalance = previousBalance - debit + credit;
 
     const newTransaction: Transaction = {
       id: 'TEMP_' + new Date().getTime(),
-      date: date, // Already in YYYY-MM-DD format from input type="date"
+      date: date,
       description,
       reference,
-      type,
+      type: balanceType,
       debit,
       credit,
       balance: newBalance,
-      category,
-      notes: notes || undefined
+      category: paymentMethod.toUpperCase(),
+      notes: notes || undefined,
+      paymentMethod: paymentMethod as Transaction['paymentMethod'],
+      utrNumber: utrNumber || undefined,
+      bankName: bankName || undefined,
+      chequeNumber: chequeNumber || undefined,
+      transactionNumber: transactionNumber || undefined,
+      receiptUrl: this.receiptFile ? URL.createObjectURL(this.receiptFile) : undefined
     };
 
     // Add to the master list
     this.selectedAccount.transactions.push(newTransaction);
 
-    this.showToast('Transaction added successfully', 'success');
+    this.showToast('Balance updated successfully', 'success');
     this.isFormModalOpen = false;
     this.resetForm();
     // Go to the last page to see the new transaction
     this.currentPage = this.totalPages;
+  }
+
+  // Receipt file handling
+  onReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.receiptFile = input.files[0];
+      this.receiptFileName = input.files[0].name;
+    }
+  }
+
+  removeReceipt() {
+    this.receiptFile = null;
+    this.receiptFileName = '';
+  }
+
+  viewReceipt(transaction: Transaction) {
+    if (transaction.receiptUrl) {
+      window.open(transaction.receiptUrl, '_blank');
+    }
+  }
+
+  // Ready to Dispatch
+  confirmReadyToDispatch() {
+    this.isDispatchModalOpen = false;
+    this.showToast('Order marked as Ready to Dispatch!', 'success');
+    // TODO: API call to mark as ready to dispatch
+  }
+
+  // Download Proforma Invoice
+  downloadProformaInvoice() {
+    this.showToast('Downloading Proforma Invoice...', 'success');
+    // TODO: API call to download PI
   }
 
 
@@ -1262,18 +1355,20 @@ export class AccountsMasterPage implements OnInit {
 
   // Get styling and labels for transaction type badges
   getTransactionTypeConfig(type: Transaction['type']) {
-    const config = {
+    const config: Record<string, { label: string; className: string; icon: string }> = {
       purchase: { label: 'Purchase', className: 'bg-amber-50 text-amber-700 border-amber-200', icon: 'cart-outline' },
       sale: { label: 'Sale', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'cash-outline' },
       return: { label: 'Return', className: 'bg-rose-50 text-rose-700 border-rose-200', icon: 'return-up-back-outline' },
       adjustment: { label: 'Adjustment', className: 'bg-gray-50 text-gray-700 border-gray-300', icon: 'settings-sharp' },
       opening: { label: 'Opening', className: 'bg-blue-50 text-blue-700 border-blue-200', icon: 'folder-open-outline' },
+      credit: { label: 'Credit', className: 'bg-emerald-50 text-emerald-700 border-emerald-200', icon: 'arrow-up-outline' },
+      debit: { label: 'Debit', className: 'bg-red-50 text-red-700 border-red-200', icon: 'arrow-down-outline' },
     };
     return config[type] || config['adjustment'];
   }
 
   generateReference() {
-    const prefix = this.formData.type.substring(0, 3).toUpperCase();
+    const prefix = this.formData.balanceType === 'credit' ? 'CR' : 'DR';
     const randomNum = Math.floor(1000 + Math.random() * 9000);
     this.formData.reference = `${prefix}-${randomNum}`;
   }
@@ -1281,13 +1376,19 @@ export class AccountsMasterPage implements OnInit {
   resetForm() {
     this.formData = {
       date: new Date().toISOString().split('T')[0],
-      type: 'purchase',
+      balanceType: 'credit',
       description: '',
       reference: '',
       amount: '',
-      category: '',
+      paymentMethod: '',
+      utrNumber: '',
+      bankName: '',
+      chequeNumber: '',
+      transactionNumber: '',
       notes: ''
     };
+    this.receiptFile = null;
+    this.receiptFileName = '';
   }
 
   async showToast(message: string, color: string = 'success') {

@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -17,7 +17,9 @@ import {
   createOutline,
   closeOutline,
   trashOutline,
-  lockClosedOutline
+  lockClosedOutline,
+  eyeOutline,
+  eyeOffOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto } from '../services/distributor.service';
 
@@ -85,7 +87,8 @@ export class DistributorPage implements OnInit {
   constructor(
     private fb: FormBuilder,
     private modalCtrl: ModalController,
-    private distributorService: DistributorService
+    private distributorService: DistributorService,
+    private cdr: ChangeDetectorRef
   ) {
     // Register icons
     addIcons({
@@ -102,7 +105,9 @@ export class DistributorPage implements OnInit {
       'create-outline': createOutline,
       'close-outline': closeOutline,
       'trash-outline': trashOutline,
-      'lock-closed-outline': lockClosedOutline
+      'lock-closed-outline': lockClosedOutline,
+      'eye-outline': eyeOutline,
+      'eye-off-outline': eyeOffOutline
     });
   }
 
@@ -150,8 +155,11 @@ export class DistributorPage implements OnInit {
       panNumber: dto.panNumber,
       gstNumber: dto.gstNumber,
       accountNumber: (dto as any).accountNumber || '',
-      ifsc: (dto as any).ifsc || '',
+      ifsc: (dto as any).IFSC || (dto as any).ifsc || '',
       accountName: (dto as any).accountName || '',
+      username: (dto as any).username || '',
+      password: (dto as any).password || '',
+      creditLimit: (dto as any).creditLimit || false,
       createdAt: dto.createdOn
     };
   }
@@ -175,7 +183,7 @@ export class DistributorPage implements OnInit {
       username: formData.username || '',
       password: formData.password || '',
       accountNumber: formData.accountNumber || '',
-      ifsc: formData.ifsc || '',
+      ifsc: (formData.ifsc || '').toUpperCase(),
       accountName: formData.accountName || ''
     };
   }
@@ -299,22 +307,30 @@ export class DistributorPage implements OnInit {
   onEditDistributor() {
     if (this.selectedDistributor) {
       this.isEditing = true;
-      this.distributorForm.patchValue({
-        name: this.selectedDistributor.name,
-        assignedPerson: this.selectedDistributor.assignedPerson,
-        distributorType: this.selectedDistributor.distributorType,
-        companyType: this.selectedDistributor.companyType,
-        email: this.selectedDistributor.email,
-        contact: this.selectedDistributor.contact,
-        alternateContact: this.selectedDistributor.alternateContact,
-        address: this.selectedDistributor.address,
-        aadhaarNumber: this.selectedDistributor.aadhaarNumber,
-        panNumber: this.selectedDistributor.panNumber,
-        gstNumber: this.selectedDistributor.gstNumber,
-        accountNumber: this.selectedDistributor.accountNumber,
-        ifsc: this.selectedDistributor.ifsc,
-        accountName: this.selectedDistributor.accountName
-      });
+      // setTimeout ensures the *ngIf="isEditing" DOM (including ion-select) is fully
+      // rendered before patchValue is called, otherwise selects ignore the value.
+      setTimeout(() => {
+        this.distributorForm.patchValue({
+          name: this.selectedDistributor!.name,
+          assignedPerson: this.selectedDistributor!.assignedPerson,
+          distributorType: this.selectedDistributor!.distributorType,
+          companyType: this.selectedDistributor!.companyType,
+          email: this.selectedDistributor!.email,
+          contact: this.selectedDistributor!.contact,
+          alternateContact: this.selectedDistributor!.alternateContact,
+          address: this.selectedDistributor!.address,
+          aadhaarNumber: this.selectedDistributor!.aadhaarNumber,
+          panNumber: this.selectedDistributor!.panNumber,
+          gstNumber: this.selectedDistributor!.gstNumber,
+          accountNumber: this.selectedDistributor!.accountNumber,
+          ifsc: this.selectedDistributor!.ifsc,
+          accountName: this.selectedDistributor!.accountName,
+          creditLimit: (this.selectedDistributor as any).creditLimit || false,
+          username: this.selectedDistributor!.username || '',
+          password: this.selectedDistributor!.password || ''
+        });
+        this.cdr.detectChanges();
+      }, 300);
     }
   }
 

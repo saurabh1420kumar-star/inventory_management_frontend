@@ -5,6 +5,7 @@ import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angula
 import { Router } from '@angular/router';
 import { IonicModule, Platform } from '@ionic/angular';
 import { CommonModule } from '@angular/common';
+import { Capacitor } from '@capacitor/core';
 
 import { Auth } from '../services/auth';
 import { Toast } from '../services/toast';
@@ -68,6 +69,19 @@ export class LoginPage {
       next: async (res) => {
         this.loading = false;
 
+        const role = res.roleType?.toUpperCase() || '';
+        const isMobile = Capacitor.isNativePlatform() || window.innerWidth < 768;
+
+        // Distributor and Sales Officer accounts are only allowed on the mobile app
+        if ((role === 'DISTRIBUTOR' || role === 'SALES_OFFICER') && !isMobile) {
+          this.auth.logout();
+          await this.toast.present(
+            `${role === 'DISTRIBUTOR' ? 'Distributor' : 'Sales Officer'} login is only available on the mobile app.`,
+            'warning'
+          );
+          return;
+        }
+
         await this.toast.present(
           res.message || 'Login successful',
           'success'
@@ -103,7 +117,6 @@ export class LoginPage {
   }
 
   forgotPassword() {
-    console.log('Forgot password clicked');
-    // Implement forgot password logic
+    this.router.navigateByUrl('/forgot-password');
   }
 }

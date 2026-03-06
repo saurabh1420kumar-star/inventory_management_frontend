@@ -692,14 +692,15 @@
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
-              <ion-select formControlName="assignedPerson" placeholder="Select a sales person" class="custom-select" [disabled]="salesPersons.length === 0">
-                <ion-select-option *ngFor="let person of salesPersons" [value]="(person.firstName || '') + ' ' + (person.lastName || '')">
+              <select formControlName="assignedPerson"
+                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                <option value="" disabled>Select a sales person</option>
+                <option *ngFor="let person of salesPersons"
+                        [value]="(person.firstName || '') + ' ' + (person.lastName || '')">
                   {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
-                </ion-select-option>
-              </ion-select>
-              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">
-                Loading sales persons...
-              </div>
+                </option>
+              </select>
+              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">Loading sales persons...</div>
               <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('assignedPerson') }}
               </div>
@@ -707,12 +708,14 @@
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Type of Distributor *</label>
-              <ion-select formControlName="distributorType" placeholder="Select distributor type" class="custom-select">
-                <ion-select-option value="Wholesale">Wholesale</ion-select-option>
-                <ion-select-option value="Retail">Retail</ion-select-option>
-                <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
-                <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
-              </ion-select>
+              <select formControlName="distributorType"
+                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                <option value="" disabled>Select distributor type</option>
+                <option value="Wholesale">Wholesale</option>
+                <option value="Retail">Retail</option>
+                <option value="Super Stockist">Super Stockist</option>
+                <option value="C&F Agent">C&F Agent</option>
+              </select>
               <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('distributorType') }}
               </div>
@@ -720,12 +723,14 @@
 
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Type of Company *</label>
-              <ion-select formControlName="companyType" placeholder="Select company type" class="custom-select">
-                <ion-select-option value="Private Limited">Private Limited</ion-select-option>
-                <ion-select-option value="LLP">LLP</ion-select-option>
-                <ion-select-option value="Partnership">Partnership</ion-select-option>
-                <ion-select-option value="Proprietorship">Proprietorship</ion-select-option>
-              </ion-select>
+              <select formControlName="companyType"
+                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+                <option value="" disabled>Select company type</option>
+                <option value="Private Limited">Private Limited</option>
+                <option value="LLP">LLP</option>
+                <option value="Partnership">Partnership</option>
+                <option value="Proprietorship">Proprietorship</option>
+              </select>
               <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('companyType') }}
               </div>
@@ -836,7 +841,7 @@
                 type="text" 
                 placeholder="Enter IFSC code" 
                 class="custom-input"
-                [readonly]="true">
+                style="text-transform: uppercase">
               </ion-input>
               <div *ngIf="distributorForm.get('ifsc')?.invalid && distributorForm.get('ifsc')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -857,6 +862,28 @@
                    class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('accountName') }}
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Login Credentials -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="lock-closed-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Login Credentials</h3>
+          </div>
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Username</label>
+              <ion-input formControlName="username" type="text" placeholder="Enter username" class="custom-input"></ion-input>
+            </div>
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Password</label>
+              <ion-input formControlName="password" [type]="showPassword ? 'text' : 'password'" placeholder="Enter password" class="custom-input">
+                <ion-button slot="end" fill="clear" (click)="showPassword = !showPassword">
+                  <ion-icon [name]="showPassword ? 'eye-off-outline' : 'eye-outline'" class="text-slate-400"></ion-icon>
+                </ion-button>
+              </ion-input>
             </div>
           </div>
         </div>

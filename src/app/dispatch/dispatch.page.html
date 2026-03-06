@@ -1,0 +1,615 @@
+﻿<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-600">Dispatch</span> Management
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refreshData()" class="text-slate-500 hover:text-emerald-600 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <!-- ═══════ HERO ═══════ -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-teal-500/20 blur-3xl"></div>
+
+        <div class="relative px-5 py-6 sm:px-8 sm:py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Dispatch & GDN Management</h1>
+              <p class="text-cyan-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="cube-outline" class="text-lg"></ion-icon>
+                Approve Orders · Generate GDN · Track Dispatch
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ SEARCH + TABS ═══════ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+          <!-- Search -->
+          <div class="flex-1 w-full relative group">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-emerald-500 transition-colors"></ion-icon>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              placeholder="Search orders, distributors, sales person..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200 text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mt-4 overflow-x-auto pb-1">
+          <button
+            *ngFor="let tab of [
+              { key: 'pending', label: 'Pending Approval', count: tabCounts.pending, icon: 'time-outline', dot: 'bg-amber-400' },
+              { key: 'approved', label: 'Ready for GDN', count: tabCounts.approved, icon: 'checkmark-circle-outline', dot: 'bg-emerald-400' },
+              { key: 'gdn', label: 'GDN Generated', count: tabCounts.gdn, icon: 'document-text-outline', dot: 'bg-teal-400' },
+              { key: 'dispatched', label: 'Dispatched', count: tabCounts.dispatched, icon: 'car-outline', dot: 'bg-cyan-400' }
+            ]"
+            (click)="activeTab = $any(tab.key)"
+            [class.bg-gradient-to-r]="activeTab === tab.key"
+            [class.from-emerald-500]="activeTab === tab.key"
+            [class.to-teal-600]="activeTab === tab.key"
+            [class.text-white]="activeTab === tab.key"
+            [class.shadow-lg]="activeTab === tab.key"
+            [class.shadow-emerald-200]="activeTab === tab.key"
+            [class.border-transparent]="activeTab === tab.key"
+            [class.bg-white]="activeTab !== tab.key"
+            [class.border-slate-200]="activeTab !== tab.key"
+            [class.text-slate-600]="activeTab !== tab.key"
+            [class.shadow-sm]="activeTab !== tab.key"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0">
+            <span [class]="tab.dot + ' w-2 h-2 rounded-full inline-block'"></span>
+            {{ tab.label }}
+            <span
+              [class]="activeTab === tab.key ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'"
+              class="text-xs font-bold px-1.5 py-0.5 rounded-full">
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- ORDER CARDS                                               -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div *ngIf="filteredOrders.length > 0" class="space-y-5">
+        <div
+          *ngFor="let order of filteredOrders"
+          class="bg-white rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg"
+          [class.border-amber-200]="order.approvalStatus === 'pending'"
+          [class.border-emerald-200]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+          [class.border-teal-200]="order.gdnStatus === 'generated'"
+          [class.border-cyan-200]="order.gdnStatus === 'dispatched'"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+
+          <!-- Top Accent -->
+          <div class="h-1 w-full"
+            [class.bg-gradient-to-r]="true"
+            [class.from-amber-400]="order.approvalStatus === 'pending'"
+            [class.to-orange-400]="order.approvalStatus === 'pending'"
+            [class.from-emerald-400]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+            [class.to-teal-400]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+            [class.from-teal-400]="order.gdnStatus === 'generated'"
+            [class.to-blue-400]="order.gdnStatus === 'generated'"
+            [class.from-cyan-400]="order.gdnStatus === 'dispatched'"
+            [class.to-sky-400]="order.gdnStatus === 'dispatched'">
+          </div>
+
+          <div class="p-4 sm:p-6">
+            <!-- ── Row 1: Header ── -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+                    {{ order.distributorName.charAt(0).toUpperCase() }}
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-slate-800 truncate">{{ order.orderNumber }}</h3>
+                    <p class="text-sm text-slate-500 truncate">{{ order.distributorName }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 flex-shrink-0 flex-wrap">
+                <!-- Approval Badge -->
+                <span *ngIf="order.approvalStatus === 'pending'"
+                  class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block"></span>
+                  Pending Approval
+                </span>
+                <span *ngIf="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                  class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                  Approved
+                </span>
+                <span *ngIf="order.approvalStatus === 'rejected'"
+                  class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+                  Rejected
+                </span>
+
+                <!-- GDN Badge -->
+                <span *ngIf="order.gdnStatus === 'generated'"
+                  class="inline-flex items-center gap-1.5 bg-teal-50 text-teal-600 border border-teal-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
+                  GDN: {{ order.gdnNumber }}
+                </span>
+                <span *ngIf="order.gdnStatus === 'dispatched'"
+                  class="inline-flex items-center gap-1.5 bg-cyan-50 text-cyan-600 border border-cyan-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="car-outline" class="text-sm"></ion-icon>
+                  Dispatched
+                </span>
+              </div>
+            </div>
+
+            <!-- ── Row 2: Info Grid ── -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <div class="rounded-xl p-3"
+                [class.bg-amber-50]="order.approvalStatus === 'pending'"
+                [class.bg-emerald-50]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                [class.bg-teal-50]="order.gdnStatus === 'generated'"
+                [class.bg-cyan-50]="order.gdnStatus === 'dispatched'"
+                [class.bg-rose-50]="order.approvalStatus === 'rejected'">
+                <p class="text-[10px] font-bold uppercase tracking-wider mb-0.5"
+                  [class.text-amber-500]="order.approvalStatus === 'pending'"
+                  [class.text-emerald-500]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                  [class.text-teal-500]="order.gdnStatus === 'generated'"
+                  [class.text-cyan-500]="order.gdnStatus === 'dispatched'"
+                  [class.text-rose-500]="order.approvalStatus === 'rejected'">Order Date</p>
+                <p class="text-sm font-bold text-slate-700">{{ order.orderDate | date:'dd MMM yyyy' }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Sales Person</p>
+                <p class="text-sm font-bold text-slate-700 truncate">{{ order.salesPersonName }}</p>
+              </div>
+              <div class="rounded-xl p-3"
+                [class.bg-amber-50]="order.approvalStatus === 'pending'"
+                [class.bg-emerald-50]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                [class.bg-teal-50]="order.gdnStatus === 'generated'"
+                [class.bg-cyan-50]="order.gdnStatus === 'dispatched'"
+                [class.bg-rose-50]="order.approvalStatus === 'rejected'">
+                <p class="text-[10px] font-bold uppercase tracking-wider mb-0.5"
+                  [class.text-amber-500]="order.approvalStatus === 'pending'"
+                  [class.text-emerald-500]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                  [class.text-teal-500]="order.gdnStatus === 'generated'"
+                  [class.text-cyan-500]="order.gdnStatus === 'dispatched'"
+                  [class.text-rose-500]="order.approvalStatus === 'rejected'">Total Amount</p>
+                <p class="text-sm font-bold"
+                  [class.text-amber-700]="order.approvalStatus === 'pending'"
+                  [class.text-emerald-700]="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
+                  [class.text-teal-700]="order.gdnStatus === 'generated'"
+                  [class.text-cyan-700]="order.gdnStatus === 'dispatched'"
+                  [class.text-rose-700]="order.approvalStatus === 'rejected'">₹{{ order.totalAmount.toLocaleString() }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Items</p>
+                <p class="text-sm font-bold text-slate-700">{{ order.items.length }} product{{ order.items.length !== 1 ? 's' : '' }}</p>
+              </div>
+            </div>
+
+            <!-- ── Expandable Items ── -->
+            <div class="mb-5">
+              <button
+                (click)="toggleExpand(order.id)"
+                class="w-full flex items-center justify-between text-sm font-semibold text-slate-700 bg-slate-50 hover:bg-slate-100 rounded-xl px-4 py-2.5 transition-colors">
+                <span class="flex items-center gap-2">
+                  <ion-icon name="cube-outline" class="text-emerald-500 text-base"></ion-icon>
+                  View Order Items
+                </span>
+                <ion-icon
+                  [name]="isExpanded(order.id) ? 'chevron-up-outline' : 'chevron-down-outline'"
+                  class="text-slate-400 text-base">
+                </ion-icon>
+              </button>
+
+              <div *ngIf="isExpanded(order.id)" class="mt-2 rounded-xl border border-slate-100 overflow-hidden">
+                <!-- Desktop Table Header -->
+                <div class="hidden sm:grid grid-cols-12 bg-slate-50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                  <span class="col-span-4">Product</span>
+                  <span class="col-span-2">Batch</span>
+                  <span class="col-span-2 text-center">Qty</span>
+                  <span class="col-span-2 text-right">Price</span>
+                  <span class="col-span-2 text-right">Total</span>
+                </div>
+                <!-- Desktop Rows -->
+                <div *ngFor="let item of order.items; let last = last"
+                  class="hidden sm:grid grid-cols-12 px-4 py-2.5 text-sm items-center"
+                  [class.border-b]="!last"
+                  [class.border-slate-50]="!last">
+                  <span class="col-span-4 text-slate-700 font-medium truncate pr-2">{{ item.productName }}</span>
+                  <span class="col-span-2 text-slate-400 text-xs font-mono truncate">{{ item.batchNumber || '—' }}</span>
+                  <span class="col-span-2 text-center text-slate-500 font-semibold">{{ item.quantity }}</span>
+                  <span class="col-span-2 text-right text-slate-500">₹{{ item.unitPrice.toLocaleString() }}</span>
+                  <span class="col-span-2 text-right text-slate-800 font-bold">₹{{ getLineTotal(item).toLocaleString() }}</span>
+                </div>
+                <!-- Mobile Stacked -->
+                <div *ngFor="let item of order.items; let last = last"
+                  class="sm:hidden p-3"
+                  [class.border-b]="!last"
+                  [class.border-slate-50]="!last">
+                  <p class="text-sm font-medium text-slate-700 mb-1">{{ item.productName }}</p>
+                  <p *ngIf="item.batchNumber" class="text-[10px] text-slate-400 font-mono mb-1">{{ item.batchNumber }}</p>
+                  <div class="flex justify-between text-xs text-slate-500">
+                    <span>{{ item.quantity }} × ₹{{ item.unitPrice.toLocaleString() }}</span>
+                    <span class="font-bold text-slate-800">₹{{ getLineTotal(item).toLocaleString() }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Shipping Address (if exists) ── -->
+            <div *ngIf="order.shippingAddress" class="flex items-start gap-2 bg-emerald-50/50 rounded-xl px-4 py-3 mb-5 text-sm text-slate-600">
+              <ion-icon name="location-outline" class="text-emerald-400 text-lg flex-shrink-0 mt-0.5"></ion-icon>
+              <span class="font-medium">{{ order.shippingAddress }}</span>
+            </div>
+
+            <!-- ── GDN / Transport Info (conditionally) ── -->
+            <div *ngIf="order.gdnStatus !== 'not-generated'" class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <div *ngIf="order.gdnNumber" class="bg-teal-50 rounded-xl p-3">
+                <p class="text-[10px] text-teal-400 font-bold uppercase tracking-wider mb-0.5">GDN Number</p>
+                <p class="text-sm font-bold text-teal-700">{{ order.gdnNumber }}</p>
+              </div>
+              <div *ngIf="order.gdnDate" class="bg-teal-50 rounded-xl p-3">
+                <p class="text-[10px] text-teal-400 font-bold uppercase tracking-wider mb-0.5">GDN Date</p>
+                <p class="text-sm font-bold text-teal-700">{{ order.gdnDate | date:'dd MMM yyyy' }}</p>
+              </div>
+              <div *ngIf="order.vehicleNumber" class="bg-cyan-50 rounded-xl p-3">
+                <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-0.5">Vehicle No.</p>
+                <p class="text-sm font-bold text-cyan-700">{{ order.vehicleNumber }}</p>
+              </div>
+              <div *ngIf="order.transporterName" class="bg-cyan-50 rounded-xl p-3">
+                <p class="text-[10px] text-cyan-400 font-bold uppercase tracking-wider mb-0.5">Transporter</p>
+                <p class="text-sm font-bold text-cyan-700 truncate">{{ order.transporterName }}</p>
+              </div>
+            </div>
+
+            <!-- ── Approval Remarks ── -->
+            <div *ngIf="order.approvalRemarks && order.approvalStatus !== 'pending'"
+              class="flex items-start gap-2 rounded-xl px-4 py-2.5 mb-5 text-xs"
+              [class.bg-emerald-50]="order.approvalStatus === 'approved'"
+              [class.text-emerald-700]="order.approvalStatus === 'approved'"
+              [class.bg-rose-50]="order.approvalStatus === 'rejected'"
+              [class.text-rose-700]="order.approvalStatus === 'rejected'">
+              <ion-icon name="chatbubble-ellipses-outline" class="text-base flex-shrink-0 mt-0.5"></ion-icon>
+              <span class="font-medium">{{ order.approvalRemarks }}</span>
+            </div>
+
+            <div class="border-t border-slate-100 pt-5"></div>
+
+            <!-- ══════════════════════════════════════════════════ -->
+            <!-- ACTION BUTTONS — context-specific                -->
+            <!-- ══════════════════════════════════════════════════ -->
+
+            <!-- PENDING → Approve / Reject -->
+            <div *ngIf="order.approvalStatus === 'pending'" class="flex gap-3">
+              <button
+                (click)="approveOrder(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                Approve Order
+              </button>
+              <button
+                (click)="openRejectModal(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                Reject Order
+              </button>
+            </div>
+
+            <!-- APPROVED + no GDN → Generate GDN -->
+            <div *ngIf="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'" class="flex gap-3">
+              <button
+                (click)="generateGdn(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                Generate GDN
+              </button>
+              <button
+                (click)="openDetail(order)"
+                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon name="eye-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+
+            <!-- GDN Generated → Mark Dispatched + Download -->
+            <div *ngIf="order.gdnStatus === 'generated'" class="flex gap-3">
+              <button
+                (click)="markDispatched(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-cyan-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="car-outline" class="text-lg"></ion-icon>
+                Mark as Dispatched
+              </button>
+              <button
+                (click)="downloadGdn(order)"
+                class="flex items-center justify-center gap-2 bg-teal-50 hover:bg-teal-100 text-teal-600 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200 border border-teal-200">
+                <ion-icon name="download-outline" class="text-lg"></ion-icon>
+                GDN
+              </button>
+            </div>
+
+            <!-- Dispatched → Download / View -->
+            <div *ngIf="order.gdnStatus === 'dispatched'" class="flex gap-3">
+              <div
+                class="flex-1 flex items-center justify-center gap-2 bg-cyan-50 text-cyan-600 font-bold text-sm rounded-xl py-3 border border-cyan-200">
+                <ion-icon name="checkmark-done-circle-outline" class="text-lg"></ion-icon>
+                Dispatched {{ order.dispatchDate ? 'on ' + (order.dispatchDate | date:'dd MMM') : '' }}
+              </div>
+              <button
+                (click)="downloadGdn(order)"
+                class="flex items-center justify-center gap-2 bg-teal-50 hover:bg-teal-100 text-teal-600 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200 border border-teal-200">
+                <ion-icon name="download-outline" class="text-lg"></ion-icon>
+              </button>
+              <button
+                (click)="openDetail(order)"
+                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon name="eye-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ EMPTY STATE ═══════ -->
+      <div *ngIf="filteredOrders.length === 0"
+        class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="cube-outline" class="text-3xl text-slate-300"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700 mb-1">No orders found</h3>
+        <p class="text-sm text-slate-400">
+          {{ searchTerm ? 'No results match your search.' : 'No orders in this category yet.' }}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- REJECT MODAL                                              -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+    <ng-template>
+      <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 90vh;">
+        <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+              <ion-icon name="close-circle-outline" class="text-xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white">Reject Order</h2>
+              <p *ngIf="orderBeingRejected" class="text-xs text-rose-100">{{ orderBeingRejected.orderNumber }} · {{ orderBeingRejected.distributorName }}</p>
+            </div>
+          </div>
+          <button (click)="cancelReject()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
+            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5 overflow-y-auto flex-1">
+          <div class="flex items-start gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
+            <ion-icon name="warning-outline" class="text-rose-500 text-xl flex-shrink-0 mt-0.5"></ion-icon>
+            <div>
+              <p class="text-sm font-bold text-rose-700">Confirm Rejection</p>
+              <p class="text-xs text-rose-600 mt-0.5">This action will notify the distributor that their order has been rejected.</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Rejection Reason</label>
+            <textarea
+              [(ngModel)]="rejectRemarks"
+              placeholder="e.g. Insufficient stock, pricing mismatch, incomplete order details..."
+              rows="4"
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm">
+            </textarea>
+          </div>
+
+          <div class="flex gap-3 pt-2 pb-4">
+            <button (click)="cancelReject()"
+              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl py-3.5 active:scale-95 transition-all">
+              Cancel
+            </button>
+            <button (click)="confirmReject()"
+              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3.5 shadow-md shadow-rose-200 active:scale-95 transition-all">
+              <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+              Confirm Reject
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- ORDER DETAIL MODAL                                        -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isDetailModalOpen" (didDismiss)="closeDetail()" class="custom-modal">
+    <ng-template>
+      <div *ngIf="selectedOrder" class="h-screen flex flex-col bg-slate-50">
+        <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-5 flex items-center justify-between shadow-lg flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+              <ion-icon name="receipt-outline" class="text-xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white">{{ selectedOrder.orderNumber }}</h2>
+              <p class="text-xs text-teal-100">{{ selectedOrder.distributorName }}</p>
+            </div>
+          </div>
+          <button (click)="closeDetail()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
+            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          </button>
+        </div>
+
+        <div class="flex-1 overflow-y-auto p-6 space-y-5">
+
+          <!-- Status Timeline -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-4">Order Timeline</h4>
+            <div class="space-y-4">
+              <!-- Placed -->
+              <div class="flex items-center gap-3">
+                <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="checkmark-circle" class="text-emerald-500 text-lg"></ion-icon>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-700">Order Placed</p>
+                  <p class="text-xs text-slate-400">{{ selectedOrder.orderDate | date:'dd MMM yyyy' }}</p>
+                </div>
+              </div>
+              <!-- Approved / Rejected -->
+              <div class="flex items-center gap-3">
+                <div
+                  [class.bg-emerald-100]="selectedOrder.approvalStatus === 'approved'"
+                  [class.bg-rose-100]="selectedOrder.approvalStatus === 'rejected'"
+                  [class.bg-amber-100]="selectedOrder.approvalStatus === 'pending'"
+                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                  <ion-icon
+                    [name]="selectedOrder.approvalStatus === 'approved' ? 'checkmark-circle' : selectedOrder.approvalStatus === 'rejected' ? 'close-circle' : 'time-outline'"
+                    [class.text-emerald-500]="selectedOrder.approvalStatus === 'approved'"
+                    [class.text-rose-500]="selectedOrder.approvalStatus === 'rejected'"
+                    [class.text-amber-500]="selectedOrder.approvalStatus === 'pending'"
+                    class="text-lg">
+                  </ion-icon>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-700">{{ selectedOrder.approvalStatus === 'approved' ? 'Approved' : selectedOrder.approvalStatus === 'rejected' ? 'Rejected' : 'Awaiting Approval' }}</p>
+                  <p *ngIf="selectedOrder.approvalDate" class="text-xs text-slate-400">{{ selectedOrder.approvalDate | date:'dd MMM yyyy' }}</p>
+                  <p *ngIf="selectedOrder.approvalRemarks" class="text-xs text-slate-500 mt-0.5">{{ selectedOrder.approvalRemarks }}</p>
+                </div>
+              </div>
+              <!-- GDN -->
+              <div class="flex items-center gap-3">
+                <div
+                  [class.bg-teal-100]="selectedOrder.gdnStatus !== 'not-generated'"
+                  [class.bg-slate-100]="selectedOrder.gdnStatus === 'not-generated'"
+                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="document-text-outline"
+                    [class.text-teal-500]="selectedOrder.gdnStatus !== 'not-generated'"
+                    [class.text-slate-300]="selectedOrder.gdnStatus === 'not-generated'"
+                    class="text-lg">
+                  </ion-icon>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-700">{{ selectedOrder.gdnNumber ? 'GDN Generated — ' + selectedOrder.gdnNumber : 'GDN Pending' }}</p>
+                  <p *ngIf="selectedOrder.gdnDate" class="text-xs text-slate-400">{{ selectedOrder.gdnDate | date:'dd MMM yyyy' }}</p>
+                </div>
+              </div>
+              <!-- Dispatched -->
+              <div class="flex items-center gap-3">
+                <div
+                  [class.bg-cyan-100]="selectedOrder.gdnStatus === 'dispatched'"
+                  [class.bg-slate-100]="selectedOrder.gdnStatus !== 'dispatched'"
+                  class="w-8 h-8 rounded-full flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="car-outline"
+                    [class.text-cyan-500]="selectedOrder.gdnStatus === 'dispatched'"
+                    [class.text-slate-300]="selectedOrder.gdnStatus !== 'dispatched'"
+                    class="text-lg">
+                  </ion-icon>
+                </div>
+                <div>
+                  <p class="text-sm font-bold text-slate-700">{{ selectedOrder.gdnStatus === 'dispatched' ? 'Dispatched' : 'Awaiting Dispatch' }}</p>
+                  <p *ngIf="selectedOrder.dispatchDate" class="text-xs text-slate-400">{{ selectedOrder.dispatchDate | date:'dd MMM yyyy' }}</p>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Distributor Info -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Distributor</h4>
+            <div class="flex items-center gap-3">
+              <div class="w-11 h-11 rounded-full bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                {{ selectedOrder.distributorName.charAt(0).toUpperCase() }}
+              </div>
+              <div>
+                <p class="text-sm font-bold text-slate-800">{{ selectedOrder.distributorName }}</p>
+                <p class="text-xs text-slate-500">{{ selectedOrder.distributorContact }}</p>
+              </div>
+            </div>
+            <div *ngIf="selectedOrder.shippingAddress" class="mt-3 text-sm text-slate-600 flex items-start gap-2">
+              <ion-icon name="location-outline" class="text-emerald-400 text-base flex-shrink-0 mt-0.5"></ion-icon>
+              {{ selectedOrder.shippingAddress }}
+            </div>
+          </div>
+
+          <!-- Transport -->
+          <div *ngIf="selectedOrder.vehicleNumber" class="bg-white rounded-2xl p-5 border border-slate-100">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Transport Details</h4>
+            <div class="grid grid-cols-2 gap-3">
+              <div class="bg-cyan-50 rounded-xl p-3">
+                <p class="text-[10px] text-cyan-400 font-bold uppercase">Vehicle</p>
+                <p class="text-sm font-bold text-cyan-700">{{ selectedOrder.vehicleNumber }}</p>
+              </div>
+              <div class="bg-cyan-50 rounded-xl p-3">
+                <p class="text-[10px] text-cyan-400 font-bold uppercase">Transporter</p>
+                <p class="text-sm font-bold text-cyan-700">{{ selectedOrder.transporterName }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Items -->
+          <div class="bg-white rounded-2xl p-5 border border-slate-100">
+            <h4 class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Order Items</h4>
+            <div class="rounded-xl border border-slate-100 overflow-hidden">
+              <div class="hidden sm:grid grid-cols-12 bg-slate-50 px-4 py-2 text-[10px] font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
+                <span class="col-span-5">Product</span>
+                <span class="col-span-2 text-center">Qty</span>
+                <span class="col-span-2 text-right">Price</span>
+                <span class="col-span-3 text-right">Total</span>
+              </div>
+              <div *ngFor="let item of selectedOrder.items; let last = last"
+                class="hidden sm:grid grid-cols-12 px-4 py-2.5 text-sm items-center"
+                [class.border-b]="!last"
+                [class.border-slate-50]="!last">
+                <div class="col-span-5">
+                  <p class="text-slate-700 font-medium truncate">{{ item.productName }}</p>
+                  <p class="text-[10px] text-slate-400 font-mono">{{ item.batchNumber }}</p>
+                </div>
+                <span class="col-span-2 text-center text-slate-500 font-semibold">{{ item.quantity }}</span>
+                <span class="col-span-2 text-right text-slate-500">₹{{ item.unitPrice.toLocaleString() }}</span>
+                <span class="col-span-3 text-right text-slate-800 font-bold">₹{{ getLineTotal(item).toLocaleString() }}</span>
+              </div>
+              <!-- Mobile Stacked -->
+              <div *ngFor="let item of selectedOrder.items; let last = last"
+                class="sm:hidden p-3"
+                [class.border-b]="!last"
+                [class.border-slate-50]="!last">
+                <p class="text-sm font-medium text-slate-700">{{ item.productName }}</p>
+                <p *ngIf="item.batchNumber" class="text-[10px] text-slate-400 font-mono mb-1">{{ item.batchNumber }}</p>
+                <div class="flex justify-between text-xs text-slate-500">
+                  <span>{{ item.quantity }} × ₹{{ item.unitPrice.toLocaleString() }}</span>
+                  <span class="font-bold text-slate-800">₹{{ getLineTotal(item).toLocaleString() }}</span>
+                </div>
+              </div>
+              <!-- Total -->
+              <div class="flex items-center justify-between px-4 py-3 bg-emerald-50 border-t border-slate-100">
+                <span class="text-xs font-bold text-emerald-500 uppercase">Grand Total</span>
+                <span class="text-lg font-extrabold text-emerald-700">₹{{ selectedOrder.totalAmount.toLocaleString() }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

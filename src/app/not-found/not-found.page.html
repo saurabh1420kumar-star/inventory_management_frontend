@@ -1,0 +1,53 @@
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 via-blue-50 to-emerald-50 p-6">
+    <div class="w-full max-w-lg text-center animate-fade-up">
+
+      <!-- Floating 404 illustration -->
+      <div class="relative mb-8">
+        <!-- Big 404 text -->
+        <h1 class="text-[10rem] leading-none font-black tracking-tighter select-none bg-gradient-to-br from-emerald-300 via-sky-400 to-violet-500 bg-clip-text text-transparent opacity-20 animate-float">
+          404
+        </h1>
+        <!-- Overlay icon -->
+        <div class="absolute inset-0 flex items-center justify-center">
+          <div class="w-28 h-28 bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.08)] border border-white/60 flex items-center justify-center animate-bounce-slow">
+            <ion-icon name="compass-outline" class="text-6xl text-emerald-500"></ion-icon>
+          </div>
+        </div>
+      </div>
+
+      <!-- Card -->
+      <div class="bg-white/80 backdrop-blur-xl rounded-3xl shadow-[0_8px_30px_rgb(0,0,0,0.04)] border border-white/50 p-10">
+        <h2 class="text-2xl font-bold text-slate-800 tracking-tight mb-2">Page Not Found</h2>
+        <p class="text-slate-500 text-sm leading-relaxed max-w-sm mx-auto mb-8">
+          Oops! The page you're looking for doesn't exist or has been moved.
+          Let's get you back on track.
+        </p>
+
+        <div class="flex flex-col sm:flex-row gap-3 justify-center">
+          <button (click)="goBack()"
+            class="inline-flex items-center justify-center gap-2 px-6 py-3.5 rounded-2xl border-2 border-slate-200 bg-white text-slate-700 font-semibold text-sm hover:border-emerald-300 hover:bg-emerald-50 transition-all duration-300 group">
+            <ion-icon name="arrow-back-outline" class="text-lg group-hover:-translate-x-0.5 transition-transform"></ion-icon>
+            Go Back
+          </button>
+
+          <ion-button
+            (click)="goHome()"
+            class="h-[52px] font-bold rounded-2xl overflow-hidden shadow-lg shadow-emerald-200/50"
+            style="--background: linear-gradient(135deg, #34d399 0%, #0ea5e9 100%); --border-radius: 16px; --box-shadow: none;">
+            <ion-icon name="home-outline" class="mr-2 text-white text-lg"></ion-icon>
+            <span class="text-white text-sm tracking-wide">Back to Home</span>
+          </ion-button>
+        </div>
+      </div>
+
+      <!-- Decorative dots -->
+      <div class="flex justify-center gap-2 mt-8 opacity-30">
+        <div class="w-2 h-2 rounded-full bg-emerald-400 animate-pulse"></div>
+        <div class="w-2 h-2 rounded-full bg-sky-400 animate-pulse" style="animation-delay: 0.2s"></div>
+        <div class="w-2 h-2 rounded-full bg-violet-400 animate-pulse" style="animation-delay: 0.4s"></div>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

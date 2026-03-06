@@ -137,8 +137,15 @@ export class CartService {
     return saved ? JSON.parse(saved) : [];
   }
 
-  // Place order (submit cart)
-  placeOrder(orderData: any): Observable<any> {
-    return this.http.post<any>(`${environment.apiUrl}/orders`, orderData);
+  // Place order via the correct API:
+  // POST /cart/placeOrder?distributorId=<id>  body: CartItemPayload[]
+  placeOrder(distributorId: string | number, items: CartItemPayload[]): Observable<any> {
+    const url = `${this.cartApiUrl}/placeOrder?distributorId=${distributorId}`;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    return this.http.post<any>(url, items, { headers });
   }
 }

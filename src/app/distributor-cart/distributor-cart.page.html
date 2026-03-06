@@ -297,19 +297,11 @@
         </div>
         <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-5">
           <h3 class="text-base font-bold text-slate-800 mb-4">Delivery Details</h3>
-          <div class="mb-4">
+          <div class="mb-2">
             <label class="block text-sm font-medium text-slate-600 mb-2">Delivery Address *</label>
-            <ion-textarea formControlName="deliveryAddress" placeholder="Enter your delivery address" rows="3" class="custom-textarea"></ion-textarea>
+            <textarea formControlName="deliveryAddress" placeholder="Enter your delivery address" rows="3"
+                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 placeholder:text-slate-400 resize-none"></textarea>
             <div *ngIf="orderForm.get('deliveryAddress')?.invalid && orderForm.get('deliveryAddress')?.touched" class="text-xs text-red-500 mt-1">Address is required</div>
-          </div>
-          <div class="mb-4">
-            <label class="block text-sm font-medium text-slate-600 mb-2">Preferred Delivery Date *</label>
-            <ion-input formControlName="preferredDeliveryDate" type="date" class="custom-input"></ion-input>
-            <div *ngIf="orderForm.get('preferredDeliveryDate')?.invalid && orderForm.get('preferredDeliveryDate')?.touched" class="text-xs text-red-500 mt-1">Delivery date is required</div>
-          </div>
-          <div>
-            <label class="block text-sm font-medium text-slate-600 mb-2">Special Instructions</label>
-            <ion-textarea formControlName="specialInstructions" placeholder="e.g., Fragile items, Handle with care" rows="2" class="custom-textarea"></ion-textarea>
           </div>
         </div>
         <div class="flex flex-col gap-2">
