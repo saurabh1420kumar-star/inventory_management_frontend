@@ -15,12 +15,37 @@ export interface Distributor {
   updatedAt: string;
 }
 
+export interface PendingOrderItem {
+  id: number;
+  itemId: number;
+  itemName: string;
+  itemSku: string;
+  priceAtTime: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface PendingOrder {
+  id: number;
+  cartItems: PendingOrderItem[];
+  createdAt: string;
+  distributorId: number | null;
+  distributorName: string | null;
+  salespersonId: number | null;
+  salespersonName: string | null;
+  status: string;
+  totalCartAmount: number;
+  updatedAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class SalesService {
   private apiUrl = `${environment.apiUrl}/distributors`;
   private salesMappingUrl = `${environment.apiUrl}/sales-mapping`;
+  private orderApiUrl = `${environment.apiUrl}/order`;
+  private cartApiUrl = `${environment.apiUrl}/cart`;
 
   constructor(private http: HttpClient) { }
 
@@ -50,5 +75,17 @@ export class SalesService {
 
   getSalesMapping(): Observable<any> {
     return this.http.get<any>(this.salesMappingUrl);
+  }
+
+  getPendingOrderApprovals(): Observable<PendingOrder[]> {
+    return this.http.get<PendingOrder[]>(`${this.orderApiUrl}/pending-order-approvals`);
+  }
+
+  approveOrder(cartId: number): Observable<any> {
+    return this.http.put<any>(`${this.orderApiUrl}/approve/${cartId}`, {});
+  }
+
+  dismissOrder(cartId: number): Observable<any> {
+    return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`);
   }
 }

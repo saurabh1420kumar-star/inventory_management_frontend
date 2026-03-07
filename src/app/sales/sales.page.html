@@ -119,7 +119,6 @@
             *ngFor="let tab of [
               { key: 'pending', label: 'Pending', count: orderTabCounts['pending'], dotColor: '#f59e0b' },
               { key: 'approved', label: 'Approved', count: orderTabCounts['approved'], dotColor: '#10b981' },
-              { key: 'pi-ready', label: 'PI Ready', count: orderTabCounts['pi-ready'], dotColor: '#14b8a6' },
               { key: 'rejected', label: 'Rejected', count: orderTabCounts['rejected'], dotColor: '#f43f5e' },
               { key: 'all', label: 'All', count: orderTabCounts['all'], dotColor: '#94a3b8' }
             ]"
@@ -145,12 +144,12 @@
             *ngFor="let order of filteredOrderSummaries"
             class="rounded-xl overflow-hidden transition-all duration-300"
             [style.background]="'rgba(255,255,255,0.04)'"
-            [style.border]="order.status === 'pending' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'approved' ? '1px solid rgba(16,185,129,0.2)' : order.status === 'pi-ready' ? '1px solid rgba(20,184,166,0.2)' : '1px solid rgba(244,63,94,0.2)'"
+            [style.border]="order.status === 'ACTIVE' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'APPROVED' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(244,63,94,0.2)'"
             style="backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
 
             <!-- Card Top Accent Bar -->
             <div class="h-0.5 w-full"
-              [style.background]="order.status === 'pending' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'approved' ? 'linear-gradient(to right, #10b981, #14b8a6)' : order.status === 'pi-ready' ? 'linear-gradient(to right, #14b8a6, #06b6d4)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
+              [style.background]="order.status === 'ACTIVE' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'APPROVED' ? 'linear-gradient(to right, #10b981, #14b8a6)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
             </div>
 
             <div class="p-4">
@@ -159,34 +158,28 @@
               <div class="flex items-start justify-between mb-3">
                 <div>
                   <p class="text-xs font-medium uppercase tracking-wider mb-0.5" style="color: #475569;">Order</p>
-                  <h3 class="text-sm font-bold text-white tracking-tight">{{ order.orderNumber }}</h3>
+                  <h3 class="text-sm font-bold text-white tracking-tight">ORD-{{ order.id }}</h3>
                   <p class="text-xs mt-0.5 flex items-center gap-1" style="color: #475569;">
                     <ion-icon name="calendar-outline" class="text-xs"></ion-icon>
-                    {{ order.orderDate | date: 'dd MMM yyyy' }}
+                    {{ order.createdAt | date: 'dd MMM yyyy' }}
                   </p>
                 </div>
 
                 <!-- Status Badge -->
                 <div>
-                  <span *ngIf="order.status === 'pending'"
+                  <span *ngIf="order.status === 'ACTIVE'"
                     class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
                     style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
                     <span class="w-1.5 h-1.5 rounded-full animate-ping inline-block" style="background: #f59e0b;"></span>
                     Pending
                   </span>
-                  <span *ngIf="order.status === 'approved'"
+                  <span *ngIf="order.status === 'APPROVED'"
                     class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
                     style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">
                     <ion-icon name="checkmark-circle-outline" class="text-xs"></ion-icon>
                     Approved
                   </span>
-                  <span *ngIf="order.status === 'pi-ready'"
-                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
-                    style="background: rgba(20,184,166,0.1); color: #14b8a6; border: 1px solid rgba(20,184,166,0.25);">
-                    <ion-icon name="document-text-outline" class="text-xs"></ion-icon>
-                    PI Ready
-                  </span>
-                  <span *ngIf="order.status === 'rejected'"
+                  <span *ngIf="order.status === 'DISMISSED'"
                     class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
                     style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.25);">
                     <ion-icon name="close-circle-outline" class="text-xs"></ion-icon>
@@ -200,18 +193,18 @@
 
               <!-- Distributor Info -->
               <div class="flex items-center gap-3 mb-3 rounded-lg p-2.5"
-                [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.06)' : order.status === 'approved' ? 'rgba(16,185,129,0.06)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.06)' : 'rgba(244,63,94,0.06)'"
+                [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.06)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)'"
                 [style.border]="'1px solid rgba(255,255,255,0.04)'">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6);">
-                  {{ order.distributorName.charAt(0).toUpperCase() }}
+                  {{ (order.distributorName || 'D').charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
                   <p class="text-xs font-medium uppercase tracking-wider" style="color: #475569;">Distributor</p>
-                  <p class="text-xs font-bold text-white truncate">{{ order.distributorName }}</p>
+                  <p class="text-xs font-bold text-white truncate">{{ order.distributorName || 'Unknown' }}</p>
                   <p class="text-xs truncate flex items-center gap-1" style="color: #64748b;">
                     <ion-icon name="person-outline" class="text-xs" style="color: #10b981;"></ion-icon>
-                    {{ order.salesPersonName }}
+                    {{ order.salespersonName || 'N/A' }}
                   </p>
                 </div>
               </div>
@@ -221,12 +214,12 @@
                 <button
                   (click)="toggleOrderExpand(order.id)"
                   class="w-full flex items-center justify-between text-xs font-bold rounded-lg px-3 py-2 transition-colors mb-2"
-                  [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.08)' : order.status === 'approved' ? 'rgba(16,185,129,0.08)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.08)' : 'rgba(244,63,94,0.08)'"
-                  [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'"
+                  [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
+                  [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'"
                   [style.border]="'1px solid rgba(255,255,255,0.04)'">
                   <span class="flex items-center gap-2">
                     <ion-icon name="cube-outline" class="text-sm"></ion-icon>
-                    {{ order.items.length }} Item{{ order.items.length !== 1 ? 's' : '' }}
+                    {{ order.cartItems.length }} Item{{ order.cartItems.length !== 1 ? 's' : '' }}
                   </span>
                   <ion-icon
                     [name]="isOrderExpanded(order.id) ? 'chevron-up-outline' : 'chevron-down-outline'"
@@ -237,13 +230,13 @@
                 <!-- Items List -->
                 <div *ngIf="isOrderExpanded(order.id)" class="rounded-lg overflow-hidden"
                   style="border: 1px solid rgba(255,255,255,0.06);">
-                  <div *ngFor="let item of order.items; let last = last"
+                  <div *ngFor="let item of order.cartItems; let last = last"
                     class="p-3"
                     [style.border-bottom]="!last ? '1px solid rgba(255,255,255,0.04)' : 'none'">
-                    <p class="text-xs font-medium text-white mb-1">{{ item.productName }}</p>
+                    <p class="text-xs font-medium text-white mb-1">{{ item.itemName }}</p>
                     <div class="flex justify-between text-xs" style="color: #64748b;">
-                      <span>{{ item.quantity }} x &#8377;{{ item.unitPrice.toLocaleString() }}</span>
-                      <span class="font-bold text-white">&#8377;{{ getLineTotal(item).toLocaleString() }}</span>
+                      <span>{{ item.quantity }} x &#8377;{{ item.priceAtTime.toLocaleString() }}</span>
+                      <span class="font-bold text-white">&#8377;{{ item.totalPrice.toLocaleString() }}</span>
                     </div>
                   </div>
                 </div>
@@ -251,47 +244,25 @@
 
               <!-- Total Amount -->
               <div class="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3"
-                [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.08)' : order.status === 'approved' ? 'rgba(16,185,129,0.08)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.08)' : 'rgba(244,63,94,0.08)'"
+                [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
                 [style.border]="'1px solid rgba(255,255,255,0.04)'">
                 <div class="flex items-center gap-2">
                   <ion-icon name="receipt-outline" class="text-base"
-                    [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'">
+                    [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
                   </ion-icon>
                   <span class="text-xs font-bold uppercase tracking-wider" style="color: #64748b;">Total</span>
                 </div>
                 <span class="text-base font-extrabold"
-                  [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'">
-                  &#8377;{{ order.totalAmount.toLocaleString() }}
+                  [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
+                  &#8377;{{ order.totalCartAmount.toLocaleString() }}
                 </span>
-              </div>
-
-              <!-- Remarks -->
-              <div *ngIf="order.remarks && order.status !== 'pending'"
-                class="flex items-start gap-2 rounded-lg px-3 py-2 mb-3 text-xs"
-                [style.background]="order.status === 'approved' ? 'rgba(16,185,129,0.06)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.06)' : 'rgba(244,63,94,0.06)'"
-                [style.color]="order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'"
-                style="border: 1px solid rgba(255,255,255,0.04);">
-                <ion-icon name="chatbubble-ellipses-outline" class="text-sm flex-shrink-0 mt-0.5"></ion-icon>
-                <span class="font-medium">{{ order.remarks }}</span>
-              </div>
-
-              <!-- PI Info -->
-              <div *ngIf="order.status === 'pi-ready' && order.piNumber"
-                class="flex items-center gap-3 rounded-lg px-3 py-2.5 mb-3"
-                style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.15);">
-                <ion-icon name="document-text-outline" style="color: #14b8a6;" class="text-base flex-shrink-0"></ion-icon>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-bold uppercase tracking-wider" style="color: #14b8a6;">Proforma Invoice</p>
-                  <p class="text-xs font-bold text-white">{{ order.piNumber }}</p>
-                </div>
-                <span *ngIf="order.piDate" class="text-xs font-medium flex-shrink-0" style="color: #14b8a6;">{{ order.piDate | date:'dd MMM yyyy' }}</span>
               </div>
 
               <!-- Divider before actions -->
               <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
 
               <!-- Action Buttons: Pending -->
-              <div *ngIf="order.status === 'pending'" class="flex gap-2">
+              <div *ngIf="order.status === 'ACTIVE'" class="flex gap-2">
                 <button
                   (click)="approveOrder(order)"
                   class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
@@ -300,7 +271,7 @@
                   Approve
                 </button>
                 <button
-                  (click)="openRejectModal(order)"
+                  (click)="dismissOrder(order)"
                   class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
                   <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
@@ -308,43 +279,24 @@
                 </button>
               </div>
 
-              <!-- Action: Approved - Generate PI -->
-              <div *ngIf="order.status === 'approved'" class="flex gap-2">
+              <!-- Action: Approved - Generate & Download PI -->
+              <div *ngIf="order.status === 'APPROVED'" class="flex gap-2">
                 <button
-                  (click)="generateProformaInvoice(order)"
+                  (click)="generateAndDownloadPI(order)"
                   class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
-                  style="background: linear-gradient(135deg, #14b8a6, #06b6d4); box-shadow: 0 4px 15px rgba(20,184,166,0.25);">
+                  style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.25);">
                   <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
-                  Generate Proforma Invoice
-                </button>
-              </div>
-
-              <!-- PI Ready state -->
-              <div *ngIf="order.status === 'pi-ready'" class="flex gap-2">
-                <div class="flex-1 flex items-center gap-2 rounded-lg py-2 px-3 text-xs font-bold"
-                  style="background: rgba(20,184,166,0.08); color: #14b8a6; border: 1px solid rgba(20,184,166,0.15);">
-                  <ion-icon name="checkmark-done-circle-outline" class="text-sm flex-shrink-0"></ion-icon>
-                  <span>PI Generated</span>
-                  <span *ngIf="order.piDate" class="text-xs font-normal opacity-70 ml-auto flex-shrink-0">{{ order.piDate | date:'dd MMM' }}</span>
-                </div>
-                <button
-                  (click)="downloadProformaInvoice(order)"
-                  class="flex items-center justify-center gap-1 text-white font-bold text-xs rounded-lg px-3 py-2 active:scale-95 transition-all duration-200 flex-shrink-0"
-                  style="background: linear-gradient(135deg, #14b8a6, #06b6d4); box-shadow: 0 4px 15px rgba(20,184,166,0.25);">
-                  <ion-icon name="download-outline" class="text-sm"></ion-icon>
-                  PI
+                  Generate &amp; Download PI
                 </button>
               </div>
 
               <!-- Rejected state -->
-              <div *ngIf="order.status === 'rejected'"
+              <div *ngIf="order.status === 'DISMISSED'"
                 class="flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold"
                 style="background: rgba(244,63,94,0.08); color: #f43f5e; border: 1px solid rgba(244,63,94,0.15);">
                 <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
                 Rejected
-                <span *ngIf="order.processedAt" class="text-xs font-normal opacity-70">
-                  &middot; {{ order.processedAt | date:'dd MMM, h:mm a' }}
-                </span>
+
               </div>
 
             </div>
@@ -698,79 +650,6 @@
 
             </form>
           </div>
-        </div>
-      </div>
-    </ng-template>
-  </ion-modal>
-
-  <!-- REJECT ORDER MODAL -->
-  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" class="auto-height">
-    <ng-template>
-      <div class="flex flex-col rounded-t-2xl overflow-hidden" style="max-height: 90vh; background: #0d1117;">
-
-        <!-- Modal Header -->
-        <div class="px-5 py-4 flex items-center justify-between flex-shrink-0"
-          style="background: rgba(244,63,94,0.1); border-bottom: 1px solid rgba(244,63,94,0.15);">
-          <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center"
-              style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.25);">
-              <ion-icon name="close-circle-outline" class="text-lg" style="color: #f43f5e;"></ion-icon>
-            </div>
-            <div>
-              <h2 class="text-sm font-bold text-white">Reject Order</h2>
-              <p *ngIf="orderBeingRejected" class="text-xs" style="color: #f43f5e;">{{ orderBeingRejected.orderNumber }} &middot; {{ orderBeingRejected.distributorName }}</p>
-            </div>
-          </div>
-          <button (click)="cancelReject()" class="p-2 rounded-lg transition-colors"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
-            <ion-icon name="close-outline" class="text-base" style="color: #e2e8f0;"></ion-icon>
-          </button>
-        </div>
-
-        <div class="p-5 space-y-4 overflow-y-auto flex-1">
-
-          <!-- Warning Banner -->
-          <div class="flex items-start gap-3 rounded-lg p-3"
-            style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15);">
-            <ion-icon name="warning-outline" style="color: #f43f5e;" class="text-lg flex-shrink-0 mt-0.5"></ion-icon>
-            <div>
-              <p class="text-xs font-bold" style="color: #fb7185;">Confirm Rejection</p>
-              <p class="text-xs mt-0.5" style="color: #f43f5e; opacity: 0.8;">This action will notify the distributor. Please provide a reason.</p>
-            </div>
-          </div>
-
-          <!-- Reason Input -->
-          <div>
-            <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color: #64748b;">
-              Rejection Reason <span style="color: #f43f5e;">(optional)</span>
-            </label>
-            <textarea
-              [(ngModel)]="rejectRemarks"
-              placeholder="e.g. Insufficient stock, pricing mismatch..."
-              rows="4"
-              class="w-full rounded-lg py-3 px-4 outline-none transition-all duration-200 resize-none text-sm font-medium"
-              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0;">
-            </textarea>
-          </div>
-
-          <!-- Action Buttons -->
-          <div class="flex gap-2 pt-2 pb-4">
-            <button
-              (click)="cancelReject()"
-              class="flex-1 flex items-center justify-center gap-2 font-bold text-xs rounded-lg py-3 transition-all duration-200 active:scale-95"
-              style="background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);">
-              <ion-icon name="arrow-back-outline" class="text-sm"></ion-icon>
-              Cancel
-            </button>
-            <button
-              (click)="confirmReject()"
-              class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs rounded-lg py-3 transition-all duration-200 active:scale-95"
-              style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
-              <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
-              Confirm Reject
-            </button>
-          </div>
-
         </div>
       </div>
     </ng-template>

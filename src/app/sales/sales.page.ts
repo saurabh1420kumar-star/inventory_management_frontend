@@ -3,28 +3,7 @@ import { CommonModule } from '@angular/common';
 import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ModalController } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
-import { SalesService } from '../services/sales.service';
-
-export interface OrderItem {
-  productName: string;
-  quantity: number;
-  unitPrice: number;
-}
-
-export interface OrderSummary {
-  id: string;
-  orderNumber: string;
-  distributorName: string;
-  salesPersonName: string;
-  orderDate: string;
-  totalAmount: number;
-  items: OrderItem[];
-  status: 'pending' | 'approved' | 'rejected' | 'pi-ready';
-  remarks?: string;
-  processedAt?: string;
-  piNumber?: string;
-  piDate?: string;
-}
+import { SalesService, PendingOrder } from '../services/sales.service';
 
 interface Distributor {
   id: string;
@@ -57,53 +36,12 @@ export class SalesPage implements OnInit {
   selectedDistributor: Distributor | null = null;
 
   // ── Order Approval ──────────────────────────────────────
-  orderSummaries: OrderSummary[] = [
-    {
-      id: 'ord-1',
-      orderNumber: 'ORD-2026-001',
-      distributorName: 'test-5 created',
-      salesPersonName: 'Rahul Sharma',
-      orderDate: '2026-02-15',
-      totalAmount: 45000,
-      items: [
-        { productName: 'Nectar Premium Mix', quantity: 10, unitPrice: 2500 },
-        { productName: 'Organic Blend Pack', quantity: 5, unitPrice: 3000 },
-        { productName: 'Wellness Supplement', quantity: 8, unitPrice: 1875 },
-      ],
-      status: 'pending',
-    },
-    {
-      id: 'ord-2',
-      orderNumber: 'ORD-2026-002',
-      distributorName: 'New Distributor',
-      salesPersonName: 'Vikram Singh',
-      orderDate: '2026-02-10',
-      totalAmount: 32000,
-      items: [
-        { productName: 'Standard Mix Pack', quantity: 20, unitPrice: 1600 },
-      ],
-      status: 'pending',
-    },
-    {
-      id: 'ord-3',
-      orderNumber: 'ORD-2026-003',
-      distributorName: 'test-3-edited',
-      salesPersonName: 'Rahul Sharma',
-      orderDate: '2026-01-28',
-      totalAmount: 78000,
-      items: [
-        { productName: 'Premium Wellness Pack', quantity: 15, unitPrice: 5200 },
-      ],
-      status: 'pending',
-    },
-  ];
+  pendingOrders: PendingOrder[] = [];
+  isOrdersLoading = false;
 
-  orderFilterTab: 'all' | 'pending' | 'approved' | 'rejected' | 'pi-ready' = 'pending';
+  orderFilterTab: 'all' | 'pending' | 'approved' | 'rejected' = 'pending';
   orderSearchTerm = '';
-  expandedOrderIds = new Set<string>();
-  isRejectModalOpen = false;
-  rejectRemarks = '';
-  orderBeingRejected: OrderSummary | null = null;
+  expandedOrderIds = new Set<number>();
   
   addForm: FormGroup;
   editForm: FormGroup;
@@ -140,6 +78,21 @@ export class SalesPage implements OnInit {
 
   ngOnInit() {
     this.loadDistributors();
+    this.loadPendingOrders();
+  }
+
+  loadPendingOrders() {
+    this.isOrdersLoading = true;
+    this.salesService.getPendingOrderApprovals().subscribe({
+      next: (data) => {
+        this.pendingOrders = data;
+        this.isOrdersLoading = false;
+      },
+      error: (error) => {
+        console.error('Error loading pending orders:', error);
+        this.isOrdersLoading = false;
+      },
+    });
   }
 
   loadDistributors() {
@@ -274,17 +227,26 @@ export class SalesPage implements OnInit {
   }
 
   // ── Order Approval Helpers ───────────────────────────────
-  get filteredOrderSummaries(): OrderSummary[] {
-    let filtered = this.orderFilterTab === 'all'
-      ? this.orderSummaries
-      : this.orderSummaries.filter(o => o.status === this.orderFilterTab);
+  get filteredOrderSummaries(): PendingOrder[] {
+    let filtered: PendingOrder[];
+    if (this.orderFilterTab === 'all') {
+      filtered = this.pendingOrders;
+    } else if (this.orderFilterTab === 'pending') {
+      filtered = this.pendingOrders.filter(o => o.status === 'ACTIVE');
+    } else if (this.orderFilterTab === 'approved') {
+      filtered = this.pendingOrders.filter(o => o.status === 'APPROVED');
+    } else if (this.orderFilterTab === 'rejected') {
+      filtered = this.pendingOrders.filter(o => o.status === 'DISMISSED');
+    } else {
+      filtered = this.pendingOrders;
+    }
 
     if (this.orderSearchTerm.trim()) {
       const term = this.orderSearchTerm.toLowerCase();
       filtered = filtered.filter(o =>
-        o.orderNumber.toLowerCase().includes(term) ||
-        o.distributorName.toLowerCase().includes(term) ||
-        o.salesPersonName.toLowerCase().includes(term)
+        String(o.id).includes(term) ||
+        (o.distributorName || '').toLowerCase().includes(term) ||
+        (o.salespersonName || '').toLowerCase().includes(term)
       );
     }
 
@@ -293,51 +255,53 @@ export class SalesPage implements OnInit {
 
   get orderTabCounts(): Record<string, number> {
     return {
-      all: this.orderSummaries.length,
-      pending: this.orderSummaries.filter(o => o.status === 'pending').length,
-      approved: this.orderSummaries.filter(o => o.status === 'approved').length,
-      'pi-ready': this.orderSummaries.filter(o => o.status === 'pi-ready').length,
-      rejected: this.orderSummaries.filter(o => o.status === 'rejected').length,
+      all: this.pendingOrders.length,
+      pending: this.pendingOrders.filter(o => o.status === 'ACTIVE').length,
+      approved: this.pendingOrders.filter(o => o.status === 'APPROVED').length,
+      rejected: this.pendingOrders.filter(o => o.status === 'DISMISSED').length,
     };
   }
 
-  approveOrder(order: OrderSummary) {
-    order.status = 'approved';
-    order.processedAt = new Date().toISOString();
-    order.remarks = 'Approved by Sales Manager';
+  approveOrder(order: PendingOrder) {
+    this.salesService.approveOrder(order.id).subscribe({
+      next: () => {
+        const idx = this.pendingOrders.findIndex(o => o.id === order.id);
+        if (idx !== -1) {
+          this.pendingOrders[idx] = { ...this.pendingOrders[idx], status: 'APPROVED' };
+          this.pendingOrders = [...this.pendingOrders];
+        }
+        this.orderFilterTab = 'approved';
+      },
+      error: (error) => {
+        console.error('Error approving order:', error);
+        this.errorMessage = 'Failed to approve order. Please try again.';
+      },
+    });
   }
 
-  generateProformaInvoice(order: OrderSummary) {
-    const now = new Date();
-    order.status = 'pi-ready';
-    order.piNumber = `PI-${now.getFullYear()}-${order.orderNumber.split('-').pop()}`;
-    order.piDate = now.toISOString().split('T')[0];
+  generateAndDownloadPI(order: PendingOrder) {
+    // TODO: Integrate PI generation/download API
+    console.log('Generate & Download PI for order:', order.id);
   }
 
-  openRejectModal(order: OrderSummary) {
-    this.orderBeingRejected = order;
-    this.rejectRemarks = '';
-    this.isRejectModalOpen = true;
+  dismissOrder(order: PendingOrder) {
+    this.salesService.dismissOrder(order.id).subscribe({
+      next: () => {
+        const idx = this.pendingOrders.findIndex(o => o.id === order.id);
+        if (idx !== -1) {
+          this.pendingOrders[idx] = { ...this.pendingOrders[idx], status: 'DISMISSED' };
+          this.pendingOrders = [...this.pendingOrders];
+        }
+        this.orderFilterTab = 'rejected';
+      },
+      error: (error) => {
+        console.error('Error dismissing order:', error);
+        this.errorMessage = 'Failed to dismiss order. Please try again.';
+      },
+    });
   }
 
-  confirmReject() {
-    if (this.orderBeingRejected) {
-      this.orderBeingRejected.status = 'rejected';
-      this.orderBeingRejected.remarks = this.rejectRemarks || 'Rejected by Sales Manager';
-      this.orderBeingRejected.processedAt = new Date().toISOString();
-    }
-    this.isRejectModalOpen = false;
-    this.orderBeingRejected = null;
-    this.rejectRemarks = '';
-  }
-
-  cancelReject() {
-    this.isRejectModalOpen = false;
-    this.orderBeingRejected = null;
-    this.rejectRemarks = '';
-  }
-
-  toggleOrderExpand(id: string) {
+  toggleOrderExpand(id: number) {
     if (this.expandedOrderIds.has(id)) {
       this.expandedOrderIds.delete(id);
     } else {
@@ -345,21 +309,12 @@ export class SalesPage implements OnInit {
     }
   }
 
-  isOrderExpanded(id: string): boolean {
+  isOrderExpanded(id: number): boolean {
     return this.expandedOrderIds.has(id);
-  }
-
-  getLineTotal(item: OrderItem): number {
-    return item.quantity * item.unitPrice;
-  }
-
-  downloadProformaInvoice(order: OrderSummary) {
-    // TODO: Integrate PI download API here
-    // e.g. this.salesService.downloadPi(order.piNumber).subscribe(blob => saveAs(blob, order.piNumber + '.pdf'));
-    console.log('Downloading PI:', order.piNumber);
   }
 
   refreshSales() {
     this.loadDistributors();
+    this.loadPendingOrders();
   }
 }
