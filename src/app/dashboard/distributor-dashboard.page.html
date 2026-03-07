@@ -1,6 +1,936 @@
 <ion-content class="ion-no-padding" style="--background: #0d1117;">
 
-  <div class="max-w-6xl mx-auto px-4 pt-5 pb-8">
+  <!-- ===== OPERATION DETAIL VIEWS ===== -->
+
+  <!-- ==================== PAYMENT REPORT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'payment-report'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Payment Report</h1>
+        <p class="text-xs text-slate-500">Track all payments & collections</p>
+      </div>
+      <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="funnel-outline" class="text-slate-400 text-lg"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Date Range -->
+    <div class="flex items-center gap-2 mb-4 rounded-xl px-4 py-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-icon name="calendar-outline" class="text-emerald-400 text-lg"></ion-icon>
+      <span class="text-sm text-slate-300 font-medium">{{ dateRange }}</span>
+    </div>
+
+    <!-- Filter Pills -->
+    <div class="flex gap-2 mb-5 overflow-x-auto pb-1">
+      <button class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap"
+              [style.background]="paymentFilter === 'all' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+              [style.border]="paymentFilter === 'all' ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.08)'"
+              [style.color]="paymentFilter === 'all' ? '#4ade80' : '#94a3b8'"
+              (click)="paymentFilter = 'all'">All Status</button>
+      <button class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap"
+              [style.background]="paymentFilter === 'cleared' ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.05)'"
+              [style.border]="paymentFilter === 'cleared' ? '1px solid rgba(16,185,129,0.4)' : '1px solid rgba(255,255,255,0.08)'"
+              [style.color]="paymentFilter === 'cleared' ? '#4ade80' : '#94a3b8'"
+              (click)="paymentFilter = 'cleared'">Cleared</button>
+      <button class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap"
+              [style.background]="paymentFilter === 'process' ? 'rgba(245,158,11,0.2)' : 'rgba(255,255,255,0.05)'"
+              [style.border]="paymentFilter === 'process' ? '1px solid rgba(245,158,11,0.4)' : '1px solid rgba(255,255,255,0.08)'"
+              [style.color]="paymentFilter === 'process' ? '#fbbf24' : '#94a3b8'"
+              (click)="paymentFilter = 'process'">In Process</button>
+      <button class="px-4 py-2 rounded-full text-xs font-semibold whitespace-nowrap"
+              [style.background]="paymentFilter === 'neft' ? 'rgba(59,130,246,0.2)' : 'rgba(255,255,255,0.05)'"
+              [style.border]="paymentFilter === 'neft' ? '1px solid rgba(59,130,246,0.4)' : '1px solid rgba(255,255,255,0.08)'"
+              [style.color]="paymentFilter === 'neft' ? '#60a5fa' : '#94a3b8'"
+              (click)="paymentFilter = 'neft'">NEFT</button>
+    </div>
+
+    <!-- Total Collections Card -->
+    <div class="rounded-2xl p-5 mb-5 relative overflow-hidden"
+         style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25); backdrop-filter: blur(16px); box-shadow: 0 0 30px rgba(16,185,129,0.08), inset 0 1px 0 rgba(255,255,255,0.05);">
+      <!-- Chart decoration -->
+      <div class="absolute bottom-0 left-0 right-0 opacity-20">
+        <svg width="100%" height="80" viewBox="0 0 400 80" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="chartGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#10b981" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#10b981" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,60 Q40,50 80,45 T160,30 T240,35 T320,20 T400,10 L400,80 L0,80 Z" fill="url(#chartGrad)"/>
+          <polyline fill="none" stroke="#10b981" stroke-width="2" points="0,60 40,50 80,45 120,38 160,30 200,33 240,35 280,25 320,20 360,15 400,10"/>
+        </svg>
+      </div>
+      <div class="relative z-10">
+        <div class="flex items-center gap-2 mb-1">
+          <ion-icon name="wallet-outline" class="text-emerald-400 text-lg"></ion-icon>
+          <p class="text-xs font-semibold text-emerald-400 uppercase tracking-widest">Total Collections</p>
+        </div>
+        <p class="text-4xl font-extrabold text-white tracking-tight mb-2">{{ totalCollections }}</p>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-full" style="background: rgba(16,185,129,0.2);">
+            <ion-icon name="trending-up-outline" class="text-emerald-400 text-xs"></ion-icon>
+            <span class="text-xs font-bold text-emerald-400">{{ collectionGrowth }}</span>
+          </div>
+          <span class="text-xs text-slate-500">vs last month</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction List -->
+    <div class="mb-2">
+      <h3 class="text-sm font-bold text-white mb-3">Recent Transactions</h3>
+    </div>
+    <div class="flex flex-col gap-3">
+      <ng-container *ngFor="let txn of transactions">
+        <div *ngIf="paymentFilter === 'all' || (paymentFilter === 'cleared' && txn.status === 'Cleared') || (paymentFilter === 'process' && txn.status === 'In Process') || (paymentFilter === 'neft' && txn.type === 'NEFT')"
+             class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+          <div class="flex items-start justify-between mb-2">
+            <div>
+              <p class="text-sm font-bold text-white">{{ txn.amount }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ txn.date }}</p>
+            </div>
+            <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+                  [style.background]="getStatusBg(txn.status)"
+                  [style.color]="getStatusColor(txn.status)">{{ txn.status }}</span>
+          </div>
+          <div class="flex items-center justify-between pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+            <span class="text-xs text-slate-500 font-mono">{{ txn.txnId }}</span>
+            <span class="text-xs font-medium px-2 py-0.5 rounded" style="background: rgba(255,255,255,0.06); color: #94a3b8;">{{ txn.type }}</span>
+          </div>
+        </div>
+      </ng-container>
+    </div>
+  </div>
+
+  <!-- ==================== COLLECTION STATUS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'collection-status'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Collection Status</h1>
+        <p class="text-xs text-slate-500">Track collection progress</p>
+      </div>
+    </div>
+
+    <!-- Summary Cards -->
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <p class="text-xs text-emerald-400 font-semibold mb-1">Collected</p>
+        <p class="text-2xl font-extrabold text-white">₹32,710</p>
+        <p class="text-xs text-slate-500 mt-1">This Month</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
+        <p class="text-xs text-amber-400 font-semibold mb-1">Pending</p>
+        <p class="text-2xl font-extrabold text-white">₹12,500</p>
+        <p class="text-xs text-slate-500 mt-1">Outstanding</p>
+      </div>
+    </div>
+
+    <!-- Progress Bar -->
+    <div class="rounded-2xl p-4 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm font-bold text-white">Collection Target</p>
+        <p class="text-sm font-bold text-emerald-400">72%</p>
+      </div>
+      <div class="w-full h-2 rounded-full" style="background: rgba(255,255,255,0.08);">
+        <div class="h-2 rounded-full" style="width: 72%; background: linear-gradient(90deg, #10b981, #34d399);"></div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">₹32,710 of ₹45,000 target</p>
+    </div>
+
+    <!-- Collection List -->
+    <h3 class="text-sm font-bold text-white mb-3">Collection Entries</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-sm font-bold text-white">₹15,000.00</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Received</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 20 · Cheque · INV-2024-0451</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-sm font-bold text-white">₹17,710.00</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Received</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 15 · NEFT · INV-2024-0438</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-1">
+          <p class="text-sm font-bold text-white">₹12,500.00</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 28 · UPI · INV-2024-0467</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ORDER STATUS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'order-status'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Order Status</h1>
+        <p class="text-xs text-slate-500">Track your order deliveries</p>
+      </div>
+    </div>
+
+    <!-- Status Summary -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="rounded-2xl p-3 text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
+        <p class="text-2xl font-extrabold text-white">{{ pendingOrdersCount }}</p>
+        <p class="text-xs text-amber-400 font-semibold">Pending</p>
+      </div>
+      <div class="rounded-2xl p-3 text-center" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+        <p class="text-2xl font-extrabold text-white">{{ dispatchedCount }}</p>
+        <p class="text-xs text-blue-400 font-semibold">Dispatched</p>
+      </div>
+      <div class="rounded-2xl p-3 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <p class="text-2xl font-extrabold text-white">{{ deliveredCount }}</p>
+        <p class="text-xs text-emerald-400 font-semibold">Delivered</p>
+      </div>
+    </div>
+
+    <!-- Order Cards -->
+    <h3 class="text-sm font-bold text-white mb-3">Recent Orders</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1892</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Delivered</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-1">12 items · ₹24,500</p>
+        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <ion-icon name="time-outline" class="text-slate-500 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Oct 26, 2024 · Delivered on Oct 28</p>
+        </div>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1885</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Dispatched</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-1">8 items · ₹16,200</p>
+        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <ion-icon name="car-outline" class="text-slate-500 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Oct 24, 2024 · In transit</p>
+        </div>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1878</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-1">5 items · ₹9,800</p>
+        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <ion-icon name="time-outline" class="text-slate-500 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Oct 22, 2024 · Awaiting confirmation</p>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== DISPATCH REPORT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'dispatch-report'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Dispatch Report</h1>
+        <p class="text-xs text-slate-500">View dispatch schedule & status</p>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="rounded-2xl p-4" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
+        <p class="text-xs text-rose-400 font-semibold mb-1">Today's Dispatch</p>
+        <p class="text-2xl font-extrabold text-white">5</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+        <p class="text-xs text-blue-400 font-semibold mb-1">This Week</p>
+        <p class="text-2xl font-extrabold text-white">18</p>
+      </div>
+    </div>
+
+    <h3 class="text-sm font-bold text-white mb-3">Dispatch Schedule</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">DSP-2024-0342</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Shipped</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 28 · 12 items · Vehicle: MH-12-AB-1234</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">DSP-2024-0339</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Loading</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 28 · 8 items · Vehicle: MH-14-CD-5678</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">DSP-2024-0335</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Scheduled</span>
+        </div>
+        <p class="text-xs text-slate-500">Oct 29 · 15 items · Vehicle: TBD</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PENDING ORDERS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'pending-orders'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Pending Orders</h1>
+        <p class="text-xs text-slate-500">Orders awaiting processing</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl p-4 mb-5" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
+      <div class="flex items-center gap-3">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.15);">
+          <ion-icon name="time-outline" class="text-amber-400 text-2xl"></ion-icon>
+        </div>
+        <div>
+          <p class="text-xs text-amber-400 font-semibold">Total Pending</p>
+          <p class="text-3xl font-extrabold text-white">{{ pendingOrdersCount }}</p>
+          <p class="text-xs text-slate-500">Worth ₹78,400</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1878</p>
+          <p class="text-sm font-bold text-amber-400">₹9,800</p>
+        </div>
+        <p class="text-xs text-slate-500">5 items · Oct 22, 2024</p>
+        <p class="text-xs text-amber-400/70 mt-1">Awaiting confirmation - 6 days</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1871</p>
+          <p class="text-sm font-bold text-amber-400">₹15,600</p>
+        </div>
+        <p class="text-xs text-slate-500">10 items · Oct 20, 2024</p>
+        <p class="text-xs text-amber-400/70 mt-1">Under review - 8 days</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1865</p>
+          <p class="text-sm font-bold text-amber-400">₹22,100</p>
+        </div>
+        <p class="text-xs text-slate-500">14 items · Oct 18, 2024</p>
+        <p class="text-xs text-amber-400/70 mt-1">Credit check pending - 10 days</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PENDING REPORT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'pending-report'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Pending Report</h1>
+        <p class="text-xs text-slate-500">Pending orders summary</p>
+      </div>
+      <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="download-outline" class="text-slate-400 text-lg"></ion-icon>
+      </button>
+    </div>
+
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(59,130,246,0.08); border: 1.5px solid rgba(59,130,246,0.25);">
+      <p class="text-xs text-blue-400 font-semibold uppercase tracking-widest mb-1">Total Pending Value</p>
+      <p class="text-4xl font-extrabold text-white tracking-tight">₹1,24,500</p>
+      <p class="text-xs text-slate-500 mt-1">Across 15 orders · Updated today</p>
+    </div>
+
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <p class="text-lg font-bold text-white">6</p>
+        <p class="text-xs text-slate-500">0-7 days</p>
+      </div>
+      <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <p class="text-lg font-bold text-amber-400">5</p>
+        <p class="text-xs text-slate-500">7-15 days</p>
+      </div>
+      <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <p class="text-lg font-bold text-rose-400">4</p>
+        <p class="text-xs text-slate-500">15+ days</p>
+      </div>
+    </div>
+
+    <h3 class="text-sm font-bold text-white mb-3">Aging Details</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">0-7 Days</p>
+          <p class="text-sm font-bold text-emerald-400">₹42,300</p>
+        </div>
+        <p class="text-xs text-slate-500">6 orders · Low priority</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">7-15 Days</p>
+          <p class="text-sm font-bold text-amber-400">₹45,200</p>
+        </div>
+        <p class="text-xs text-slate-500">5 orders · Medium priority</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">15+ Days</p>
+          <p class="text-sm font-bold text-rose-400">₹37,000</p>
+        </div>
+        <p class="text-xs text-slate-500">4 orders · High priority</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== SALES REPORT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'sales-report'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Sales Report</h1>
+        <p class="text-xs text-slate-500">Monthly sales analysis</p>
+      </div>
+      <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="download-outline" class="text-slate-400 text-lg"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Sales Overview Card -->
+    <div class="rounded-2xl p-5 mb-5 relative overflow-hidden"
+         style="background: rgba(59,130,246,0.08); border: 1.5px solid rgba(59,130,246,0.25); backdrop-filter: blur(16px);">
+      <div class="absolute bottom-0 left-0 right-0 opacity-20">
+        <svg width="100%" height="70" viewBox="0 0 400 70" preserveAspectRatio="none">
+          <defs>
+            <linearGradient id="salesGrad" x1="0" y1="0" x2="0" y2="1">
+              <stop offset="0%" stop-color="#3b82f6" stop-opacity="0.4"/>
+              <stop offset="100%" stop-color="#3b82f6" stop-opacity="0"/>
+            </linearGradient>
+          </defs>
+          <path d="M0,50 Q50,45 100,35 T200,25 T300,30 T400,15 L400,70 L0,70 Z" fill="url(#salesGrad)"/>
+          <polyline fill="none" stroke="#3b82f6" stroke-width="2" points="0,50 50,45 100,35 150,30 200,25 250,28 300,30 350,20 400,15"/>
+        </svg>
+      </div>
+      <div class="relative z-10">
+        <div class="flex items-center gap-2 mb-1">
+          <ion-icon name="stats-chart-outline" class="text-blue-400 text-lg"></ion-icon>
+          <p class="text-xs font-semibold text-blue-400 uppercase tracking-widest">Total Sales MTD</p>
+        </div>
+        <p class="text-4xl font-extrabold text-white tracking-tight mb-2">₹2,85,400</p>
+        <div class="flex items-center gap-2">
+          <div class="flex items-center gap-1 px-2 py-0.5 rounded-full" style="background: rgba(16,185,129,0.2);">
+            <ion-icon name="trending-up-outline" class="text-emerald-400 text-xs"></ion-icon>
+            <span class="text-xs font-bold text-emerald-400">+8.3%</span>
+          </div>
+          <span class="text-xs text-slate-500">vs last month</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <p class="text-xs text-slate-500 mb-1">Volume Sold</p>
+        <p class="text-xl font-bold text-white">42.5 MT</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <p class="text-xs text-slate-500 mb-1">Avg Order Value</p>
+        <p class="text-xl font-bold text-white">₹18,900</p>
+      </div>
+    </div>
+
+    <h3 class="text-sm font-bold text-white mb-3">Top Products</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">Premium Grade A</p>
+          <p class="text-sm font-bold text-blue-400">₹98,500</p>
+        </div>
+        <div class="w-full h-1.5 rounded-full" style="background: rgba(255,255,255,0.08);">
+          <div class="h-1.5 rounded-full" style="width: 85%; background: #3b82f6;"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">18.5 MT · 34.5%</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">Standard Grade B</p>
+          <p class="text-sm font-bold text-blue-400">₹72,300</p>
+        </div>
+        <div class="w-full h-1.5 rounded-full" style="background: rgba(255,255,255,0.08);">
+          <div class="h-1.5 rounded-full" style="width: 65%; background: #3b82f6;"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">14.2 MT · 25.3%</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-2">
+          <p class="text-sm font-bold text-white">Economy Pack</p>
+          <p class="text-sm font-bold text-blue-400">₹54,100</p>
+        </div>
+        <div class="w-full h-1.5 rounded-full" style="background: rgba(255,255,255,0.08);">
+          <div class="h-1.5 rounded-full" style="width: 48%; background: #3b82f6;"></div>
+        </div>
+        <p class="text-xs text-slate-500 mt-1">9.8 MT · 18.9%</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ACCOUNT SERVICES VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'account-services'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Account Services</h1>
+        <p class="text-xs" style="color: #d4a24e;">Manage your account & settings</p>
+      </div>
+    </div>
+
+    <!-- Distributor Info Card -->
+    <div class="rounded-2xl p-5 mb-5 flex items-center gap-4"
+         style="background: rgba(212,162,78,0.08); border: 1.5px solid rgba(212,162,78,0.25); backdrop-filter: blur(16px);">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center" style="background: rgba(212,162,78,0.15); border: 1px solid rgba(212,162,78,0.3);">
+        <ion-icon name="person-circle-outline" style="font-size: 32px; color: #d4a24e;"></ion-icon>
+      </div>
+      <div>
+        <p class="text-lg font-bold text-white">{{ distributorName }}</p>
+        <p class="text-sm font-mono" style="color: #d4a24e;">{{ distributorId }}</p>
+        <p class="text-xs text-slate-500 mt-0.5">Active Distributor</p>
+      </div>
+    </div>
+
+    <!-- Menu Items -->
+    <div class="flex flex-col gap-3">
+      <!-- Credit Limit Info -->
+      <button (click)="openOperationView('credit-limit')" class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(20,184,166,0.08); border: 1.5px solid rgba(20,184,166,0.2); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(20,184,166,0.15); border: 1px solid rgba(20,184,166,0.25);">
+          <ion-icon name="card-outline" class="text-teal-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Credit Limit Info</p>
+          <p class="text-xs text-slate-500">Check your credit limit & usage</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+
+      <!-- Profile Settings -->
+      <button class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.2);">
+          <ion-icon name="settings-outline" class="text-purple-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Profile Settings</p>
+          <p class="text-xs text-slate-500">Update your profile information</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+
+      <!-- Bank Account Details -->
+      <button class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);">
+          <ion-icon name="business-outline" class="text-blue-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Bank Account Details</p>
+          <p class="text-xs text-slate-500">View bank & payment details</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+
+      <!-- Tax Documents -->
+      <button class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+          <ion-icon name="document-text-outline" class="text-orange-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Tax Documents</p>
+          <p class="text-xs text-slate-500">GST, PAN & tax certificates</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+
+      <!-- Support Help Desk -->
+      <button class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.12); border: 1px solid rgba(16,185,129,0.2);">
+          <ion-icon name="help-circle-outline" class="text-emerald-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Support / Help Desk</p>
+          <p class="text-xs text-slate-500">Get help & raise tickets</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+    </div>
+  </div>
+
+  <!-- ==================== CREDIT LIMIT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'credit-limit'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="openOperationView('account-services')" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Credit Limit Info</h1>
+        <p class="text-xs text-teal-400">Your credit details</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(20,184,166,0.08); border: 1.5px solid rgba(20,184,166,0.25);">
+      <p class="text-xs text-teal-400 font-semibold uppercase tracking-widest mb-1">Total Credit Limit</p>
+      <p class="text-4xl font-extrabold text-white tracking-tight">₹5,00,000</p>
+      <p class="text-xs text-slate-500 mt-1">Approved on Jan 15, 2024</p>
+    </div>
+
+    <div class="grid grid-cols-2 gap-3 mb-5">
+      <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <p class="text-xs text-emerald-400 font-semibold mb-1">Available</p>
+        <p class="text-2xl font-extrabold text-white">₹3,25,000</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
+        <p class="text-xs text-rose-400 font-semibold mb-1">Utilized</p>
+        <p class="text-2xl font-extrabold text-white">₹1,75,000</p>
+      </div>
+    </div>
+
+    <!-- Usage Bar -->
+    <div class="rounded-2xl p-4 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex justify-between items-center mb-2">
+        <p class="text-sm font-bold text-white">Credit Utilization</p>
+        <p class="text-sm font-bold text-teal-400">35%</p>
+      </div>
+      <div class="w-full h-3 rounded-full" style="background: rgba(255,255,255,0.08);">
+        <div class="h-3 rounded-full" style="width: 35%; background: linear-gradient(90deg, #14b8a6, #2dd4bf);"></div>
+      </div>
+      <p class="text-xs text-slate-500 mt-2">₹1,75,000 of ₹5,00,000 used</p>
+    </div>
+
+    <h3 class="text-sm font-bold text-white mb-3">Recent Transactions</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Order #1892</p>
+          <p class="text-sm font-bold text-rose-400">-₹24,500</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 26 · Credit Used</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Payment Received</p>
+          <p class="text-sm font-bold text-emerald-400">+₹15,000</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 20 · Credit Restored</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== ACCOUNT STATEMENT VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'account-statement'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Account Statement</h1>
+        <p class="text-xs text-purple-400">View account transaction history</p>
+      </div>
+      <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="download-outline" class="text-slate-400 text-lg"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Balance Summary -->
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(168,85,247,0.08); border: 1.5px solid rgba(168,85,247,0.25);">
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-1">Current Balance</p>
+          <p class="text-3xl font-extrabold text-white tracking-tight">₹1,75,000</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-slate-500">As of</p>
+          <p class="text-sm text-white font-medium">Oct 28, 2024</p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Statement Entries -->
+    <h3 class="text-sm font-bold text-white mb-3">Transactions</h3>
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Invoice #INV-0467</p>
+          <p class="text-sm font-bold text-rose-400">₹24,500</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 26 · Debit · Order #1892</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Payment Received</p>
+          <p class="text-sm font-bold text-emerald-400">₹15,000</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 20 · Credit · Cheque</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Invoice #INV-0451</p>
+          <p class="text-sm font-bold text-rose-400">₹16,200</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 18 · Debit · Order #1885</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex justify-between items-center mb-1">
+          <p class="text-sm font-bold text-white">Payment Received</p>
+          <p class="text-sm font-bold text-emerald-400">₹17,710</p>
+        </div>
+        <p class="text-xs text-slate-500">Oct 15 · Credit · NEFT</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== BALANCE CONFIRMATION VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'balance-confirmation'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Balance Confirmation</h1>
+        <p class="text-xs text-purple-400">Confirm your account balance</p>
+      </div>
+    </div>
+
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(168,85,247,0.08); border: 1.5px solid rgba(168,85,247,0.25);">
+      <div class="flex items-center gap-3 mb-3">
+        <ion-icon name="shield-checkmark-outline" class="text-purple-400 text-2xl"></ion-icon>
+        <p class="text-xs text-purple-400 font-semibold uppercase tracking-widest">Confirmed Balance</p>
+      </div>
+      <p class="text-4xl font-extrabold text-white tracking-tight mb-2">₹1,75,000</p>
+      <p class="text-xs text-slate-500">Last confirmed: Oct 25, 2024</p>
+    </div>
+
+    <div class="rounded-2xl p-4 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex justify-between items-center mb-3">
+        <p class="text-sm font-bold text-white">Balance Breakdown</p>
+      </div>
+      <div class="flex flex-col gap-3">
+        <div class="flex justify-between">
+          <p class="text-sm text-slate-400">Total Invoiced</p>
+          <p class="text-sm font-medium text-white">₹4,85,000</p>
+        </div>
+        <div class="flex justify-between">
+          <p class="text-sm text-slate-400">Total Payments</p>
+          <p class="text-sm font-medium text-emerald-400">₹3,10,000</p>
+        </div>
+        <div class="pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <div class="flex justify-between">
+            <p class="text-sm font-bold text-white">Net Outstanding</p>
+            <p class="text-sm font-bold text-amber-400">₹1,75,000</p>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <button class="w-full py-3.5 rounded-2xl font-bold text-sm text-white"
+            style="background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 20px rgba(168,85,247,0.3);">
+      Confirm Balance
+    </button>
+  </div>
+
+  <!-- ==================== SUMMARIZED A/C VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'summarized-account'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Summarized A/C</h1>
+        <p class="text-xs text-purple-400">Account summary overview</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3 mb-5">
+      <div class="rounded-2xl p-4" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+        <p class="text-xs text-blue-400 font-semibold mb-1">Opening Balance</p>
+        <p class="text-2xl font-extrabold text-white">₹1,20,000</p>
+        <p class="text-xs text-slate-500 mt-1">Apr 1, 2024</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
+        <p class="text-xs text-rose-400 font-semibold mb-1">Total Debits</p>
+        <p class="text-2xl font-extrabold text-white">₹4,85,000</p>
+        <p class="text-xs text-slate-500 mt-1">Invoices & Charges</p>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <p class="text-xs text-emerald-400 font-semibold mb-1">Total Credits</p>
+        <p class="text-2xl font-extrabold text-white">₹3,10,000</p>
+        <p class="text-xs text-slate-500 mt-1">Payments & Adjustments</p>
+      </div>
+      <div class="rounded-2xl p-5" style="background: rgba(168,85,247,0.08); border: 1.5px solid rgba(168,85,247,0.25);">
+        <p class="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-1">Closing Balance</p>
+        <p class="text-3xl font-extrabold text-white tracking-tight">₹2,95,000</p>
+        <p class="text-xs text-slate-500 mt-1">As of Oct 28, 2024</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== COPY OF INVOICE VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'copy-invoice'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Copy of Invoice</h1>
+        <p class="text-xs text-orange-400">Download your invoices</p>
+      </div>
+    </div>
+
+    <!-- Search -->
+    <div class="relative mb-4">
+      <ion-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none z-10" name="search-outline"></ion-icon>
+      <input type="text" placeholder="Search invoices..."
+             style="background: rgba(255,255,255,0.05); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.08);"
+             class="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-orange-500/30 placeholder:text-slate-600 font-medium text-sm" />
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-sm font-bold text-white">INV-2024-0467</p>
+            <p class="text-xs text-slate-500">Oct 26 · ₹24,500</p>
+          </div>
+          <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+            <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+          </button>
+        </div>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-sm font-bold text-white">INV-2024-0451</p>
+            <p class="text-xs text-slate-500">Oct 18 · ₹16,200</p>
+          </div>
+          <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+            <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+          </button>
+        </div>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-sm font-bold text-white">INV-2024-0438</p>
+            <p class="text-xs text-slate-500">Oct 12 · ₹9,800</p>
+          </div>
+          <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+            <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+          </button>
+        </div>
+      </div>
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <div>
+            <p class="text-sm font-bold text-white">INV-2024-0425</p>
+            <p class="text-xs text-slate-500">Oct 5 · ₹31,400</p>
+          </div>
+          <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+            <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== OFFICIAL DOCUMENTS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'official-documents'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Official Documents</h1>
+        <p class="text-xs text-orange-400">Access official documents</p>
+      </div>
+    </div>
+
+    <div class="flex flex-col gap-3">
+      <div class="rounded-2xl p-4 flex items-center gap-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+          <ion-icon name="document-text-outline" class="text-orange-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">GST Certificate</p>
+          <p class="text-xs text-slate-500">GSTIN: 27AABCU9603R1ZM</p>
+        </div>
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
+          <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+        </button>
+      </div>
+      <div class="rounded-2xl p-4 flex items-center gap-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+          <ion-icon name="document-attach-outline" class="text-orange-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">PAN Card</p>
+          <p class="text-xs text-slate-500">PAN: ABCDE1234F</p>
+        </div>
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
+          <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+        </button>
+      </div>
+      <div class="rounded-2xl p-4 flex items-center gap-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+          <ion-icon name="receipt-outline" class="text-orange-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Trade License</p>
+          <p class="text-xs text-slate-500">Valid till: Mar 31, 2025</p>
+        </div>
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
+          <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+        </button>
+      </div>
+      <div class="rounded-2xl p-4 flex items-center gap-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.12); border: 1px solid rgba(251,146,60,0.2);">
+          <ion-icon name="shield-checkmark-outline" class="text-orange-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Distribution Agreement</p>
+          <p class="text-xs text-slate-500">Signed: Apr 1, 2024</p>
+        </div>
+        <button class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
+          <ion-icon name="download-outline" class="text-orange-400 text-lg"></ion-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== MAIN DASHBOARD / OPERATIONS VIEW ==================== -->
+  <div *ngIf="!activeOperationView" class="max-w-6xl mx-auto px-4 pt-5 pb-8">
 
     <!-- Title -->
     <div class="mb-5">
@@ -132,7 +1062,7 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'payment'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
+          <button (click)="openOperationView('payment-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.12);">
               <ion-icon name="receipt-outline" class="text-emerald-400 text-lg"></ion-icon>
             </div>
@@ -140,8 +1070,9 @@
               <p class="font-semibold text-white text-sm">Payment Due</p>
               <p class="text-xs text-slate-500">View outstanding payments</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
+          <button (click)="openOperationView('collection-status')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.12);">
               <ion-icon name="wallet-outline" class="text-emerald-400 text-lg"></ion-icon>
             </div>
@@ -149,6 +1080,7 @@
               <p class="font-semibold text-white text-sm">Collection Status</p>
               <p class="text-xs text-slate-500">Track collection progress</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
         </div>
       </div>
@@ -170,7 +1102,7 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'orders'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
+          <button (click)="openOperationView('order-status')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
               <ion-icon name="document-text-outline" class="text-rose-400 text-lg"></ion-icon>
             </div>
@@ -178,8 +1110,9 @@
               <p class="font-semibold text-white text-sm">Order Status</p>
               <p class="text-xs text-slate-500">Check order delivery status</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
+          <button (click)="openOperationView('dispatch-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
               <ion-icon name="car-outline" class="text-rose-400 text-lg"></ion-icon>
             </div>
@@ -187,8 +1120,9 @@
               <p class="font-semibold text-white text-sm">Dispatch Report</p>
               <p class="text-xs text-slate-500">View dispatch schedule</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
+          <button (click)="openOperationView('pending-orders')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
               <ion-icon name="time-outline" class="text-rose-400 text-lg"></ion-icon>
             </div>
@@ -196,6 +1130,7 @@
               <p class="font-semibold text-white text-sm">Pending Orders</p>
               <p class="text-xs text-slate-500">View pending order report</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
         </div>
       </div>
@@ -217,7 +1152,7 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'reports'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
+          <button (click)="openOperationView('pending-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(59,130,246,0.12);">
               <ion-icon name="document-outline" class="text-blue-400 text-lg"></ion-icon>
             </div>
@@ -225,8 +1160,9 @@
               <p class="font-semibold text-white text-sm">Pending Report</p>
               <p class="text-xs text-slate-500">Pending orders summary</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
+          <button (click)="openOperationView('sales-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(59,130,246,0.12);">
               <ion-icon name="stats-chart-outline" class="text-blue-400 text-lg"></ion-icon>
             </div>
@@ -234,13 +1170,14 @@
               <p class="font-semibold text-white text-sm">Sales Report</p>
               <p class="text-xs text-slate-500">Monthly sales analysis</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
         </div>
       </div>
 
       <!-- Account Services -->
       <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('account')"
+        <button (click)="openOperationView('account-services')"
                 class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
           <div class="flex items-center gap-3">
             <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.25);">
@@ -251,38 +1188,8 @@
               <p class="text-xs text-slate-500">Manage your account</p>
             </div>
           </div>
-          <ion-icon [name]="expandedMenu === 'account' ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
+          <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
-        <div *ngIf="expandedMenu === 'account'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(168,85,247,0.12);">
-              <ion-icon name="list-outline" class="text-purple-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Account Statement</p>
-              <p class="text-xs text-slate-500">View account history</p>
-            </div>
-          </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(168,85,247,0.12);">
-              <ion-icon name="checkmark-done-outline" class="text-purple-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Balance Confirmation</p>
-              <p class="text-xs text-slate-500">Confirm account balance</p>
-            </div>
-          </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(168,85,247,0.06); border: 1px solid rgba(168,85,247,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(168,85,247,0.12);">
-              <ion-icon name="analytics-outline" class="text-purple-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Summarized A/C</p>
-              <p class="text-xs text-slate-500">Summary of account</p>
-            </div>
-          </button>
-        </div>
       </div>
 
       <!-- Documents -->
@@ -302,7 +1209,7 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'documents'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
+          <button (click)="openOperationView('copy-invoice')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
               <ion-icon name="receipt-outline" class="text-orange-400 text-lg"></ion-icon>
             </div>
@@ -310,8 +1217,9 @@
               <p class="font-semibold text-white text-sm">Copy Of Invoice</p>
               <p class="text-xs text-slate-500">Download invoice copy</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
-          <button class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
+          <button (click)="openOperationView('official-documents')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
               <ion-icon name="document-attach-outline" class="text-orange-400 text-lg"></ion-icon>
             </div>
@@ -319,6 +1227,7 @@
               <p class="font-semibold text-white text-sm">Official Documents</p>
               <p class="text-xs text-slate-500">Access official documents</p>
             </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
         </div>
       </div>

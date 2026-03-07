@@ -2,7 +2,8 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
-import { LedgerService, LedgerDto, ApiResponse } from '../../services/accountsLedger.service';
+import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../services/accountsLedger.service';
+import { Auth } from '../../services/auth';
 import { Toast as ToastService } from '../../services/toast';
 import { addIcons } from 'ionicons';
 import {
@@ -80,7 +81,7 @@ interface Transaction {
   date: string; // YYYY-MM-DD format
   description: string;
   reference: string;
-  type: 'purchase' | 'sale' | 'return' | 'adjustment' | 'opening' | 'credit' | 'debit';
+  type:  'credit' | 'debit';
   debit: number;
   credit: number;
   balance: number;
@@ -102,6 +103,8 @@ interface LedgerAccount {
   toParty: Party;
   openingBalance: number;
   transactions: Transaction[];
+  distributorId?: number;
+  salespersonId?: number;
 }
 
 interface LedgerSummary {
@@ -130,7 +133,7 @@ export class AccountsMasterPage implements OnInit {
   Math = Math; // Expose Math to template
 
   // API Data properties
-  apiAccounts: LedgerDto[] = [];
+  distributors: Distributor[] = [];
   isLoadingAccounts: boolean = false;
 
   // State used in view
@@ -187,539 +190,12 @@ export class AccountsMasterPage implements OnInit {
   receiptFileName: string = '';
   isDispatchModalOpen: boolean = false;
 
-  // Mock Data - Updated to exactly match Image 1 & 2
-  ledgerAccounts: LedgerAccount[] = [
-    {
-      id: '1',
-      name: 'Acme Corporation',
-      accountCode: 'ACC-001',
-      fromParty: {
-        id: 'p1',
-        name: 'Nectar private limited',
-        address: '123, Business Park, Sector 62',
-        city: 'Noida',
-        state: 'Uttar Pradesh',
-        pincode: '201301',
-        phone: '+91 120 4567890',
-        email: 'accounts@nectar.com',
-        gstin: '09AAACY1234F1Z5',
-      },
-      toParty: {
-        id: 'p2',
-        name: 'Acme Corporation',
-        address: '456, Industrial Area, Phase II',
-        city: 'Gurugram',
-        state: 'Haryana',
-        pincode: '122001',
-        phone: '+91 124 9876543',
-        email: 'billing@acme.com',
-        gstin: '06AABCA5678K1Z3',
-      },
-      openingBalance: 50000,
-      transactions: [
-        {
-          id: '1',
-          date: '2024-01-01',
-          description: 'Opening Balance',
-          reference: 'OB-2024',
-          type: 'opening',
-          debit: 0,
-          credit: 50000.00,
-          balance: 50000.00,
-          category: 'Opening'
-        },
-        {
-          id: '2',
-          date: '2024-01-08',
-          description: 'Sale - Product Bundle A',
-          reference: 'INV-1001',
-          type: 'sale',
-          debit: 0,
-          credit: 8500.00,
-          balance: 58500.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '3',
-          date: '2024-01-18',
-          description: 'Return - Defective Items',
-          reference: 'RET-001',
-          type: 'return',
-          debit: 850.00,
-          credit: 0,
-          balance: 57650.00,
-          category: 'Returns'
-        },
-        {
-          id: '4',
-          date: '2024-01-25',
-          description: 'Sale - Electronics Package',
-          reference: 'INV-1002',
-          type: 'sale',
-          debit: 0,
-          credit: 15200.00,
-          balance: 72850.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '5',
-          date: '2024-02-02',
-          description: 'Purchase - Raw Materials',
-          reference: 'PO-2001',
-          type: 'purchase',
-          debit: 22000.00,
-          credit: 0,
-          balance: 50850.00,
-          category: 'Office Supplies'
-        },
-        {
-          id: '6',
-          date: '2024-02-10',
-          description: 'Sale - Software License',
-          reference: 'INV-1003',
-          type: 'sale',
-          debit: 0,
-          credit: 35000.00,
-          balance: 85850.00,
-          category: 'Services'
-        },
-        {
-          id: '7',
-          date: '2024-02-18',
-          description: 'Adjustment - Inventory Correction',
-          reference: 'ADJ-001',
-          type: 'adjustment',
-          debit: 1200.00,
-          credit: 0,
-          balance: 84650.00,
-          category: 'Adjustments'
-        },
-        {
-          id: '8',
-          date: '2024-02-25',
-          description: 'Sale - Hardware Components',
-          reference: 'INV-1004',
-          type: 'sale',
-          debit: 0,
-          credit: 18500.00,
-          balance: 103150.00,
-          category: 'Product Sales'
-        },
-      ],
-    },
-    {
-      id: '2',
-      name: 'TechFlow Solutions',
-      accountCode: 'ACC-002',
-      fromParty: {
-        id: 'p1',
-        name: 'Nectar private limited',
-        address: '123, Business Park, Sector 62',
-        city: 'Noida',
-        state: 'Uttar Pradesh',
-        pincode: '201301',
-        phone: '+91 120 4567890',
-        email: 'accounts@nectar.com',
-        gstin: '09AAACY1234F1Z5',
-      },
-      toParty: {
-        id: 'p3',
-        name: 'TechFlow Solutions Pvt. Ltd.',
-        address: '789, Tech Hub, Electronic City',
-        city: 'Bangalore',
-        state: 'Karnataka',
-        pincode: '560100',
-        phone: '+91 80 12345678',
-        email: 'finance@techflow.in',
-        gstin: '29AABCT1234H1ZP',
-      },
-      openingBalance: 75000,
-      transactions: [
-        {
-          id: '1',
-          date: '2024-01-01',
-          description: 'Opening Balance',
-          reference: 'OB-2024-TF',
-          type: 'opening',
-          debit: 0,
-          credit: 75000.00,
-          balance: 75000.00,
-          category: 'Opening'
-        },
-        {
-          id: '2',
-          date: '2024-01-15',
-          description: 'Sale - Cloud Services Annual',
-          reference: 'INV-2001',
-          type: 'sale',
-          debit: 0,
-          credit: 120000.00,
-          balance: 195000.00,
-          category: 'Services'
-        },
-        {
-          id: '3',
-          date: '2024-01-28',
-          description: 'Purchase - Server Equipment',
-          reference: 'PO-3001',
-          type: 'purchase',
-          debit: 45000.00,
-          credit: 0,
-          balance: 150000.00,
-          category: 'Office Supplies'
-        },
-        {
-          id: '4',
-          date: '2024-02-05',
-          description: 'Sale - API Integration Package',
-          reference: 'INV-2002',
-          type: 'sale',
-          debit: 0,
-          credit: 28000.00,
-          balance: 178000.00,
-          category: 'Services'
-        },
-        {
-          id: '5',
-          date: '2024-02-12',
-          description: 'Return - Faulty Hardware',
-          reference: 'RET-002',
-          type: 'return',
-          debit: 5500.00,
-          credit: 0,
-          balance: 172500.00,
-          category: 'Returns'
-        },
-        {
-          id: '6',
-          date: '2024-02-20',
-          description: 'Sale - Support Contract Q1',
-          reference: 'INV-2003',
-          type: 'sale',
-          debit: 0,
-          credit: 45000.00,
-          balance: 217500.00,
-          category: 'Services'
-        },
-      ],
-    },
-    {
-      id: '3',
-      name: 'GlobalMart Retail',
-      accountCode: 'ACC-003',
-      fromParty: {
-        id: 'p1',
-        name: 'Nectar private limited',
-        address: '123, Business Park, Sector 62',
-        city: 'Noida',
-        state: 'Uttar Pradesh',
-        pincode: '201301',
-        phone: '+91 120 4567890',
-        email: 'accounts@yourcompany.com',
-        gstin: '09AAACY1234F1Z5',
-      },
-      toParty: {
-        id: 'p4',
-        name: 'GlobalMart Retail India Ltd.',
-        address: '321, Commerce Tower, Andheri East',
-        city: 'Mumbai',
-        state: 'Maharashtra',
-        pincode: '400069',
-        phone: '+91 22 87654321',
-        email: 'accounts@globalmart.com',
-        gstin: '27AABCG9876M1ZH',
-      },
-      openingBalance: 125000,
-      transactions: [
-        {
-          id: '1',
-          date: '2024-01-01',
-          description: 'Opening Balance',
-          reference: 'OB-2024-GM',
-          type: 'opening',
-          debit: 0,
-          credit: 125000.00,
-          balance: 125000.00,
-          category: 'Opening'
-        },
-        {
-          id: '2',
-          date: '2024-01-10',
-          description: 'Sale - Bulk Order Electronics',
-          reference: 'INV-3001',
-          type: 'sale',
-          debit: 0,
-          credit: 250000.00,
-          balance: 375000.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '3',
-          date: '2024-01-20',
-          description: 'Purchase - Display Units',
-          reference: 'PO-4001',
-          type: 'purchase',
-          debit: 35000.00,
-          credit: 0,
-          balance: 340000.00,
-          category: 'Office Supplies'
-        },
-        {
-          id: '4',
-          date: '2024-01-30',
-          description: 'Return - Damaged Goods',
-          reference: 'RET-003',
-          type: 'return',
-          debit: 12500.00,
-          credit: 0,
-          balance: 327500.00,
-          category: 'Returns'
-        },
-        {
-          id: '5',
-          date: '2024-02-08',
-          description: 'Sale - Fashion Accessories',
-          reference: 'INV-3002',
-          type: 'sale',
-          debit: 0,
-          credit: 85000.00,
-          balance: 412500.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '6',
-          date: '2024-02-15',
-          description: 'Sale - Home Appliances',
-          reference: 'INV-3003',
-          type: 'sale',
-          debit: 0,
-          credit: 175000.00,
-          balance: 587500.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '7',
-          date: '2024-02-22',
-          description: 'Adjustment - Price Correction',
-          reference: 'ADJ-002',
-          type: 'adjustment',
-          debit: 0,
-          credit: 5000.00,
-          balance: 592500.00,
-          category: 'Adjustments'
-        },
-      ],
-    },
-    {
-      id: '4',
-      name: 'BuildRight Construction',
-      accountCode: 'ACC-004',
-      fromParty: {
-        id: 'p1',
-        name: 'Nectar private limited',
-        address: '123, Business Park, Sector 62',
-        city: 'Noida',
-        state: 'Uttar Pradesh',
-        pincode: '201301',
-        phone: '+91 120 4567890',
-        email: 'accounts@yourcompany.com',
-        gstin: '09AAACY1234F1Z5',
-      },
-      toParty: {
-        id: 'p5',
-        name: 'BuildRight Construction Co.',
-        address: '555, Builder Complex, Whitefield',
-        city: 'Bangalore',
-        state: 'Karnataka',
-        pincode: '560066',
-        phone: '+91 80 55667788',
-        email: 'billing@buildright.in',
-        gstin: '29AABCB5566K1ZQ',
-      },
-      openingBalance: 200000,
-      transactions: [
-        {
-          id: '1',
-          date: '2024-01-01',
-          description: 'Opening Balance',
-          reference: 'OB-2024-BR',
-          type: 'opening',
-          debit: 0,
-          credit: 200000.00,
-          balance: 200000.00,
-          category: 'Opening'
-        },
-        {
-          id: '2',
-          date: '2024-01-12',
-          description: 'Sale - Industrial Equipment',
-          reference: 'INV-4001',
-          type: 'sale',
-          debit: 0,
-          credit: 450000.00,
-          balance: 650000.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '3',
-          date: '2024-01-22',
-          description: 'Purchase - Safety Gear',
-          reference: 'PO-5001',
-          type: 'purchase',
-          debit: 28000.00,
-          credit: 0,
-          balance: 622000.00,
-          category: 'Office Supplies'
-        },
-        {
-          id: '4',
-          date: '2024-02-01',
-          description: 'Sale - Construction Materials',
-          reference: 'INV-4002',
-          type: 'sale',
-          debit: 0,
-          credit: 320000.00,
-          balance: 942000.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '5',
-          date: '2024-02-14',
-          description: 'Return - Incorrect Specifications',
-          reference: 'RET-004',
-          type: 'return',
-          debit: 45000.00,
-          credit: 0,
-          balance: 897000.00,
-          category: 'Returns'
-        },
-      ],
-    },
-    {
-      id: '5',
-      name: 'MediCare Pharma',
-      accountCode: 'ACC-005',
-      fromParty: {
-        id: 'p1',
-        name: 'Nectar private limited',
-        address: '123, Business Park, Sector 62',
-        city: 'Noida',
-        state: 'Uttar Pradesh',
-        pincode: '201301',
-        phone: '+91 120 4567890',
-        email: 'accounts@yourcompany.com',
-        gstin: '09AAACY1234F1Z5',
-      },
-      toParty: {
-        id: 'p6',
-        name: 'MediCare Pharmaceuticals Ltd.',
-        address: '100, Pharma City, Jubilee Hills',
-        city: 'Hyderabad',
-        state: 'Telangana',
-        pincode: '500033',
-        phone: '+91 40 99887766',
-        email: 'finance@medicare.co.in',
-        gstin: '36AABCM9988J1ZR',
-      },
-      openingBalance: 90000,
-      transactions: [
-        {
-          id: '1',
-          date: '2024-01-01',
-          description: 'Opening Balance',
-          reference: 'OB-2024-MC',
-          type: 'opening',
-          debit: 0,
-          credit: 90000.00,
-          balance: 90000.00,
-          category: 'Opening'
-        },
-        {
-          id: '2',
-          date: '2024-01-08',
-          description: 'Sale - Medical Supplies Q1',
-          reference: 'INV-5001',
-          type: 'sale',
-          debit: 0,
-          credit: 180000.00,
-          balance: 270000.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '3',
-          date: '2024-01-18',
-          description: 'Sale - Lab Equipment',
-          reference: 'INV-5002',
-          type: 'sale',
-          debit: 0,
-          credit: 95000.00,
-          balance: 365000.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '4',
-          date: '2024-01-28',
-          description: 'Purchase - Packaging Materials',
-          reference: 'PO-6001',
-          type: 'purchase',
-          debit: 15000.00,
-          credit: 0,
-          balance: 350000.00,
-          category: 'Office Supplies'
-        },
-        {
-          id: '5',
-          date: '2024-02-05',
-          description: 'Return - Expired Stock',
-          reference: 'RET-005',
-          type: 'return',
-          debit: 8500.00,
-          credit: 0,
-          balance: 341500.00,
-          category: 'Returns'
-        },
-        {
-          id: '6',
-          date: '2024-02-12',
-          description: 'Sale - Diagnostic Kits',
-          reference: 'INV-5003',
-          type: 'sale',
-          debit: 0,
-          credit: 125000.00,
-          balance: 466500.00,
-          category: 'Product Sales'
-        },
-        {
-          id: '7',
-          date: '2024-02-20',
-          description: 'Adjustment - Stock Reconciliation',
-          reference: 'ADJ-003',
-          type: 'adjustment',
-          debit: 3500.00,
-          credit: 0,
-          balance: 463000.00,
-          category: 'Adjustments'
-        },
-        {
-          id: '8',
-          date: '2024-02-28',
-          description: 'Sale - Surgical Instruments',
-          reference: 'INV-5004',
-          type: 'sale',
-          debit: 0,
-          credit: 210000.00,
-          balance: 673000.00,
-          category: 'Product Sales'
-        },
-      ],
-    }
-  ];
-
   constructor(
     private toastController: ToastController,
     private ledgerService: LedgerService,
     private elementRef: ElementRef,
-    private toastSvc: ToastService
+    private toastSvc: ToastService,
+    private auth: Auth
   ) {
     // Add specific icons shown in the images
     addIcons({
@@ -781,8 +257,8 @@ export class AccountsMasterPage implements OnInit {
   }
 
   ngOnInit() {
-    // Fetch accounts from API on initialization
-    this.loadAccountsFromApi();
+    // Fetch distributors from API on initialization
+    this.loadDistributors();
 
     // Uncomment below to auto-select the account on load for development purposes
     // if (this.ledgerAccounts.length > 0) {
@@ -812,36 +288,92 @@ export class AccountsMasterPage implements OnInit {
 
   // --- API Methods ---
 
-  loadAccountsFromApi() {
+  loadDistributors() {
     this.isLoadingAccounts = true;
-    this.ledgerService.getAllLedgers().subscribe({
-      next: (response: ApiResponse<LedgerDto[]>) => {
+    this.ledgerService.getDistributors().subscribe({
+      next: (response: ApiResponse<Distributor[]>) => {
         if (response.success && response.data) {
-          this.apiAccounts = response.data;
-          console.log('Accounts loaded successfully:', this.apiAccounts);
-          this.showToast(`${this.apiAccounts.length} accounts loaded successfully`, 'success');
+          this.distributors = response.data;
+          console.log('Distributors loaded successfully:', this.distributors);
+          this.showToast(`${this.distributors.length} distributors loaded successfully`, 'success');
         } else {
-          this.showToast('Failed to load accounts: ' + response.message, 'warning');
+          this.showToast('Failed to load distributors: ' + response.message, 'warning');
         }
         this.isLoadingAccounts = false;
       },
       error: (error) => {
-        console.error('Error loading accounts:', error);
-        this.showToast('Error loading accounts from server', 'danger');
+        console.error('Error loading distributors:', error);
+        this.showToast('Error loading distributors from server', 'danger');
         this.isLoadingAccounts = false;
       }
     });
   }
 
-  // Map API LedgerDto to UI LedgerAccount structure
-  mapApiAccountsToLedgerAccounts(apiAccounts: LedgerDto[]): LedgerAccount[] {
-    return apiAccounts.map(apiAccount => ({
-      id: apiAccount.id.toString(),
-      name: apiAccount.accountName,
-      accountCode: apiAccount.accountNumber,
+  loadPaymentHistory(distributorId: number) {
+    this.ledgerService.getPaymentHistory(distributorId).subscribe({
+      next: (response: ApiResponse<any>) => {
+        if (this.selectedAccount) {
+          // API returns array directly or wrapped in data property
+          const payments = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
+          
+          if (payments.length > 0) {
+            this.selectedAccount.transactions = this.mapPaymentHistoryToTransactions(payments);
+            console.log('Payment history loaded:', this.selectedAccount.transactions);
+            this.showToast(`${payments.length} transactions loaded`, 'success');
+          } else {
+            console.log('No payment history found');
+          }
+        }
+      },
+      error: (error) => {
+        console.error('Error loading payment history:', error);
+        // Keep using existing transactions if API fails
+      }
+    });
+  }
+
+  mapPaymentHistoryToTransactions(payments: any[]): Transaction[] {
+    let runningBalance = this.selectedAccount?.openingBalance || 0;
+    
+    return (payments || []).map((payment: any, index: number) => {
+      // Extract date from createdAt timestamp (format: YYYY-MM-DD)
+      const dateStr = payment.createdAt ? payment.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
+      
+      // Determine debit/credit based on transactionType
+      const isCredit = payment.transactionType?.toUpperCase() === 'CREDIT';
+      const debit = isCredit ? 0 : (payment.amount || 0);
+      const credit = isCredit ? (payment.amount || 0) : 0;
+      
+      // Update running balance
+      runningBalance = runningBalance - debit + credit;
+      
+      return {
+        id: String(payment.id || index),
+        date: dateStr,
+        description: payment.description || '',
+        reference: `TXN-${payment.id || index}`,
+        type: isCredit ? 'credit' : 'debit',
+        debit: debit,
+        credit: credit,
+        balance: runningBalance,
+        category: payment.transactionType || 'TRANSACTION',
+        notes: payment.remarks || undefined,
+        paymentMethod: undefined
+      };
+    });
+  }
+
+  // Map Distributor to UI LedgerAccount structure
+  mapDistributorsToLedgerAccounts(distributors: Distributor[]): LedgerAccount[] {
+    return distributors.map(distributor => ({
+      id: distributor.id.toString(),
+      name: distributor.name,
+      accountCode: distributor.accountNumber,
+      distributorId: distributor.id,
+      salespersonId: undefined,
       fromParty: {
-        id: 'company-' + apiAccount.companyId,
-        name: 'Nectar private limited', // Hardcoded as per request
+        id: 'company-nectar',
+        name: 'Nectar private limited',
         address: 'Company Address',
         city: 'City',
         state: 'State',
@@ -851,84 +383,19 @@ export class AccountsMasterPage implements OnInit {
         gstin: 'GSTIN000000'
       },
       toParty: {
-        id: 'distributor-' + apiAccount.distributorId,
-        name: apiAccount.accountName, // Using account name as party name
-        address: 'Distributor Address',
+        id: 'distributor-' + distributor.id,
+        name: distributor.name,
+        address: distributor.address,
         city: 'City',
         state: 'State',
         pincode: '000000',
-        phone: '+91 000 0000000',
-        email: 'distributor@example.com',
-        gstin: 'GSTIN000000'
+        phone: distributor.phoneNumber,
+        email: distributor.email,
+        gstin: distributor.gstNumber
       },
-      openingBalance: apiAccount.currentBalance || 0,
-      transactions: this.generateMockTransactions(apiAccount.currentBalance || 0, apiAccount.id)
+      openingBalance: 0,
+      transactions: [] // Transactions will be loaded from API when account is selected
     }));
-  }
-
-  // Generate mock transactions for demonstration
-  generateMockTransactions(currentBalance: number, accountId: number): Transaction[] {
-    const transactions: Transaction[] = [];
-    const openingBalance = Math.max(currentBalance - 50000, 0);
-    let runningBalance = openingBalance;
-
-    // Opening balance transaction
-    transactions.push({
-      id: `${accountId}-0`,
-      date: '2024-01-01',
-      description: 'Opening Balance',
-      reference: `OB-2024-${accountId}`,
-      type: 'opening',
-      debit: 0,
-      credit: openingBalance,
-      balance: runningBalance,
-      category: 'Opening'
-    });
-
-    // Generate 5-8 random transactions
-    const transactionCount = Math.floor(Math.random() * 4) + 5;
-    const startDate = new Date('2024-01-01');
-    const dayIncrement = Math.floor(365 / transactionCount);
-
-    const transactionTypes: Transaction['type'][] = ['sale', 'purchase', 'return', 'adjustment'];
-    const descriptions = {
-      sale: ['Product Sales', 'Service Revenue', 'Bulk Order', 'Monthly Sales', 'Quarterly Revenue'],
-      purchase: ['Inventory Purchase', 'Raw Materials', 'Office Supplies', 'Equipment Purchase', 'Stock Replenishment'],
-      return: ['Product Return', 'Damaged Goods', 'Quality Issue', 'Wrong Item', 'Customer Return'],
-      adjustment: ['Price Correction', 'Stock Reconciliation', 'Accounting Adjustment', 'Balance Correction', 'System Adjustment']
-    };
-
-    for (let i = 0; i < transactionCount; i++) {
-      const transDate = new Date(startDate);
-      transDate.setDate(startDate.getDate() + (i + 1) * dayIncrement + Math.floor(Math.random() * 5));
-
-      const type = transactionTypes[Math.floor(Math.random() * transactionTypes.length)];
-      const isDebit = type === 'purchase' || type === 'return' || (type === 'adjustment' && Math.random() > 0.5);
-      const amount = Math.floor(Math.random() * 30000) + 5000;
-
-      const debit = isDebit ? amount : 0;
-      const credit = !isDebit ? amount : 0;
-      runningBalance = runningBalance - debit + credit;
-
-      const descList = descriptions[type as keyof typeof descriptions];
-      const description = descList[Math.floor(Math.random() * descList.length)];
-
-      transactions.push({
-        id: `${accountId}-${i + 1}`,
-        date: transDate.toISOString().split('T')[0],
-        description: description,
-        reference: `${type.substring(0, 3).toUpperCase()}-${1000 + i}`,
-        type: type,
-        debit: debit,
-        credit: credit,
-        balance: runningBalance,
-        category: type === 'sale' ? 'Product Sales' :
-          type === 'purchase' ? 'Office Supplies' :
-            type === 'return' ? 'Returns' : 'Adjustments'
-      });
-    }
-
-    return transactions;
   }
 
   // --- Computed Properties ---
@@ -1038,10 +505,8 @@ export class AccountsMasterPage implements OnInit {
   }
 
   get filteredAccounts(): LedgerAccount[] {
-    // Use API accounts if available, otherwise fallback to mock ledgerAccounts
-    const accountsToFilter = this.apiAccounts.length > 0
-      ? this.mapApiAccountsToLedgerAccounts(this.apiAccounts)
-      : this.ledgerAccounts;
+    // Use distributors
+    const accountsToFilter = this.mapDistributorsToLedgerAccounts(this.distributors);
 
     if (!this.accountSearchQuery.trim()) {
       return accountsToFilter;
@@ -1062,6 +527,12 @@ export class AccountsMasterPage implements OnInit {
     this.accountSearchQuery = ''; // Clear search
     // Reset filters on new account selection
     this.resetFilters();
+    
+    // Load payment history from API if distributor ID exists
+    if (account.distributorId) {
+      this.loadPaymentHistory(account.distributorId);
+    }
+    
     this.showToast(`Selected ${account.name}`);
   }
 
@@ -1108,8 +579,8 @@ export class AccountsMasterPage implements OnInit {
   }
 
   handleRefresh() {
-    // Refresh accounts from API
-    this.loadAccountsFromApi();
+    // Refresh distributors from API
+    this.loadDistributors();
   }
 
   handleExport() {
@@ -1228,66 +699,93 @@ export class AccountsMasterPage implements OnInit {
 
   // --- Transaction Addition Logic (Update Balance) ---
   handleAddTransaction() {
-    if (!this.selectedAccount) return;
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) return;
 
     const { date, balanceType, description, reference, amount, paymentMethod, utrNumber, bankName, chequeNumber, transactionNumber, notes } = this.formData;
 
-    if (!description || !reference || !amount || !paymentMethod) {
+    if (!description || !reference || !amount) {
       this.showToast('Please fill required fields', 'danger');
       return;
     }
 
-    // Validate payment method specific fields
-    if ((paymentMethod === 'rtgs' || paymentMethod === 'neft') && !utrNumber) {
-      this.showToast('Please enter UTR Number', 'danger');
-      return;
-    }
-    if (paymentMethod === 'cheque' && (!bankName || !chequeNumber)) {
-      this.showToast('Please enter Bank Name and Cheque Number', 'danger');
-      return;
-    }
-    if ((paymentMethod === 'imps' || paymentMethod === 'upi') && !transactionNumber) {
-      this.showToast('Please enter Transaction Number', 'danger');
-      return;
+    // Validate payment method specific fields (only if payment method is selected)
+    if (paymentMethod) {
+      if ((paymentMethod === 'rtgs' || paymentMethod === 'neft') && !utrNumber) {
+        this.showToast('Please enter UTR Number', 'danger');
+        return;
+      }
+      if (paymentMethod === 'cheque' && (!bankName || !chequeNumber)) {
+        this.showToast('Please enter Bank Name and Cheque Number', 'danger');
+        return;
+      }
+      if ((paymentMethod === 'imps' || paymentMethod === 'upi') && !transactionNumber) {
+        this.showToast('Please enter Transaction Number', 'danger');
+        return;
+      }
     }
 
     const parsedAmount = parseFloat(amount);
     const isDebit = balanceType === 'debit';
     const debit = isDebit ? parsedAmount : 0;
     const credit = !isDebit ? parsedAmount : 0;
+    const transactionType = balanceType.toUpperCase(); // 'CREDIT' or 'DEBIT'
 
-    // Calculate new balance based on the last transaction
-    const lastTransaction = this.transactions[this.transactions.length - 1];
-    const previousBalance = lastTransaction ? lastTransaction.balance : this.selectedAccount.openingBalance;
-    const newBalance = previousBalance - debit + credit;
-
-    const newTransaction: Transaction = {
-      id: 'TEMP_' + new Date().getTime(),
-      date: date,
+    // Call API to update balance
+    this.ledgerService.updateBalance(
+      this.selectedAccount.distributorId,
+      parsedAmount,
       description,
-      reference,
-      type: balanceType,
-      debit,
-      credit,
-      balance: newBalance,
-      category: paymentMethod.toUpperCase(),
-      notes: notes || undefined,
-      paymentMethod: paymentMethod as Transaction['paymentMethod'],
-      utrNumber: utrNumber || undefined,
-      bankName: bankName || undefined,
-      chequeNumber: chequeNumber || undefined,
-      transactionNumber: transactionNumber || undefined,
-      receiptUrl: this.receiptFile ? URL.createObjectURL(this.receiptFile) : undefined
-    };
+      transactionType
+    ).subscribe({
+      next: (response: ApiResponse<any>) => {
+        console.log('Update Balance Response:', response);
+        
+        // Success if response is received without error (HTTP 200)
+        // Check success flag if it exists, otherwise treat as success
+        const isSuccess = response.success !== false;
+        
+        if (isSuccess && this.selectedAccount) {
+          // Calculate new balance based on the last transaction
+          const lastTransaction = this.transactions[this.transactions.length - 1];
+          const previousBalance = lastTransaction ? lastTransaction.balance : this.selectedAccount.openingBalance;
+          const newBalance = previousBalance - debit + credit;
 
-    // Add to the master list
-    this.selectedAccount.transactions.push(newTransaction);
+          const newTransaction: Transaction = {
+            id: 'TEMP_' + new Date().getTime(),
+            date: date,
+            description,
+            reference,
+            type: balanceType,
+            debit,
+            credit,
+            balance: newBalance,
+            category: paymentMethod ? paymentMethod.toUpperCase() : 'ADJUSTMENT',
+            notes: notes || undefined,
+            paymentMethod: paymentMethod as Transaction['paymentMethod'],
+            utrNumber: utrNumber || undefined,
+            bankName: bankName || undefined,
+            chequeNumber: chequeNumber || undefined,
+            transactionNumber: transactionNumber || undefined,
+            receiptUrl: this.receiptFile ? URL.createObjectURL(this.receiptFile) : undefined
+          };
 
-    this.showToast('Balance updated successfully', 'success');
-    this.isFormModalOpen = false;
-    this.resetForm();
-    // Go to the last page to see the new transaction
-    this.currentPage = this.totalPages;
+          // Add to the master list
+          this.selectedAccount.transactions.push(newTransaction);
+
+          this.showToast(response?.message || 'Balance updated successfully', 'success');
+          this.isFormModalOpen = false;
+          this.resetForm();
+          // Go to the last page to see the new transaction
+          this.currentPage = this.totalPages;
+        } else {
+          this.showToast(response?.message || 'Failed to update balance', 'danger');
+        }
+      },
+      error: (error: any) => {
+        console.error('Error updating balance:', error);
+        this.showToast(error?.error?.message || error?.message || 'Error updating balance', 'danger');
+      }
+    });
   }
 
   // Receipt file handling
@@ -1308,6 +806,36 @@ export class AccountsMasterPage implements OnInit {
     if (transaction.receiptUrl) {
       window.open(transaction.receiptUrl, '_blank');
     }
+  }
+
+  // Approve PI
+  handleApprovePI() {
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+
+    const accountId = this.selectedAccount.id;
+    const distributorId = this.selectedAccount.distributorId;
+    // Use account's salespersonId, or fallback to logged-in user's ID
+    const userId = localStorage.getItem('auth_user_id');
+    const salespersonId = this.selectedAccount.salespersonId || (userId ? Number(userId) : null);
+
+    if (!salespersonId) {
+      this.showToast('User ID not found. Please login again.', 'warning');
+      return;
+    }
+
+    this.ledgerService.approvePI(Number(accountId), distributorId, salespersonId).subscribe({
+      next: (response: any) => {
+        this.showToast('PI approved successfully', 'success');
+        console.log('Approve PI Response:', response);
+      },
+      error: (error: any) => {
+        console.error('Error approving PI:', error);
+        this.showToast(error?.error?.message || 'Error approving PI', 'danger');
+      }
+    });
   }
 
   // Ready to Dispatch

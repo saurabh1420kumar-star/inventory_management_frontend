@@ -35,21 +35,17 @@ ion-modal {
   }
 }
 
-// Scrollbar styling
+// Scrollbar styling - hide duplicate scrollbars
 ::-webkit-scrollbar {
-  width: 6px;
-  height: 6px;
+  width: 0px;
+  height: 0px;
+  display: none;
 }
 
 ::-webkit-scrollbar-track {
-  background: #161b22;
+  background: transparent;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #30363d;
-  border-radius: 3px;
-
-  &:hover {
-    background: #484f58;
-  }
+  background: transparent;
 }

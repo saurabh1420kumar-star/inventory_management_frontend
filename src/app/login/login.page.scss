@@ -1,9 +1,23 @@
 /* src/app/pages/nexus-login/nexus-login.page.scss */
 
+:host {
+  display: flex;
+  flex-direction: column;
+  height: 100%;
+}
+
 ion-content {
   --background: radial-gradient(circle at top left, #3880ff1a, transparent),
     radial-gradient(circle at bottom right, #0cd1e81a, transparent),
     var(--ion-color-light);
+  --overflow: auto;
+}
+
+// Hide browser scrollbar on this light page
+::-webkit-scrollbar {
+  width: 0;
+  height: 0;
+  display: none;
 }
 .error-text {
   color: red;

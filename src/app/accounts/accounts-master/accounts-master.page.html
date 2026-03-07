@@ -462,24 +462,18 @@
         </div>
       </div>
 
-      <!-- Ready to Dispatch Section -->
-      <div *ngIf="selectedAccount" class="mt-6 bg-gradient-to-r from-emerald-50 via-teal-50 to-cyan-50 rounded-2xl shadow-sm border border-emerald-200 p-6">
-        <div class="flex flex-col sm:flex-row items-center justify-between gap-4">
-          <div class="flex items-center gap-3">
-            <div class="w-12 h-12 rounded-xl bg-emerald-100 flex items-center justify-center">
-              <ion-icon name="rocket-outline" class="text-emerald-600 text-2xl"></ion-icon>
-            </div>
-            <div>
-              <h3 class="text-base font-bold text-slate-800">Ready to Dispatch?</h3>
-              <p class="text-xs text-slate-500">Mark this order as ready for dispatch to proceed</p>
-            </div>
-          </div>
-          <button (click)="isDispatchModalOpen = true"
-            class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
-            <ion-icon name="send-outline" class="text-lg"></ion-icon>
-            Ready to Dispatch
-          </button>
-        </div>
+      <!-- Approve PI & Ready to Dispatch Buttons -->
+      <div *ngIf="selectedAccount" class="mt-6 flex items-center justify-end gap-3">
+        <button (click)="handleApprovePI()"
+          class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+          <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+          Approve PI
+        </button>
+        <button (click)="isDispatchModalOpen = true"
+          class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+          <ion-icon name="send-outline" class="text-lg"></ion-icon>
+          Ready to Dispatch
+        </button>
       </div>
 
     </div>
@@ -606,11 +600,11 @@
             <div class="txn-field-group">
               <label class="txn-field-label">
                 <ion-icon name="card-outline" class="text-blue-500"></ion-icon>
-                Transaction Type <span class="text-red-400">*</span>
+                Transaction Type <span class="text-xs text-slate-400 font-normal ml-1">(optional)</span>
               </label>
               <div class="grid grid-cols-5 gap-3">
                 <button type="button" *ngFor="let pm of paymentMethods"
-                  (click)="formData.paymentMethod = $any(pm.value)"
+                  (click)="formData.paymentMethod === pm.value ? formData.paymentMethod = '' : formData.paymentMethod = $any(pm.value)"
                   [class]="formData.paymentMethod === pm.value
                     ? 'txn-type-btn txn-type-active-' + pm.color
                     : 'txn-type-btn txn-type-inactive'"
