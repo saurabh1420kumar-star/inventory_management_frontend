@@ -1,18 +1,18 @@
 :host {
-  --ion-background-color: #f8fafc;
-  --ion-text-color: #0f172a;
+  --ion-background-color: #0d1117;
+  --ion-text-color: #e2e8f0;
 }
 
 ion-content {
-  --background: #f8fafc;
+  --background: #0d1117;
 }
 
 .metric-card {
   transition: all 0.3s ease;
 
   &:hover {
-    transform: translateY(-4px);
-    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.1);
+    transform: translateY(-2px);
+    box-shadow: 0 12px 30px rgba(16, 185, 129, 0.1);
   }
 }
 

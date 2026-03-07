@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
   cartOutline,
@@ -11,7 +12,10 @@ import {
   trashOutline,
   checkmarkOutline,
   cubeOutline,
-  pricetagOutline
+  pricetagOutline,
+  gridOutline,
+  personOutline,
+  appsOutline
 } from 'ionicons/icons';
 import { CartService, Product, CartItem, CartItemPayload } from '../services/cart.service';
 import { Auth } from '../services/auth';
@@ -58,7 +62,8 @@ export class DistributorCartPage implements OnInit {
     private fb: FormBuilder,
     private cartService: CartService,
     private modalCtrl: ModalController,
-    private auth: Auth
+    private auth: Auth,
+    private router: Router
   ) {
     addIcons({
       'cart-outline': cartOutline,
@@ -68,7 +73,10 @@ export class DistributorCartPage implements OnInit {
       'trash-outline': trashOutline,
       'checkmark-outline': checkmarkOutline,
       'cube-outline': cubeOutline,
-      'pricetag-outline': pricetagOutline
+      'pricetag-outline': pricetagOutline,
+      'grid-outline': gridOutline,
+      'person-outline': personOutline,
+      'apps-outline': appsOutline
     });
   }
 
@@ -257,5 +265,9 @@ export class DistributorCartPage implements OnInit {
       return `${fieldName.replace(/([A-Z])/g, ' $1')} is required`;
     }
     return '';
+  }
+
+  goToDashboard() {
+    this.router.navigate(['/dashboard']);
   }
 }

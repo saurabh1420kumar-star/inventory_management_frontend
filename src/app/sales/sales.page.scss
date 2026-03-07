@@ -1,8 +1,14 @@
 :host {
+  --ion-background-color: #0d1117;
+  --ion-text-color: #e2e8f0;
   --ion-safe-area-left: 0;
   --ion-safe-area-right: 0;
   --ion-safe-area-top: 0;
   --ion-safe-area-bottom: 0;
+}
+
+ion-content {
+  --background: #0d1117;
 }
 
 .custom-modal {
@@ -16,7 +22,7 @@
 /* Accordion styles */
 [data-distributor] {
   &:hover {
-    background-color: rgb(248, 250, 252);
+    background-color: rgba(255, 255, 255, 0.02);
   }
 }
 
@@ -46,4 +52,16 @@ ion-input, ion-select {
   --padding-end: 0;
   --padding-top: 0;
   --padding-bottom: 0;
+}
+
+/* Dark scrollbar */
+::-webkit-scrollbar {
+  width: 4px;
+}
+::-webkit-scrollbar-track {
+  background: #161b22;
+}
+::-webkit-scrollbar-thumb {
+  background: #30363d;
+  border-radius: 4px;
 }

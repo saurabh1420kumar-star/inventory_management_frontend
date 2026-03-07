@@ -1,14 +1,15 @@
-<!-- HEADER -->
+﻿<!-- HEADER -->
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+  <ion-toolbar style="--background: rgba(13,17,23,0.95); --border-width: 0; backdrop-filter: blur(20px);">
     <ion-buttons slot="start">
-      <ion-menu-button class="text-slate-600 hover:text-blue-500 transition-colors"></ion-menu-button>
+      <ion-menu-button style="color: #e2e8f0;"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
-      <span class="text-emerald-600">Sales</span> Management
+    <ion-title>
+      <span style="color: #10b981; font-weight: 800; font-size: 1.125rem; letter-spacing: -0.025em;">Sales</span>
+      <span style="color: #e2e8f0; font-weight: 700; font-size: 1.125rem;"> Management</span>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="refreshSales()" class="text-slate-500 hover:text-emerald-600 transition-colors bg-slate-50 rounded-full w-10 h-10">
+      <ion-button (click)="refreshSales()" style="--color: #64748b;" class="w-10 h-10">
         <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -16,21 +17,24 @@
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content class="bg-slate-50">
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/50 to-teal-50/30 pb-20">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
-      
-      <!-- Hero Section -->
-      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
-        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-teal-500/20 blur-3xl"></div>
+<ion-content style="--background: #0d1117;">
+  <div class="min-h-screen pb-20" style="background: #0d1117;">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
 
-        <div class="relative px-5 py-6 sm:px-8 sm:py-8">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+      <!-- Hero Banner Glass Card -->
+      <div class="relative rounded-2xl overflow-hidden mb-6"
+        style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); backdrop-filter: blur(16px); box-shadow: 0 0 40px rgba(16,185,129,0.06);">
+        <!-- Decorative orbs -->
+        <div class="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full" style="background: rgba(16,185,129,0.06); filter: blur(40px);"></div>
+        <div class="absolute bottom-0 left-0 -ml-12 -mb-12 w-48 h-48 rounded-full" style="background: rgba(6,182,212,0.04); filter: blur(40px);"></div>
+
+        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
             <div>
-              <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Sales Management</h1>
-              <p class="text-cyan-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
-                <ion-icon name="bar-chart-outline" class="text-lg"></ion-icon>
+              <h1 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">Sales Management</h1>
+              <p class="text-xs font-medium flex items-center gap-2 w-fit px-3 py-1.5 rounded-full"
+                style="color: rgba(16,185,129,0.9); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); backdrop-filter: blur(8px);">
+                <ion-icon name="bar-chart-outline" class="text-sm"></ion-icon>
                 Track Distributors & Sales Performance
               </p>
             </div>
@@ -39,74 +43,72 @@
       </div>
 
       <!-- ERROR -->
-      <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 rounded-2xl p-6 mb-8">
+      <div *ngIf="errorMessage" class="rounded-xl p-4 mb-6"
+        style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
         <div class="flex items-center gap-3">
-          <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl"></ion-icon>
-          <p class="text-rose-700 font-medium">{{ errorMessage }}</p>
+          <ion-icon name="alert-circle-outline" style="color: #f43f5e;" class="text-2xl"></ion-icon>
+          <p style="color: #fb7185;" class="font-medium text-sm">{{ errorMessage }}</p>
         </div>
       </div>
 
       <!-- STATS -->
-      <div class="grid grid-cols-1 sm:grid-cols-3 gap-4 mb-8">
-        <div *ngFor="let stat of statCards" class="bg-white rounded-2xl p-4 sm:p-6 shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:border-emerald-200 transition-all duration-300 group">
-          <div class="flex items-center justify-between mb-4">
-            <div 
-              [class]="'w-12 h-12 rounded-xl flex items-center justify-center group-hover:scale-110 transition-transform'"
-              [class.bg-emerald-50]="stat.color === 'emerald'"
-              [class.text-emerald-500]="stat.color === 'emerald'"
-              [class.bg-teal-50]="stat.color === 'green'"
-              [class.text-teal-500]="stat.color === 'green'"
-              [class.bg-slate-100]="stat.color === 'slate'"
-              [class.text-slate-500]="stat.color === 'slate'"
-            >
-              <ion-icon [name]="stat.icon" class="text-2xl"></ion-icon>
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div *ngFor="let stat of statCards" class="rounded-xl p-3 sm:p-4 transition-all duration-300"
+          style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+          <div class="flex items-center justify-between mb-3">
+            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center"
+              [style.background]="stat.color === 'emerald' ? 'rgba(16,185,129,0.15)' : stat.color === 'green' ? 'rgba(20,184,166,0.15)' : 'rgba(100,116,139,0.15)'"
+              [style.border]="stat.color === 'emerald' ? '1px solid rgba(16,185,129,0.25)' : stat.color === 'green' ? '1px solid rgba(20,184,166,0.25)' : '1px solid rgba(100,116,139,0.25)'">
+              <ion-icon [name]="stat.icon" class="text-lg sm:text-xl"
+                [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#94a3b8'">
+              </ion-icon>
             </div>
           </div>
-          <h3 class="text-slate-500 text-xs font-bold uppercase tracking-wider mb-1">{{ stat.label }}</h3>
-          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+          <h3 class="text-xs font-bold uppercase tracking-wider mb-1" style="color: #64748b;">{{ stat.label }}</h3>
+          <p class="text-lg sm:text-xl font-bold text-white">{{ stat.value }}</p>
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════ -->
-      <!-- SEARCH BAR                                                -->
-      <!-- ═══════════════════════════════════════════════════════════ -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-6">
-        <div class="flex-1 w-full relative group">
-          <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-emerald-500 transition-colors"></ion-icon>
-          <input 
+      <!-- SEARCH BAR -->
+      <div class="rounded-xl p-3 mb-5"
+        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="flex-1 w-full relative">
+          <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-lg z-10" style="color: #475569;"></ion-icon>
+          <input
             type="text"
             [(ngModel)]="orderSearchTerm"
-            placeholder="Search orders by number, distributor, or sales person..."
-            class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200 text-sm"
+            placeholder="Search orders..."
+            class="w-full rounded-lg py-2.5 pl-10 pr-4 outline-none text-sm font-medium"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; backdrop-filter: blur(8px);"
           />
         </div>
       </div>
 
-      <!-- ═══════════════════════════════════════════════════════════ -->
-      <!-- ORDER APPROVAL REQUESTS SECTION                           -->
-      <!-- ═══════════════════════════════════════════════════════════ -->
-      <div class="mb-10">
+      <!-- ORDER APPROVAL SECTION -->
+      <div class="mb-8">
 
         <!-- Section Header -->
-        <div class="flex items-center justify-between mb-4 sm:mb-5">
+        <div class="flex items-center justify-between mb-4">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200">
-              <ion-icon name="clipboard-outline" class="text-lg sm:text-xl text-white"></ion-icon>
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+              style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+              <ion-icon name="clipboard-outline" class="text-lg" style="color: #10b981;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-lg sm:text-xl font-bold text-slate-800 leading-tight">Order Approval Requests</h2>
-              <p class="text-xs text-slate-500 hidden sm:block">Review and approve orders placed by distributors</p>
+              <h2 class="text-base sm:text-lg font-bold text-white leading-tight">Order Approval</h2>
+              <p class="text-xs hidden sm:block" style="color: #64748b;">Review orders from distributors</p>
             </div>
           </div>
-          <!-- Pending badge -->
           <span *ngIf="orderTabCounts['pending'] > 0"
-            class="flex items-center gap-1.5 bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full animate-pulse">
-            <span class="w-2 h-2 rounded-full bg-amber-500 inline-block"></span>
+            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse"
+            style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
+            <span class="w-1.5 h-1.5 rounded-full inline-block" style="background: #f59e0b;"></span>
             {{ orderTabCounts['pending'] }} Pending
           </span>
           <span *ngIf="orderTabCounts['pending'] === 0"
-            class="flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full">
-            <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
+            style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">
+            <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
             All Reviewed
           </span>
         </div>
@@ -115,31 +117,23 @@
         <div class="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
           <button
             *ngFor="let tab of [
-              { key: 'pending', label: 'Pending', count: orderTabCounts['pending'], dot: 'bg-amber-400' },
-              { key: 'approved', label: 'Approved', count: orderTabCounts['approved'], dot: 'bg-emerald-400' },
-              { key: 'pi-ready', label: 'PI Ready', count: orderTabCounts['pi-ready'], dot: 'bg-teal-400' },
-              { key: 'rejected', label: 'Rejected', count: orderTabCounts['rejected'], dot: 'bg-rose-400' },
-              { key: 'all', label: 'All Orders', count: orderTabCounts['all'], dot: 'bg-slate-400' }
+              { key: 'pending', label: 'Pending', count: orderTabCounts['pending'], dotColor: '#f59e0b' },
+              { key: 'approved', label: 'Approved', count: orderTabCounts['approved'], dotColor: '#10b981' },
+              { key: 'pi-ready', label: 'PI Ready', count: orderTabCounts['pi-ready'], dotColor: '#14b8a6' },
+              { key: 'rejected', label: 'Rejected', count: orderTabCounts['rejected'], dotColor: '#f43f5e' },
+              { key: 'all', label: 'All', count: orderTabCounts['all'], dotColor: '#94a3b8' }
             ]"
             (click)="orderFilterTab = $any(tab.key)"
-            [class.bg-white]="orderFilterTab !== tab.key"
-            [class.shadow-sm]="orderFilterTab !== tab.key"
-            [class.border-slate-200]="orderFilterTab !== tab.key"
-            [class.text-slate-600]="orderFilterTab !== tab.key"
-            [class.bg-gradient-to-r]="orderFilterTab === tab.key"
-            [class.from-emerald-500]="orderFilterTab === tab.key"
-            [class.to-teal-600]="orderFilterTab === tab.key"
-            [class.text-white]="orderFilterTab === tab.key"
-            [class.border-transparent]="orderFilterTab === tab.key"
-            [class.shadow-lg]="orderFilterTab === tab.key"
-            [class.shadow-emerald-200]="orderFilterTab === tab.key"
-            class="flex items-center gap-2 px-4 py-2 rounded-xl border text-sm font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0">
-            <span [class]="tab.dot + ' w-2 h-2 rounded-full inline-block'"></span>
+            class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 whitespace-nowrap flex-shrink-0"
+            [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'"
+            [style.border]="orderFilterTab === tab.key ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)'"
+            [style.color]="orderFilterTab === tab.key ? '#10b981' : '#94a3b8'"
+            [style.box-shadow]="orderFilterTab === tab.key ? '0 0 15px rgba(16,185,129,0.1)' : 'none'">
+            <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tab.dotColor"></span>
             {{ tab.label }}
-            <span [class]="orderFilterTab === tab.key
-              ? 'bg-white/25 text-white'
-              : 'bg-slate-100 text-slate-600'"
-              class="text-xs font-bold px-1.5 py-0.5 rounded-full">
+            <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+              [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'"
+              [style.color]="orderFilterTab === tab.key ? '#10b981' : '#64748b'">
               {{ tab.count }}
             </span>
           </button>
@@ -149,39 +143,25 @@
         <div *ngIf="filteredOrderSummaries.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             *ngFor="let order of filteredOrderSummaries"
-            class="group bg-white rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg hover:-translate-y-0.5"
-            [class.border-amber-200]="order.status === 'pending'"
-            [class.border-emerald-200]="order.status === 'approved'"
-            [class.border-teal-200]="order.status === 'pi-ready'"
-            [class.border-rose-200]="order.status === 'rejected'"
-            [class.shadow-amber-50]="order.status === 'pending'"
-            [class.shadow-emerald-50]="order.status === 'approved'"
-            [class.shadow-teal-50]="order.status === 'pi-ready'"
-            [class.shadow-rose-50]="order.status === 'rejected'"
-            style="box-shadow: 0 4px 20px rgb(0,0,0,0.04);">
+            class="rounded-xl overflow-hidden transition-all duration-300"
+            [style.background]="'rgba(255,255,255,0.04)'"
+            [style.border]="order.status === 'pending' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'approved' ? '1px solid rgba(16,185,129,0.2)' : order.status === 'pi-ready' ? '1px solid rgba(20,184,166,0.2)' : '1px solid rgba(244,63,94,0.2)'"
+            style="backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
 
             <!-- Card Top Accent Bar -->
-            <div class="h-1 w-full"
-              [class.bg-gradient-to-r]="true"
-              [class.from-amber-400]="order.status === 'pending'"
-              [class.to-orange-400]="order.status === 'pending'"
-              [class.from-emerald-400]="order.status === 'approved'"
-              [class.to-teal-400]="order.status === 'approved'"
-              [class.from-teal-400]="order.status === 'pi-ready'"
-              [class.to-cyan-400]="order.status === 'pi-ready'"
-              [class.from-rose-400]="order.status === 'rejected'"
-              [class.to-pink-400]="order.status === 'rejected'">
+            <div class="h-0.5 w-full"
+              [style.background]="order.status === 'pending' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'approved' ? 'linear-gradient(to right, #10b981, #14b8a6)' : order.status === 'pi-ready' ? 'linear-gradient(to right, #14b8a6, #06b6d4)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
             </div>
 
-            <div class="p-5">
+            <div class="p-4">
 
-              <!-- Card Header: Order Number + Status Badge -->
-              <div class="flex items-start justify-between mb-4">
+              <!-- Card Header -->
+              <div class="flex items-start justify-between mb-3">
                 <div>
-                  <p class="text-xs text-slate-400 font-medium uppercase tracking-wider mb-1">Order Number</p>
-                  <h3 class="text-lg font-bold text-slate-800 tracking-tight">{{ order.orderNumber }}</h3>
-                  <p class="text-xs text-slate-400 mt-0.5 flex items-center gap-1">
-                    <ion-icon name="calendar-outline" class="text-sm"></ion-icon>
+                  <p class="text-xs font-medium uppercase tracking-wider mb-0.5" style="color: #475569;">Order</p>
+                  <h3 class="text-sm font-bold text-white tracking-tight">{{ order.orderNumber }}</h3>
+                  <p class="text-xs mt-0.5 flex items-center gap-1" style="color: #475569;">
+                    <ion-icon name="calendar-outline" class="text-xs"></ion-icon>
                     {{ order.orderDate | date: 'dd MMM yyyy' }}
                   </p>
                 </div>
@@ -189,215 +169,181 @@
                 <!-- Status Badge -->
                 <div>
                   <span *ngIf="order.status === 'pending'"
-                    class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold px-3 py-1.5 rounded-full">
-                    <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-ping inline-block"></span>
+                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+                    style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
+                    <span class="w-1.5 h-1.5 rounded-full animate-ping inline-block" style="background: #f59e0b;"></span>
                     Pending
                   </span>
                   <span *ngIf="order.status === 'approved'"
-                    class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full">
-                    <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+                    style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">
+                    <ion-icon name="checkmark-circle-outline" class="text-xs"></ion-icon>
                     Approved
                   </span>
                   <span *ngIf="order.status === 'pi-ready'"
-                    class="inline-flex items-center gap-1.5 bg-teal-50 text-teal-600 border border-teal-200 text-xs font-bold px-3 py-1.5 rounded-full">
-                    <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
+                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+                    style="background: rgba(20,184,166,0.1); color: #14b8a6; border: 1px solid rgba(20,184,166,0.25);">
+                    <ion-icon name="document-text-outline" class="text-xs"></ion-icon>
                     PI Ready
                   </span>
                   <span *ngIf="order.status === 'rejected'"
-                    class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-full">
-                    <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
+                    style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.25);">
+                    <ion-icon name="close-circle-outline" class="text-xs"></ion-icon>
                     Rejected
                   </span>
                 </div>
               </div>
 
               <!-- Divider -->
-              <div class="border-t border-slate-100 mb-4"></div>
+              <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
 
               <!-- Distributor Info -->
-              <div class="flex items-center gap-3 mb-4 rounded-xl p-3"
-                [class.bg-amber-50]="order.status === 'pending'"
-                [class.bg-emerald-50]="order.status === 'approved'"
-                [class.bg-teal-50]="order.status === 'pi-ready'"
-                [class.bg-rose-50]="order.status === 'rejected'">
-                <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+              <div class="flex items-center gap-3 mb-3 rounded-lg p-2.5"
+                [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.06)' : order.status === 'approved' ? 'rgba(16,185,129,0.06)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.06)' : 'rgba(244,63,94,0.06)'"
+                [style.border]="'1px solid rgba(255,255,255,0.04)'">
+                <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                  style="background: linear-gradient(135deg, #10b981, #14b8a6);">
                   {{ order.distributorName.charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs text-slate-400 font-medium uppercase tracking-wider">From Distributor</p>
-                  <p class="text-sm font-bold text-slate-800 truncate">{{ order.distributorName }}</p>
-                  <p class="text-xs text-slate-500 truncate flex items-center gap-1">
-                    <ion-icon name="person-outline" class="text-xs text-emerald-400"></ion-icon>
+                  <p class="text-xs font-medium uppercase tracking-wider" style="color: #475569;">Distributor</p>
+                  <p class="text-xs font-bold text-white truncate">{{ order.distributorName }}</p>
+                  <p class="text-xs truncate flex items-center gap-1" style="color: #64748b;">
+                    <ion-icon name="person-outline" class="text-xs" style="color: #10b981;"></ion-icon>
                     {{ order.salesPersonName }}
                   </p>
                 </div>
-                <div class="flex-shrink-0">
-                  <ion-icon name="storefront-outline" class="text-xl text-emerald-300"></ion-icon>
-                </div>
               </div>
 
-              <!-- Order Items (Collapsible) -->
-              <div class="mb-4">
+              <!-- Order Items Collapsible -->
+              <div class="mb-3">
                 <button
                   (click)="toggleOrderExpand(order.id)"
-                  class="w-full flex items-center justify-between text-sm font-semibold rounded-xl px-3 py-2.5 transition-colors mb-2"
-                  [class.bg-amber-50]="order.status === 'pending'"
-                  [class.text-amber-700]="order.status === 'pending'"
-                  [class.bg-emerald-50]="order.status === 'approved'"
-                  [class.text-emerald-700]="order.status === 'approved'"
-                  [class.bg-teal-50]="order.status === 'pi-ready'"
-                  [class.text-teal-700]="order.status === 'pi-ready'"
-                  [class.bg-rose-50]="order.status === 'rejected'"
-                  [class.text-rose-700]="order.status === 'rejected'">
+                  class="w-full flex items-center justify-between text-xs font-bold rounded-lg px-3 py-2 transition-colors mb-2"
+                  [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.08)' : order.status === 'approved' ? 'rgba(16,185,129,0.08)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.08)' : 'rgba(244,63,94,0.08)'"
+                  [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'"
+                  [style.border]="'1px solid rgba(255,255,255,0.04)'">
                   <span class="flex items-center gap-2">
-                    <ion-icon name="cube-outline" class="text-emerald-500 text-base"></ion-icon>
+                    <ion-icon name="cube-outline" class="text-sm"></ion-icon>
                     {{ order.items.length }} Item{{ order.items.length !== 1 ? 's' : '' }}
                   </span>
                   <ion-icon
                     [name]="isOrderExpanded(order.id) ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-400 transition-transform text-base">
+                    class="text-sm" style="color: #64748b;">
                   </ion-icon>
                 </button>
 
                 <!-- Items List -->
-                <div *ngIf="isOrderExpanded(order.id)" class="rounded-xl border border-slate-100 overflow-hidden">
-                  <!-- Desktop Table Header -->
-                  <div class="hidden sm:grid grid-cols-12 bg-slate-50 px-3 py-2 text-xs font-bold text-slate-400 uppercase tracking-wider border-b border-slate-100">
-                    <span class="col-span-5">Product</span>
-                    <span class="col-span-2 text-center">Qty</span>
-                    <span class="col-span-2 text-right">Price</span>
-                    <span class="col-span-3 text-right">Total</span>
-                  </div>
-                  <!-- Desktop Rows -->
+                <div *ngIf="isOrderExpanded(order.id)" class="rounded-lg overflow-hidden"
+                  style="border: 1px solid rgba(255,255,255,0.06);">
                   <div *ngFor="let item of order.items; let last = last"
-                    class="hidden sm:grid grid-cols-12 px-3 py-2.5 text-sm items-center"
-                    [class.border-b]="!last"
-                    [class.border-slate-50]="!last">
-                    <span class="col-span-5 text-slate-700 font-medium truncate pr-2">{{ item.productName }}</span>
-                    <span class="col-span-2 text-center text-slate-500 font-semibold">{{ item.quantity }}</span>
-                    <span class="col-span-2 text-right text-slate-500">₹{{ item.unitPrice.toLocaleString() }}</span>
-                    <span class="col-span-3 text-right text-slate-800 font-bold">₹{{ getLineTotal(item).toLocaleString() }}</span>
-                  </div>
-                  <!-- Mobile Stacked -->
-                  <div *ngFor="let item of order.items; let last = last"
-                    class="sm:hidden p-3"
-                    [class.border-b]="!last"
-                    [class.border-slate-50]="!last">
-                    <p class="text-sm font-medium text-slate-700 mb-1">{{ item.productName }}</p>
-                    <div class="flex justify-between text-xs text-slate-500">
-                      <span>{{ item.quantity }} × ₹{{ item.unitPrice.toLocaleString() }}</span>
-                      <span class="font-bold text-slate-800">₹{{ getLineTotal(item).toLocaleString() }}</span>
+                    class="p-3"
+                    [style.border-bottom]="!last ? '1px solid rgba(255,255,255,0.04)' : 'none'">
+                    <p class="text-xs font-medium text-white mb-1">{{ item.productName }}</p>
+                    <div class="flex justify-between text-xs" style="color: #64748b;">
+                      <span>{{ item.quantity }} x &#8377;{{ item.unitPrice.toLocaleString() }}</span>
+                      <span class="font-bold text-white">&#8377;{{ getLineTotal(item).toLocaleString() }}</span>
                     </div>
                   </div>
                 </div>
               </div>
 
               <!-- Total Amount -->
-              <div class="flex items-center justify-between bg-gradient-to-r rounded-xl px-4 py-3 mb-4"
-                [class.from-amber-50]="order.status === 'pending'"
-                [class.to-orange-50]="order.status === 'pending'"
-                [class.from-emerald-50]="order.status === 'approved'"
-                [class.to-teal-50]="order.status === 'approved'"
-                [class.from-teal-50]="order.status === 'pi-ready'"
-                [class.to-cyan-50]="order.status === 'pi-ready'"
-                [class.from-rose-50]="order.status === 'rejected'"
-                [class.to-pink-50]="order.status === 'rejected'">
+              <div class="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3"
+                [style.background]="order.status === 'pending' ? 'rgba(245,158,11,0.08)' : order.status === 'approved' ? 'rgba(16,185,129,0.08)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.08)' : 'rgba(244,63,94,0.08)'"
+                [style.border]="'1px solid rgba(255,255,255,0.04)'">
                 <div class="flex items-center gap-2">
-                  <ion-icon name="receipt-outline"
-                    class="text-lg"
-                    [class.text-amber-500]="order.status === 'pending'"
-                    [class.text-emerald-500]="order.status === 'approved'"
-                    [class.text-teal-500]="order.status === 'pi-ready'"
-                    [class.text-rose-500]="order.status === 'rejected'">
+                  <ion-icon name="receipt-outline" class="text-base"
+                    [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'">
                   </ion-icon>
-                  <span class="text-xs font-bold text-slate-500 uppercase tracking-wider">Order Total</span>
+                  <span class="text-xs font-bold uppercase tracking-wider" style="color: #64748b;">Total</span>
                 </div>
-                <span class="text-xl font-extrabold"
-                  [class.text-amber-600]="order.status === 'pending'"
-                  [class.text-emerald-600]="order.status === 'approved'"
-                  [class.text-teal-600]="order.status === 'pi-ready'"
-                  [class.text-rose-600]="order.status === 'rejected'">
-                  ₹{{ order.totalAmount.toLocaleString() }}
+                <span class="text-base font-extrabold"
+                  [style.color]="order.status === 'pending' ? '#f59e0b' : order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'">
+                  &#8377;{{ order.totalAmount.toLocaleString() }}
                 </span>
               </div>
 
-              <!-- Remarks (if processed) -->
+              <!-- Remarks -->
               <div *ngIf="order.remarks && order.status !== 'pending'"
-                class="flex items-start gap-2 rounded-xl px-3 py-2.5 mb-4 text-xs"
-                [class.bg-emerald-50]="order.status === 'approved'"
-                [class.text-emerald-700]="order.status === 'approved'"
-                [class.bg-teal-50]="order.status === 'pi-ready'"
-                [class.text-teal-700]="order.status === 'pi-ready'"
-                [class.bg-rose-50]="order.status === 'rejected'"
-                [class.text-rose-700]="order.status === 'rejected'">
-                <ion-icon name="chatbubble-ellipses-outline" class="text-base flex-shrink-0 mt-0.5"></ion-icon>
+                class="flex items-start gap-2 rounded-lg px-3 py-2 mb-3 text-xs"
+                [style.background]="order.status === 'approved' ? 'rgba(16,185,129,0.06)' : order.status === 'pi-ready' ? 'rgba(20,184,166,0.06)' : 'rgba(244,63,94,0.06)'"
+                [style.color]="order.status === 'approved' ? '#10b981' : order.status === 'pi-ready' ? '#14b8a6' : '#f43f5e'"
+                style="border: 1px solid rgba(255,255,255,0.04);">
+                <ion-icon name="chatbubble-ellipses-outline" class="text-sm flex-shrink-0 mt-0.5"></ion-icon>
                 <span class="font-medium">{{ order.remarks }}</span>
               </div>
 
-              <!-- PI Info (if pi-ready) -->
+              <!-- PI Info -->
               <div *ngIf="order.status === 'pi-ready' && order.piNumber"
-                class="flex items-center gap-3 bg-teal-50 rounded-xl px-3 py-2.5 mb-4">
-                <ion-icon name="document-text-outline" class="text-teal-500 text-lg flex-shrink-0"></ion-icon>
+                class="flex items-center gap-3 rounded-lg px-3 py-2.5 mb-3"
+                style="background: rgba(20,184,166,0.08); border: 1px solid rgba(20,184,166,0.15);">
+                <ion-icon name="document-text-outline" style="color: #14b8a6;" class="text-base flex-shrink-0"></ion-icon>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs text-teal-400 font-bold uppercase tracking-wider">Proforma Invoice</p>
-                  <p class="text-sm font-bold text-teal-700">{{ order.piNumber }}</p>
+                  <p class="text-xs font-bold uppercase tracking-wider" style="color: #14b8a6;">Proforma Invoice</p>
+                  <p class="text-xs font-bold text-white">{{ order.piNumber }}</p>
                 </div>
-                <span *ngIf="order.piDate" class="text-xs text-teal-500 font-medium flex-shrink-0">{{ order.piDate | date:'dd MMM yyyy' }}</span>
+                <span *ngIf="order.piDate" class="text-xs font-medium flex-shrink-0" style="color: #14b8a6;">{{ order.piDate | date:'dd MMM yyyy' }}</span>
               </div>
 
-              <!-- Divider -->
-              <div class="border-t border-slate-100 mb-4"></div>
+              <!-- Divider before actions -->
+              <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
 
-              <!-- Action Buttons -->
-              <div *ngIf="order.status === 'pending'" class="flex gap-3">
-                <!-- Approve -->
+              <!-- Action Buttons: Pending -->
+              <div *ngIf="order.status === 'pending'" class="flex gap-2">
                 <button
                   (click)="approveOrder(order)"
-                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 shadow-md shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-300 active:scale-95">
-                  <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.25);">
+                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
                   Approve
                 </button>
-                <!-- Reject -->
                 <button
                   (click)="openRejectModal(order)"
-                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 shadow-md shadow-rose-200 hover:shadow-lg hover:shadow-rose-300 active:scale-95">
-                  <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
+                  <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
                   Reject
                 </button>
               </div>
 
-              <!-- Generate Proforma Invoice (approved orders) -->
-              <div *ngIf="order.status === 'approved'" class="flex gap-3">
+              <!-- Action: Approved - Generate PI -->
+              <div *ngIf="order.status === 'approved'" class="flex gap-2">
                 <button
                   (click)="generateProformaInvoice(order)"
-                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 shadow-md shadow-teal-200 hover:shadow-lg hover:shadow-teal-300 active:scale-95">
-                  <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  style="background: linear-gradient(135deg, #14b8a6, #06b6d4); box-shadow: 0 4px 15px rgba(20,184,166,0.25);">
+                  <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
                   Generate Proforma Invoice
                 </button>
               </div>
 
-              <!-- PI Ready State -->
-              <div *ngIf="order.status === 'pi-ready'" class="flex gap-3">
-                <div class="flex-1 flex items-center gap-2 rounded-xl py-3 px-3 text-sm font-bold bg-teal-50 text-teal-600">
-                  <ion-icon name="checkmark-done-circle-outline" class="text-lg flex-shrink-0"></ion-icon>
-                  <span>Proforma Invoice Generated</span>
+              <!-- PI Ready state -->
+              <div *ngIf="order.status === 'pi-ready'" class="flex gap-2">
+                <div class="flex-1 flex items-center gap-2 rounded-lg py-2 px-3 text-xs font-bold"
+                  style="background: rgba(20,184,166,0.08); color: #14b8a6; border: 1px solid rgba(20,184,166,0.15);">
+                  <ion-icon name="checkmark-done-circle-outline" class="text-sm flex-shrink-0"></ion-icon>
+                  <span>PI Generated</span>
                   <span *ngIf="order.piDate" class="text-xs font-normal opacity-70 ml-auto flex-shrink-0">{{ order.piDate | date:'dd MMM' }}</span>
                 </div>
                 <button
                   (click)="downloadProformaInvoice(order)"
-                  class="flex items-center justify-center gap-1.5 bg-teal-500 hover:bg-teal-600 text-white font-bold text-sm rounded-xl px-4 py-3 active:scale-95 transition-all duration-200 shadow-md shadow-teal-200 flex-shrink-0">
-                  <ion-icon name="download-outline" class="text-lg"></ion-icon>
-                  <span>PI</span>
+                  class="flex items-center justify-center gap-1 text-white font-bold text-xs rounded-lg px-3 py-2 active:scale-95 transition-all duration-200 flex-shrink-0"
+                  style="background: linear-gradient(135deg, #14b8a6, #06b6d4); box-shadow: 0 4px 15px rgba(20,184,166,0.25);">
+                  <ion-icon name="download-outline" class="text-sm"></ion-icon>
+                  PI
                 </button>
               </div>
 
-              <!-- Rejected State -->
+              <!-- Rejected state -->
               <div *ngIf="order.status === 'rejected'"
-                class="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold bg-rose-50 text-rose-600">
-                <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
-                Order Rejected
+                class="flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold"
+                style="background: rgba(244,63,94,0.08); color: #f43f5e; border: 1px solid rgba(244,63,94,0.15);">
+                <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+                Rejected
                 <span *ngIf="order.processedAt" class="text-xs font-normal opacity-70">
-                  · {{ order.processedAt | date:'dd MMM, h:mm a' }}
+                  &middot; {{ order.processedAt | date:'dd MMM, h:mm a' }}
                 </span>
               </div>
 
@@ -407,129 +353,124 @@
 
         <!-- Empty State -->
         <div *ngIf="filteredOrderSummaries.length === 0"
-          class="bg-white rounded-2xl border border-dashed border-slate-200 p-10 text-center">
-          <div class="w-14 h-14 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+          class="rounded-xl p-8 text-center"
+          style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
             <ion-icon
               [name]="orderFilterTab === 'pending' ? 'clipboard-outline' : orderFilterTab === 'approved' ? 'checkmark-done-circle-outline' : 'close-circle-outline'"
-              class="text-3xl text-slate-300">
+              class="text-2xl" style="color: #475569;">
             </ion-icon>
           </div>
-          <h3 class="text-base font-bold text-slate-700 mb-1">
+          <h3 class="text-sm font-bold text-white mb-1">
             No {{ orderFilterTab === 'all' ? '' : orderFilterTab }} orders
           </h3>
-          <p class="text-sm text-slate-400">
+          <p class="text-xs" style="color: #64748b;">
             {{ orderFilterTab === 'pending' ? 'All orders have been reviewed.' : 'No orders in this category yet.' }}
           </p>
         </div>
 
       </div>
-      <!-- ═══════════════════════════════════════════════════════════ -->
 
       <!-- DISTRIBUTORS LIST WITH ACCORDION -->
-      <div *ngIf="!isDistributorsLoading && filteredDistributors.length > 0" class="space-y-4">
-        <div *ngFor="let distributor of filteredDistributors" class="bg-white rounded-2xl shadow-sm border border-slate-100 hover:border-emerald-200 overflow-hidden transition-all duration-300">
-          
+      <div *ngIf="!isDistributorsLoading && filteredDistributors.length > 0" class="space-y-3">
+        <div *ngFor="let distributor of filteredDistributors" class="rounded-xl overflow-hidden transition-all duration-300"
+          style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+
           <!-- Accordion Header -->
-          <div class="p-6 cursor-pointer hover:bg-slate-50 transition-colors" [attr.data-distributor]="distributor.id">
+          <div class="p-4 cursor-pointer transition-colors" [attr.data-distributor]="distributor.id">
             <div class="flex items-center justify-between">
               <div class="flex-1">
-                <div class="flex items-center gap-4">
-                  <div class="w-10 h-10 rounded-full bg-gradient-to-br from-emerald-400 to-teal-400 flex items-center justify-center text-white font-bold text-sm flex-shrink-0">
+                <div class="flex items-center gap-3">
+                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
+                    style="background: linear-gradient(135deg, #10b981, #14b8a6);">
                     {{ distributor.name.charAt(0).toUpperCase() }}
                   </div>
                   <div class="flex-1">
-                    <h3 class="text-lg font-bold text-slate-800 mb-1">{{ distributor.name }}</h3>
-                    <p class="text-sm text-slate-500">📌 Sales Person: <span class="font-semibold text-slate-700">{{ distributor.salesPersonName }}</span></p>
+                    <h3 class="text-sm font-bold text-white mb-0.5">{{ distributor.name }}</h3>
+                    <p class="text-xs" style="color: #64748b;">
+                      <span style="color: #10b981;">&#9679;</span> {{ distributor.salesPersonName }}
+                    </p>
                   </div>
                 </div>
               </div>
-              
-              <!-- Status Badge -->
-              <div class="flex items-center gap-4 flex-shrink-0">
-                <span [class]="'px-3 py-1 rounded-full text-xs font-bold transition-all'"
-                  [class.bg-emerald-100]="distributor.status === 'ACTIVE'"
-                  [class.text-emerald-700]="distributor.status === 'ACTIVE'"
-                  [class.bg-slate-100]="distributor.status === 'INACTIVE'"
-                  [class.text-slate-700]="distributor.status === 'INACTIVE'">
+
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="px-2 py-0.5 rounded-full text-xs font-bold"
+                  [style.background]="distributor.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)'"
+                  [style.color]="distributor.status === 'ACTIVE' ? '#10b981' : '#94a3b8'"
+                  [style.border]="distributor.status === 'ACTIVE' ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(100,116,139,0.25)'">
                   {{ distributor.status }}
                 </span>
-                
-                <!-- Expand Icon -->
-                <ion-icon name="chevron-down-outline" class="text-2xl text-slate-400"></ion-icon>
+                <ion-icon name="chevron-down-outline" class="text-lg" style="color: #475569;"></ion-icon>
               </div>
             </div>
           </div>
 
           <!-- Accordion Content -->
-          <div class="px-6 py-4 bg-gradient-to-br from-slate-50/50 to-emerald-50/30 border-t border-slate-100">
-            
+          <div class="px-4 py-4" style="border-top: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
+
             <!-- Sales Performance Grid -->
-            <div class="grid grid-cols-1 md:grid-cols-3 gap-4 mb-6">
-              <div class="bg-white rounded-xl p-4 border border-slate-100">
-                <p class="text-xs text-slate-500 font-bold uppercase mb-2">Monthly Sales</p>
-                <p class="text-2xl font-bold text-slate-800">${{ distributor.salesPerMonth.toLocaleString() }}</p>
+            <div class="grid grid-cols-3 gap-2 mb-4">
+              <div class="rounded-lg p-3"
+                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Monthly</p>
+                <p class="text-sm font-bold text-white">${{ distributor.salesPerMonth.toLocaleString() }}</p>
               </div>
-              <div class="bg-white rounded-xl p-4 border border-slate-100">
-                <p class="text-xs text-slate-500 font-bold uppercase mb-2">Quarterly Sales</p>
-                <p class="text-2xl font-bold text-slate-800">${{ distributor.salesPerQuarter.toLocaleString() }}</p>
+              <div class="rounded-lg p-3"
+                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Quarterly</p>
+                <p class="text-sm font-bold text-white">${{ distributor.salesPerQuarter.toLocaleString() }}</p>
               </div>
-              <div class="bg-white rounded-xl p-4 border border-slate-100">
-                <p class="text-xs text-slate-500 font-bold uppercase mb-2">Yearly Sales</p>
-                <p class="text-2xl font-bold text-slate-800">${{ distributor.salesPerYear.toLocaleString() }}</p>
+              <div class="rounded-lg p-3"
+                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Yearly</p>
+                <p class="text-sm font-bold text-white">${{ distributor.salesPerYear.toLocaleString() }}</p>
               </div>
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-3 justify-end">
-              <ion-button
-                (click)="openEditModal(distributor)"
-                class="bg-blue-50 text-blue-600 font-bold rounded-lg h-10"
-                style="--background: #eff6ff; --color: #2563eb;"
-              >
-                <ion-icon slot="start" name="pencil-outline"></ion-icon>
+            <div class="flex gap-2 justify-end">
+              <button (click)="openEditModal(distributor)"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                style="background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2);">
+                <ion-icon name="pencil-outline" class="text-xs"></ion-icon>
                 Edit
-              </ion-button>
-              <ion-button
-                (click)="deleteDistributor(distributor.id)"
-                class="bg-rose-50 text-rose-600 font-bold rounded-lg h-10"
-                style="--background: #fef2f2; --color: #dc2626;"
-              >
-                <ion-icon slot="start" name="trash-outline"></ion-icon>
+              </button>
+              <button (click)="deleteDistributor(distributor.id)"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2);">
+                <ion-icon name="trash-outline" class="text-xs"></ion-icon>
                 Delete
-              </ion-button>
-              <ion-button
-                (click)="toggleStatus(distributor.id)"
-                [class.bg-emerald-50]="distributor.status === 'ACTIVE'"
-                [class.text-emerald-600]="distributor.status === 'ACTIVE'"
-                [class.bg-slate-100]="distributor.status === 'INACTIVE'"
-                [class.text-slate-600]="distributor.status === 'INACTIVE'"
-                class="font-bold rounded-lg h-10"
-                [style.--background]="distributor.status === 'ACTIVE' ? '#f0fdf4' : '#f1f5f9'"
-                [style.--color]="distributor.status === 'ACTIVE' ? '#059669' : '#64748b'"
-              >
-                <ion-icon slot="start" [name]="distributor.status === 'ACTIVE' ? 'pause-circle-outline' : 'checkmark-circle-outline'"></ion-icon>
+              </button>
+              <button (click)="toggleStatus(distributor.id)"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
+                [style.background]="distributor.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)'"
+                [style.color]="distributor.status === 'ACTIVE' ? '#10b981' : '#94a3b8'"
+                [style.border]="distributor.status === 'ACTIVE' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(100,116,139,0.2)'">
+                <ion-icon [name]="distributor.status === 'ACTIVE' ? 'pause-circle-outline' : 'checkmark-circle-outline'" class="text-xs"></ion-icon>
                 {{ distributor.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
-              </ion-button>
+              </button>
             </div>
           </div>
         </div>
       </div>
 
       <!-- EMPTY STATE -->
-      <div *ngIf="!isDistributorsLoading && filteredDistributors.length === 0" class="bg-white rounded-2xl p-12 text-center border border-slate-100">
-        <div class="w-16 h-16 rounded-full bg-slate-100 flex items-center justify-center mx-auto mb-4">
-          <ion-icon name="storefront-outline" class="text-3xl text-slate-400"></ion-icon>
+      <div *ngIf="!isDistributorsLoading && filteredDistributors.length === 0" class="rounded-xl p-8 text-center"
+        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-3"
+          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+          <ion-icon name="storefront-outline" class="text-2xl" style="color: #475569;"></ion-icon>
         </div>
-        <h3 class="text-lg font-bold text-slate-800 mb-2">No Distributors Found</h3>
-        <p class="text-slate-500 mb-6">{{ searchTerm ? 'No results match your search' : 'Start by adding your first distributor' }}</p>
-        <ion-button 
-          (click)="openAddModal()" 
-          class="bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold rounded-xl"
-          style="--background: linear-gradient(135deg, #a855f7 0%, #ec4899 100%);"
-        >
-          <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        <h3 class="text-base font-bold text-white mb-1">No Distributors Found</h3>
+        <p class="text-sm mb-4" style="color: #64748b;">{{ searchTerm ? 'No results match your search' : 'Start by adding your first distributor' }}</p>
+        <button (click)="openAddModal()"
+          class="inline-flex items-center gap-2 text-white font-bold text-sm rounded-lg px-5 py-2.5 active:scale-95 transition-all"
+          style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+          <ion-icon name="add-circle-outline" class="text-base"></ion-icon>
           Add Distributor
-        </ion-button>
+        </button>
       </div>
     </div>
   </div>
@@ -537,101 +478,113 @@
   <!-- ADD DISTRIBUTOR MODAL -->
   <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" class="custom-modal">
     <ng-template>
-      <div class="h-screen flex flex-col bg-slate-50">
-        
-        <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-6 flex items-center justify-between shadow-lg flex-shrink-0">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
-              <ion-icon name="add-circle-outline" class="text-2xl text-white"></ion-icon>
+      <div class="h-screen flex flex-col" style="background: #0d1117;">
+
+        <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between flex-shrink-0"
+          style="background: rgba(16,185,129,0.1); border-bottom: 1px solid rgba(16,185,129,0.15); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+              style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+              <ion-icon name="add-circle-outline" class="text-xl" style="color: #10b981;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-xl font-bold text-white">Add Distributor</h2>
-              <p class="text-xs text-cyan-50">Register a new distributor with sales data</p>
+              <h2 class="text-base font-bold text-white">Add Distributor</h2>
+              <p class="text-xs" style="color: #64748b;">Register a new distributor</p>
             </div>
           </div>
-          <button (click)="closeAddModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm border border-white/30">
-            <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+          <button (click)="closeAddModal()" class="p-2 rounded-lg transition-colors"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+            <ion-icon name="close-outline" class="text-lg" style="color: #e2e8f0;"></ion-icon>
           </button>
         </div>
 
         <div class="flex-1 overflow-y-auto">
-          <div class="max-w-xl mx-auto p-6 pb-20">
-          <form [formGroup]="addForm" (ngSubmit)="addDistributor()" class="space-y-5">
-            
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Distributor Name</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+          <div class="max-w-xl mx-auto p-5 pb-20">
+            <form [formGroup]="addForm" (ngSubmit)="addDistributor()" class="space-y-4">
+
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Distributor Name</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
+                <div *ngIf="addForm.get('name')?.hasError('minlength')" class="text-xs mt-1 ml-1" style="color: #f43f5e;">Min 2 characters</div>
               </div>
-              <div *ngIf="addForm.get('name')?.hasError('minlength')" class="text-xs text-rose-600 mt-1 ml-1">Must be at least 2 characters</div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Person Name</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Person Name</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
+                <div *ngIf="addForm.get('salesPersonName')?.hasError('minlength')" class="text-xs mt-1 ml-1" style="color: #f43f5e;">Min 2 characters</div>
               </div>
-              <div *ngIf="addForm.get('salesPersonName')?.hasError('minlength')" class="text-xs text-rose-600 mt-1 ml-1">Must be at least 2 characters</div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Month ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerMonth" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Month ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerMonth" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Quarter ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerQuarter" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Quarter ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerQuarter" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Year ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerYear" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Year ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerYear" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Status</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-select formControlName="status" placeholder="Select Status" interface="popover" class="w-full px-4 py-4 text-slate-900 font-medium text-base">
-                  <ion-select-option value="ACTIVE">Active</ion-select-option>
-                  <ion-select-option value="INACTIVE">Inactive</ion-select-option>
-                </ion-select>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Status</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-select formControlName="status" placeholder="Select Status" interface="popover"
+                    class="w-full px-4 py-3 font-medium text-sm" style="color: #e2e8f0; --placeholder-color: #475569;">
+                    <ion-select-option value="ACTIVE">Active</ion-select-option>
+                    <ion-select-option value="INACTIVE">Inactive</ion-select-option>
+                  </ion-select>
+                </div>
               </div>
-            </div>
 
-            <div class="pt-8 border-t border-slate-200">
-              <ion-button 
-                expand="block" 
-                type="submit" 
-                [disabled]="addForm.invalid"
-                [class.opacity-50]="addForm.invalid"
-                [class.cursor-not-allowed]="addForm.invalid"
-                class="h-14 font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200"
-                style="--background: linear-gradient(135deg, #059669 0%, #06b6d4 100%); --box-shadow: 0 20px 25px rgba(5, 150, 105, 0.3);"
-              >
-                <ion-icon slot="start" name="checkmark-circle-outline" class="text-xl"></ion-icon>
-                <span class="text-white text-lg tracking-wide font-semibold">Add Distributor</span>
-              </ion-button>
-            </div>
+              <div class="pt-6" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                <button
+                  type="submit"
+                  [disabled]="addForm.invalid"
+                  [class.opacity-50]="addForm.invalid"
+                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-lg py-3.5 transition-all active:scale-95"
+                  style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
+                  <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                  Add Distributor
+                </button>
+              </div>
 
-          </form>
-            </div>
+            </form>
+          </div>
         </div>
       </div>
     </ng-template>
@@ -640,158 +593,180 @@
   <!-- EDIT DISTRIBUTOR MODAL -->
   <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" class="custom-modal">
     <ng-template>
-      <div class="h-screen flex flex-col bg-slate-50">
-        
-        <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-500 to-cyan-500 px-6 py-6 flex items-center justify-between shadow-lg flex-shrink-0">
-          <div class="flex items-center gap-4">
-            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
-              <ion-icon name="pencil-outline" class="text-2xl text-white"></ion-icon>
+      <div class="h-screen flex flex-col" style="background: #0d1117;">
+
+        <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between flex-shrink-0"
+          style="background: rgba(6,182,212,0.1); border-bottom: 1px solid rgba(6,182,212,0.15); backdrop-filter: blur(20px);">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+              style="background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.25);">
+              <ion-icon name="pencil-outline" class="text-xl" style="color: #06b6d4;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-xl font-bold text-white">Edit Distributor</h2>
-              <p class="text-xs text-cyan-50">Update distributor details and sales data</p>
+              <h2 class="text-base font-bold text-white">Edit Distributor</h2>
+              <p class="text-xs" style="color: #64748b;">Update details & sales data</p>
             </div>
           </div>
-          <button (click)="closeEditModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm border border-white/30">
-            <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+          <button (click)="closeEditModal()" class="p-2 rounded-lg transition-colors"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+            <ion-icon name="close-outline" class="text-lg" style="color: #e2e8f0;"></ion-icon>
           </button>
         </div>
 
         <div class="flex-1 overflow-y-auto">
-          <div class="max-w-xl mx-auto p-6 pb-20">
-          <form [formGroup]="editForm" (ngSubmit)="updateDistributor()" class="space-y-5">
-            
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Distributor Name</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+          <div class="max-w-xl mx-auto p-5 pb-20">
+            <form [formGroup]="editForm" (ngSubmit)="updateDistributor()" class="space-y-4">
+
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Distributor Name</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Person Name</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Person Name</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Month ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerMonth" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Month ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerMonth" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Quarter ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerQuarter" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Quarter ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerQuarter" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Sales Per Year ($)</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="number" formControlName="salesPerYear" placeholder="0" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
-                </ion-item>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Year ($)</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="salesPerYear" placeholder="0"
+                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
+                  </ion-item>
+                </div>
               </div>
-            </div>
 
-            <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">Status</label>
-              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
-                <ion-select formControlName="status" placeholder="Select Status" interface="popover" class="w-full px-4 py-4 text-slate-900 font-medium text-base">
-                  <ion-select-option value="ACTIVE">Active</ion-select-option>
-                  <ion-select-option value="INACTIVE">Inactive</ion-select-option>
-                </ion-select>
+              <div class="group">
+                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Status</label>
+                <div class="rounded-lg overflow-hidden transition-all"
+                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
+                  <ion-select formControlName="status" placeholder="Select Status" interface="popover"
+                    class="w-full px-4 py-3 font-medium text-sm" style="color: #e2e8f0; --placeholder-color: #475569;">
+                    <ion-select-option value="ACTIVE">Active</ion-select-option>
+                    <ion-select-option value="INACTIVE">Inactive</ion-select-option>
+                  </ion-select>
+                </div>
               </div>
-            </div>
 
-            <div class="pt-8 border-t border-slate-200">
-              <ion-button 
-                expand="block" 
-                type="submit" 
-                [disabled]="editForm.invalid"
-                [class.opacity-50]="editForm.invalid"
-                [class.cursor-not-allowed]="editForm.invalid"
-                class="h-14 font-bold rounded-xl overflow-hidden shadow-lg hover:shadow-xl transition-all duration-200"
-                style="--background: linear-gradient(135deg, #059669 0%, #0891b2 100%); --box-shadow: 0 20px 25px rgba(5, 150, 105, 0.3);"
-              >
-                <ion-icon slot="start" name="checkmark-circle-outline" class="text-xl"></ion-icon>
-                <span class="text-white text-lg tracking-wide font-semibold">Update Distributor</span>
-              </ion-button>
-            </div>
+              <div class="pt-6" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                <button
+                  type="submit"
+                  [disabled]="editForm.invalid"
+                  [class.opacity-50]="editForm.invalid"
+                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-lg py-3.5 transition-all active:scale-95"
+                  style="background: linear-gradient(135deg, #06b6d4, #0891b2); box-shadow: 0 4px 20px rgba(6,182,212,0.3);">
+                  <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                  Update Distributor
+                </button>
+              </div>
 
-          </form>
-            </div>
+            </form>
+          </div>
         </div>
       </div>
     </ng-template>
   </ion-modal>
+
   <!-- REJECT ORDER MODAL -->
   <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" class="auto-height">
     <ng-template>
-      <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 90vh;">
+      <div class="flex flex-col rounded-t-2xl overflow-hidden" style="max-height: 90vh; background: #0d1117;">
 
         <!-- Modal Header -->
-        <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
+        <div class="px-5 py-4 flex items-center justify-between flex-shrink-0"
+          style="background: rgba(244,63,94,0.1); border-bottom: 1px solid rgba(244,63,94,0.15);">
           <div class="flex items-center gap-3">
-            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
-              <ion-icon name="close-circle-outline" class="text-xl text-white"></ion-icon>
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+              style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.25);">
+              <ion-icon name="close-circle-outline" class="text-lg" style="color: #f43f5e;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-lg font-bold text-white">Reject Order</h2>
-              <p *ngIf="orderBeingRejected" class="text-xs text-rose-100">{{ orderBeingRejected.orderNumber }} · {{ orderBeingRejected.distributorName }}</p>
+              <h2 class="text-sm font-bold text-white">Reject Order</h2>
+              <p *ngIf="orderBeingRejected" class="text-xs" style="color: #f43f5e;">{{ orderBeingRejected.orderNumber }} &middot; {{ orderBeingRejected.distributorName }}</p>
             </div>
           </div>
-          <button (click)="cancelReject()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
-            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          <button (click)="cancelReject()" class="p-2 rounded-lg transition-colors"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
+            <ion-icon name="close-outline" class="text-base" style="color: #e2e8f0;"></ion-icon>
           </button>
         </div>
 
-        <div class="p-6 space-y-5 overflow-y-auto flex-1">
+        <div class="p-5 space-y-4 overflow-y-auto flex-1">
 
           <!-- Warning Banner -->
-          <div class="flex items-start gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
-            <ion-icon name="warning-outline" class="text-rose-500 text-xl flex-shrink-0 mt-0.5"></ion-icon>
+          <div class="flex items-start gap-3 rounded-lg p-3"
+            style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.15);">
+            <ion-icon name="warning-outline" style="color: #f43f5e;" class="text-lg flex-shrink-0 mt-0.5"></ion-icon>
             <div>
-              <p class="text-sm font-bold text-rose-700">Confirm Rejection</p>
-              <p class="text-xs text-rose-600 mt-0.5">This action will notify the distributor that their order has been rejected. Please provide a reason.</p>
+              <p class="text-xs font-bold" style="color: #fb7185;">Confirm Rejection</p>
+              <p class="text-xs mt-0.5" style="color: #f43f5e; opacity: 0.8;">This action will notify the distributor. Please provide a reason.</p>
             </div>
           </div>
 
           <!-- Reason Input -->
           <div>
-            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Rejection Reason <span class="text-rose-400">(optional)</span></label>
+            <label class="block text-xs font-bold uppercase tracking-wider mb-2" style="color: #64748b;">
+              Rejection Reason <span style="color: #f43f5e;">(optional)</span>
+            </label>
             <textarea
               [(ngModel)]="rejectRemarks"
-              placeholder="e.g. Insufficient stock, pricing mismatch, incomplete order details..."
+              placeholder="e.g. Insufficient stock, pricing mismatch..."
               rows="4"
-              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm">
+              class="w-full rounded-lg py-3 px-4 outline-none transition-all duration-200 resize-none text-sm font-medium"
+              style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0;">
             </textarea>
           </div>
 
           <!-- Action Buttons -->
-          <div class="flex gap-3 pt-2 pb-4">
+          <div class="flex gap-2 pt-2 pb-4">
             <button
               (click)="cancelReject()"
-              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl py-3.5 transition-all duration-200 active:scale-95">
-              <ion-icon name="arrow-back-outline" class="text-base"></ion-icon>
+              class="flex-1 flex items-center justify-center gap-2 font-bold text-xs rounded-lg py-3 transition-all duration-200 active:scale-95"
+              style="background: rgba(255,255,255,0.06); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);">
+              <ion-icon name="arrow-back-outline" class="text-sm"></ion-icon>
               Cancel
             </button>
             <button
               (click)="confirmReject()"
-              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3.5 transition-all duration-200 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95">
-              <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+              class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-xs rounded-lg py-3 transition-all duration-200 active:scale-95"
+              style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
+              <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
               Confirm Reject
             </button>
           </div>

@@ -1,14 +1,14 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100">
+  <ion-toolbar style="--background: #0d1117; --border-color: transparent;">
     <ion-buttons slot="start">
-      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+      <ion-menu-button style="color: #e2e8f0;"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
-      <span class="text-emerald-500">Shopping </span> Cart
+    <ion-title class="font-bold text-white tracking-tight text-xl">
+      Shopping Cart
     </ion-title>
     <ion-buttons slot="end">
       <button (click)="showCartModal = true" class="relative mr-3 p-1">
-        <ion-icon name="cart-outline" class="text-2xl text-emerald-500"></ion-icon>
+        <ion-icon name="cart-outline" class="text-2xl text-emerald-400"></ion-icon>
         <span *ngIf="cartCount > 0" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
           {{ cartCount }}
         </span>
@@ -17,30 +17,31 @@
   </ion-toolbar>
 </ion-header>
 
-<ion-content class="ion-padding bg-gray-50">
-  <div class="flex flex-col min-h-full pb-4">
+<ion-content style="--background: #0d1117;">
+  <div class="flex flex-col min-h-full px-4 pt-4 pb-6">
 
-    <!-- Banner -->
+    <!-- Banner (Glass) -->
     <div class="mb-4">
-      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl shadow-lg p-5">
-        <h1 class="text-lg font-bold mb-1">
-          <span class="text-yellow-300">Order</span>
-          <span class="text-white"> Finished Products</span>
-        </h1>
-        <div class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white/20 rounded-full border border-white/30">
-          <ion-icon class="text-white text-xs" name="cube-outline"></ion-icon>
-          <span class="text-white text-xs font-medium">Browse and order finished products</span>
+      <div class="rounded-2xl p-5 flex items-center gap-4"
+           style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(16px); box-shadow: 0 0 25px rgba(16,185,129,0.06);">
+        <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.15);">
+          <ion-icon name="cube-outline" class="text-emerald-400 text-2xl"></ion-icon>
+        </div>
+        <div>
+          <h1 class="text-base font-bold text-white">Order Finished Products</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Browse and order finished products</p>
         </div>
       </div>
     </div>
 
-    <!-- Search -->
+    <!-- Search (Glass) -->
     <div class="relative mb-4">
-      <ion-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-gray-400 text-lg pointer-events-none z-10" name="search-outline"></ion-icon>
+      <ion-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none z-10" name="search-outline"></ion-icon>
       <input
         (input)="onSearchChange($event)"
         [value]="searchQuery"
-        class="w-full pl-11 pr-4 py-3 bg-white border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-sm placeholder:text-gray-400 text-gray-700 font-medium text-sm"
+        style="background: rgba(255,255,255,0.05); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.08);"
+        class="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-600 font-medium text-sm"
         placeholder="Search products..."
         type="text"
       />
@@ -48,36 +49,31 @@
 
     <!-- Loading -->
     <div *ngIf="isLoading && filteredProducts.length === 0" class="flex justify-center py-12">
-      <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+      <ion-spinner name="crescent" class="text-emerald-400"></ion-spinner>
     </div>
 
-    <!-- Product Cards -->
+    <!-- Product Cards (Glass) -->
     <div class="flex flex-col gap-3">
       <div *ngFor="let product of filteredProducts"
-           class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-        <div class="bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-3 flex items-center gap-3">
-          <div class="w-10 h-10 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-            <ion-icon name="cube-outline" class="text-white text-xl"></ion-icon>
+           class="rounded-2xl overflow-hidden"
+           style="background: rgba(255,255,255,0.04); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px); box-shadow: 0 0 20px rgba(16,185,129,0.04);">
+        <div class="px-4 py-3 flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15);">
+            <ion-icon name="hardware-chip-outline" class="text-emerald-400 text-2xl"></ion-icon>
           </div>
           <div class="flex-1 min-w-0">
-            <h3 class="text-white font-bold truncate text-sm">{{ product.name }}</h3>
-            <span class="inline-block px-2 py-0.5 bg-white/20 rounded-full text-white text-[0.6rem] mt-0.5">{{ product.unit || 'PIECE' }}</span>
+            <h3 class="text-white font-bold text-base truncate">{{ product.name }}</h3>
+            <p class="text-slate-500 text-xs mt-0.5">Stock: {{ product.quantity }}</p>
           </div>
-          <span class="text-white/80 text-xs font-mono flex-shrink-0">{{ product.sku }}</span>
         </div>
-        <div class="px-4 py-3 flex items-center justify-between">
-          <div class="flex gap-6">
-            <div>
-              <p class="text-[0.65rem] text-slate-400 uppercase tracking-wide">Stock</p>
-              <p class="font-bold text-emerald-600 text-sm">{{ product.quantity }}</p>
-            </div>
-            <div *ngIf="product.price">
-              <p class="text-[0.65rem] text-slate-400 uppercase tracking-wide">Price</p>
-              <p class="font-bold text-slate-800 text-base">&#8377;{{ product.price }}</p>
-            </div>
+        <div class="px-4 pb-3 flex items-center justify-between">
+          <div>
+            <p class="text-slate-500 text-xs mb-0.5">Price</p>
+            <p class="font-bold text-white text-base">&#8377;{{ product.price }}</p>
           </div>
           <button (click)="openProductModal(product)"
-                  class="px-4 py-2 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl text-sm font-semibold transition-all shadow-sm flex items-center gap-1">
+                  class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-1"
+                  style="box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
             <ion-icon name="add-outline" class="text-base"></ion-icon>
             Add
           </button>
@@ -87,20 +83,20 @@
 
     <!-- Empty State -->
     <div *ngIf="filteredProducts.length === 0 && !isLoading" class="text-center py-16 px-4">
-      <div class="w-16 h-16 mx-auto mb-3 rounded-full bg-slate-100 flex items-center justify-center">
-        <ion-icon name="cube-outline" class="text-3xl text-slate-400"></ion-icon>
+      <div class="w-16 h-16 mx-auto mb-3 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.05);">
+        <ion-icon name="cube-outline" class="text-3xl text-slate-600"></ion-icon>
       </div>
-      <p class="text-slate-500 text-sm">{{ searchQuery ? 'No products found' : 'No products available' }}</p>
+      <p class="text-slate-600 text-sm">{{ searchQuery ? 'No products found' : 'No products available' }}</p>
     </div>
 
   </div>
 </ion-content>
 
-<!-- ===== CART MODAL ===== -->
+<!-- ===== CART MODAL (Glass) ===== -->
 <ion-modal [isOpen]="showCartModal" (didDismiss)="showCartModal = false">
   <ng-template>
     <ion-header class="ion-no-border">
-      <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+      <ion-toolbar style="--background: #0d1117;">
         <ion-title class="text-white font-bold">Your Cart</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="showCartModal = false" class="text-white">
@@ -110,87 +106,106 @@
       </ion-toolbar>
     </ion-header>
 
-    <ion-content class="ion-padding bg-slate-50">
+    <ion-content style="--background: #0d1117;">
       <!-- Empty Cart -->
       <div *ngIf="cartItems.length === 0" class="text-center py-20 px-4">
-        <div class="w-20 h-20 mx-auto mb-4 rounded-full bg-slate-100 flex items-center justify-center">
-          <ion-icon name="cart-outline" class="text-4xl text-slate-300"></ion-icon>
+        <div class="w-20 h-20 mx-auto mb-4 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.05);">
+          <ion-icon name="cart-outline" class="text-4xl text-slate-600"></ion-icon>
         </div>
-        <h3 class="text-slate-600 font-semibold mb-2">Your cart is empty</h3>
-        <p class="text-slate-400 text-sm mb-6">Browse products and add items to your cart</p>
+        <h3 class="text-slate-300 font-semibold mb-2">Your cart is empty</h3>
+        <p class="text-slate-600 text-sm mb-6">Browse products and add items to your cart</p>
         <button (click)="showCartModal = false"
-                class="px-6 py-3 bg-emerald-500 text-white rounded-xl font-semibold text-sm shadow-md hover:bg-emerald-600 transition-all">
+                class="px-6 py-3 bg-emerald-500 text-white rounded-xl font-semibold text-sm transition-all"
+                style="box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
           Browse Products
         </button>
       </div>
 
       <!-- Cart Items -->
-      <div *ngIf="cartItems.length > 0" class="pb-32">
+      <div *ngIf="cartItems.length > 0" class="px-4 pt-4 pb-36">
         <div class="flex flex-col gap-3 mb-4">
           <div *ngFor="let item of cartItems"
-               class="bg-white rounded-2xl shadow-sm border border-slate-100 overflow-hidden">
-            <div class="bg-gradient-to-r from-emerald-400 to-teal-400 px-4 py-3 flex items-center justify-between">
-              <div class="flex items-center gap-2">
-                <div class="w-8 h-8 rounded-full bg-white/20 flex items-center justify-center flex-shrink-0">
-                  <ion-icon name="cube-outline" class="text-white text-sm"></ion-icon>
+               class="rounded-2xl overflow-hidden"
+               style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+
+            <!-- Item Header -->
+            <div class="px-4 py-3 flex items-center justify-between" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15);">
+                  <ion-icon name="cube-outline" class="text-emerald-400 text-lg"></ion-icon>
                 </div>
                 <h3 class="text-white font-bold text-sm truncate max-w-[180px]">{{ item.name }}</h3>
               </div>
-              <button (click)="removeFromCart(item.id)" class="w-7 h-7 bg-red-400/30 hover:bg-red-400/50 rounded-full flex items-center justify-center transition-all">
-                <ion-icon name="trash-outline" class="text-white text-sm"></ion-icon>
+              <button (click)="removeFromCart(item.id)" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+                      style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.15);">
+                <ion-icon name="trash-outline" class="text-red-400 text-sm"></ion-icon>
               </button>
             </div>
+
+            <!-- Item Body -->
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-3">
-                <p class="text-xs text-slate-400">Unit Price</p>
-                <p class="font-semibold text-slate-700">&#8377;{{ item.price }}</p>
+                <p class="text-slate-500 text-sm">Unit Price:</p>
+                <p class="font-semibold text-emerald-400 text-sm">&#8377;{{ item.price }}</p>
               </div>
-              <div class="flex items-center justify-between">
-                <p class="text-xs text-slate-400">Quantity</p>
-                <div class="flex items-center gap-2">
+
+              <!-- Quantity Controls (Glass teal) -->
+              <div class="flex items-center justify-between mb-3">
+                <p class="text-slate-500 text-sm">Quantity</p>
+                <div class="flex items-center gap-0 rounded-xl overflow-hidden" style="border: 1.5px solid rgba(20,184,166,0.3); background: rgba(20,184,166,0.06);">
                   <button (click)="updateCartQuantity(item.id, item.cartQuantity - 1)"
                           [disabled]="item.cartQuantity <= 1"
-                          class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700 flex items-center justify-center disabled:opacity-40 transition-all">
+                          class="w-9 h-9 font-bold text-teal-400 flex items-center justify-center disabled:opacity-30 transition-all text-lg"
+                          style="background: transparent;">
                     &#8722;
                   </button>
-                  <span class="w-8 text-center font-bold text-slate-800 text-sm">{{ item.cartQuantity }}</span>
+                  <span class="w-9 text-center font-bold text-white text-sm" style="background: rgba(20,184,166,0.15);">{{ item.cartQuantity }}</span>
                   <button (click)="updateCartQuantity(item.id, item.cartQuantity + 1)"
-                          class="w-8 h-8 bg-slate-100 hover:bg-slate-200 rounded-lg font-bold text-slate-700 flex items-center justify-center transition-all">
+                          class="w-9 h-9 font-bold text-teal-400 flex items-center justify-center transition-all text-lg"
+                          style="background: transparent;">
                     +
                   </button>
                 </div>
               </div>
-              <div class="mt-3 pt-3 border-t border-slate-100 flex items-center justify-between">
-                <p class="text-xs text-slate-400">Subtotal</p>
-                <p class="font-bold text-emerald-600 text-sm">&#8377;{{ item.subtotal }}</p>
+
+              <div class="pt-3 flex items-center justify-between" style="border-top: 1px solid rgba(255,255,255,0.06);">
+                <p class="text-slate-500 text-sm">Subtotal</p>
+                <p class="font-bold text-emerald-400 text-base">&#8377;{{ item.subtotal }}</p>
               </div>
             </div>
           </div>
         </div>
 
-        <!-- Grand Total -->
-        <div class="bg-white rounded-2xl shadow-sm border border-emerald-100 p-4 mb-4">
+        <!-- Delivery Estimate (Glass) -->
+        <div class="rounded-2xl p-4 mb-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <p class="font-semibold text-white text-sm mb-1">Delivery Estimate</p>
+          <p class="text-xs text-slate-500">Estimated Delivery: 3 - 7 Business Days</p>
+        </div>
+
+        <!-- Grand Total (Glass) -->
+        <div class="rounded-2xl p-4 mb-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
           <div class="flex justify-between items-center mb-2">
             <span class="text-sm text-slate-500">Total Items</span>
-            <span class="font-semibold text-slate-700">{{ cartCount }}</span>
+            <span class="font-semibold text-white">{{ cartCount }}</span>
           </div>
-          <div class="flex justify-between items-center pt-2 border-t border-slate-100">
-            <span class="font-bold text-slate-800">Grand Total</span>
-            <span class="text-xl font-bold text-emerald-600">&#8377;{{ cartTotal }}</span>
+          <div class="flex justify-between items-center pt-2.5" style="border-top: 1px solid rgba(255,255,255,0.06);">
+            <span class="font-bold text-white">Grand Total</span>
+            <span class="text-xl font-bold text-emerald-400">&#8377;{{ cartTotal }}</span>
           </div>
         </div>
       </div>
 
-      <!-- Sticky bottom actions -->
-      <div *ngIf="cartItems.length > 0" class="fixed bottom-0 left-0 right-0 p-4 bg-slate-50 border-t border-slate-100">
+      <!-- Sticky Bottom -->
+      <div *ngIf="cartItems.length > 0" class="fixed bottom-0 left-0 right-0 p-4" style="background: rgba(13,17,23,0.95); border-top: 1px solid rgba(255,255,255,0.06); backdrop-filter: blur(20px);">
         <div class="flex flex-col gap-2">
           <button (click)="showCartModal = false; openCheckoutModal()"
-                  class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-base shadow-lg transition-all flex items-center justify-center gap-2">
-            <ion-icon name="checkmark-outline" class="text-xl"></ion-icon>
+                  class="w-full py-3.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl font-bold text-base transition-all flex items-center justify-center gap-2"
+                  style="box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
+            <ion-icon name="checkmark-circle-outline" class="text-xl"></ion-icon>
             Checkout &middot; &#8377;{{ cartTotal }}
           </button>
           <button (click)="clearCart()"
-                  class="w-full py-2.5 bg-slate-100 hover:bg-red-50 text-slate-500 hover:text-red-500 rounded-xl font-medium text-sm transition-all flex items-center justify-center gap-2">
+                  class="w-full py-2.5 text-slate-500 hover:text-red-400 font-medium text-sm transition-all flex items-center justify-center gap-2">
             <ion-icon name="trash-outline"></ion-icon>
             Clear Cart
           </button>
@@ -200,11 +215,11 @@
   </ng-template>
 </ion-modal>
 
-<!-- ===== ADD TO CART MODAL ===== -->
+<!-- ===== ADD TO CART MODAL (Glass) ===== -->
 <ion-modal [isOpen]="showProductModal" (didDismiss)="closeProductModal()">
   <ng-template>
     <ion-header class="ion-no-border">
-      <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+      <ion-toolbar style="--background: #0d1117;">
         <ion-title class="text-white font-bold">Add to Cart</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="closeProductModal()" class="text-white">
@@ -213,50 +228,61 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding bg-slate-50" *ngIf="selectedProduct">
-      <div class="max-w-2xl mx-auto">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-5">
-          <div class="flex items-center gap-4 mb-5 pb-5 border-b border-slate-100">
-            <div class="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-400 to-teal-400 flex items-center justify-center flex-shrink-0">
-              <ion-icon name="cube-outline" class="text-white text-3xl"></ion-icon>
+    <ion-content style="--background: #0d1117;" *ngIf="selectedProduct">
+      <div class="px-4 pt-6 pb-8">
+        <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+          <!-- Product Icon + Name -->
+          <div class="flex flex-col items-center mb-5 pb-5" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div class="w-20 h-20 rounded-2xl flex items-center justify-center mb-3" style="background: rgba(20,184,166,0.1); border: 1px solid rgba(20,184,166,0.2);">
+              <ion-icon name="cube-outline" class="text-teal-400 text-4xl"></ion-icon>
             </div>
-            <div>
-              <h3 class="text-xl font-bold text-slate-800">{{ selectedProduct.name }}</h3>
-              <p class="text-xs text-slate-400 mt-1">SKU: {{ selectedProduct.sku }} &middot; {{ selectedProduct.unit || 'PIECE' }}</p>
+            <h3 class="text-xl font-bold text-white text-center">{{ selectedProduct.name }}</h3>
+            <p class="text-xs text-slate-500 mt-1">SKU: {{ selectedProduct.sku }} &middot; {{ selectedProduct.unit || 'PIECE' }}</p>
+          </div>
+
+          <!-- Stats (Glass) -->
+          <div class="grid grid-cols-2 gap-3 mb-5 pb-5" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+              <p class="text-xs text-slate-500 mb-1">Available Stock</p>
+              <p class="text-xl font-bold text-emerald-400">{{ selectedProduct.quantity }}</p>
+            </div>
+            <div *ngIf="selectedProduct.price" class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+              <p class="text-xs text-slate-500 mb-1">Price / Unit</p>
+              <p class="text-xl font-bold text-emerald-400">&#8377;{{ selectedProduct.price }}</p>
             </div>
           </div>
-          <div class="grid grid-cols-2 gap-4 mb-5 pb-5 border-b border-slate-100">
-            <div class="bg-slate-50 rounded-xl p-3 text-center">
-              <p class="text-xs text-slate-400 mb-1">Available Stock</p>
-              <p class="text-xl font-bold text-emerald-600">{{ selectedProduct.quantity }}</p>
-            </div>
-            <div *ngIf="selectedProduct.price" class="bg-slate-50 rounded-xl p-3 text-center">
-              <p class="text-xs text-slate-400 mb-1">Price / Unit</p>
-              <p class="text-xl font-bold text-emerald-600">&#8377;{{ selectedProduct.price }}</p>
-            </div>
-          </div>
+
+          <!-- Quantity with glass controls -->
           <div class="mb-5">
-            <label class="block text-sm font-medium text-slate-600 mb-3">Quantity</label>
+            <label class="block text-sm font-semibold text-slate-300 mb-3 text-center">Quantity</label>
             <div class="flex items-center gap-3">
               <button (click)="quantityToAdd = Math.max(1, quantityToAdd - 1)"
-                      class="w-11 h-11 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-lg text-slate-700 transition-all">&#8722;</button>
+                      class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
+                      style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">&#8722;</button>
               <input [(ngModel)]="quantityToAdd" type="number" min="1" [max]="selectedProduct.quantity"
-                     class="flex-1 px-4 py-3 border border-slate-200 rounded-xl text-center text-lg font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500" />
+                     style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);"
+                     class="flex-1 px-4 py-3 rounded-xl text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
               <button (click)="quantityToAdd = Math.min(selectedProduct.quantity, quantityToAdd + 1)"
-                      class="w-11 h-11 bg-slate-100 hover:bg-slate-200 rounded-xl font-bold text-lg text-slate-700 transition-all">+</button>
+                      class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
+                      style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">+</button>
             </div>
-            <p class="text-xs text-slate-400 mt-2 text-center">Max: {{ selectedProduct.quantity }}</p>
+            <p class="text-xs text-slate-600 mt-2 text-center">Max: {{ selectedProduct.quantity }}</p>
           </div>
-          <div class="bg-emerald-50 rounded-xl p-4 border border-emerald-200 flex justify-between items-center">
-            <span class="font-medium text-slate-700">Subtotal</span>
-            <span class="text-2xl font-bold text-emerald-600">&#8377;{{ quantityToAdd * (selectedProduct.price || 0) }}</span>
+
+          <!-- Subtotal -->
+          <div class="rounded-xl p-4 flex justify-between items-center" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.12);">
+            <span class="font-medium text-slate-400">Subtotal</span>
+            <span class="text-2xl font-bold text-emerald-400">&#8377;{{ quantityToAdd * (selectedProduct.price || 0) }}</span>
           </div>
         </div>
+
         <div class="flex gap-3">
           <button (click)="closeProductModal()"
-                  class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-semibold text-sm">Cancel</button>
+                  class="flex-1 py-3 rounded-xl hover:opacity-80 transition-all font-semibold text-sm"
+                  style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);">Cancel</button>
           <button (click)="addProductToCart()" [disabled]="isLoading"
-                  class="flex-1 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold shadow-lg flex items-center justify-center gap-2 disabled:opacity-50">
+                  class="flex-1 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 transition-all font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                  style="box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
             <ion-spinner *ngIf="isLoading" name="crescent" class="text-sm"></ion-spinner>
             <ion-icon *ngIf="!isLoading" name="add-outline" class="text-lg"></ion-icon>
             {{ isLoading ? 'Adding...' : 'Add to Cart' }}
@@ -267,11 +293,35 @@
   </ng-template>
 </ion-modal>
 
-<!-- ===== CHECKOUT MODAL ===== -->
+<!-- ===== BOTTOM TAB BAR (Glass) ===== -->
+<ion-footer class="ion-no-border">
+  <div style="background: rgba(13,17,23,0.95); border-top: 1px solid rgba(255,255,255,0.06); padding-bottom: env(safe-area-inset-bottom); backdrop-filter: blur(20px);" class="flex">
+    <button (click)="goToDashboard()" class="flex-1 flex flex-col items-center pt-2 pb-3" style="background: transparent; border: none; cursor: pointer;">
+      <ion-icon name="apps-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
+      <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Dashboard</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center pt-2 pb-3 relative" style="background: transparent; border: none; cursor: pointer;">
+      <div class="absolute top-0 left-1/4 right-1/4 rounded-full" style="height: 2.5px; background: #4ade80;"></div>
+      <ion-icon name="grid-outline" style="font-size: 22px; color: #4ade80;"></ion-icon>
+      <span style="font-size: 11px; color: #4ade80; font-weight: 600; margin-top: 3px;">Catalog</span>
+    </button>
+    <button (click)="showCartModal = true" class="flex-1 flex flex-col items-center pt-2 pb-3 relative" style="background: transparent; border: none; cursor: pointer;">
+      <span *ngIf="cartCount > 0" class="absolute top-1 right-1/4 -translate-x-0.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center" style="font-size: 9px; font-weight: 700;">{{ cartCount }}</span>
+      <ion-icon name="cart-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
+      <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Cart</span>
+    </button>
+    <button class="flex-1 flex flex-col items-center pt-2 pb-3" style="background: transparent; border: none; cursor: pointer;">
+      <ion-icon name="person-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
+      <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Profile</span>
+    </button>
+  </div>
+</ion-footer>
+
+<!-- ===== CHECKOUT MODAL (Glass) ===== -->
 <ion-modal [isOpen]="showCheckoutModal" (didDismiss)="closeCheckoutModal()">
   <ng-template>
     <ion-header class="ion-no-border">
-      <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+      <ion-toolbar style="--background: #0d1117;">
         <ion-title class="text-white font-bold">Checkout</ion-title>
         <ion-buttons slot="end">
           <ion-button (click)="closeCheckoutModal()" class="text-white">
@@ -280,38 +330,45 @@
         </ion-buttons>
       </ion-toolbar>
     </ion-header>
-    <ion-content class="ion-padding bg-slate-50">
-      <form [formGroup]="orderForm" (ngSubmit)="submitOrder()" class="max-w-2xl mx-auto pb-20">
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-5">
-          <h3 class="text-base font-bold text-slate-800 mb-4">Order Summary</h3>
-          <div class="space-y-2 mb-4 pb-4 border-b border-slate-100">
+    <ion-content style="--background: #0d1117;">
+      <form [formGroup]="orderForm" (ngSubmit)="submitOrder()" class="px-4 pt-4 pb-24">
+        <!-- Order Summary (Glass) -->
+        <div class="rounded-2xl p-5 mb-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+          <h3 class="text-base font-bold text-white mb-4">Order Summary</h3>
+          <div class="space-y-2 mb-4 pb-4" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div *ngFor="let item of cartItems" class="flex justify-between text-sm">
-              <span class="text-slate-600">{{ item.name }} &times; {{ item.cartQuantity }}</span>
-              <span class="font-semibold text-slate-800">&#8377;{{ item.subtotal }}</span>
+              <span class="text-slate-500">{{ item.name }} &times; {{ item.cartQuantity }}</span>
+              <span class="font-semibold text-white">&#8377;{{ item.subtotal }}</span>
             </div>
           </div>
-          <div class="flex justify-between items-center text-base">
-            <span class="font-bold text-slate-800">Total Amount</span>
-            <span class="font-bold text-emerald-600">&#8377;{{ cartTotal }}</span>
+          <div class="flex justify-between items-center">
+            <span class="font-bold text-white">Total Amount</span>
+            <span class="font-bold text-emerald-400">&#8377;{{ cartTotal }}</span>
           </div>
         </div>
-        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-5">
-          <h3 class="text-base font-bold text-slate-800 mb-4">Delivery Details</h3>
-          <div class="mb-2">
-            <label class="block text-sm font-medium text-slate-600 mb-2">Delivery Address *</label>
+
+        <!-- Delivery (Glass) -->
+        <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+          <h3 class="text-base font-bold text-white mb-4">Delivery Details</h3>
+          <div>
+            <label class="block text-sm font-medium text-slate-500 mb-2">Delivery Address *</label>
             <textarea formControlName="deliveryAddress" placeholder="Enter your delivery address" rows="3"
-                      class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 placeholder:text-slate-400 resize-none"></textarea>
-            <div *ngIf="orderForm.get('deliveryAddress')?.invalid && orderForm.get('deliveryAddress')?.touched" class="text-xs text-red-500 mt-1">Address is required</div>
+                      style="background: rgba(255,255,255,0.05); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.1);"
+                      class="w-full px-4 py-3 rounded-xl text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-600 resize-none"></textarea>
+            <div *ngIf="orderForm.get('deliveryAddress')?.invalid && orderForm.get('deliveryAddress')?.touched" class="text-xs text-red-400 mt-1">Address is required</div>
           </div>
         </div>
+
         <div class="flex flex-col gap-2">
           <button type="submit" [disabled]="isLoading"
-                  class="w-full py-3.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-bold shadow-lg disabled:opacity-50 flex items-center justify-center gap-2">
+                  class="w-full py-3.5 bg-emerald-500 text-white rounded-xl hover:bg-emerald-400 transition-all font-bold disabled:opacity-50 flex items-center justify-center gap-2"
+                  style="box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
             <ion-spinner *ngIf="isLoading" name="crescent" class="text-sm"></ion-spinner>
             {{ isLoading ? 'Processing...' : 'Place Order' }}
           </button>
           <button type="button" (click)="closeCheckoutModal()"
-                  class="w-full py-3 bg-slate-100 text-slate-600 rounded-xl hover:bg-slate-200 transition-all font-medium text-sm">Cancel</button>
+                  class="w-full py-3 rounded-xl hover:opacity-80 transition-all font-medium text-sm"
+                  style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);">Cancel</button>
         </div>
       </form>
     </ion-content>

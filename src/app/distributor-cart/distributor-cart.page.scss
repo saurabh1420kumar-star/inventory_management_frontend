@@ -3,21 +3,8 @@ ion-input, ion-textarea, ion-select {
   --padding-end: 0;
 }
 
-.custom-input {
-  --background: rgba(255, 255, 255, 0.95);
-  --border-radius: 0.75rem;
-  --padding-start: 1rem;
-  --padding-end: 1rem;
-}
-
-.custom-textarea {
-  --background: rgba(255, 255, 255, 0.95);
-  --border-radius: 0.75rem;
-  --padding-start: 1rem;
-  --padding-end: 1rem;
-  --border-style: solid;
-  --border-color: #e2e8f0;
-  --border-width: 1px;
+:host {
+  --ion-background-color: #0d1117;
 }
 
 // Animations
@@ -55,14 +42,14 @@ ion-modal {
 }
 
 ::-webkit-scrollbar-track {
-  background: #f1f5f9;
+  background: #161b22;
 }
 
 ::-webkit-scrollbar-thumb {
-  background: #cbd5e1;
+  background: #30363d;
   border-radius: 3px;
 
   &:hover {
-    background: #94a3b8;
+    background: #484f58;
   }
 }

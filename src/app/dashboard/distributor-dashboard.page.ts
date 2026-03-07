@@ -1,16 +1,15 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
+import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
-  arrowUpOutline,
-  arrowDownOutline,
-  businessOutline,
-  statsChartOutline,
-  trendingUpOutline,
-  checkmarkDoneOutline,
-  chevronUpOutline,
-  chevronDownOutline
+  arrowUpOutline, arrowDownOutline, businessOutline, statsChartOutline,
+  trendingUpOutline, checkmarkDoneOutline, chevronUpOutline, chevronDownOutline,
+  barChartOutline, checkmarkCircleOutline, receiptOutline, walletOutline,
+  analyticsOutline, folderOutline, documentAttachOutline, personCircleOutline,
+  listOutline, carOutline, timeOutline, documentOutline, documentTextOutline,
+  cubeOutline, appsOutline, gridOutline, cartOutline, personOutline
 } from 'ionicons/icons';
 
 interface MetricCard {
@@ -59,7 +58,7 @@ export class DistributorDashboardPage implements OnInit {
     callYTD: '145'
   };
 
-  constructor() {
+  constructor(private router: Router) {
     addIcons({
       'arrow-up-outline': arrowUpOutline,
       'arrow-down-outline': arrowDownOutline,
@@ -68,7 +67,25 @@ export class DistributorDashboardPage implements OnInit {
       'trending-up-outline': trendingUpOutline,
       'checkmark-done-outline': checkmarkDoneOutline,
       'chevron-up-outline': chevronUpOutline,
-      'chevron-down-outline': chevronDownOutline
+      'chevron-down-outline': chevronDownOutline,
+      'bar-chart-outline': barChartOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'receipt-outline': receiptOutline,
+      'wallet-outline': walletOutline,
+      'analytics-outline': analyticsOutline,
+      'folder-outline': folderOutline,
+      'document-attach-outline': documentAttachOutline,
+      'person-circle-outline': personCircleOutline,
+      'list-outline': listOutline,
+      'car-outline': carOutline,
+      'time-outline': timeOutline,
+      'document-outline': documentOutline,
+      'document-text-outline': documentTextOutline,
+      'cube-outline': cubeOutline,
+      'apps-outline': appsOutline,
+      'grid-outline': gridOutline,
+      'cart-outline': cartOutline,
+      'person-outline': personOutline
     });
   }
 
@@ -122,6 +139,10 @@ export class DistributorDashboardPage implements OnInit {
 
   switchTab(tab: 'dashboard' | 'operations') {
     this.activeTab = tab;
+  }
+
+  goToCatalog() {
+    this.router.navigate(['/distributor-cart']);
   }
 
   toggleMenu(menu: string) {
