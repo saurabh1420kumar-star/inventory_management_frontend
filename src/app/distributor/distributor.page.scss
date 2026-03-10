@@ -113,6 +113,35 @@ ion-content {
   }
 }
 
+// Black select style
+.black-select {
+  --background: #ffffff !important;
+  --border-color: #e2e8f0 !important;
+  --color: #000000 !important;
+  --placeholder-color: #000000 !important;
+  --font-size: 16px !important;
+  font-weight: 500 !important;
+
+  &:focus-within {
+    --border-color: #10b981 !important;
+    --background: #ffffff !important;
+  }
+
+  ion-select-option {
+    --color: #000000 !important;
+    --background: #ffffff !important;
+  }
+}
+
+// Ensure select trigger text is visible
+ion-select.black-select::part(text) {
+  color: #000000 !important;
+}
+
+ion-select.black-select::part(placeholder) {
+  color: #000000 !important;
+}
+
 // Modal styles
 ion-modal {
   --border-radius: 16px;

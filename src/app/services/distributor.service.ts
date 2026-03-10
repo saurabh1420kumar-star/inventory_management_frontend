@@ -30,6 +30,7 @@ export interface DistributorDto {
 export interface CreateDistributorRequest {
   name: string;
   assignedPerson: string;
+  salespersonId: number;
   distributorType: string;
   companyType: string;
   contactEmail: string;

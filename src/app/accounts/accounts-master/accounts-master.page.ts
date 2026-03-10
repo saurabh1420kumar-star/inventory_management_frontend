@@ -99,6 +99,7 @@ interface LedgerAccount {
   id: string;
   name: string;
   accountCode: string;
+  accountName?: string;
   fromParty: Party;
   toParty: Party;
   openingBalance: number;
@@ -369,6 +370,7 @@ export class AccountsMasterPage implements OnInit {
       id: distributor.id.toString(),
       name: distributor.name,
       accountCode: distributor.accountNumber,
+      accountName: distributor.accountName,
       distributorId: distributor.id,
       salespersonId: undefined,
       fromParty: {

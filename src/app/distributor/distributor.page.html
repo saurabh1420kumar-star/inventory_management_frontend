@@ -207,22 +207,23 @@
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person *</label>
               <ion-select
-                formControlName="assignedPerson"
+                formControlName="salespersonId"
                 placeholder="Select a sales person"
-                class="custom-select"
+                class="custom-select black-select"
                 [disabled]="salesPersons.length === 0"
+                (ionChange)="onSalesPersonChange($event)"
               >
                 <ion-select-option *ngFor="let person of salesPersons" 
-                  [value]="(person.firstName || '') + ' ' + (person.lastName || '')">
+                  [value]="person.id">
                   {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
                 </ion-select-option>
               </ion-select>
               <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">
                 Loading sales persons...
               </div>
-              <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" 
+              <div *ngIf="(distributorForm.get('assignedPerson')?.invalid || distributorForm.get('salespersonId')?.invalid) && (distributorForm.get('assignedPerson')?.touched || distributorForm.get('salespersonId')?.touched)" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('assignedPerson') }}
+                {{ getErrorMessage('salespersonId') }}
               </div>
             </div>
 
@@ -231,7 +232,7 @@
               <ion-select
                 formControlName="distributorType"
                 placeholder="Select distributor type"
-                class="custom-select"
+                class="custom-select black-select"
               >
                 <ion-select-option value="Wholesale">Wholesale</ion-select-option>
                 <ion-select-option value="Retail">Retail</ion-select-option>
@@ -249,7 +250,7 @@
               <ion-select
                 formControlName="companyType"
                 placeholder="Select company type"
-                class="custom-select"
+                class="custom-select black-select"
               >
                 <ion-select-option value="Private Limited">Private Limited</ion-select-option>
                 <ion-select-option value="LLP">LLP</ion-select-option>

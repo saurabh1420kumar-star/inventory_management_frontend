@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular';
+import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -27,6 +27,7 @@ interface Distributor {
   id: string;
   name: string;
   assignedPerson: string;
+  salespersonId?: number;
   distributorType: string;
   companyType: string;
   email: string;
@@ -88,7 +89,8 @@ export class DistributorPage implements OnInit {
     private fb: FormBuilder,
     private modalCtrl: ModalController,
     private distributorService: DistributorService,
-    private cdr: ChangeDetectorRef
+    private cdr: ChangeDetectorRef,
+    private toastCtrl: ToastController
   ) {
     // Register icons
     addIcons({
@@ -121,6 +123,7 @@ export class DistributorPage implements OnInit {
     this.distributorForm = this.fb.group({
       name: ['', [Validators.required]],
       assignedPerson: ['', [Validators.required]],
+      salespersonId: ['', [Validators.required]],
       distributorType: ['', [Validators.required]],
       companyType: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -145,6 +148,7 @@ export class DistributorPage implements OnInit {
       id: dto.id.toString(),
       name: dto.name,
       assignedPerson: dto.assignedPerson,
+      salespersonId: (dto as any).salespersonId,
       distributorType: dto.distributorType,
       companyType: dto.companyType,
       email: dto.contactEmail,
@@ -166,9 +170,19 @@ export class DistributorPage implements OnInit {
 
   // Helper method to map form data to API payload
   private mapFormToPayload(formData: any) {
-    return {
+    // If assignedPerson is empty, try to get it from selected salesperson
+    let assignedPerson = formData.assignedPerson;
+    if (!assignedPerson && formData.salespersonId) {
+      const person = this.salesPersons.find((p: any) => p.id === formData.salespersonId);
+      if (person) {
+        assignedPerson = (person.firstName || '') + ' ' + (person.lastName || '');
+      }
+    }
+
+    const payload = {
       name: formData.name,
-      assignedPerson: formData.assignedPerson,
+      assignedPerson: assignedPerson?.trim() || '',
+      salespersonId: formData.salespersonId,
       distributorType: formData.distributorType,
       companyType: formData.companyType,
       contactEmail: formData.email,
@@ -186,6 +200,9 @@ export class DistributorPage implements OnInit {
       ifsc: (formData.ifsc || '').toUpperCase(),
       accountName: formData.accountName || ''
     };
+
+    console.log('Final payload after mapping:', payload);
+    return payload;
   }
 
   // Fetch Sales Persons for dropdown
@@ -210,6 +227,20 @@ export class DistributorPage implements OnInit {
         this.salesPersons = [];
       }
     });
+  }
+
+  // Handle sales person selection
+  onSalesPersonChange(event: any) {
+    const salespersonId = event.detail.value;
+    const selectedPerson = this.salesPersons.find((p: any) => p.id === salespersonId);
+    
+    if (selectedPerson) {
+      const fullName = (selectedPerson.firstName || '') + ' ' + (selectedPerson.lastName || '');
+      this.distributorForm.patchValue({
+        salespersonId: salespersonId,
+        assignedPerson: fullName.trim()
+      });
+    }
   }
 
   // API Method 1: Get All Distributors
@@ -313,6 +344,7 @@ export class DistributorPage implements OnInit {
         this.distributorForm.patchValue({
           name: this.selectedDistributor!.name,
           assignedPerson: this.selectedDistributor!.assignedPerson,
+          salespersonId: this.selectedDistributor!.salespersonId,
           distributorType: this.selectedDistributor!.distributorType,
           companyType: this.selectedDistributor!.companyType,
           email: this.selectedDistributor!.email,
@@ -337,13 +369,19 @@ export class DistributorPage implements OnInit {
   // API Methods 3 & 4: Create or Update Distributor
   onSubmitForm() {
     if (this.distributorForm.invalid) {
+      console.log('Form is invalid. Invalid controls:');
       Object.keys(this.distributorForm.controls).forEach(key => {
+        const control = this.distributorForm.get(key);
+        if (control?.invalid) {
+          console.log(`${key}: ${control.errors ? JSON.stringify(control.errors) : 'unknown error'}`);
+        }
         this.distributorForm.get(key)?.markAsTouched();
       });
       return;
     }
 
     const formData = this.distributorForm.value;
+    console.log('Form data before mapping:', formData);
     const payload = this.mapFormToPayload(formData);
 
     if (this.isEditing && this.selectedDistributor) {
@@ -373,12 +411,13 @@ export class DistributorPage implements OnInit {
         error: (err) => {
           console.error('Failed to update distributor', err);
           this.isLoading = false;
-          alert('Failed to update distributor. Please try again.');
+          this.showToast('Failed to update distributor. Please try again.', 'danger');
         }
       });
     } else {
       // CREATE new distributor
       this.isLoading = true;
+      console.log('Creating distributor with payload:', payload);
 
       this.distributorService.createDistributor(payload).subscribe({
         next: (response) => {
@@ -396,8 +435,11 @@ export class DistributorPage implements OnInit {
         },
         error: (err) => {
           console.error('Failed to create distributor', err);
+          console.error('Error response:', err.error);
+          console.error('Error message:', err.error?.message || err.statusText);
           this.isLoading = false;
-          alert('Failed to create distributor. Please try again.');
+          const errorMsg = err.error?.message || 'Failed to create distributor. Please check the form and try again.';
+          this.showToast(errorMsg, 'danger');
         }
       });
     }
@@ -406,6 +448,17 @@ export class DistributorPage implements OnInit {
   cancelEdit() {
     this.isEditing = false;
     this.distributorForm.reset();
+  }
+
+  // Show toast notification
+  async showToast(message: string, color: string = 'success') {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      position: 'top',
+      color: color
+    });
+    await toast.present();
   }
 
   // Delete confirmation
@@ -440,14 +493,14 @@ export class DistributorPage implements OnInit {
           this.filteredDistributors = [...this.distributors];
           this.calculateStats();
           this.closeDetailsModal();
-          alert('Distributor deleted successfully!');
+          this.showToast('Distributor deleted successfully!', 'success');
         }
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Failed to delete distributor', err);
         this.isLoading = false;
-        alert('Failed to delete distributor. Please try again.');
+        this.showToast('Failed to delete distributor. Please try again.', 'danger');
       }
     });
   }
