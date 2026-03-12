@@ -32,6 +32,11 @@ export interface CartItemPayload {
   active: boolean;
 }
 
+export interface PlaceOrderRequest {
+  cartId: number;
+  address: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -42,6 +47,9 @@ export class CartService {
   private cartItems = new BehaviorSubject<CartItem[]>(this.getLocalCart());
   public cart$ = this.cartItems.asObservable();
 
+  // Cart ID from backend
+  private _cartId: number | null = null;
+
   constructor(
     private http: HttpClient,
     private auth: Auth
@@ -51,11 +59,40 @@ export class CartService {
     if (savedCart.length > 0) {
       this.cartItems.next(savedCart);
     }
+    // Load cartId from localStorage
+    this._cartId = this.getCartIdFromStorage();
+  }
+
+  // Cart ID getter
+  getCartId(): number | null {
+    return this._cartId;
+  }
+
+  // Cart ID setter
+  setCartId(cartId: number): void {
+    this._cartId = cartId;
+    localStorage.setItem('cartId', cartId.toString());
+  }
+
+  // Get cartId from localStorage
+  private getCartIdFromStorage(): number | null {
+    const saved = localStorage.getItem('cartId');
+    return saved ? parseInt(saved, 10) : null;
   }
 
   // Get all finished products
   getFinishedProducts(): Observable<Product[]> {
     return this.http.get<Product[]>(this.finishedProductsUrl);
+  }
+
+  // Get cart from API - returns cart with id
+  getCart(distributorId: string | number): Observable<any> {
+    const url = `${this.cartApiUrl}?distributorId=${distributorId}`;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    return this.http.get<any>(url, { headers });
   }
 
   // Add product to cart via API
@@ -113,7 +150,9 @@ export class CartService {
   // Clear cart
   clearCart(): void {
     this.cartItems.next([]);
+    this._cartId = null;
     localStorage.removeItem('distributorCart');
+    localStorage.removeItem('cartId');
   }
 
   // Get cart total
@@ -138,14 +177,14 @@ export class CartService {
   }
 
   // Place order via the correct API:
-  // POST /cart/placeOrder?distributorId=<id>  body: CartItemPayload[]
-  placeOrder(distributorId: string | number, items: CartItemPayload[]): Observable<any> {
+  // POST /cart/placeOrder?distributorId=<id>  body: { cartId, address }
+  placeOrder(distributorId: string | number, payload: PlaceOrderRequest): Observable<any> {
     const url = `${this.cartApiUrl}/placeOrder?distributorId=${distributorId}`;
     const token = this.auth.getToken();
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     });
-    return this.http.post<any>(url, items, { headers });
+    return this.http.post<any>(url, payload, { headers });
   }
 }

@@ -182,7 +182,7 @@ export class DistributorPage implements OnInit {
 
     const payload = {
       name: formData.name,
-      assignedPerson: assignedPerson?.trim() || '',
+      assignedPerson: (assignedPerson?.trim() || '').toUpperCase(),
       salespersonId: formData.salespersonId,
       distributorType: formData.distributorType,
       companyType: formData.companyType,

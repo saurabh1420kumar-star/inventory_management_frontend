@@ -17,7 +17,7 @@ import {
   personOutline,
   appsOutline
 } from 'ionicons/icons';
-import { CartService, Product, CartItem, CartItemPayload } from '../services/cart.service';
+import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } from '../services/cart.service';
 import { Auth } from '../services/auth';
 
 @Component({
@@ -217,29 +217,38 @@ export class DistributorCartPage implements OnInit {
       return;
     }
 
-    // Build the payload array expected by POST /cart/placeOrder?distributorId=<id>
-    const orderPayload: CartItemPayload[] = this.cartItems.map(item => ({
-      itemId: (item.sku || item.id.toString()),
-      quantity: item.cartQuantity,
-      name: item.name,
-      sku: (item.sku || item.id.toString()),
-      price: item.price || 0,
-      imageUrl: '',
-      active: true
-    }));
-
     this.isLoading = true;
-    this.cartService.placeOrder(this.distributorId, orderPayload).subscribe({
-      next: (response) => {
-        alert('Order placed successfully!');
-        this.cartService.clearCart();
-        this.closeCheckoutModal();
-        this.isLoading = false;
+
+    // First get the cart to retrieve the cart ID
+    this.cartService.getCart(this.distributorId).subscribe({
+      next: (cartResponse) => {
+        const cartId = cartResponse?.id || cartResponse?.cartId || 0;
+        
+        const orderPayload: PlaceOrderRequest = {
+          cartId: cartId,
+          address: this.orderForm.value.deliveryAddress
+        };
+
+        console.log('Placing order with payload:', orderPayload);
+
+        this.cartService.placeOrder(this.distributorId!, orderPayload).subscribe({
+          next: (response) => {
+            alert('Order placed successfully!');
+            this.cartService.clearCart();
+            this.closeCheckoutModal();
+            this.isLoading = false;
+          },
+          error: (err) => {
+            console.error('Failed to place order', err);
+            const msg = err?.error?.message || err?.error?.error || 'Please try again.';
+            alert('Failed to place order: ' + msg);
+            this.isLoading = false;
+          }
+        });
       },
       error: (err) => {
-        console.error('Failed to place order', err);
-        const msg = err?.error?.message || err?.error?.error || 'Please try again.';
-        alert('Failed to place order: ' + msg);
+        console.error('Failed to fetch cart', err);
+        alert('Failed to fetch cart. Please try again.');
         this.isLoading = false;
       }
     });
