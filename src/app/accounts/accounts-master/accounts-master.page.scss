@@ -501,6 +501,7 @@ ion-modal {
   color: #1e293b;
   outline: none;
   transition: all 0.2s ease;
+  box-sizing: border-box;
   
   &::placeholder {
     color: #94a3b8;
@@ -514,6 +515,12 @@ ion-modal {
   &:hover:not(:focus) {
     border-color: #cbd5e1;
   }
+}
+
+// ============================================================
+// Amount Input with Currency Symbol
+.txn-field-input.pl-16 {
+  padding-left: 60px;
 }
 
 // ============================================================

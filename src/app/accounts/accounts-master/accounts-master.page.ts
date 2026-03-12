@@ -774,7 +774,7 @@ export class AccountsMasterPage implements OnInit {
           // Add to the master list
           this.selectedAccount.transactions.push(newTransaction);
 
-          this.showToast(response?.message || 'Balance updated successfully', 'success');
+          this.showToast('Payment is updated', 'success');
           this.isFormModalOpen = false;
           this.resetForm();
           // Go to the last page to see the new transaction

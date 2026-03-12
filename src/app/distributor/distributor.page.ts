@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule, ModalController, ToastController } from '@ionic/angular';
+import { IonicModule, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -90,7 +90,8 @@ export class DistributorPage implements OnInit {
     private modalCtrl: ModalController,
     private distributorService: DistributorService,
     private cdr: ChangeDetectorRef,
-    private toastCtrl: ToastController
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) {
     // Register icons
     addIcons({
@@ -430,6 +431,7 @@ export class DistributorPage implements OnInit {
             this.calculateStats();
             this.closeAddModal();
             this.distributorForm.reset();
+            this.showSuccessAlert('Distributor is created successfully!', 'Distributor Created');
           }
           this.isLoading = false;
         },
@@ -459,6 +461,16 @@ export class DistributorPage implements OnInit {
       color: color
     });
     await toast.present();
+  }
+
+  // Show success alert
+  async showSuccessAlert(message: string, title: string = 'Success') {
+    const alert = await this.alertCtrl.create({
+      header: title,
+      message: message,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   // Delete confirmation

@@ -13,37 +13,23 @@ import {
   IonToolbar,
   IonTitle,
   IonContent,
-  IonList,
-  IonItem,
-  IonLabel,
-  IonIcon,
-  IonButton,
   IonButtons,
   IonMenuButton,
-  IonCard,
-  IonCardHeader,
-  IonCardTitle,
-  IonCardSubtitle,
-  IonCardContent,
-  IonSearchbar,
-  IonSegment,
-  IonSegmentButton,
   IonModal,
+  IonIcon,
+  IonButton,
+  IonItem,
   IonInput,
-  IonRow,
-  IonCol,
-  IonGrid,
-  IonSpinner,
-  IonFab,
-  IonFabButton,
   IonSelect,
   IonSelectOption,
-  IonToggle,
-  IonBadge
+  IonBadge,
+  IonSpinner,
+  IonFab,
+  IonFabButton
 } from '@ionic/angular/standalone';
 
-import { ModalController } from '@ionic/angular';
-import { UnitService, Unit } from '../services/unit.service';
+import { ModalController, ToastController, AlertController } from '@ionic/angular';
+import { UnitService, Unit, RawMaterial, FinishedProduct } from '../services/unit.service';
 
 /* ---------- COMPONENT ---------- */
 @Component({
@@ -55,25 +41,23 @@ import { UnitService, Unit } from '../services/unit.service';
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
-
     IonHeader,
     IonToolbar,
     IonTitle,
     IonContent,
-    IonItem,
-    IonIcon,
-    IonButton,
     IonButtons,
     IonMenuButton,
     IonModal,
+    IonIcon,
+    IonButton,
+    IonItem,
     IonInput,
-    IonSpinner,
-
-    IonFab,
-    IonFabButton,
     IonSelect,
     IonSelectOption,
-    IonBadge
+    IonBadge,
+    IonSpinner,
+    IonFab,
+    IonFabButton
   ]
 })
 export class UnitMasterPage implements OnInit {
@@ -87,7 +71,7 @@ export class UnitMasterPage implements OnInit {
   selectedUnit: Unit | null = null;
   currentPage = 1;
   itemsPerPage = 8;
-  selectedCategory: 'raw_material' | 'finished_product' | null = null;
+  selectedCategory: 'Raw Material' | 'Finished Product' | null = null;
   selectedUnitType: 'KG' | 'LITER' | 'PIECE' | 'METER' | null = null;
   selectedVariant: string | null = null;
 
@@ -110,30 +94,46 @@ export class UnitMasterPage implements OnInit {
   constructor(
     private fb: FormBuilder,
     private modalCtrl: ModalController,
-    private unitService: UnitService
+    private unitService: UnitService,
+    private toastCtrl: ToastController,
+    private alertCtrl: AlertController
   ) {
+    // Add Form - supports both Raw Material and Finished Product
     this.addForm = this.fb.group({
       category: ['', Validators.required],
-      unitType: ['KG', Validators.required],
-      subUnit: ['KG'],
-      variant: ['', Validators.required],
-      size: ['', Validators.required],
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      code: ['', [Validators.required, Validators.minLength(1)]],
+      // Raw Material Fields
+      unitName: ['', [Validators.required, Validators.minLength(2)]],
+      unitCode: [1000],
+      unitType: ['KG'],
+      productSize: ['small'],
+      // Finished Product Fields
+      sku: [''],
+      price: [0],
+      name: [''],
+      quantity: [0],
+      minimumThreshold: [0],
+      // Common Fields
       description: [''],
-      status: ['ACTIVE', Validators.required]
+      status: ['ACTIVE']
     });
 
+    // Edit Form - same structure
     this.editForm = this.fb.group({
       category: ['', Validators.required],
-      unitType: ['KG', Validators.required],
-      subUnit: ['KG'],
-      variant: ['', Validators.required],
-      size: ['', Validators.required],
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      code: ['', [Validators.required, Validators.minLength(1)]],
+      // Raw Material Fields
+      unitName: ['', [Validators.required, Validators.minLength(2)]],
+      unitCode: [1000],
+      unitType: ['KG'],
+      productSize: ['small'],
+      // Finished Product Fields
+      sku: [''],
+      price: [0],
+      name: [''],
+      quantity: [0],
+      minimumThreshold: [0],
+      // Common Fields
       description: [''],
-      status: ['ACTIVE', Validators.required]
+      status: ['ACTIVE']
     });
   }
 
@@ -163,8 +163,8 @@ export class UnitMasterPage implements OnInit {
   get stats() {
     return {
       totalUnits: this.units.length,
-      activeUnits: this.units.filter(u => u.status === 'ACTIVE').length,
-      inactiveUnits: this.units.filter(u => u.status === 'INACTIVE').length
+      activeUnits: this.units.filter(u => (u as any).status === 'ACTIVE' || u.active === true).length,
+      inactiveUnits: this.units.filter(u => (u as any).status === 'INACTIVE' || u.active === false).length
     };
   }
 
@@ -222,22 +222,38 @@ export class UnitMasterPage implements OnInit {
     const q = this.searchTerm?.toLowerCase();
 
     return this.units.filter(unit => {
-      const match =
-        !q ||
-        unit.name.toLowerCase().includes(q) ||
-        unit.code.toLowerCase().includes(q) ||
-        (unit.description?.toLowerCase().includes(q) ?? false);
+      // Build searchable text based on category
+      const searchText = [
+        unit.name,
+        unit.category,
+        unit.description || '',
+        unit.category === 'Raw Material' ? (unit as any).unitName || '' : '',
+        unit.category === 'Raw Material' ? (unit as any).unitCode?.toString() || '' : '',
+        unit.category === 'Finished Product' ? (unit as any).sku || '' : ''
+      ].join(' ').toLowerCase();
+
+      const match = !q || searchText.includes(q);
 
       if (this.activeStatusFilter === 'ACTIVE') {
-        return match && unit.status === 'ACTIVE';
+        return match && ((unit as any).status === 'ACTIVE' || unit.active === true);
       }
 
       if (this.activeStatusFilter === 'INACTIVE') {
-        return match && unit.status === 'INACTIVE';
+        return match && ((unit as any).status === 'INACTIVE' || unit.active === false);
       }
 
       return match;
     });
+  }
+
+  // Helper method to check if a unit is raw material
+  isRawMaterial(unit: Unit): boolean {
+    return this.unitService.isRawMaterial(unit as any);
+  }
+
+  // Helper method to check if a unit is finished product
+  isFinishedProduct(unit: Unit): boolean {
+    return this.unitService.isFinishedProduct(unit as any);
   }
 
   get getVariantOptions(): string[] {
@@ -255,9 +271,16 @@ export class UnitMasterPage implements OnInit {
     }
   }
 
-  onCategoryChange(category: 'raw_material' | 'finished_product') {
+  onCategoryChange(category: 'Raw Material' | 'Finished Product') {
     this.selectedCategory = category;
     this.addForm.patchValue({ category });
+    this.editForm.patchValue({ category });
+    // Reset category-specific fields
+    if (category === 'Raw Material') {
+      this.addForm.patchValue({ sku: '', price: 0, name: '', quantity: 0, minimumThreshold: 0 });
+    } else {
+      this.addForm.patchValue({ unitName: '', unitCode: 1000, unitType: 'KG', productSize: 'small' });
+    }
   }
 
   /* ---------- SUB-UNIT OPTIONS ---------- */
@@ -307,29 +330,40 @@ export class UnitMasterPage implements OnInit {
     this.selectedVariant = null;
     this.addForm.reset({
       status: 'ACTIVE',
-      unitType: 'KG'
+      unitType: 'KG',
+      productSize: 'small',
+      unitCode: 1000
     });
   }
 
   openEditModal(unit: Unit) {
     this.selectedUnit = unit;
-    const category = (unit as any).category || 'raw_material';
-    const unitType = (unit as any).unitType || 'KG';
-    const variant = (unit as any).variant || '';
+    this.selectedCategory = unit.category as 'Raw Material' | 'Finished Product';
     
-    this.selectedCategory = category;
-    this.selectedUnitType = unitType;
-    this.selectedVariant = variant;
-    
-    this.editForm.patchValue({
-      category,
-      unitType,
-      variant,
-      name: unit.name,
-      code: unit.code,
-      description: unit.description || '',
-      status: unit.status
-    });
+    if (unit.category === 'Raw Material') {
+      const rawMat = unit as any;
+      this.editForm.patchValue({
+        category: 'Raw Material',
+        unitName: rawMat.unitName || rawMat.name || '',
+        unitCode: rawMat.unitCode || 1000,
+        unitType: rawMat.unitType || rawMat.unit || 'KG',
+        productSize: rawMat.productSize || 'small',
+        description: unit.description || '',
+        status: rawMat.status || (unit.active ? 'ACTIVE' : 'INACTIVE')
+      });
+    } else {
+      const product = unit as any;
+      this.editForm.patchValue({
+        category: 'Finished Product',
+        name: unit.name,
+        sku: product.sku,
+        price: product.price,
+        quantity: unit.quantity,
+        minimumThreshold: product.minimumThreshold,
+        description: unit.description || '',
+        status: product.status || (unit.active ? 'ACTIVE' : 'INACTIVE')
+      });
+    }
     this.isEditModalOpen = true;
   }
 
@@ -341,26 +375,61 @@ export class UnitMasterPage implements OnInit {
     this.selectedVariant = null;
     this.editForm.reset({
       status: 'ACTIVE',
-      unitType: 'KG'
+      unitType: 'KG',
+      productSize: 'small',
+      unitCode: 1000
     });
   }
 
   /* ---------- CREATE UNIT ---------- */
   addUnit() {
-    if (this.addForm.invalid) return;
+    if (this.addForm.invalid) {
+      this.showToast('Please fill all required fields', 'danger');
+      return;
+    }
 
-    const payload = this.addForm.value;
+    const formValue = this.addForm.value;
+    let payload: any;
+
+    // Create payload based on category
+    if (formValue.category === 'Raw Material') {
+      payload = {
+        category: 'Raw Material',
+        unitName: formValue.unitName,
+        unitCode: formValue.unitCode || 1000,
+        unitType: formValue.unitType || 'KG',
+        productSize: formValue.productSize || 'small',
+        description: formValue.description || '',
+        status: formValue.status || 'ACTIVE'
+      };
+    } else if (formValue.category === 'Finished Product') {
+      payload = {
+        category: 'Finished Product',
+        name: formValue.name,
+        sku: formValue.sku,
+        price: formValue.price || 0,
+        quantity: formValue.quantity || 0,
+        description: formValue.description || '',
+        minimumThreshold: formValue.minimumThreshold || 0,
+        status: formValue.status || 'ACTIVE'
+      };
+    }
+
+    console.log('Creating unit with payload:', payload);
 
     this.unitService.createUnit(payload).subscribe({
-      next: (created) => {
-        this.units.unshift(created);
+      next: (response: any) => {
+        console.log('Unit created successfully:', response);
+        const newUnit = response.data || response;
+        this.units.unshift(newUnit);
         this.resetPagination();
         this.closeAddModal();
-        alert('Unit created successfully!');
+        this.showSuccessAlert('Unit is created successfully!', 'Unit Created');
       },
       error: (err) => {
-        console.error(err);
-        alert('Failed to create unit.');
+        console.error('Failed to create unit:', err);
+        const errorMsg = err.error?.message || err.message || 'Failed to create unit';
+        this.showToast(errorMsg, 'danger');
       }
     });
   }
@@ -369,7 +438,32 @@ export class UnitMasterPage implements OnInit {
   updateUnit() {
     if (this.editForm.invalid || !this.selectedUnit) return;
 
-    const payload = this.editForm.value;
+    const formValue = this.editForm.value;
+    let payload: any;
+
+    // Create payload based on category
+    if (formValue.category === 'Raw Material') {
+      payload = {
+        category: 'Raw Material',
+        unitName: formValue.unitName,
+        unitCode: formValue.unitCode || 1000,
+        unitType: formValue.unitType || 'KG',
+        productSize: formValue.productSize || 'small',
+        description: formValue.description || '',
+        status: formValue.status || 'ACTIVE'
+      };
+    } else if (formValue.category === 'Finished Product') {
+      payload = {
+        category: 'Finished Product',
+        name: formValue.name,
+        sku: formValue.sku,
+        price: formValue.price || 0,
+        quantity: formValue.quantity || 0,
+        description: formValue.description || '',
+        minimumThreshold: formValue.minimumThreshold || 0,
+        status: formValue.status || 'ACTIVE'
+      };
+    }
 
     this.unitService.updateUnit(this.selectedUnit.id, payload).subscribe({
       next: (updated) => {
@@ -378,11 +472,12 @@ export class UnitMasterPage implements OnInit {
           this.units[index] = updated;
         }
         this.closeEditModal();
-        alert('Unit updated successfully!');
+        this.showSuccessAlert('Unit updated successfully!', 'Unit Updated');
       },
       error: (err) => {
         console.error(err);
-        alert('Failed to update unit.');
+        const errorMsg = err.error?.message || err.message || 'Failed to update unit';
+        this.showToast(errorMsg, 'danger');
       }
     });
   }
@@ -394,9 +489,13 @@ export class UnitMasterPage implements OnInit {
     this.unitService.deleteUnit(id).subscribe({
       next: () => {
         this.units = this.units.filter(u => u.id !== id);
-        alert('Unit deleted successfully!');
+        this.showSuccessAlert('Unit deleted successfully!', 'Unit Deleted');
+        this.resetPagination();
       },
-      error: () => alert('Delete failed')
+      error: (err) => {
+        const errorMsg = err.error?.message || err.message || 'Failed to delete unit';
+        this.showToast(errorMsg, 'danger');
+      }
     });
   }
 
@@ -407,7 +506,7 @@ export class UnitMasterPage implements OnInit {
   }
 
   onStatusFilterChange(status: 'all' | 'ACTIVE' | 'INACTIVE') {
-    this.activeStatusFilter = status;
+    this.activeStatusFilter = status as 'all' | 'ACTIVE' | 'INACTIVE';
     this.resetPagination();
   }
 
@@ -417,6 +516,27 @@ export class UnitMasterPage implements OnInit {
 
   getStatusBadgeClass(status: string): string {
     return status === 'ACTIVE' ? 'badge-active' : 'badge-inactive';
+  }
+
+  /* ---------- NOTIFICATION METHODS ---------- */
+
+  async showToast(message: string, color: string = 'success') {
+    const toast = await this.toastCtrl.create({
+      message: message,
+      duration: 3000,
+      position: 'top',
+      color: color
+    });
+    await toast.present();
+  }
+
+  async showSuccessAlert(message: string, title: string = 'Success') {
+    const alert = await this.alertCtrl.create({
+      header: title,
+      message: message,
+      buttons: ['OK']
+    });
+    await alert.present();
   }
 
   Math = Math;

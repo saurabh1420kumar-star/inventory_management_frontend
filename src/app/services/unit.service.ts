@@ -3,15 +3,84 @@ import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
 
-export interface Unit {
+/* ============================================
+   RAW MATERIAL INTERFACE
+   ============================================ */
+export interface RawMaterial {
   id: number;
+  category: 'Raw Material';
   name: string;
-  code: string;
+  materialCode: string;
+  unit: 'KG' | 'LITER' | 'PIECE' | 'METER';
+  unitType?: string;
+  productSize?: string;
+  unitName?: string;
+  unitCode?: string;
   description?: string;
-  status: 'ACTIVE' | 'INACTIVE';
+  quantity: number;
+  minimumThreshold: number;
+  status?: string;
+  active: boolean;
   createdAt: string;
   updatedAt: string;
+  sku?: null;
+  price?: null;
+  unitStatus?: null;
+  unitDescription?: null;
 }
+
+/* ============================================
+   FINISHED PRODUCT INTERFACE
+   ============================================ */
+export interface FinishedProduct {
+  id: number;
+  category: 'Finished Product';
+  name: string;
+  sku: string;
+  description?: string;
+  price: number;
+  quantity: number;
+  minimumThreshold?: number;
+  status?: string;
+  active: boolean;
+  createdAt: string;
+  updatedAt: string;
+  materialCode?: null;
+  unit?: null;
+  unitType?: null;
+  productSize?: null;
+  unitName?: null;
+  unitCode?: null;
+  unitDescription?: null;
+}
+
+/* ============================================
+   UNION TYPES AND INTERFACES
+   ============================================ */
+export type Unit = RawMaterial | FinishedProduct;
+
+export interface CreateRawMaterialRequest {
+  category: 'Raw Material';
+  unitName: string;
+  unitCode: number;
+  unitType: 'KG' | 'LITER' | 'PIECE' | 'METER';
+  productSize: 'small' | 'medium' | 'large';
+  description?: string;
+  status: 'ACTIVE' | 'INACTIVE';
+}
+
+export interface CreateFinishedProductRequest {
+  category: 'Finished Product';
+  name: string;
+  sku: string;
+  price: number;
+  quantity: number;
+  description?: string;
+  minimumThreshold?: number;
+  active: boolean;
+}
+
+export type CreateUnitRequest = CreateRawMaterialRequest | CreateFinishedProductRequest;
 
 export interface ApiResponse<T> {
   success: boolean;
@@ -28,7 +97,7 @@ export class UnitService {
   constructor(private http: HttpClient) {}
 
   /**
-   * Get all units
+   * Get all units (both raw materials and finished products)
    */
   getAllUnits(): Observable<Unit[]> {
     return this.http.get<Unit[]>(this.baseUrl);
@@ -42,10 +111,10 @@ export class UnitService {
   }
 
   /**
-   * Create a new unit
+   * Create a new unit (raw material or finished product)
    */
-  createUnit(payload: Partial<Unit>): Observable<Unit> {
-    return this.http.post<Unit>(this.baseUrl, payload);
+  createUnit(payload: CreateUnitRequest): Observable<ApiResponse<Unit>> {
+    return this.http.post<ApiResponse<Unit>>(this.baseUrl, payload);
   }
 
   /**
@@ -67,5 +136,19 @@ export class UnitService {
    */
   toggleUnitStatus(id: number): Observable<Unit> {
     return this.http.patch<Unit>(`${this.baseUrl}/${id}/toggle-status`, {});
+  }
+
+  /**
+   * Check if unit is a raw material
+   */
+  isRawMaterial(unit: Unit): unit is RawMaterial {
+    return unit.category === 'Raw Material';
+  }
+
+  /**
+   * Check if unit is a finished product
+   */
+  isFinishedProduct(unit: Unit): unit is FinishedProduct {
+    return unit.category === 'Finished Product';
   }
 }
