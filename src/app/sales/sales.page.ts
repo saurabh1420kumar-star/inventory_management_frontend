@@ -2,6 +2,7 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SalesService, PendingOrder } from '../services/sales.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
@@ -13,7 +14,7 @@ import { ToastController } from '@ionic/angular';
   templateUrl: './sales.page.html',
   styleUrls: ['./sales.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule]
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule]
 })
 export class SalesPage implements OnInit {
   isLoading = false;
