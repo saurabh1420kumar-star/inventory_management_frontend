@@ -179,6 +179,12 @@
           <ion-label>Complaints & Feedback</ion-label>
         </ion-item>
 
+        <!-- ===== COMPLAINTS MANAGEMENT (Admin only) ===== -->
+        <ion-item *ngIf="isAdmin" routerLink="/complaints-management" routerLinkActive="active" (click)="onMenuItemClick()">
+          <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+          <ion-label>Manage Complaints</ion-label>
+        </ion-item>
+
         <!-- ===== USER RIGHTS (hidden) ===== -->
         <!-- <ng-container *ngIf="isDesktop || isAdmin">
           <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active" (click)="onMenuItemClick()">

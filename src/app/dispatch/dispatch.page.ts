@@ -1,9 +1,14 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
+import { IonicModule, ToastController } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { DispatchService, DispatchOrder, GdnGenerateRequest } from '../services/dispatch.service';
+import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
+import { GdnService, GDN } from '../services/gdn.service';
 
-// ── Interfaces ──────────────────────────────────────
+// ── Local Display Interface ──────────────────────────────────────
 
 export interface DispatchItem {
   productName: string;
@@ -12,16 +17,17 @@ export interface DispatchItem {
   batchNumber?: string;
 }
 
-export interface DispatchOrder {
-  id: string;
+export interface DispatchOrderDisplay {
+  id: number;
   orderNumber: string;
   distributorName: string;
   distributorContact: string;
+  distributorId: number | null;
   salesPersonName: string;
   orderDate: string;
   totalAmount: number;
   items: DispatchItem[];
-  approvalStatus: 'pending' | 'approved' | 'rejected';
+  approvalStatus: 'pending' | 'approved' | 'payment_approved' | 'rejected';
   approvalDate?: string;
   approvalRemarks?: string;
   gdnStatus: 'not-generated' | 'generated' | 'dispatched';
@@ -31,6 +37,7 @@ export interface DispatchOrder {
   vehicleNumber?: string;
   transporterName?: string;
   shippingAddress?: string;
+  originalOrder?: DispatchOrder;
 }
 
 @Component({
@@ -38,13 +45,35 @@ export interface DispatchOrder {
   templateUrl: './dispatch.page.html',
   styleUrls: ['./dispatch.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule],
 })
 export class DispatchPage implements OnInit {
   // ── Data ──────────────────────────────────────────
-  orders: DispatchOrder[] = [];
+  orders: DispatchOrderDisplay[] = [];
   searchTerm = '';
-  activeTab: 'pending' | 'approved' | 'gdn' | 'dispatched' = 'pending';
+  activeTab: 'pending' | 'approved' | 'payment_approved' = 'pending';
+  isLoading = false;
+  errorMessage = '';
+
+  // ── Proforma Invoices ─────────────────────────────
+  proformaInvoices: ProformaInvoice[] = [];
+  paidInvoices: ProformaInvoice[] = [];
+  isLoadingInvoices = false;
+  downloadingInvoiceId: number | null = null;
+  showProformaInvoices = false;
+  invoicesByOrder: Map<number, ProformaInvoice[]> = new Map();
+  showInvoicesByOrder: Map<number, boolean> = new Map();
+
+  // ── GDN (Good Delivery Notes) ──────────────────────
+  gdns: GDN[] = [];
+  gdnsByOrder: Map<number, GDN[]> = new Map();
+  showGdnsByOrder: Map<number, boolean> = new Map();
+  isLoadingGdns = false;
+  downloadingGdnId: number | null = null;
+  showGdns = false;
+  viewingGdnPdfUrl: SafeResourceUrl | null = null;
+  rawGdnPdfUrl: string | null = null;
+  expandedGdnId: number | null = null;
 
   // ── Stats ─────────────────────────────────────────
   get pendingCount(): number {
@@ -63,120 +92,131 @@ export class DispatchPage implements OnInit {
   // ── Modals ────────────────────────────────────────
   isRejectModalOpen = false;
   rejectRemarks = '';
-  orderBeingRejected: DispatchOrder | null = null;
+  orderBeingRejected: DispatchOrderDisplay | null = null;
 
   isDetailModalOpen = false;
-  selectedOrder: DispatchOrder | null = null;
+  selectedOrder: DispatchOrderDisplay | null = null;
 
-  expandedIds = new Set<string>();
+  // ── GDN Modal ─────────────────────────────────────
+  isGdnModalOpen = false;
+  orderForGdn: DispatchOrderDisplay | null = null;
+  gdnForm: FormGroup;
+
+  expandedIds = new Set<number>();
+
+  constructor(
+    private dispatchService: DispatchService,
+    private proformaInvoiceService: ProformaInvoiceService,
+    private gdnService: GdnService,
+    private fb: FormBuilder,
+    private toastController: ToastController,
+    private sanitizer: DomSanitizer
+  ) {
+    this.gdnForm = this.fb.group({
+      dispatchFromAddress: ['', Validators.required],
+      shippingAddress: ['', Validators.required],
+      vehicleNo: ['', Validators.required],
+      transportName: ['', Validators.required],
+      driverName: ['', Validators.required],
+      driverMobile: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+    });
+  }
 
   ngOnInit() {
     this.loadOrders();
+    this.loadProformaInvoices();
+    this.loadGdns();
   }
 
   loadOrders() {
-    // Sample data — in production this would come from an API
-    this.orders = [
-      {
-        id: 'dsp-1',
-        orderNumber: 'ORD-2026-001',
-        distributorName: 'test-5 created',
-        distributorContact: '+91 98765 43210',
-        salesPersonName: 'Rahul Sharma',
-        orderDate: '2026-02-15',
-        totalAmount: 45000,
-        items: [
-          { productName: 'Nectar Premium Mix', quantity: 10, unitPrice: 2500, batchNumber: 'BN-2026-0100' },
-          { productName: 'Organic Blend Pack', quantity: 5, unitPrice: 3000, batchNumber: 'BN-2026-0101' },
-          { productName: 'Wellness Supplement', quantity: 8, unitPrice: 1875, batchNumber: 'BN-2026-0102' },
-        ],
-        approvalStatus: 'pending',
-        gdnStatus: 'not-generated',
-        shippingAddress: '45, MG Road, Bengaluru, Karnataka 560001',
+    this.isLoading = true;
+    this.errorMessage = '';
+    
+    this.dispatchService.getActiveCarts().subscribe({
+      next: (data) => {
+        console.log('Raw API Response:', JSON.stringify(data, null, 2));
+        this.orders = data.map((order) => {
+          const mapped = this.mapApiOrderToDisplay(order);
+          console.log(`Order ${order.id} - Backend Status: ${order.status}, Mapped Status: ${mapped.approvalStatus}, GDN Status: ${mapped.gdnStatus}`);
+          return mapped;
+        });
+        console.log('All Mapped Orders:', this.orders);
+        console.log('Pending Orders:', this.orders.filter(o => o.approvalStatus === 'pending'));
+        console.log('Approved Orders:', this.orders.filter(o => o.approvalStatus === 'approved'));
+        console.log('Payment Approved Orders:', this.orders.filter(o => o.approvalStatus === 'payment_approved'));
+        this.isLoading = false;
       },
-      {
-        id: 'dsp-2',
-        orderNumber: 'ORD-2026-002',
-        distributorName: 'New Distributor',
-        distributorContact: '+91 87654 32109',
-        salesPersonName: 'Vikram Singh',
-        orderDate: '2026-02-10',
-        totalAmount: 32000,
-        items: [
-          { productName: 'Standard Mix Pack', quantity: 20, unitPrice: 1600, batchNumber: 'BN-2026-0200' },
-        ],
-        approvalStatus: 'pending',
-        gdnStatus: 'not-generated',
-        shippingAddress: '12, Civil Lines, Delhi 110054',
+      error: (err) => {
+        console.error('Error loading orders:', err);
+        this.errorMessage = 'Failed to load orders. Please try again.';
+        this.isLoading = false;
       },
-      {
-        id: 'dsp-3',
-        orderNumber: 'ORD-2026-003',
-        distributorName: 'test-3-edited',
-        distributorContact: '+91 76543 21098',
-        salesPersonName: 'Rahul Sharma',
-        orderDate: '2026-01-28',
-        totalAmount: 78000,
-        items: [
-          { productName: 'Premium Wellness Pack', quantity: 15, unitPrice: 5200, batchNumber: 'BN-2026-0300' },
-        ],
-        approvalStatus: 'approved',
-        approvalDate: '2026-01-30',
-        approvalRemarks: 'Approved by Sales Manager',
-        gdnStatus: 'not-generated',
-        shippingAddress: '78, Station Road, Jaipur, Rajasthan 302001',
-      },
-      {
-        id: 'dsp-4',
-        orderNumber: 'ORD-2026-004',
-        distributorName: 'Metro Distributors Pvt. Ltd.',
-        distributorContact: '+91 65432 10987',
-        salesPersonName: 'Priya Patel',
-        orderDate: '2026-01-20',
-        totalAmount: 125000,
-        items: [
-          { productName: 'Nectar Premium Mix', quantity: 20, unitPrice: 2500, batchNumber: 'BN-2026-0400' },
-          { productName: 'Wellness Supplement', quantity: 30, unitPrice: 1875, batchNumber: 'BN-2026-0401' },
-          { productName: 'Immunity Booster', quantity: 10, unitPrice: 3375, batchNumber: 'BN-2026-0402' },
-        ],
-        approvalStatus: 'approved',
-        approvalDate: '2026-01-22',
-        approvalRemarks: 'Approved by Sales Manager',
-        gdnStatus: 'generated',
-        gdnNumber: 'GDN-2026-004',
-        gdnDate: '2026-01-23',
-        vehicleNumber: 'KA-01-AB-1234',
-        transporterName: 'Express Logistics',
-        shippingAddress: '100, Industrial Area, Pune, Maharashtra 411019',
-      },
-      {
-        id: 'dsp-5',
-        orderNumber: 'ORD-2026-005',
-        distributorName: 'Southern Supplies Co.',
-        distributorContact: '+91 54321 09876',
-        salesPersonName: 'Amit Verma',
-        orderDate: '2026-01-10',
-        totalAmount: 92000,
-        items: [
-          { productName: 'Organic Blend Pack', quantity: 12, unitPrice: 3000, batchNumber: 'BN-2026-0500' },
-          { productName: 'Premium Wellness Pack', quantity: 10, unitPrice: 5600, batchNumber: 'BN-2026-0501' },
-        ],
-        approvalStatus: 'approved',
-        approvalDate: '2026-01-12',
-        approvalRemarks: 'Verified and approved',
-        gdnStatus: 'dispatched',
-        gdnNumber: 'GDN-2026-005',
-        gdnDate: '2026-01-13',
-        dispatchDate: '2026-01-14',
-        vehicleNumber: 'TN-04-CD-5678',
-        transporterName: 'Swift Transport',
-        shippingAddress: '23, Anna Nagar, Chennai, Tamil Nadu 600040',
-      },
-    ];
+    });
+  }
+
+  private mapApiOrderToDisplay(order: DispatchOrder): DispatchOrderDisplay {
+    // Handle invalid order data
+    if (!order || !order.id) {
+      console.warn('Invalid order data received:', order);
+      throw new Error('Order data is invalid or missing ID');
+    }
+    
+    // Map API status to display status
+    let approvalStatus: 'pending' | 'approved' | 'payment_approved' | 'rejected' = 'pending';
+    
+    console.log(`Mapping order ${order.id} with status: "${order.status}"`);
+    
+    if (order.status === 'PAYMENT_APPROVED') {
+      approvalStatus = 'payment_approved';
+    } else if (order.status === 'APPROVED') {
+      approvalStatus = 'approved';
+    } else if (order.status === 'DISMISSED') {
+      approvalStatus = 'rejected';
+    } else if (order.status === 'PLACED') {
+      approvalStatus = 'pending';
+    }
+
+    // Determine GDN status
+    let gdnStatus: 'not-generated' | 'generated' | 'dispatched' = 'not-generated';
+    if (order.gdnNumber) {
+      gdnStatus = order.dispatchDate ? 'dispatched' : 'generated';
+    }
+
+    const result = {
+      id: order.id,
+      orderNumber: `ORD-${order.id}`,
+      distributorName: order.distributorName || 'Unknown Distributor',
+      distributorContact: '',
+      distributorId: order.distributorId,
+      salesPersonName: order.salespersonName || 'Unknown',
+      orderDate: order.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
+      totalAmount: order.totalCartAmount || 0,
+      items: (order.cartItems || []).map((item) => ({
+        productName: item.itemName || 'Unknown Product',
+        quantity: item.quantity,
+        unitPrice: item.priceAtTime,
+        batchNumber: item.itemSku,
+      })),
+      approvalStatus,
+      gdnStatus,
+      gdnNumber: order.gdnNumber,
+      gdnDate: order.gdnDate,
+      dispatchDate: order.dispatchDate,
+      vehicleNumber: order.vehicleNumber,
+      transporterName: order.transporterName,
+      shippingAddress: order.shippingAddress || '',
+      originalOrder: order,
+    };
+    
+    if (order.id === 75 || order.id === 52) {
+      console.log(`Order ${order.id} detailed mapping:`, result);
+    }
+    
+    return result;
   }
 
   // ── Filtering ─────────────────────────────────────
-  get filteredOrders(): DispatchOrder[] {
+  get filteredOrders(): DispatchOrderDisplay[] {
     let filtered = this.orders;
 
     // Tab filter
@@ -187,11 +227,8 @@ export class DispatchPage implements OnInit {
       case 'approved':
         filtered = filtered.filter((o) => o.approvalStatus === 'approved' && o.gdnStatus === 'not-generated');
         break;
-      case 'gdn':
-        filtered = filtered.filter((o) => o.gdnStatus === 'generated');
-        break;
-      case 'dispatched':
-        filtered = filtered.filter((o) => o.gdnStatus === 'dispatched');
+      case 'payment_approved':
+        filtered = filtered.filter((o) => o.approvalStatus === 'payment_approved' && o.gdnStatus === 'not-generated');
         break;
     }
 
@@ -213,19 +250,200 @@ export class DispatchPage implements OnInit {
     return {
       pending: this.orders.filter((o) => o.approvalStatus === 'pending').length,
       approved: this.orders.filter((o) => o.approvalStatus === 'approved' && o.gdnStatus === 'not-generated').length,
+      payment_approved: this.orders.filter((o) => o.approvalStatus === 'payment_approved' && o.gdnStatus === 'not-generated').length,
       gdn: this.orders.filter((o) => o.gdnStatus === 'generated').length,
       dispatched: this.orders.filter((o) => o.gdnStatus === 'dispatched').length,
     };
   }
 
   // ── Actions ───────────────────────────────────────
-  approveOrder(order: DispatchOrder) {
-    order.approvalStatus = 'approved';
-    order.approvalDate = new Date().toISOString().split('T')[0];
-    order.approvalRemarks = 'Approved by Dispatch Manager';
+  approveOrder(order: DispatchOrderDisplay) {
+    this.isLoading = true;
+    console.log('=== APPROVE ORDER START ===');
+    console.log('Order ID:', order.id);
+    console.log('Current Status:', order.approvalStatus);
+    
+    this.dispatchService.approveOrder(order.id).subscribe({
+      next: async (response) => {
+        console.log('=== APPROVE API SUCCESS ===');
+        console.log('API Response Status:', response.status);
+        console.log('API returned orderId:', response.orderId);
+        
+        // Update the local order object with the response data
+        // Transform API response to have 'id' field (API returns 'orderId')
+        const transformedResponse = {
+          ...response,
+          id: response.orderId || order.id,
+          cartItems: order.originalOrder?.cartItems || []  // Preserve original cart items
+        };
+        const updatedOrder = this.mapApiOrderToDisplay(transformedResponse);
+        console.log('Updated Order Approval Status:', updatedOrder.approvalStatus);
+        console.log('Updated order id:', updatedOrder.id);
+        console.log('Updated order items count:', updatedOrder.items.length);
+        
+        // Find and replace the order in the list
+        const index = this.orders.findIndex(o => o.id === order.id);
+        if (index !== -1) {
+          this.orders[index] = updatedOrder;
+          console.log('Order updated in list at index:', index);
+        }
+        
+        this.isLoading = false;
+        console.log('Tab Counts after update:', this.tabCounts);
+        console.log('Updated Orders in approved tab:', this.filteredOrders);
+        
+        // Show success toast
+        const successToast = await this.toastController.create({
+          message: `Order #${order.orderNumber} approved successfully`,
+          duration: 3000,
+          position: 'top',
+          color: 'success',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await successToast.present();
+        
+        // Switch to Approve PI tab
+        this.activeTab = 'approved';
+      },
+      error: async (err) => {
+        console.error('=== APPROVE API ERROR ===');
+        console.error('Error Status Code:', err?.status);
+        console.error('Error Status Text:', err?.statusText);
+        console.error('Error Message:', err?.error?.message || err?.error || 'No message');
+        this.errorMessage = err?.error?.message || 'Failed to approve order. Please try again.';
+        this.isLoading = false;
+        
+        // Show error toast
+        const errorToast = await this.toastController.create({
+          message: this.errorMessage,
+          duration: 4000,
+          position: 'top',
+          color: 'danger',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await errorToast.present();
+      },
+    });
   }
 
-  openRejectModal(order: DispatchOrder) {
+  approvePayment(order: DispatchOrderDisplay) {
+    if (!order.distributorId) {
+      this.errorMessage = 'Distributor ID not found for this order.';
+      return;
+    }
+    
+    this.isLoading = true;
+    console.log('Approving payment for order:', order.id);
+    this.dispatchService.approvePayment(order.id, order.distributorId).subscribe({
+      next: async (response) => {
+        console.log('Payment API Response:', response);
+        
+        // Check if response contains an error status
+        if (response && (response.status === 'INSUFFICIENT_BALANCE' || response.status === 'PAYMENT_FAILED' || response.message?.includes('Insufficient'))) {
+          console.error('Payment approval failed:', response.message);
+          this.errorMessage = response.message || 'Payment approval failed. Please check distributor balance.';
+          this.isLoading = false;
+          
+          // Show error toast
+          const errorToast = await this.toastController.create({
+            message: this.errorMessage,
+            duration: 4000,
+            position: 'top',
+            color: 'danger',
+            buttons: [
+              {
+                text: 'Close',
+                role: 'cancel'
+              }
+            ]
+          });
+          await errorToast.present();
+          return;
+        }
+        
+        // Only update order if payment was approved successfully
+        if (response && response.status === 'PAYMENT_APPROVED') {
+          console.log('Payment approved successfully for order:', order.id);
+          console.log('API returned orderId:', response.orderId);
+          
+          // Update the local order object with the response data
+          if (response.status) {
+            // Transform API response to have 'id' field (API returns 'orderId')
+            const transformedResponse = {
+              ...response,
+              id: response.orderId || order.id,  // API returns orderId, but mapper expects id
+              cartItems: order.originalOrder?.cartItems || []  // Preserve original cart items from the order object
+            };
+            console.log('Transformed response - id:', transformedResponse.id, 'orderId:', response.orderId);
+            console.log('Preserving items count:', transformedResponse.cartItems?.length);
+            const updatedOrder = this.mapApiOrderToDisplay(transformedResponse);
+            const index = this.orders.findIndex(o => o.id === order.id);
+            if (index !== -1) {
+              this.orders[index] = updatedOrder;
+              console.log('Order updated to status:', updatedOrder.approvalStatus);
+              console.log('Updated order id:', updatedOrder.id);
+              console.log('Updated order items count:', updatedOrder.items.length);
+            }
+          }
+          
+          // Show success toast
+          const successToast = await this.toastController.create({
+            message: `Payment for Order #${order.orderNumber} approved successfully`,
+            duration: 3000,
+            position: 'top',
+            color: 'success',
+            buttons: [
+              {
+                text: 'Close',
+                role: 'cancel'
+              }
+            ]
+          });
+          await successToast.present();
+          
+          // Switch to Generate GDN tab
+          this.activeTab = 'payment_approved';
+        } else {
+          console.warn('Unexpected response status:', response?.status);
+        }
+        
+        this.isLoading = false;
+        console.log('Tab Counts:', this.tabCounts);
+      },
+      error: async (err) => {
+        console.error('Error approving payment:', err);
+        this.errorMessage = err?.error?.message || 'Failed to approve payment. Please try again.';
+        this.isLoading = false;
+        
+        // Show error toast
+        const errorToast = await this.toastController.create({
+          message: this.errorMessage,
+          duration: 4000,
+          position: 'top',
+          color: 'danger',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await errorToast.present();
+      },
+    });
+  }
+
+  openRejectModal(order: DispatchOrderDisplay) {
     this.orderBeingRejected = order;
     this.rejectRemarks = '';
     this.isRejectModalOpen = true;
@@ -233,13 +451,70 @@ export class DispatchPage implements OnInit {
 
   confirmReject() {
     if (this.orderBeingRejected) {
-      this.orderBeingRejected.approvalStatus = 'rejected';
-      this.orderBeingRejected.approvalDate = new Date().toISOString().split('T')[0];
-      this.orderBeingRejected.approvalRemarks = this.rejectRemarks || 'Rejected by Dispatch Manager';
+      this.isLoading = true;
+      this.dispatchService.dismissOrder(this.orderBeingRejected.id).subscribe({
+        next: async (response) => {
+          console.log('Order rejected:', this.orderBeingRejected?.id);
+          
+          // Update the local order object with the response data
+          if (this.orderBeingRejected && response && response.status) {
+            // Transform API response to have 'id' field (API returns 'orderId')
+            const transformedResponse = {
+              ...response,
+              id: response.orderId || this.orderBeingRejected.id,
+              cartItems: this.orderBeingRejected.originalOrder?.cartItems || []  // Preserve items
+            };
+            const updatedOrder = this.mapApiOrderToDisplay(transformedResponse);
+            const index = this.orders.findIndex(o => o.id === this.orderBeingRejected!.id);
+            if (index !== -1) {
+              this.orders[index] = updatedOrder;
+              console.log('Order updated to status:', updatedOrder.approvalStatus);
+              console.log('Updated order items count:', updatedOrder.items.length);
+            }
+          }
+          
+          this.isRejectModalOpen = false;
+          this.orderBeingRejected = null;
+          this.rejectRemarks = '';
+          this.isLoading = false;
+          
+          // Show success toast
+          const successToast = await this.toastController.create({
+            message: 'Order rejected successfully',
+            duration: 3000,
+            position: 'top',
+            color: 'success',
+            buttons: [
+              {
+                text: 'Close',
+                role: 'cancel'
+              }
+            ]
+          });
+          await successToast.present();
+        },
+        error: async (err) => {
+          console.error('Error rejecting order:', err);
+          this.errorMessage = 'Failed to reject order. Please try again.';
+          this.isLoading = false;
+          
+          // Show error toast
+          const errorToast = await this.toastController.create({
+            message: this.errorMessage,
+            duration: 4000,
+            position: 'top',
+            color: 'danger',
+            buttons: [
+              {
+                text: 'Close',
+                role: 'cancel'
+              }
+            ]
+          });
+          await errorToast.present();
+        },
+      });
     }
-    this.isRejectModalOpen = false;
-    this.orderBeingRejected = null;
-    this.rejectRemarks = '';
   }
 
   cancelReject() {
@@ -249,19 +524,221 @@ export class DispatchPage implements OnInit {
   }
 
   // ── GDN Generation ────────────────────────────────
-  generateGdn(order: DispatchOrder) {
-    // TODO: Integrate GDN generation API here
-    // e.g. this.dispatchService.generateGdn(order.id).subscribe(res => { order.gdnStatus = 'generated'; order.gdnNumber = res.gdnNumber; });
-    console.log('Generating GDN for order:', order.orderNumber);
+  openGdnModal(order: DispatchOrderDisplay) {
+    console.log('Opening GDN Modal for order:', order);
+    console.log('Order ID:', order?.id);
+    console.log('Order number:', order?.orderNumber);
+    this.orderForGdn = order;
+    this.gdnForm.reset();
+    // Pre-fill shipping address if available
+    if (order.shippingAddress) {
+      this.gdnForm.patchValue({ shippingAddress: order.shippingAddress });
+    }
+    this.isGdnModalOpen = true;
   }
 
-  markDispatched(order: DispatchOrder) {
-    order.gdnStatus = 'dispatched';
-    order.dispatchDate = new Date().toISOString().split('T')[0];
+  closeGdnModal() {
+    this.isGdnModalOpen = false;
+    this.orderForGdn = null;
+    this.gdnForm.reset();
+  }
+
+  submitGdnGeneration() {
+    if (this.gdnForm.invalid || !this.orderForGdn) {
+      Object.keys(this.gdnForm.controls).forEach(key => {
+        this.gdnForm.get(key)?.markAsTouched();
+      });
+      return;
+    }
+
+    // Check if order ID exists
+    if (!this.orderForGdn.id) {
+      console.error('Order ID is missing!');
+      console.error('orderForGdn:', this.orderForGdn);
+      this.errorMessage = 'Order ID is missing. Cannot generate GDN.';
+      return;
+    }
+
+    this.isLoading = true;
+    console.log('=== VERIFY INVENTORY START ===');
+    console.log('Order ID:', this.orderForGdn.id);
+
+    // STEP 1: Verify inventory before generating GDN
+    this.dispatchService.verifyInventory(this.orderForGdn.id).subscribe({
+      next: async (verifyResponse) => {
+        console.log('=== INVENTORY VERIFICATION SUCCESS ===');
+        console.log('Verify Response:', verifyResponse);
+        
+        // Show verification success toast
+        const verifyToast = await this.toastController.create({
+          message: 'Inventory verified successfully. Generating GDN...',
+          duration: 2000,
+          position: 'top',
+          color: 'success',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await verifyToast.present();
+        
+        // Wait a moment, then proceed with GDN generation
+        setTimeout(() => {
+          this.proceedWithGdnGeneration();
+        }, 500);
+      },
+      error: async (err) => {
+        console.error('=== INVENTORY VERIFICATION FAILED ===');
+        console.error('Verify Error:', err);
+        console.error('Error URL:', err?.url);
+        console.error('Error Status:', err?.status);
+        const errorMsg = err?.error?.message || err?.error?.error || 'Inventory verification failed.';
+        this.errorMessage = errorMsg;
+        this.isLoading = false;
+        
+        // Show warning toast with option to proceed anyway
+        const warningToast = await this.toastController.create({
+          message: `⚠️ ${errorMsg} Would you like to proceed anyway?`,
+          duration: 6000,
+          position: 'top',
+          color: 'warning',
+          buttons: [
+            {
+              text: 'Proceed',
+              handler: () => {
+                console.log('User chose to proceed without inventory verification');
+                this.proceedWithGdnGeneration();
+              }
+            },
+            {
+              text: 'Cancel',
+              role: 'cancel'
+            }
+          ]
+        });
+        await warningToast.present();
+      },
+    });
+  }
+
+  /**
+   * Proceed with GDN generation (called after inventory verification or skip)
+   */
+  private proceedWithGdnGeneration() {
+    if (!this.orderForGdn) return;
+
+    const payload: GdnGenerateRequest = this.gdnForm.value;
+    const orderId = this.orderForGdn.id;
+    this.isLoading = true;
+
+    console.log('GDN Order ID:', orderId);
+    console.log('GDN Payload:', JSON.stringify(payload));
+
+    this.dispatchService.generateGdn(orderId, payload).subscribe({
+      next: async (response) => {
+        console.log('GDN generated successfully:', response);
+        console.log('orderForGdn before update:', this.orderForGdn);
+        console.log('orderForGdn items before update:', this.orderForGdn?.items?.length);
+        
+        // Update the local order object with GDN data
+        if (this.orderForGdn) {
+          this.orderForGdn.gdnStatus = 'generated';
+          this.orderForGdn.gdnNumber = response.gdnNumber || `GDN-${this.orderForGdn.id}`;
+          this.orderForGdn.gdnDate = new Date().toISOString().split('T')[0];
+          this.orderForGdn.vehicleNumber = payload.vehicleNo;
+          this.orderForGdn.transporterName = payload.transportName;
+          this.orderForGdn.shippingAddress = payload.shippingAddress;
+          
+          console.log('orderForGdn after update:', this.orderForGdn);
+          console.log('orderForGdn items after update:', this.orderForGdn?.items?.length);
+          
+          // IMPORTANT: Also update the order in the main orders array
+          const index = this.orders.findIndex(o => o.id === this.orderForGdn!.id);
+          if (index !== -1) {
+            // Create a new object preserving all properties including items
+            const updatedOrder = {
+              ...this.orderForGdn,
+              items: this.orderForGdn.items || []  // Ensure items are preserved
+            };
+            this.orders[index] = updatedOrder;
+            console.log('Order updated in array at index:', index);
+            console.log('Updated order items count:', this.orders[index].items.length);
+            console.log('Updated order gdnStatus:', this.orders[index].gdnStatus);
+          }
+        }
+        
+        this.closeGdnModal();
+        this.isLoading = false;
+        
+        // Show success toast
+        const successToast = await this.toastController.create({
+          message: `GDN generated successfully! GDN #${this.orderForGdn?.gdnNumber}`,
+          duration: 3000,
+          position: 'top',
+          color: 'success',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await successToast.present();
+      },
+      error: async (err) => {
+        console.error('Error generating GDN:', err);
+        console.error('Error response:', JSON.stringify(err?.error));
+        this.errorMessage = err?.error?.message || err?.error?.error || 'Failed to generate GDN. Please try again.';
+        this.isLoading = false;
+        
+        // Show error toast
+        const errorToast = await this.toastController.create({
+          message: this.errorMessage,
+          duration: 4000,
+          position: 'top',
+          color: 'danger',
+          buttons: [
+            {
+              text: 'Close',
+              role: 'cancel'
+            }
+          ]
+        });
+        await errorToast.present();
+      },
+    });
+  }
+
+  // Legacy method for backward compatibility
+  generateGdn(order: DispatchOrderDisplay) {
+    this.openGdnModal(order);
+  }
+
+  markDispatched(order: DispatchOrderDisplay) {
+    this.isLoading = true;
+    this.dispatchService.markDispatchedOrder(order.id).subscribe({
+      next: (response) => {
+        console.log('Order marked as dispatched:', order.id);
+        
+        // Update the local order object
+        order.gdnStatus = 'dispatched';
+        order.dispatchDate = new Date().toISOString().split('T')[0];
+        
+        this.isLoading = false;
+        console.log('Tab Counts:', this.tabCounts);
+      },
+      error: (err) => {
+        console.error('Error marking order as dispatched:', err);
+        this.errorMessage = err?.error?.message || 'Failed to mark order as dispatched. Please try again.';
+        this.isLoading = false;
+      },
+    });
   }
 
   // ── Detail Modal ──────────────────────────────────
-  openDetail(order: DispatchOrder) {
+  openDetail(order: DispatchOrderDisplay) {
     this.selectedOrder = order;
     this.isDetailModalOpen = true;
   }
@@ -272,7 +749,7 @@ export class DispatchPage implements OnInit {
   }
 
   // ── Expand/Collapse ───────────────────────────────
-  toggleExpand(id: string) {
+  toggleExpand(id: number) {
     if (this.expandedIds.has(id)) {
       this.expandedIds.delete(id);
     } else {
@@ -280,7 +757,7 @@ export class DispatchPage implements OnInit {
     }
   }
 
-  isExpanded(id: string): boolean {
+  isExpanded(id: number): boolean {
     return this.expandedIds.has(id);
   }
 
@@ -288,13 +765,244 @@ export class DispatchPage implements OnInit {
     return item.quantity * item.unitPrice;
   }
 
-  // ── Download GDN (stub) ───────────────────────────
-  downloadGdn(order: DispatchOrder) {
+  // ── Download GDN ──────────────────────────────────
+  downloadGdn(order: DispatchOrderDisplay) {
     console.log(`Downloading GDN ${order.gdnNumber} for order ${order.orderNumber}`);
-    // TODO: hit real API endpoint to download PDF
+    // TODO: Implement download GDN PDF API
   }
 
   refreshData() {
     this.loadOrders();
+  }
+
+  // ── Form Helpers ──────────────────────────────────
+  getGdnFieldError(fieldName: string): string {
+    const control = this.gdnForm.get(fieldName);
+    if (control?.hasError('required')) {
+      return 'This field is required';
+    }
+    if (control?.hasError('pattern')) {
+      return 'Invalid format';
+    }
+    return '';
+  }
+
+  // ── Proforma Invoices ─────────────────────────────
+  loadProformaInvoices() {
+    this.isLoadingInvoices = true;
+
+    this.proformaInvoiceService.getAllInvoices().subscribe({
+      next: (data) => {
+        this.proformaInvoices = data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        // Filter for paid invoices only (first 5)
+        this.paidInvoices = this.proformaInvoices
+          .filter(inv => inv.paymentStatus === 'PAID')
+          .slice(0, 5);
+        
+        // Group invoices by order/cart ID
+        this.groupInvoicesByOrder();
+        this.isLoadingInvoices = false;
+      },
+      error: (error) => {
+        console.error('Error loading proforma invoices:', error);
+        this.isLoadingInvoices = false;
+      }
+    });
+  }
+
+  groupInvoicesByOrder() {
+    this.invoicesByOrder.clear();
+    this.proformaInvoices.forEach(invoice => {
+      if (!this.invoicesByOrder.has(invoice.cartId)) {
+        this.invoicesByOrder.set(invoice.cartId, []);
+      }
+      this.invoicesByOrder.get(invoice.cartId)!.push(invoice);
+    });
+  }
+
+  getInvoicesForOrder(orderId: number): ProformaInvoice[] {
+    return this.invoicesByOrder.get(orderId) || [];
+  }
+
+  toggleInvoicesForOrder(orderId: number) {
+    const current = this.showInvoicesByOrder.get(orderId) || false;
+    this.showInvoicesByOrder.set(orderId, !current);
+  }
+
+  downloadInvoicePdf(invoice: ProformaInvoice) {
+    if (invoice.paymentStatus !== 'PAID') {
+      return;
+    }
+
+    this.downloadingInvoiceId = invoice.id;
+
+    this.proformaInvoiceService.downloadInvoicePdf(invoice.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${invoice.piNumber}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingInvoiceId = null;
+      },
+      error: (error) => {
+        console.error('Error downloading PDF:', error);
+        this.downloadingInvoiceId = null;
+      }
+    });
+  }
+
+  // ── GDN Methods ───────────────────────────────────
+  loadGdns() {
+    this.isLoadingGdns = true;
+
+    this.gdnService.getAllGdns().subscribe({
+      next: (data) => {
+        this.gdns = data.sort(
+          (a, b) => new Date(b.gdnDate).getTime() - new Date(a.gdnDate).getTime()
+        );
+        this.groupGdnsByOrder();
+        this.isLoadingGdns = false;
+      },
+      error: (error) => {
+        console.error('Error loading GDNs:', error);
+        this.isLoadingGdns = false;
+      }
+    });
+  }
+
+  groupGdnsByOrder() {
+    this.gdnsByOrder.clear();
+    this.gdns.forEach(gdn => {
+      if (!this.gdnsByOrder.has(gdn.orderId)) {
+        this.gdnsByOrder.set(gdn.orderId, []);
+      }
+      this.gdnsByOrder.get(gdn.orderId)!.push(gdn);
+    });
+  }
+
+  getGdnsForOrder(orderId: number): GDN[] {
+    return this.gdnsByOrder.get(orderId) || [];
+  }
+
+  toggleGdnsForOrder(orderId: number) {
+    const current = this.showGdnsByOrder.get(orderId) || false;
+    this.showGdnsByOrder.set(orderId, !current);
+  }
+
+  downloadGdnPdf(gdn: GDN) {
+    if (!gdn.hasPdf || !gdn.pdfUrl) {
+      return;
+    }
+
+    this.downloadingGdnId = gdn.id;
+
+    this.gdnService.downloadGdnPdf(gdn.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${gdn.gdnNumber}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingGdnId = null;
+      },
+      error: (error) => {
+        console.error('Error downloading GDN PDF:', error);
+        this.downloadingGdnId = null;
+      }
+    });
+  }
+
+  viewGdnPdfModal(gdn: GDN) {
+    if (!gdn.hasPdf || !gdn.pdfUrl) {
+      return;
+    }
+    this.rawGdnPdfUrl = gdn.pdfUrl;
+    this.viewingGdnPdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(gdn.pdfUrl);
+  }
+
+  closeGdnPdfModal() {
+    this.viewingGdnPdfUrl = null;
+    this.rawGdnPdfUrl = null;
+  }
+
+  toggleGdnDetails(gdnId: number) {
+    if (this.expandedGdnId === gdnId) {
+      this.expandedGdnId = null;
+    } else {
+      this.expandedGdnId = gdnId;
+    }
+  }
+
+  getGdnStatusColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'emerald';
+      case 'PENDING':
+        return 'amber';
+      case 'CANCELLED':
+        return 'rose';
+      default:
+        return 'slate';
+    }
+  }
+
+  getGdnStatusBgColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-emerald-50';
+      case 'PENDING':
+        return 'bg-amber-50';
+      case 'CANCELLED':
+        return 'bg-rose-50';
+      default:
+        return 'bg-slate-50';
+    }
+  }
+
+  getGdnStatusBadgeColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-emerald-200 text-emerald-800';
+      case 'PENDING':
+        return 'bg-amber-200 text-amber-800';
+      case 'CANCELLED':
+        return 'bg-rose-200 text-rose-800';
+      default:
+        return 'bg-slate-200 text-slate-800';
+    }
+  }
+
+  getGdnStatusAccentGradient(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'from-emerald-500 to-teal-600';
+      case 'PENDING':
+        return 'from-amber-500 to-orange-600';
+      case 'CANCELLED':
+        return 'from-rose-500 to-pink-600';
+      default:
+        return 'from-slate-500 to-slate-600';
+    }
+  }
+
+  formatAmount(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   }
 }

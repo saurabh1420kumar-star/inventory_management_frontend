@@ -1,0 +1,278 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-600">Complaints</span> Management
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadComplaints()" class="text-slate-500 hover:text-emerald-600 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+      <!-- HERO -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8">
+        <div class="relative px-6 py-8 sm:px-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Manage Complaints</h1>
+          <p class="text-cyan-50 text-sm flex items-center gap-2">
+            <ion-icon name="alert-outline" class="text-lg"></ion-icon>
+            Review and resolve customer complaints
+          </p>
+        </div>
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+        <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl flex-shrink-0 mt-0.5"></ion-icon>
+        <div>
+          <p class="text-rose-800 font-bold text-sm">{{ errorMessage }}</p>
+        </div>
+      </div>
+
+      <!-- FILTERS & SEARCH -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="grid sm:grid-cols-4 gap-3 mb-4">
+          <!-- Search -->
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            placeholder="Search by subject or name..."
+            class="sm:col-span-2 bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm"
+          />
+
+          <!-- Status Filter -->
+          <select
+            [(ngModel)]="filterStatus"
+            class="bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm">
+            <option value="">All Status</option>
+            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+          </select>
+
+          <!-- Category Filter -->
+          <select
+            [(ngModel)]="filterCategory"
+            class="bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm">
+            <option value="">All Categories</option>
+            <option *ngFor="let category of categoryOptions" [value]="category">{{ category }}</option>
+          </select>
+        </div>
+      </div>
+
+      <!-- COMPLAINTS TABLE -->
+      <div *ngIf="!isLoading && filteredComplaints.length > 0" class="space-y-4">
+        <div *ngFor="let complaint of filteredComplaints"
+          class="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300">
+
+          <!-- Top Accent -->
+          <div class="h-1" [style.backgroundColor]="getStatusBadgeColor(complaint.status)"></div>
+
+          <div class="p-5 sm:p-6">
+            <!-- Header Row -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
+              <div>
+                <h3 class="text-lg font-bold text-slate-800 mb-1">{{ complaint.subject }}</h3>
+                <p class="text-sm text-slate-500">Complaint ID: #{{ complaint.id }}</p>
+              </div>
+
+              <div class="flex items-center gap-2">
+                <!-- Status Badge -->
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border"
+                  [style.backgroundColor]="getStatusBadgeColor(complaint.status) + '10'"
+                  [style.color]="getStatusBadgeColor(complaint.status)"
+                  [style.borderColor]="getStatusBadgeColor(complaint.status) + '30'">
+                  <span class="w-1.5 h-1.5 rounded-full inline-block" [style.backgroundColor]="getStatusBadgeColor(complaint.status)"></span>
+                  {{ complaint.status }}
+                </span>
+
+                <!-- Priority Badge -->
+                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border"
+                  [style.backgroundColor]="getPriorityBadgeColor(complaint.priorityLevel) + '10'"
+                  [style.color]="getPriorityBadgeColor(complaint.priorityLevel)"
+                  [style.borderColor]="getPriorityBadgeColor(complaint.priorityLevel) + '30'">
+                  {{ complaint.priorityLevel }}
+                </span>
+              </div>
+            </div>
+
+            <!-- Info Grid -->
+            <div class="grid sm:grid-cols-4 gap-3 mb-4">
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">From</p>
+                <p class="text-sm font-bold text-slate-700">{{ complaint.fullName }}</p>
+                <p class="text-xs text-slate-500">{{ complaint.emailAddress }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">Phone</p>
+                <p class="text-sm font-bold text-slate-700">{{ complaint.phoneNumber }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">Category</p>
+                <p class="text-sm font-bold text-slate-700">{{ complaint.category }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-lg p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase">Created</p>
+                <p class="text-sm font-bold text-slate-700">{{ complaint.createdAt | date:'dd MMM yyyy' }}</p>
+              </div>
+            </div>
+
+            <!-- Description Preview -->
+            <div class="bg-slate-50 rounded-lg p-3 mb-4">
+              <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Description</p>
+              <p class="text-sm text-slate-700 line-clamp-2">{{ complaint.description }}</p>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-2">
+              <button (click)="openDetailModal(complaint)"
+                class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg px-4 py-2.5 transition-all">
+                <ion-icon name="eye-outline" class="text-base"></ion-icon>
+                View Details
+              </button>
+              <button (click)="openStatusModal(complaint)"
+                class="flex-1 flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-xs rounded-lg px-4 py-2.5 transition-all">
+                <ion-icon name="checkmark-outline" class="text-base"></ion-icon>
+                Update Status
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- EMPTY STATE -->
+      <div *ngIf="!isLoading && filteredComplaints.length === 0"
+        class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+        <ion-icon name="document-outline" class="text-5xl text-slate-300 mb-3 block"></ion-icon>
+        <h3 class="text-lg font-bold text-slate-700 mb-1">No complaints found</h3>
+        <p class="text-sm text-slate-400">{{ searchTerm || filterStatus || filterCategory ? 'No results match your filters.' : 'No complaints yet.' }}</p>
+      </div>
+
+      <!-- LOADING STATE -->
+      <div *ngIf="isLoading" class="text-center py-12">
+        <div class="inline-block">
+          <ion-spinner name="crescent" color="emerald"></ion-spinner>
+        </div>
+      </div>
+
+      <!-- PAGINATION -->
+      <div *ngIf="!isLoading && filteredComplaints.length > 0" class="flex items-center justify-between mt-6 px-4 py-3 bg-white rounded-xl border border-slate-100">
+        <button [disabled]="currentPage === 1" (click)="previousPage()"
+          class="flex items-center gap-1 text-sm font-semibold text-slate-700 disabled:text-slate-400">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+          Previous
+        </button>
+        <span class="text-sm font-medium text-slate-600">
+          Page {{ currentPage }} of {{ totalPages }}
+        </span>
+        <button [disabled]="currentPage >= totalPages" (click)="nextPage()"
+          class="flex items-center gap-1 text-sm font-semibold text-slate-700 disabled:text-slate-400">
+          Next
+          <ion-icon name="chevron-forward-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<!-- DETAIL MODAL -->
+<div *ngIf="isDetailModalOpen && selectedComplaint"
+  class="fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center p-4">
+  <div class="bg-white rounded-3xl sm:rounded-2xl w-full sm:max-w-lg shadow-2xl max-h-screen sm:max-h-90vh overflow-y-auto">
+    <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
+      <h2 class="text-lg font-bold text-slate-800">Complaint Details</h2>
+      <button (click)="closeDetailModal()" class="text-slate-400 hover:text-slate-600">
+        <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+      </button>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <div>
+        <p class="text-xs text-slate-400 font-bold uppercase">Subject</p>
+        <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.subject }}</p>
+      </div>
+      <div>
+        <p class="text-xs text-slate-400 font-bold uppercase">Description</p>
+        <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ selectedComplaint.description }}</p>
+      </div>
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-slate-50 rounded-lg p-3">
+          <p class="text-xs text-slate-400 font-bold uppercase">Category</p>
+          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.category }}</p>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3">
+          <p class="text-xs text-slate-400 font-bold uppercase">Priority</p>
+          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.priorityLevel }}</p>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3">
+          <p class="text-xs text-slate-400 font-bold uppercase">Status</p>
+          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.status }}</p>
+        </div>
+        <div class="bg-slate-50 rounded-lg p-3">
+          <p class="text-xs text-slate-400 font-bold uppercase">Created</p>
+          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.createdAt | date:'short' }}</p>
+        </div>
+      </div>
+      <div class="bg-slate-50 rounded-lg p-3">
+        <p class="text-xs text-slate-400 font-bold uppercase mb-1">Contact Info</p>
+        <p class="text-sm text-slate-700"><strong>Name:</strong> {{ selectedComplaint.fullName }}</p>
+        <p class="text-sm text-slate-700"><strong>Email:</strong> {{ selectedComplaint.emailAddress }}</p>
+        <p class="text-sm text-slate-700"><strong>Phone:</strong> {{ selectedComplaint.phoneNumber }}</p>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-200 px-6 py-4 flex gap-2">
+      <button (click)="closeDetailModal()"
+        class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg py-2.5 transition-all">
+        Close
+      </button>
+      <button (click)="openStatusModal(selectedComplaint); closeDetailModal()"
+        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg py-2.5 transition-all">
+        Update Status
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- STATUS UPDATE MODAL -->
+<div *ngIf="isStatusModalOpen && selectedComplaint"
+  class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
+  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
+    <div class="border-b border-slate-200 px-6 py-4">
+      <h2 class="text-lg font-bold text-slate-800">Update Complaint Status</h2>
+    </div>
+
+    <div class="p-6 space-y-4">
+      <p class="text-sm text-slate-600">
+        Update status for <span class="font-bold">{{ selectedComplaint.subject }}</span>
+      </p>
+
+      <div>
+        <label class="block text-sm font-bold text-slate-700 mb-2">New Status *</label>
+        <select [(ngModel)]="newStatus"
+          class="w-full bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all">
+          <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
+        </select>
+      </div>
+    </div>
+
+    <div class="border-t border-slate-200 px-6 py-4 flex gap-2">
+      <button (click)="closeStatusModal()"
+        class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg py-2.5 transition-all">
+        Cancel
+      </button>
+      <button (click)="updateStatus()" [disabled]="isLoading"
+        class="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white font-semibold text-sm rounded-lg py-2.5 transition-all">
+        {{ isLoading ? 'Updating...' : 'Update' }}
+      </button>
+    </div>
+  </div>
+</div>

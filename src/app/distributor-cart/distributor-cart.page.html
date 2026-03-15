@@ -7,7 +7,7 @@
       Shopping Cart
     </ion-title>
     <ion-buttons slot="end">
-      <button (click)="showCartModal = true" class="relative mr-3 p-1">
+      <button (click)="openCartModal()" class="relative mr-3 p-1">
         <ion-icon name="cart-outline" class="text-2xl text-emerald-400"></ion-icon>
         <span *ngIf="cartCount > 0" class="absolute -top-1 -right-1 w-5 h-5 bg-red-500 text-white text-xs rounded-full flex items-center justify-center font-bold">
           {{ cartCount }}
@@ -305,7 +305,7 @@
       <ion-icon name="grid-outline" style="font-size: 22px; color: #4ade80;"></ion-icon>
       <span style="font-size: 11px; color: #4ade80; font-weight: 600; margin-top: 3px;">Catalog</span>
     </button>
-    <button (click)="showCartModal = true" class="flex-1 flex flex-col items-center pt-2 pb-3 relative" style="background: transparent; border: none; cursor: pointer;">
+    <button (click)="openCartModal()" class="flex-1 flex flex-col items-center pt-2 pb-3 relative" style="background: transparent; border: none; cursor: pointer;">
       <span *ngIf="cartCount > 0" class="absolute top-1 right-1/4 -translate-x-0.5 w-4 h-4 bg-red-500 text-white rounded-full flex items-center justify-center" style="font-size: 9px; font-weight: 700;">{{ cartCount }}</span>
       <ion-icon name="cart-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
       <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Cart</span>

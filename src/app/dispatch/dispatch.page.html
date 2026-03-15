@@ -58,9 +58,8 @@
           <button
             *ngFor="let tab of [
               { key: 'pending', label: 'Pending Approval', count: tabCounts.pending, icon: 'time-outline', dot: 'bg-amber-400' },
-              { key: 'approved', label: 'Ready for GDN', count: tabCounts.approved, icon: 'checkmark-circle-outline', dot: 'bg-emerald-400' },
-              { key: 'gdn', label: 'GDN Generated', count: tabCounts.gdn, icon: 'document-text-outline', dot: 'bg-teal-400' },
-              { key: 'dispatched', label: 'Dispatched', count: tabCounts.dispatched, icon: 'car-outline', dot: 'bg-cyan-400' }
+              { key: 'approved', label: 'Approve PI', count: tabCounts.approved, icon: 'card-outline', dot: 'bg-orange-400' },
+              { key: 'payment_approved', label: 'Generate GDN', count: tabCounts.payment_approved, icon: 'document-text-outline', dot: 'bg-emerald-400' }
             ]"
             (click)="activeTab = $any(tab.key)"
             [class.bg-gradient-to-r]="activeTab === tab.key"
@@ -137,7 +136,12 @@
                 <span *ngIf="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'"
                   class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full">
                   <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
-                  Approved
+                  Approved - Awaiting PI
+                </span>
+                <span *ngIf="order.approvalStatus === 'payment_approved' && order.gdnStatus === 'not-generated'"
+                  class="inline-flex items-center gap-1.5 bg-teal-50 text-teal-600 border border-teal-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="card-outline" class="text-sm"></ion-icon>
+                  PI Approved - Ready for GDN
                 </span>
                 <span *ngIf="order.approvalStatus === 'rejected'"
                   class="inline-flex items-center gap-1.5 bg-rose-50 text-rose-600 border border-rose-200 text-xs font-bold px-3 py-1.5 rounded-full">
@@ -313,8 +317,23 @@
               </button>
             </div>
 
-            <!-- APPROVED + no GDN → Generate GDN -->
+            <!-- APPROVED + no GDN → Approve PI first -->
             <div *ngIf="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'" class="flex gap-3">
+              <button
+                (click)="approvePayment(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-amber-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="card-outline" class="text-lg"></ion-icon>
+                Approve PI
+              </button>
+              <button
+                (click)="openDetail(order)"
+                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon name="eye-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+
+            <!-- PAYMENT_APPROVED + no GDN → Generate GDN -->
+            <div *ngIf="order.approvalStatus === 'payment_approved' && order.gdnStatus === 'not-generated'" class="flex gap-3">
               <button
                 (click)="generateGdn(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
@@ -365,6 +384,43 @@
 
           </div>
         </div>
+      </div>
+
+
+
+      <!-- ═══════ QUICK LINKS ═══════ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 mb-12">
+        <!-- Proforma Invoices Button -->
+        <a routerLink="/proforma-invoice"
+          class="group relative flex items-center gap-4 px-6 py-5 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 rounded-2xl transition-all duration-300 overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/0 to-teal-400/0 group-hover:from-emerald-400/5 group-hover:to-teal-400/5 transition-all duration-300"></div>
+          <div class="relative flex items-center gap-4 w-full">
+            <div class="w-12 h-12 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 flex items-center justify-center transition-all duration-300">
+              <ion-icon name="receipt-outline" class="text-2xl text-emerald-500"></ion-icon>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">Paid Proforma Invoices</h3>
+              <p class="text-xs text-slate-500 group-hover:text-slate-600">View & download invoices</p>
+            </div>
+            <ion-icon name="arrow-forward-outline" class="text-2xl text-slate-400 group-hover:text-emerald-500 transition-all duration-300 group-hover:translate-x-1"></ion-icon>
+          </div>
+        </a>
+
+        <!-- Good Delivery Notes Button -->
+        <a routerLink="/gdn"
+          class="group relative flex items-center gap-4 px-6 py-5 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200 rounded-2xl transition-all duration-300 overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-400/0 to-cyan-400/0 group-hover:from-blue-400/5 group-hover:to-cyan-400/5 transition-all duration-300"></div>
+          <div class="relative flex items-center gap-4 w-full">
+            <div class="w-12 h-12 rounded-xl bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-all duration-300">
+              <ion-icon name="document-text-outline" class="text-2xl text-blue-500"></ion-icon>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Good Delivery Notes</h3>
+              <p class="text-xs text-slate-500 group-hover:text-slate-600">Manage GDN & dispatch</p>
+            </div>
+            <ion-icon name="arrow-forward-outline" class="text-2xl text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"></ion-icon>
+          </div>
+        </a>
       </div>
 
       <!-- ═══════ EMPTY STATE ═══════ -->
@@ -606,6 +662,166 @@
                 <span class="text-lg font-extrabold text-emerald-700">₹{{ selectedOrder.totalAmount.toLocaleString() }}</span>
               </div>
             </div>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- GDN GENERATION MODAL                                       -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isGdnModalOpen" (didDismiss)="closeGdnModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+    <ng-template>
+      <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 95vh;">
+        <!-- Header -->
+        <div class="bg-gradient-to-r from-teal-500 to-cyan-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+              <ion-icon name="document-text-outline" class="text-xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white">Generate GDN</h2>
+              <p *ngIf="orderForGdn" class="text-xs text-cyan-100">{{ orderForGdn.orderNumber }} · {{ orderForGdn.distributorName }}</p>
+            </div>
+          </div>
+          <button (click)="closeGdnModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
+            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Form -->
+        <div class="p-6 space-y-5 overflow-y-auto flex-1">
+          <form [formGroup]="gdnForm">
+            <!-- Dispatch From Address -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Dispatch From Address *</label>
+              <textarea
+                formControlName="dispatchFromAddress"
+                placeholder="Enter warehouse/dispatch location address"
+                rows="2"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm"
+                [class.border-slate-200]="!gdnForm.get('dispatchFromAddress')?.touched || !gdnForm.get('dispatchFromAddress')?.invalid"
+                [class.border-rose-400]="gdnForm.get('dispatchFromAddress')?.touched && gdnForm.get('dispatchFromAddress')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('dispatchFromAddress')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('dispatchFromAddress')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('dispatchFromAddress')?.invalid">
+              </textarea>
+              <p *ngIf="gdnForm.get('dispatchFromAddress')?.touched && gdnForm.get('dispatchFromAddress')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('dispatchFromAddress') }}
+              </p>
+            </div>
+
+            <!-- Shipping Address -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Shipping Address *</label>
+              <textarea
+                formControlName="shippingAddress"
+                placeholder="Enter delivery/shipping address"
+                rows="2"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm"
+                [class.border-slate-200]="!gdnForm.get('shippingAddress')?.touched || !gdnForm.get('shippingAddress')?.invalid"
+                [class.border-rose-400]="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('shippingAddress')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('shippingAddress')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('shippingAddress')?.invalid">
+              </textarea>
+              <p *ngIf="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('shippingAddress') }}
+              </p>
+            </div>
+
+            <!-- Vehicle Number -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Vehicle Number *</label>
+              <input
+                type="text"
+                formControlName="vehicleNo"
+                placeholder="e.g. KA-01-AB-1234"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 text-sm"
+                [class.border-slate-200]="!gdnForm.get('vehicleNo')?.touched || !gdnForm.get('vehicleNo')?.invalid"
+                [class.border-rose-400]="gdnForm.get('vehicleNo')?.touched && gdnForm.get('vehicleNo')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('vehicleNo')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('vehicleNo')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('vehicleNo')?.invalid"
+              />
+              <p *ngIf="gdnForm.get('vehicleNo')?.touched && gdnForm.get('vehicleNo')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('vehicleNo') }}
+              </p>
+            </div>
+
+            <!-- Transport Name -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Transport Name *</label>
+              <input
+                type="text"
+                formControlName="transportName"
+                placeholder="e.g. Express Logistics"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 text-sm"
+                [class.border-slate-200]="!gdnForm.get('transportName')?.touched || !gdnForm.get('transportName')?.invalid"
+                [class.border-rose-400]="gdnForm.get('transportName')?.touched && gdnForm.get('transportName')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('transportName')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('transportName')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('transportName')?.invalid"
+              />
+              <p *ngIf="gdnForm.get('transportName')?.touched && gdnForm.get('transportName')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('transportName') }}
+              </p>
+            </div>
+
+            <!-- Driver Name -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Driver Name *</label>
+              <input
+                type="text"
+                formControlName="driverName"
+                placeholder="Enter driver's full name"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 text-sm"
+                [class.border-slate-200]="!gdnForm.get('driverName')?.touched || !gdnForm.get('driverName')?.invalid"
+                [class.border-rose-400]="gdnForm.get('driverName')?.touched && gdnForm.get('driverName')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('driverName')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('driverName')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('driverName')?.invalid"
+              />
+              <p *ngIf="gdnForm.get('driverName')?.touched && gdnForm.get('driverName')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('driverName') }}
+              </p>
+            </div>
+
+            <!-- Driver Mobile -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Driver Mobile *</label>
+              <input
+                type="tel"
+                formControlName="driverMobile"
+                placeholder="10-digit mobile number"
+                maxlength="10"
+                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 text-sm"
+                [class.border-slate-200]="!gdnForm.get('driverMobile')?.touched || !gdnForm.get('driverMobile')?.invalid"
+                [class.border-rose-400]="gdnForm.get('driverMobile')?.touched && gdnForm.get('driverMobile')?.invalid"
+                [class.focus:border-teal-400]="!gdnForm.get('driverMobile')?.invalid"
+                [class.focus:ring-teal-50]="!gdnForm.get('driverMobile')?.invalid"
+                [class.focus:ring-rose-50]="gdnForm.get('driverMobile')?.invalid"
+              />
+              <p *ngIf="gdnForm.get('driverMobile')?.touched && gdnForm.get('driverMobile')?.invalid" class="text-xs text-rose-500 mt-1">
+                {{ getGdnFieldError('driverMobile') }}
+              </p>
+            </div>
+          </form>
+
+          <!-- Actions -->
+          <div class="flex gap-3 pt-2 pb-4">
+            <button (click)="closeGdnModal()"
+              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl py-3.5 active:scale-95 transition-all">
+              Cancel
+            </button>
+            <button (click)="submitGdnGeneration()"
+              [disabled]="isLoading"
+              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-teal-500 to-cyan-500 hover:from-teal-600 hover:to-cyan-600 text-white font-bold text-sm rounded-xl py-3.5 shadow-md shadow-teal-200 active:scale-95 transition-all disabled:opacity-50">
+              <ion-icon *ngIf="!isLoading" name="document-text-outline" class="text-base"></ion-icon>
+              <ion-spinner *ngIf="isLoading" name="crescent" class="w-4 h-4"></ion-spinner>
+              {{ isLoading ? 'Generating...' : 'Generate GDN' }}
+            </button>
           </div>
         </div>
       </div>

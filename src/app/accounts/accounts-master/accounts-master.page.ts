@@ -2,7 +2,9 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
 import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../services/accountsLedger.service';
+import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
 import { Auth } from '../../services/auth';
 import { Toast as ToastService } from '../../services/toast';
 import { addIcons } from 'ionicons';
@@ -128,6 +130,7 @@ interface LedgerSummary {
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
+    RouterModule,
   ],
 })
 export class AccountsMasterPage implements OnInit {
@@ -151,6 +154,15 @@ export class AccountsMasterPage implements OnInit {
   currentPage: number = 1;
   rowsPerPage: number = 10;
   rowsPerPageOptions = [5, 10, 25, 50];
+
+  // Proforma Invoices
+  proformaInvoices: ProformaInvoice[] = [];
+  paidInvoices: ProformaInvoice[] = [];
+  pendingInvoices: ProformaInvoice[] = [];
+  isLoadingInvoices = false;
+  downloadingInvoiceId: number | null = null;
+  showPaidInvoices = false;
+  showPendingInvoices = false;
 
   // UI State toggles
   isAccountSelectorOpen: boolean = false;
@@ -194,6 +206,7 @@ export class AccountsMasterPage implements OnInit {
   constructor(
     private toastController: ToastController,
     private ledgerService: LedgerService,
+    private proformaInvoiceService: ProformaInvoiceService,
     private elementRef: ElementRef,
     private toastSvc: ToastService,
     private auth: Auth
@@ -260,6 +273,7 @@ export class AccountsMasterPage implements OnInit {
   ngOnInit() {
     // Fetch distributors from API on initialization
     this.loadDistributors();
+    this.loadProformaInvoices();
 
     // Uncomment below to auto-select the account on load for development purposes
     // if (this.ledgerAccounts.length > 0) {
@@ -876,6 +890,11 @@ export class AccountsMasterPage implements OnInit {
     });
   }
 
+  // Format amount for proforma invoices
+  formatAmount(amount: number): string {
+    return this.formatCurrency(amount);
+  }
+
   // For filter labels (e.g., "Jan 1")
   formatDateShort(dateString: string): string {
     if (!dateString) return '';
@@ -927,5 +946,50 @@ export class AccountsMasterPage implements OnInit {
       ? (color as 'success' | 'danger' | 'warning')
       : 'success';
     await this.toastSvc.present(message, mapped);
+  }
+
+  // ── Proforma Invoices ─────────────────────────────
+  loadProformaInvoices() {
+    this.isLoadingInvoices = true;
+
+    this.proformaInvoiceService.getAllInvoices().subscribe({
+      next: (data) => {
+        this.proformaInvoices = data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        // Separate paid and pending invoices
+        this.paidInvoices = this.proformaInvoices.filter(inv => inv.paymentStatus === 'PAID').slice(0, 6);
+        this.pendingInvoices = this.proformaInvoices.filter(inv => inv.paymentStatus === 'PENDING').slice(0, 6);
+        this.isLoadingInvoices = false;
+      },
+      error: (error) => {
+        console.error('Error loading proforma invoices:', error);
+        this.isLoadingInvoices = false;
+      }
+    });
+  }
+
+  downloadInvoicePdf(invoice: ProformaInvoice) {
+    if (invoice.paymentStatus !== 'PAID') {
+      return;
+    }
+
+    this.downloadingInvoiceId = invoice.id;
+
+    this.proformaInvoiceService.downloadInvoicePdf(invoice.id).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `${invoice.piNumber}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingInvoiceId = null;
+      },
+      error: (error) => {
+        console.error('Error downloading PDF:', error);
+        this.downloadingInvoiceId = null;
+      }
+    });
   }
 }

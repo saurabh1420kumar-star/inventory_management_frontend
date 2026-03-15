@@ -1,0 +1,362 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-600">Proforma</span> Invoices
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refresh()" class="text-slate-500 hover:text-emerald-600 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <!-- ═══════ HERO ═══════ -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-teal-500/20 blur-3xl"></div>
+
+        <div class="relative px-5 py-6 sm:px-8 sm:py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Proforma Invoice Management</h1>
+              <p class="text-cyan-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="receipt-outline" class="text-lg"></ion-icon>
+                Track Invoices · Download PDFs · Payment Status
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ SEARCH + TABS ═══════ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+          <!-- Search -->
+          <div class="flex-1 w-full relative group">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-emerald-500 transition-colors"></ion-icon>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ionInput)="onSearchChange($event)"
+              placeholder="Search by PI #, Cart ID, Distributor ID, or Amount..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200 text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Tabs -->
+        <div class="flex gap-2 mt-4 overflow-x-auto pb-1">
+          <button
+            *ngFor="let tab of [
+              { key: 'all', label: 'All', count: invoices.length, icon: 'list-outline', dot: 'bg-blue-400' },
+              { key: 'paid', label: 'Paid', count: paidCount, icon: 'checkmark-circle-outline', dot: 'bg-emerald-400' },
+              { key: 'pending', label: 'Pending', count: pendingCount, icon: 'time-outline', dot: 'bg-amber-400' }
+            ]"
+            (click)="activeTab = $any(tab.key)"
+            [class.bg-gradient-to-r]="activeTab === tab.key"
+            [class.from-emerald-500]="activeTab === tab.key"
+            [class.to-teal-600]="activeTab === tab.key"
+            [class.text-white]="activeTab === tab.key"
+            [class.shadow-lg]="activeTab === tab.key"
+            [class.shadow-emerald-200]="activeTab === tab.key"
+            [class.border-transparent]="activeTab === tab.key"
+            [class.bg-white]="activeTab !== tab.key"
+            [class.border-slate-200]="activeTab !== tab.key"
+            [class.text-slate-600]="activeTab !== tab.key"
+            [class.shadow-sm]="activeTab !== tab.key"
+            class="flex items-center gap-2 px-4 py-2.5 rounded-xl border text-sm font-semibold transition-all duration-200 whitespace-nowrap flex-shrink-0">
+            <span [class]="tab.dot + ' w-2 h-2 rounded-full inline-block'"></span>
+            {{ tab.label }}
+            <span
+              [class]="activeTab === tab.key ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-600'"
+              class="text-xs font-bold px-1.5 py-0.5 rounded-full">
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- INVOICE CARDS                                              -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div *ngIf="filteredInvoices.length > 0" class="space-y-5">
+        <div
+          *ngFor="let invoice of filteredInvoices"
+          class="bg-white rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg"
+          [class.border-emerald-200]="invoice.paymentStatus === 'PAID'"
+          [class.border-amber-200]="invoice.paymentStatus === 'PENDING'"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+
+          <!-- Top Accent -->
+          <div class="h-1 w-full"
+            [class.bg-gradient-to-r]="true"
+            [class.from-emerald-400]="invoice.paymentStatus === 'PAID'"
+            [class.to-teal-400]="invoice.paymentStatus === 'PAID'"
+            [class.from-amber-400]="invoice.paymentStatus === 'PENDING'"
+            [class.to-orange-400]="invoice.paymentStatus === 'PENDING'">
+          </div>
+
+          <div class="p-4 sm:p-6">
+            <!-- ── Row 1: Header ── -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-11 h-11 rounded-full"
+                    [class.bg-gradient-to-br]="true"
+                    [class.from-emerald-400]="invoice.paymentStatus === 'PAID'"
+                    [class.to-teal-500]="invoice.paymentStatus === 'PAID'"
+                    [class.from-amber-400]="invoice.paymentStatus === 'PENDING'"
+                    [class.to-orange-500]="invoice.paymentStatus === 'PENDING'"
+                    style="display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 0.875rem; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    {{ (invoice.paymentStatus === 'PAID') ? '✓' : '!' }}
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-slate-800 truncate">{{ invoice.piNumber }}</h3>
+                    <p class="text-sm text-slate-500 truncate">Cart #{{ invoice.cartId }} | Distributor #{{ invoice.distributorId }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span *ngIf="invoice.paymentStatus === 'PAID'"
+                  class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                  PAID
+                </span>
+                <span *ngIf="invoice.paymentStatus === 'PENDING'"
+                  class="inline-flex items-center gap-1.5 bg-amber-50 text-amber-600 border border-amber-200 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse inline-block"></span>
+                  PENDING
+                </span>
+              </div>
+            </div>
+
+            <!-- ── Row 2: Info Grid ── -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <div class="rounded-xl p-3"
+                [class.bg-emerald-50]="invoice.paymentStatus === 'PAID'"
+                [class.bg-amber-50]="invoice.paymentStatus === 'PENDING'">
+                <p class="text-[10px] font-bold uppercase tracking-wider mb-0.5"
+                  [class.text-emerald-500]="invoice.paymentStatus === 'PAID'"
+                  [class.text-amber-500]="invoice.paymentStatus === 'PENDING'">Amount</p>
+                <p class="text-sm font-bold"
+                  [class.text-emerald-700]="invoice.paymentStatus === 'PAID'"
+                  [class.text-amber-700]="invoice.paymentStatus === 'PENDING'">{{ formatAmount(invoice.amount) }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Created</p>
+                <p class="text-sm font-bold text-slate-700">{{ formatDate(invoice.createdAt) }}</p>
+              </div>
+              <div class="rounded-xl p-3"
+                [class.bg-emerald-50]="invoice.paymentStatus === 'PAID'"
+                [class.bg-amber-50]="invoice.paymentStatus === 'PENDING'">
+                <p class="text-[10px] font-bold uppercase tracking-wider mb-0.5"
+                  [class.text-emerald-500]="invoice.paymentStatus === 'PAID'"
+                  [class.text-amber-500]="invoice.paymentStatus === 'PENDING'">Status</p>
+                <p class="text-sm font-bold"
+                  [class.text-emerald-700]="invoice.paymentStatus === 'PAID'"
+                  [class.text-amber-700]="invoice.paymentStatus === 'PENDING'">{{ invoice.paymentStatus }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">PI Number</p>
+                <p class="text-sm font-bold text-slate-700 truncate">{{ invoice.piNumber }}</p>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-5"></div>
+
+            <!-- ── Action Button ── -->
+            <div class="flex gap-3">
+              <!-- Download Button (only for PAID) -->
+              <button
+                *ngIf="invoice.paymentStatus === 'PAID'"
+                (click)="downloadPdf(invoice)"
+                [disabled]="downloadingId === invoice.id || !invoice.hasPdf"
+                [class.opacity-50]="!invoice.hasPdf"
+                [class.cursor-not-allowed]="!invoice.hasPdf"
+                [title]="!invoice.hasPdf ? 'PDF not available yet' : 'Download invoice PDF'"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-50">
+                <ion-icon *ngIf="downloadingId !== invoice.id" name="download-outline" class="text-lg"></ion-icon>
+                <ion-spinner *ngIf="downloadingId === invoice.id" name="crescent" style="width: 18px; height: 18px;"></ion-spinner>
+                <span *ngIf="downloadingId !== invoice.id">
+                  {{ invoice.hasPdf ? 'Download PDF' : 'No PDF' }}
+                </span>
+                <span *ngIf="downloadingId === invoice.id">Downloading...</span>
+              </button>
+
+              <!-- Pending Message -->
+              <div *ngIf="invoice.paymentStatus === 'PENDING'" 
+                class="flex-1 flex items-center justify-center px-4 py-3 bg-amber-50 border border-amber-200 text-amber-600 font-bold text-sm rounded-xl">
+                <ion-icon name="information-circle-outline" class="mr-2 text-base"></ion-icon>
+                Awaiting Payment
+              </div>
+
+              <!-- View Details Button -->
+              <button
+                (click)="toggleInvoiceDetails(invoice.id)"
+                [class.bg-slate-100]="expandedInvoiceId !== invoice.id"
+                [class.hover:bg-slate-200]="expandedInvoiceId !== invoice.id"
+                [class.bg-emerald-100]="expandedInvoiceId === invoice.id"
+                [class.text-emerald-600]="expandedInvoiceId === invoice.id"
+                [class.text-slate-700]="expandedInvoiceId !== invoice.id"
+                class="flex items-center justify-center gap-2 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon *ngIf="expandedInvoiceId !== invoice.id" name="eye-outline" class="text-lg"></ion-icon>
+                <ion-icon *ngIf="expandedInvoiceId === invoice.id" name="eye-off-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+
+            <!-- ── Expanded Details Section ── -->
+            <div *ngIf="expandedInvoiceId === invoice.id" class="mt-5 pt-5 border-t border-slate-100 transition-all duration-300 ease-in-out">
+              <div class="space-y-4">
+                <!-- Cart ID - Main highlight -->
+                <div class="rounded-xl p-4 bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-200">
+                  <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-wider mb-1">Cart Number</p>
+                  <p class="text-2xl font-bold text-emerald-700">#{{ invoice.cartId }}</p>
+                </div>
+
+                <!-- Other Details Grid -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Invoice ID -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Invoice ID</p>
+                    <p class="text-sm font-bold text-slate-700">{{ invoice.id }}</p>
+                  </div>
+                  <!-- PI Number -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">PI Number</p>
+                    <p class="text-sm font-bold text-slate-700">{{ invoice.piNumber }}</p>
+                  </div>
+                  <!-- Distributor ID -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Distributor ID</p>
+                    <p class="text-sm font-bold text-slate-700">{{ invoice.distributorId }}</p>
+                  </div>
+                  <!-- PDF Available -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">PDF Available</p>
+                    <p class="text-sm font-bold flex items-center gap-1.5">
+                      <span *ngIf="invoice.hasPdf" class="inline-flex items-center gap-1 text-emerald-600">
+                        <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                        Yes
+                      </span>
+                      <span *ngIf="!invoice.hasPdf" class="inline-flex items-center gap-1 text-slate-400">
+                        <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                        No
+                      </span>
+                    </p>
+                  </div>
+                </div>
+
+                <!-- PDF Actions -->
+                <div *ngIf="invoice.hasPdf && invoice.pdfUrl" class="flex gap-3">
+                  <button
+                    (click)="viewPdfModal(invoice.pdfUrl)"
+                    class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-blue-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                    <ion-icon name="eye-outline" class="text-lg"></ion-icon>
+                    View PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ EMPTY STATE ═══════ -->
+      <div *ngIf="filteredInvoices.length === 0 && !isLoading"
+        class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="receipt-outline" class="text-3xl text-slate-300"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700 mb-1">No invoices found</h3>
+        <p class="text-sm text-slate-400">
+          {{ searchTerm ? 'No results match your search.' : 'No invoices in this category yet.' }}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ LOADING STATE ═══════ -->
+  <div *ngIf="isLoading" class="flex items-center justify-center h-96">
+    <div class="text-center">
+      <ion-spinner name="crescent" class="text-emerald-500 mb-4"></ion-spinner>
+      <p class="text-slate-600 font-medium">Loading invoices...</p>
+    </div>
+  </div>
+
+  <!-- ═══════ ERROR STATE ═══════ -->
+  <div *ngIf="errorMessage && !isLoading" class="bg-rose-50 border border-rose-200 rounded-2xl p-6 m-4">
+    <div class="flex items-start gap-3">
+      <ion-icon name="warning-outline" class="text-rose-500 text-2xl flex-shrink-0 mt-1"></ion-icon>
+      <div>
+        <h3 class="font-bold text-rose-700 mb-1">Error Loading Invoices</h3>
+        <p class="text-sm text-rose-600">{{ errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refresh Button -->
+  <div class="flex justify-center pb-8 mt-8">
+    <ion-button (click)="refresh()" color="secondary" shape="round" size="large">
+      Refresh
+    </ion-button>
+  </div>
+
+  <!-- ═══════ PDF VIEWER MODAL ═══════ -->
+  <div *ngIf="viewingPdfUrl" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-xl">
+            <ion-icon name="document-outline"></ion-icon>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">PDF Preview</h2>
+        </div>
+        <button
+          (click)="closePdfModal()"
+          class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-600">
+          <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+        </button>
+      </div>
+
+      <!-- PDF Viewer -->
+      <div class="flex-1 overflow-auto bg-slate-50 flex items-center justify-center">
+        <iframe
+          [src]="viewingPdfUrl"
+          class="w-full h-full"
+          frameborder="0"
+          allow="fullscreen"
+          title="PDF Viewer">
+        </iframe>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50">
+        <a
+          [href]="rawPdfUrl"
+          target="_blank"
+          class="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold px-6 py-3 rounded-xl shadow-md shadow-blue-200 hover:shadow-lg transition-all active:scale-95">
+          <ion-icon name="download-outline" class="text-lg"></ion-icon>
+          Download PDF
+        </a>
+        <button
+          (click)="closePdfModal()"
+          class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-all active:scale-95">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

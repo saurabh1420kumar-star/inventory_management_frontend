@@ -1,7 +1,8 @@
 import { Injectable } from '@angular/core';
-import { HttpClient } from '@angular/common/http';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Observable } from 'rxjs';
 import { environment } from '../../environments/environment';
+import { Auth } from './auth';
 
 export interface Distributor {
   id: string;
@@ -47,7 +48,14 @@ export class SalesService {
   private orderApiUrl = `${environment.apiUrl}/order`;
   private cartApiUrl = `${environment.apiUrl}/cart`;
 
-  constructor(private http: HttpClient) { }
+  constructor(private http: HttpClient, private auth: Auth) { }
+
+  private getAuthHeaders(): HttpHeaders {
+    const token = this.auth.getToken();
+    return new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+  }
 
   getAllDistributors(): Observable<Distributor[]> {
     return this.http.get<Distributor[]>(this.apiUrl);
@@ -81,11 +89,19 @@ export class SalesService {
     return this.http.get<PendingOrder[]>(`${this.orderApiUrl}/pending-order-approvals`);
   }
 
+  /**
+   * Get all placed carts
+   * GET /api/order/placed-carts
+   */
+  getActiveCarts(): Observable<PendingOrder[]> {
+    return this.http.get<PendingOrder[]>(`${this.orderApiUrl}/placed-carts`, { headers: this.getAuthHeaders() });
+  }
+
   approveOrder(cartId: number): Observable<any> {
-    return this.http.put<any>(`${this.orderApiUrl}/approve/${cartId}`, {});
+    return this.http.put<any>(`${this.orderApiUrl}/approve/${cartId}`, {}, { headers: this.getAuthHeaders() });
   }
 
   dismissOrder(cartId: number): Observable<any> {
-    return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`);
+    return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`, { headers: this.getAuthHeaders() });
   }
 }

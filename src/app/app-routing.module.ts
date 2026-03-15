@@ -102,6 +102,26 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'complaints',
+    loadComponent: () => import('./complaints/complaints.page').then(m => m.ComplaintsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'complaints-management',
+    loadComponent: () => import('./complaints-management/complaints-management.page').then(m => m.ComplaintsManagementPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'proforma-invoice',
+    loadComponent: () => import('./proforma-invoice/proforma-invoice.page').then(m => m.ProformaInvoicePage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'gdn',
+    loadComponent: () => import('./gdn/gdn.page').then(m => m.GdnPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }

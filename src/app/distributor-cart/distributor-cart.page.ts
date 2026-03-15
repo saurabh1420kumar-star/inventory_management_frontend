@@ -52,6 +52,9 @@ export class DistributorCartPage implements OnInit {
   // Distributor ID for API calls (login response userId = distributorId)
   distributorId: string | number | null = null;
 
+  // Current cart ID from API responses
+  currentCartId: number | null = null;
+
   // Cart modal open state
   showCartModal: boolean = false;
 
@@ -166,6 +169,9 @@ export class DistributorCartPage implements OnInit {
       this.cartService.addToCartAPI(this.distributorId || 0, [itemPayload]).subscribe({
         next: (response) => {
           console.log('Item added to cart via API:', response);
+          // Store the cart ID from response for later use
+          this.currentCartId = response?.id || response?.cartId || null;
+          console.log('Stored currentCartId:', this.currentCartId);
           // Also add to local cart for UI display
           this.cartService.addToCart(this.selectedProduct!, this.quantityToAdd);
           this.closeProductModal();
@@ -183,12 +189,51 @@ export class DistributorCartPage implements OnInit {
 
   removeFromCart(productId: number) {
     this.cartService.removeFromCart(productId);
+    this.syncCartWithBackend();
   }
 
   updateCartQuantity(productId: number, quantity: number) {
     if (quantity > 0) {
       this.cartService.updateQuantity(productId, quantity);
+      this.syncCartWithBackend();
+    } else {
+      this.removeFromCart(productId);
     }
+  }
+
+  // Sync local cart with backend via edit API
+  syncCartWithBackend() {
+    if (!this.distributorId) return;
+    
+    // Get cart ID first, then edit
+    this.cartService.getCart(this.distributorId).subscribe({
+      next: (cartResponse) => {
+        const cartData = cartResponse?.data || cartResponse?.cart || cartResponse;
+        const cartId = cartData?.id || cartData?.cartId;
+        
+        if (!cartId) {
+          console.log('No cart to sync');
+          return;
+        }
+
+        // Convert cart items to API payload
+        const items = this.cartItems.map(item => ({
+          itemId: item.id?.toString() || '',
+          quantity: item.cartQuantity,
+          name: item.name || '',
+          sku: item.sku || '',
+          price: item.price || 0,
+          imageUrl: '',
+          active: true
+        }));
+
+        this.cartService.editCart(cartId, items).subscribe({
+          next: () => console.log('Cart synced with backend'),
+          error: (err) => console.error('Failed to sync cart', err)
+        });
+      },
+      error: (err) => console.error('Failed to get cart for sync', err)
+    });
   }
 
   openCheckoutModal() {
@@ -197,6 +242,32 @@ export class DistributorCartPage implements OnInit {
       return;
     }
     this.showCheckoutModal = true;
+  }
+
+  // Open cart modal and fetch active cart from backend API
+  openCartModal() {
+    if (!this.distributorId) {
+      alert('Distributor ID not found. Please log in again.');
+      return;
+    }
+
+    this.isLoading = true;
+    this.cartService.getDistributorActiveCart(this.distributorId).subscribe({
+      next: (response) => {
+        console.log('Distributor active cart response:', response);
+        // Store cart ID from response
+        const cartData = response?.data || response;
+        this.currentCartId = cartData?.id || cartData?.cartId || null;
+        console.log('Active cart ID:', this.currentCartId);
+        this.isLoading = false;
+        this.showCartModal = true;
+      },
+      error: (err) => {
+        console.error('Failed to fetch active cart', err);
+        this.isLoading = false;
+        this.showCartModal = true;
+      }
+    });
   }
 
   closeCheckoutModal() {
@@ -219,36 +290,68 @@ export class DistributorCartPage implements OnInit {
 
     this.isLoading = true;
 
-    // First get the cart to retrieve the cart ID
-    this.cartService.getCart(this.distributorId).subscribe({
-      next: (cartResponse) => {
-        const cartId = cartResponse?.id || cartResponse?.cartId || 0;
-        
-        const orderPayload: PlaceOrderRequest = {
-          cartId: cartId,
-          address: this.orderForm.value.deliveryAddress
-        };
+    console.log('=== SUBMIT ORDER START ===');
+    console.log('currentCartId:', this.currentCartId);
+    console.log('distributorId:', this.distributorId);
 
-        console.log('Placing order with payload:', orderPayload);
-
-        this.cartService.placeOrder(this.distributorId!, orderPayload).subscribe({
-          next: (response) => {
-            alert('Order placed successfully!');
-            this.cartService.clearCart();
-            this.closeCheckoutModal();
+    // Use stored cart ID if available, otherwise fetch from API
+    if (this.currentCartId) {
+      console.log('Using stored currentCartId:', this.currentCartId);
+      this.placeOrderWithCartId(this.currentCartId);
+    } else {
+      // Fallback: fetch cart from API
+      this.cartService.getCart(this.distributorId).subscribe({
+        next: (cartResponse) => {
+          console.log('Cart API response:', cartResponse);
+          const cartData = cartResponse?.data || cartResponse?.cart || cartResponse;
+          const cartId = cartData?.id || cartData?.cartId || 0;
+          
+          if (!cartId) {
+            console.error('No cartId found in response:', cartResponse);
+            alert('Cart not found. Please add items to cart first.');
             this.isLoading = false;
-          },
-          error: (err) => {
-            console.error('Failed to place order', err);
-            const msg = err?.error?.message || err?.error?.error || 'Please try again.';
-            alert('Failed to place order: ' + msg);
-            this.isLoading = false;
+            return;
           }
-        });
+
+          this.placeOrderWithCartId(cartId);
+        },
+        error: (err) => {
+          console.error('Failed to fetch cart', err);
+          alert('Failed to fetch cart. Please try again.');
+          this.isLoading = false;
+        }
+      });
+    }
+  }
+
+  private placeOrderWithCartId(cartId: number) {
+    const orderPayload: PlaceOrderRequest = {
+      cartId: cartId,
+      address: this.orderForm.value.deliveryAddress || ''
+    };
+
+    console.log('=== PLACE ORDER DEBUG ===');
+    console.log('Distributor ID:', this.distributorId);
+    console.log('Cart ID:', cartId);
+    console.log('Order Payload:', JSON.stringify(orderPayload));
+
+    this.cartService.placeOrder(this.distributorId!, orderPayload).subscribe({
+      next: (response) => {
+        console.log('=== ORDER PLACED SUCCESSFULLY ===');
+        console.log('Response:', response);
+        alert('Order placed successfully!');
+        this.cartService.clearCart();
+        this.currentCartId = null; // Reset cart ID after successful order
+        this.closeCheckoutModal();
+        this.isLoading = false;
       },
       error: (err) => {
-        console.error('Failed to fetch cart', err);
-        alert('Failed to fetch cart. Please try again.');
+        console.error('=== ORDER FAILED ===');
+        console.error('Error object:', err);
+        console.error('Error status:', err?.status);
+        console.error('Error body:', JSON.stringify(err?.error));
+        const msg = err?.error?.message || err?.error?.error || 'Please try again.';
+        alert('Failed to place order: ' + msg);
         this.isLoading = false;
       }
     });

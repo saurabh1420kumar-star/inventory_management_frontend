@@ -1,0 +1,166 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-600">Submit</span> Complaint
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+
+      <!-- HERO -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="relative px-6 py-8 sm:px-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">We're Here to Help</h1>
+          <p class="text-cyan-50 text-sm">Have an issue? Tell us about it and we'll resolve it quickly.</p>
+        </div>
+      </div>
+
+      <!-- SUCCESS MESSAGE -->
+      <div *ngIf="showSuccess && successMessage" 
+        class="bg-green-50 border border-green-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+        <ion-icon name="checkmark-circle-outline" class="text-green-500 text-2xl flex-shrink-0 mt-0.5"></ion-icon>
+        <div>
+          <p class="text-green-800 font-bold text-sm">{{ successMessage }}</p>
+        </div>
+      </div>
+
+      <!-- ERROR MESSAGE -->
+      <div *ngIf="errorMessage" 
+        class="bg-rose-50 border border-rose-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
+        <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl flex-shrink-0 mt-0.5"></ion-icon>
+        <div>
+          <p class="text-rose-800 font-bold text-sm">{{ errorMessage }}</p>
+        </div>
+      </div>
+
+      <!-- FORM CARD -->
+      <div class="bg-white rounded-3xl shadow-sm border border-slate-100 p-6 sm:p-8">
+        <form [formGroup]="complaintForm" (ngSubmit)="submitComplaint()">
+
+          <!-- Row 1: Full Name & Email -->
+          <div class="grid sm:grid-cols-2 gap-5 mb-6">
+            <!-- Full Name -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Full Name *</label>
+              <input
+                type="text"
+                formControlName="fullName"
+                placeholder="Enter your full name"
+                class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all"
+              />
+              <p *ngIf="complaintForm.get('fullName')?.invalid && complaintForm.get('fullName')?.touched" 
+                class="text-rose-500 text-xs mt-1">Name is required (min 2 characters)</p>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Email Address *</label>
+              <input
+                type="email"
+                formControlName="emailAddress"
+                placeholder="your@email.com"
+                class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all"
+              />
+              <p *ngIf="complaintForm.get('emailAddress')?.invalid && complaintForm.get('emailAddress')?.touched" 
+                class="text-rose-500 text-xs mt-1">Please enter a valid email</p>
+            </div>
+          </div>
+
+          <!-- Row 2: Phone & Category -->
+          <div class="grid sm:grid-cols-2 gap-5 mb-6">
+            <!-- Phone -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Phone Number *</label>
+              <input
+                type="tel"
+                formControlName="phoneNumber"
+                placeholder="10-digit mobile number"
+                class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all"
+              />
+              <p *ngIf="complaintForm.get('phoneNumber')?.invalid && complaintForm.get('phoneNumber')?.touched" 
+                class="text-rose-500 text-xs mt-1">Enter a valid 10-digit phone number</p>
+            </div>
+
+            <!-- Category -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Category *</label>
+              <select
+                formControlName="category"
+                class="w-full bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all">
+                <option *ngFor="let cat of categories" [value]="cat">{{ cat }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Row 3: Subject & Priority -->
+          <div class="grid sm:grid-cols-2 gap-5 mb-6">
+            <!-- Subject -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Subject *</label>
+              <input
+                type="text"
+                formControlName="subject"
+                placeholder="Brief subject of complaint"
+                class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all"
+              />
+              <p *ngIf="complaintForm.get('subject')?.invalid && complaintForm.get('subject')?.touched" 
+                class="text-rose-500 text-xs mt-1">Subject is required (min 5 characters)</p>
+            </div>
+
+            <!-- Priority -->
+            <div>
+              <label class="block text-sm font-bold text-slate-700 mb-2">Priority Level *</label>
+              <select
+                formControlName="priorityLevel"
+                class="w-full bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all">
+                <option *ngFor="let level of priorityLevels" [value]="level">{{ level }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Description -->
+          <div class="mb-6">
+            <label class="block text-sm font-bold text-slate-700 mb-2">Description *</label>
+            <textarea
+              formControlName="description"
+              placeholder="Provide detailed description of your complaint..."
+              rows="5"
+              class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all resize-none">
+            </textarea>
+            <p *ngIf="complaintForm.get('description')?.invalid && complaintForm.get('description')?.touched" 
+              class="text-rose-500 text-xs mt-1">Description is required (min 20 characters)</p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex gap-3">
+            <button
+              type="submit"
+              [disabled]="isLoading"
+              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:from-slate-300 disabled:to-slate-300 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg transition-all duration-200 disabled:cursor-not-allowed">
+              <ion-icon name="send-outline" class="text-lg"></ion-icon>
+              {{ isLoading ? 'Submitting...' : 'Submit Complaint' }}
+            </button>
+            <button
+              type="button"
+              (click)="resetForm()"
+              [disabled]="isLoading"
+              class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 disabled:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-6 py-3 transition-all duration-200">
+              <ion-icon name="refresh-outline" class="text-lg"></ion-icon>
+              Clear
+            </button>
+          </div>
+        </form>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

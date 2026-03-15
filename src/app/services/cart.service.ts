@@ -95,6 +95,17 @@ export class CartService {
     return this.http.get<any>(url, { headers });
   }
 
+  // Get active cart for distributor
+  // GET /api/cart/getActiveCart?distributorId=X
+  getDistributorActiveCart(distributorId: string | number): Observable<any> {
+    const url = `${this.cartApiUrl}/getActiveCart?distributorId=${distributorId}`;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    return this.http.get<any>(url, { headers });
+  }
+
   // Add product to cart via API
   addToCartAPI(distributorId: string | number, items: CartItemPayload[]): Observable<any> {
     const url = `${this.cartApiUrl}/items?distributorId=${distributorId}`;
@@ -104,6 +115,18 @@ export class CartService {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     });
     return this.http.post<any>(url, items, { headers });
+  }
+
+  // Edit cart items via API
+  // PUT /api/cart/{cartId}/edit
+  editCart(cartId: number | string, items: CartItemPayload[]): Observable<any> {
+    const url = `${this.cartApiUrl}/${cartId}/edit`;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      'Content-Type': 'application/json',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    return this.http.put<any>(url, items, { headers });
   }
 
   // Add product to cart (local)
@@ -181,6 +204,11 @@ export class CartService {
   placeOrder(distributorId: string | number, payload: PlaceOrderRequest): Observable<any> {
     const url = `${this.cartApiUrl}/placeOrder?distributorId=${distributorId}`;
     const token = this.auth.getToken();
+    
+    console.log('PlaceOrder URL:', url);
+    console.log('PlaceOrder Payload:', JSON.stringify(payload));
+    console.log('PlaceOrder Token:', token ? 'Present' : 'MISSING');
+    
     const headers = new HttpHeaders({
       'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})

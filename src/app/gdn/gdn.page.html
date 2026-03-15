@@ -1,0 +1,306 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-blue-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-blue-600">GDN</span> Documents
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refresh()" class="text-slate-500 hover:text-blue-600 transition-colors bg-slate-50 rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-cyan-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <!-- ═══════ HERO ═══════ -->
+      <div class="bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400 rounded-3xl shadow-lg shadow-blue-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-cyan-500/20 blur-3xl"></div>
+
+        <div class="relative px-5 py-6 sm:px-8 sm:py-8">
+          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Good Delivery Note Management</h1>
+          <p class="text-cyan-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+            <ion-icon name="document-outline" class="text-lg"></ion-icon>
+            Track Deliveries · Download PDFs · View Details
+          </p>
+        </div>
+      </div>
+
+      <!-- ═══════ SEARCH ═══════ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col lg:flex-row gap-4 items-center">
+          <!-- Search -->
+          <div class="flex-1 w-full relative group">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-blue-500 transition-colors"></ion-icon>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ionInput)="onSearchChange($event)"
+              placeholder="Search by GDN #, Order ID, Driver Name, or Transport..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-blue-400 focus:ring-4 focus:ring-blue-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200 text-sm"
+            />
+          </div>
+        </div>
+
+        <!-- Info -->
+        <div class="flex gap-2 mt-4">
+          <div class="flex items-center gap-2 px-4 py-2.5 rounded-xl bg-blue-50 border border-blue-200">
+            <ion-icon name="document-outline" class="text-blue-500"></ion-icon>
+            <span class="text-sm font-semibold text-blue-700">Total GDNs: <span class="font-bold">{{ gdns.length }}</span></span>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- GDN CARDS                                                  -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div *ngIf="filteredGdns.length > 0" class="space-y-5">
+        <div
+          *ngFor="let gdn of filteredGdns"
+          class="bg-white rounded-2xl border border-blue-200 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-blue-300"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+
+          <!-- Top Accent -->
+          <div class="h-1 w-full bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400"></div>
+
+          <div class="p-4 sm:p-6">
+            <!-- ── Row 1: Header ── -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+              <div class="flex-1 min-w-0">
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-11 h-11 rounded-full bg-gradient-to-br from-blue-400 to-cyan-500" style="display: flex; align-items: center; justify-content: center; color: white; font-weight: bold; font-size: 1rem; flex-shrink: 0; box-shadow: 0 2px 4px rgba(0,0,0,0.1);">
+                    📦
+                  </div>
+                  <div class="min-w-0">
+                    <h3 class="text-lg font-bold text-slate-800 truncate">{{ gdn.gdnNumber }}</h3>
+                    <p class="text-sm text-slate-500 truncate">Order #{{ gdn.orderId }} · {{ gdn.transportName }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <div class="flex items-center gap-3 flex-shrink-0">
+                <span class="inline-flex items-center gap-1.5 border border-blue-200 bg-blue-50 text-blue-600 text-xs font-bold px-3 py-1.5 rounded-full">
+                  <span class="w-1.5 h-1.5 rounded-full bg-blue-500 inline-block"></span>
+                  Delivery
+                </span>
+              </div>
+            </div>
+
+            <!-- ── Row 2: Main Info Grid ── -->
+            <div class="grid grid-cols-2 sm:grid-cols-3 gap-3 mb-5">
+              <div class="rounded-xl p-3 bg-slate-50">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Packages</p>
+                <p class="text-sm font-bold text-slate-700">{{ gdn.totalPackages }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Weight (KG)</p>
+                <p class="text-sm font-bold text-slate-700">{{ gdn.totalWeight }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Date</p>
+                <p class="text-sm font-bold text-slate-700">{{ formatDate(gdn.gdnDate) }}</p>
+              </div>
+            </div>
+
+            <div class="border-t border-slate-100 pt-5"></div>
+
+            <!-- ── Action Buttons ── -->
+            <div class="flex gap-3">
+              <!-- Download Button -->
+              <button
+                (click)="downloadPdf(gdn)"
+                [disabled]="downloadingId === gdn.id || !gdn.hasPdf"
+                [class.opacity-50]="!gdn.hasPdf"
+                [class.cursor-not-allowed]="!gdn.hasPdf"
+                [title]="!gdn.hasPdf ? 'PDF not available yet' : 'Download GDN PDF'"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-blue-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-50">
+                <ion-icon *ngIf="downloadingId !== gdn.id" name="download-outline" class="text-lg"></ion-icon>
+                <ion-spinner *ngIf="downloadingId === gdn.id" name="crescent" style="width: 18px; height: 18px;"></ion-spinner>
+                <span *ngIf="downloadingId !== gdn.id">
+                  {{ gdn.hasPdf ? 'Download PDF' : 'No PDF' }}
+                </span>
+                <span *ngIf="downloadingId === gdn.id">Downloading...</span>
+              </button>
+
+              <!-- View Details -->
+              <button
+                (click)="toggleGdnDetails(gdn.id)"
+                [class.bg-slate-100]="expandedGdnId !== gdn.id"
+                [class.hover:bg-slate-200]="expandedGdnId !== gdn.id"
+                [class.bg-blue-100]="expandedGdnId === gdn.id"
+                [class.text-blue-600]="expandedGdnId === gdn.id"
+                [class.text-slate-700]="expandedGdnId !== gdn.id"
+                class="flex items-center justify-center gap-2 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon *ngIf="expandedGdnId !== gdn.id" name="eye-outline" class="text-lg"></ion-icon>
+                <ion-icon *ngIf="expandedGdnId === gdn.id" name="eye-off-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+
+            <!-- ── Expanded Details Section ── -->
+            <div *ngIf="expandedGdnId === gdn.id" class="mt-5 pt-5 border-t border-slate-100 transition-all duration-300 ease-in-out">
+              <div class="space-y-4">
+                <!-- Order ID - Main highlight -->
+                <div class="rounded-xl p-4 bg-gradient-to-r from-blue-50 to-cyan-50 border border-blue-200">
+                  <p class="text-[10px] text-blue-500 font-bold uppercase tracking-wider mb-1">Order Number</p>
+                  <p class="text-2xl font-bold text-blue-700">#{{ gdn.orderId }}</p>
+                </div>
+
+                <!-- Transport Details -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Transport Name -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Transport</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.transportName }}</p>
+                  </div>
+                  <!-- Vehicle Number -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Vehicle</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.vehicleNo }}</p>
+                  </div>
+                  <!-- Driver Name -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Driver</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.driverName }}</p>
+                  </div>
+                  <!-- Driver Mobile -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Driver Mobile</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.driverMobile }}</p>
+                  </div>
+                  <!-- Delivery Method -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Delivery Method</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.deliveryMethod }}</p>
+                  </div>
+                  <!-- Total Weight -->
+                  <div class="rounded-xl p-3 bg-slate-50">
+                    <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Total Weight</p>
+                    <p class="text-sm font-bold text-slate-700">{{ gdn.totalWeight }} KG</p>
+                  </div>
+                </div>
+
+                <!-- Addresses -->
+                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                  <!-- Dispatch From Address -->
+                  <div class="rounded-xl p-3 bg-emerald-50 border border-emerald-200">
+                    <p class="text-[10px] text-emerald-600 font-bold uppercase tracking-wider mb-0.5">Dispatch From</p>
+                    <p class="text-sm font-semibold text-emerald-900">{{ gdn.dispatchFromAddress }}</p>
+                  </div>
+                  <!-- Shipping Address -->
+                  <div class="rounded-xl p-3 bg-amber-50 border border-amber-200">
+                    <p class="text-[10px] text-amber-600 font-bold uppercase tracking-wider mb-0.5">Shipping To</p>
+                    <p class="text-sm font-semibold text-amber-900">{{ gdn.shippingAddress }}</p>
+                  </div>
+                </div>
+
+                <!-- PDF Actions -->
+                <div *ngIf="gdn.hasPdf && gdn.pdfUrl" class="flex gap-3">
+                  <button
+                    (click)="viewPdfModal(gdn.pdfUrl)"
+                    class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-blue-500 hover:from-cyan-600 hover:to-blue-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-cyan-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                    <ion-icon name="eye-outline" class="text-lg"></ion-icon>
+                    View PDF
+                  </button>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ EMPTY STATE ═══════ -->
+      <div *ngIf="filteredGdns.length === 0 && !isLoading"
+        class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="document-outline" class="text-3xl text-slate-300"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700 mb-1">No GDNs found</h3>
+        <p class="text-sm text-slate-400">
+          {{ searchTerm ? 'No results match your search.' : 'No GDNs in this category yet.' }}
+        </p>
+      </div>
+
+    </div>
+  </div>
+
+  <!-- ═══════ LOADING STATE ═══════ -->
+  <div *ngIf="isLoading" class="flex items-center justify-center h-96">
+    <div class="text-center">
+      <ion-spinner name="crescent" class="text-blue-500 mb-4"></ion-spinner>
+      <p class="text-slate-600 font-medium">Loading GDNs...</p>
+    </div>
+  </div>
+
+  <!-- ═══════ ERROR STATE ═══════ -->
+  <div *ngIf="errorMessage && !isLoading" class="bg-rose-50 border border-rose-200 rounded-2xl p-6 m-4">
+    <div class="flex items-start gap-3">
+      <ion-icon name="warning-outline" class="text-rose-500 text-2xl flex-shrink-0 mt-1"></ion-icon>
+      <div>
+        <h3 class="font-bold text-rose-700 mb-1">Error Loading GDNs</h3>
+        <p class="text-sm text-rose-600">{{ errorMessage }}</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refresh Button -->
+  <div class="flex justify-center pb-8 mt-8">
+    <ion-button (click)="refresh()" color="secondary" shape="round" size="large">
+      Refresh
+    </ion-button>
+  </div>
+
+  <!-- ═══════ PDF VIEWER MODAL ═══════ -->
+  <div *ngIf="viewingPdfUrl" class="fixed inset-0 bg-black/50 backdrop-blur-sm z-50 flex items-center justify-center p-4">
+    <div class="bg-white rounded-3xl shadow-2xl w-full max-w-4xl max-h-[90vh] overflow-hidden flex flex-col animate-in fade-in zoom-in-95 duration-300">
+      <!-- Modal Header -->
+      <div class="flex items-center justify-between p-6 border-b border-slate-100 bg-gradient-to-r from-blue-50 to-cyan-50">
+        <div class="flex items-center gap-3">
+          <div class="w-12 h-12 rounded-xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center text-white text-xl">
+            <ion-icon name="document-outline"></ion-icon>
+          </div>
+          <h2 class="text-xl font-bold text-slate-800">PDF Preview</h2>
+        </div>
+        <button
+          (click)="closePdfModal()"
+          class="p-2 hover:bg-slate-200 rounded-lg transition-colors text-slate-600">
+          <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+        </button>
+      </div>
+
+      <!-- PDF Viewer -->
+      <div class="flex-1 overflow-auto bg-slate-50 flex items-center justify-center">
+        <iframe
+          [src]="viewingPdfUrl"
+          class="w-full h-full"
+          frameborder="0"
+          allow="fullscreen"
+          title="PDF Viewer">
+        </iframe>
+      </div>
+
+      <!-- Modal Footer -->
+      <div class="flex items-center justify-end gap-3 p-6 border-t border-slate-100 bg-slate-50">
+        <a
+          [href]="rawPdfUrl"
+          target="_blank"
+          class="flex items-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold px-6 py-3 rounded-xl shadow-md shadow-blue-200 hover:shadow-lg transition-all active:scale-95">
+          <ion-icon name="download-outline" class="text-lg"></ion-icon>
+          Download PDF
+        </a>
+        <button
+          (click)="closePdfModal()"
+          class="px-6 py-3 bg-slate-200 hover:bg-slate-300 text-slate-700 font-bold rounded-xl transition-all active:scale-95">
+          Close
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

@@ -1,0 +1,121 @@
+/* ═══════════════════════════════════════════════════════════ */
+/* GDN PAGE STYLING                                            */
+/* ═══════════════════════════════════════════════════════════ */
+
+// Global Content Styling
+ion-content {
+  --background: transparent;
+  background: linear-gradient(to bottom right, #f8fafc, #dbeafe 25%, #f0f9ff);
+}
+
+// Header Styling
+ion-header {
+  ion-toolbar {
+    --background: rgba(255, 255, 255, 0.8);
+    backdrop-filter: blur(12px);
+    border-bottom: 1px solid rgba(226, 232, 240, 1);
+    
+    ion-menu-button {
+      color: #475569;
+      
+      &:hover {
+        color: #2563eb;
+        transition: color 0.2s ease;
+      }
+    }
+    
+    ion-title {
+      color: #1e293b;
+      font-weight: 700;
+      letter-spacing: -0.5px;
+      font-size: 1.25rem;
+      text-align: center;
+      
+      span {
+        color: #2563eb;
+      }
+    }
+    
+    ion-button {
+      --color: #64748b;
+      
+      &:hover {
+        --color: #2563eb;
+      }
+    }
+  }
+}
+
+// Animations
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-pulse {
+  animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+// Loading State
+.loading-container {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  justify-content: center;
+  height: 384px;
+  gap: 1rem;
+  
+  ion-spinner {
+    --color: #2563eb;
+  }
+  
+  p {
+    color: #4b5563;
+    font-weight: 500;
+  }
+}
+
+// Error State
+.error-state {
+  background-color: rgba(254, 242, 242, 1);
+  border: 1px solid rgba(254, 226, 226, 1);
+  border-radius: 1rem;
+  padding: 1.5rem;
+  margin: 1rem;
+  
+  ion-icon {
+    color: #f43f5e;
+    font-size: 1.5rem;
+  }
+  
+  h3 {
+    color: #be123c;
+    font-weight: 700;
+    margin-bottom: 0.25rem;
+  }
+  
+  p {
+    color: #f43f5e;
+    font-size: 0.875rem;
+  }
+}
+
+// Refresh Button
+.refresh-button-container {
+  display: flex;
+  justify-content: center;
+  padding: 2rem 0;
+  margin-top: 2rem;
+}
+
+// Responsive adjustments
+@media (max-width: 640px) {
+  .search-tabs-section {
+    padding: 1.25rem;
+    margin-bottom: 1.5rem;
+  }
+}

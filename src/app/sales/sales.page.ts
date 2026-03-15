@@ -1,39 +1,23 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SalesService, PendingOrder } from '../services/sales.service';
-
-interface Distributor {
-  id: string;
-  name: string;
-  salesPersonName: string;
-  salesPerMonth: number;
-  salesPerQuarter: number;
-  salesPerYear: number;
-  status: string;
-  createdAt: string;
-  updatedAt: string;
-}
+import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
+import { GdnService, GDN } from '../services/gdn.service';
+import { ToastController } from '@ionic/angular';
 
 @Component({
   selector: 'app-sales',
   templateUrl: './sales.page.html',
   styleUrls: ['./sales.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule]
+  imports: [CommonModule, FormsModule, IonicModule]
 })
 export class SalesPage implements OnInit {
-  distributors: Distributor[] = [];
   isLoading = false;
-  isDistributorsLoading = false;
   errorMessage = '';
-  searchTerm = '';
-  
-  isAddModalOpen = false;
-  isEditModalOpen = false;
-  selectedDistributor: Distributor | null = null;
 
   // ── Order Approval ──────────────────────────────────────
   pendingOrders: PendingOrder[] = [];
@@ -42,197 +26,251 @@ export class SalesPage implements OnInit {
   orderFilterTab: 'all' | 'pending' | 'approved' | 'rejected' = 'pending';
   orderSearchTerm = '';
   expandedOrderIds = new Set<number>();
-  
-  addForm: FormGroup;
-  editForm: FormGroup;
 
   statCards = [
-    { label: 'Total Distributors', value: 0, icon: 'storefront-outline', color: 'emerald' },
-    { label: 'Total Monthly Sales', value: '$0', icon: 'trending-up-outline', color: 'green' },
-    { label: 'Active', value: 0, icon: 'checkmark-circle-outline', color: 'slate' },
+    { label: 'Total Orders', value: 0, icon: 'cart-outline', color: 'emerald' },
+    { label: 'Pending', value: 0, icon: 'time-outline', color: 'green' },
+    { label: 'Approved', value: 0, icon: 'checkmark-circle-outline', color: 'slate' },
   ];
+
+  // ── Proforma Invoices ───────────────────────────────────────
+  allInvoices: ProformaInvoice[] = [];
+  invoicesByOrder: Map<number, ProformaInvoice[]> = new Map();
+  showInvoicesByOrder: Map<number, boolean> = new Map();
+  downloadingInvoiceId: number | null = null;
+
+  // ── GDN (Good Delivery Notes) ────────────────────────────
+  gdns: GDN[] = [];
+  gdnsByOrder: Map<number, GDN[]> = new Map();
+  showGdnsByOrder: Map<number, boolean> = new Map();
+  downloadingGdnId: number | null = null;
+  showGdns = false;
+  toggleGdnHover = false;
+  viewingGdnPdfUrl: SafeResourceUrl | null = null;
+  rawGdnPdfUrl: string | null = null;
+  expandedGdnId: number | null = null;
 
   constructor(
     private salesService: SalesService,
-    private fb: FormBuilder,
-    private modalController: ModalController
-  ) {
-    this.addForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      salesPersonName: ['', [Validators.required, Validators.minLength(2)]],
-      salesPerMonth: [0, [Validators.required, Validators.min(0)]],
-      salesPerQuarter: [0, [Validators.required, Validators.min(0)]],
-      salesPerYear: [0, [Validators.required, Validators.min(0)]],
-      status: ['ACTIVE', Validators.required],
-    });
+    private proformaInvoiceService: ProformaInvoiceService,
+    private gdnService: GdnService,
+    private toastController: ToastController,
+    private sanitizer: DomSanitizer
+  ) {}
 
-    this.editForm = this.fb.group({
-      name: ['', [Validators.required, Validators.minLength(2)]],
-      salesPersonName: ['', [Validators.required, Validators.minLength(2)]],
-      salesPerMonth: [0, [Validators.required, Validators.min(0)]],
-      salesPerQuarter: [0, [Validators.required, Validators.min(0)]],
-      salesPerYear: [0, [Validators.required, Validators.min(0)]],
-      status: ['ACTIVE', Validators.required],
+  ngOnInit() {
+    this.loadPendingOrders();
+    this.loadProformaInvoices();
+    this.loadGdns();
+  }
+
+  loadProformaInvoices() {
+    this.proformaInvoiceService.getAllInvoices().subscribe({
+      next: (data) => {
+        this.allInvoices = data;
+        this.groupInvoicesByOrder();
+      },
+      error: (error) => {
+        console.error('Error loading proforma invoices:', error);
+      }
     });
   }
 
-  ngOnInit() {
-    this.loadDistributors();
-    this.loadPendingOrders();
+  groupInvoicesByOrder() {
+    this.invoicesByOrder.clear();
+    this.allInvoices.forEach(invoice => {
+      if (!this.invoicesByOrder.has(invoice.cartId)) {
+        this.invoicesByOrder.set(invoice.cartId, []);
+      }
+      this.invoicesByOrder.get(invoice.cartId)!.push(invoice);
+    });
+  }
+
+  getInvoicesForOrder(orderId: number): ProformaInvoice[] {
+    return this.invoicesByOrder.get(orderId) || [];
+  }
+
+  toggleInvoicesForOrder(orderId: number) {
+    const current = this.showInvoicesByOrder.get(orderId) || false;
+    this.showInvoicesByOrder.set(orderId, !current);
+  }
+
+  downloadInvoicePdf(invoice: ProformaInvoice) {
+    if (invoice.paymentStatus !== 'PAID') {
+      this.showToast('Only paid invoices can be downloaded', 'warning');
+      return;
+    }
+
+    if (!invoice.hasPdf) {
+      this.showToast('PDF not available for this invoice', 'warning');
+      return;
+    }
+
+    this.downloadingInvoiceId = invoice.id;
+
+    if (invoice.pdfUrl) {
+      this.downloadFromUrl(invoice.pdfUrl, `${invoice.piNumber}.pdf`);
+      this.downloadingInvoiceId = null;
+      return;
+    }
+
+    this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
+      next: (blob) => {
+        this.downloadFromBlob(blob, `${invoice.piNumber}.pdf`);
+        this.downloadingInvoiceId = null;
+        this.showToast('PDF downloaded successfully', 'success');
+      },
+      error: (error) => {
+        console.error('Error downloading PDF:', error);
+        this.downloadingInvoiceId = null;
+        this.showToast('Failed to download PDF', 'danger');
+      }
+    });
+  }
+
+  private downloadFromBlob(blob: Blob, filename: string) {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    link.click();
+    window.URL.revokeObjectURL(url);
+  }
+
+  private downloadFromUrl(pdfUrl: string, filename: string) {
+    const link = document.createElement('a');
+    link.href = pdfUrl;
+    link.download = filename;
+    link.target = '_blank';
+    link.click();
+    this.showToast('PDF downloaded successfully', 'success');
+  }
+
+  private async showToast(message: string, color: string = 'dark') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2000,
+      color,
+      position: 'bottom'
+    });
+    await toast.present();
+  }
+
+  // ── GDN Methods ───────────────────────────────────
+  loadGdns() {
+    this.gdnService.getAllGdns().subscribe({
+      next: (data) => {
+        this.gdns = data.sort(
+          (a, b) => new Date(b.gdnDate).getTime() - new Date(a.gdnDate).getTime()
+        );
+        this.groupGdnsByOrder();
+      },
+      error: (error) => {
+        console.error('Error loading GDNs:', error);
+      }
+    });
+  }
+
+  groupGdnsByOrder() {
+    this.gdnsByOrder.clear();
+    this.gdns.forEach(gdn => {
+      if (!this.gdnsByOrder.has(gdn.orderId)) {
+        this.gdnsByOrder.set(gdn.orderId, []);
+      }
+      this.gdnsByOrder.get(gdn.orderId)!.push(gdn);
+    });
+  }
+
+  getGdnsForOrder(orderId: number): GDN[] {
+    return this.gdnsByOrder.get(orderId) || [];
+  }
+
+  toggleGdnsForOrder(orderId: number) {
+    const current = this.showGdnsByOrder.get(orderId) || false;
+    this.showGdnsByOrder.set(orderId, !current);
+  }
+
+  downloadGdnPdf(gdn: GDN) {
+    if (!gdn.hasPdf || !gdn.pdfUrl) {
+      this.showToast('PDF not available for this GDN', 'warning');
+      return;
+    }
+
+    this.downloadingGdnId = gdn.id;
+
+    if (gdn.pdfUrl) {
+      this.downloadFromUrl(gdn.pdfUrl, `${gdn.gdnNumber}.pdf`);
+      this.downloadingGdnId = null;
+      return;
+    }
+
+    this.gdnService.downloadGdnPdf(gdn.id).subscribe({
+      next: (blob) => {
+        this.downloadFromBlob(blob, `${gdn.gdnNumber}.pdf`);
+        this.downloadingGdnId = null;
+        this.showToast('GDN PDF downloaded successfully', 'success');
+      },
+      error: (error) => {
+        console.error('Error downloading GDN PDF:', error);
+        this.downloadingGdnId = null;
+        this.showToast('Failed to download GDN PDF', 'danger');
+      }
+    });
+  }
+
+  formatAmount(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric'
+    });
   }
 
   loadPendingOrders() {
     this.isOrdersLoading = true;
-    this.salesService.getPendingOrderApprovals().subscribe({
+    console.log('Loading active carts...');
+    this.salesService.getActiveCarts().subscribe({
       next: (data) => {
-        this.pendingOrders = data;
+        console.log('Active carts response:', data);
+        this.pendingOrders = Array.isArray(data) ? data : (data as any)?.data || [];
+        console.log('Pending orders:', this.pendingOrders);
+        this.updateStats();
         this.isOrdersLoading = false;
       },
       error: (error) => {
         console.error('Error loading pending orders:', error);
+        console.error('Error response:', JSON.stringify(error?.error));
         this.isOrdersLoading = false;
-      },
-    });
-  }
-
-  loadDistributors() {
-    this.isDistributorsLoading = true;
-    this.errorMessage = '';
-    
-    this.salesService.getAllDistributors().subscribe({
-      next: (data) => {
-        this.distributors = data;
-        this.updateStats();
-        this.isDistributorsLoading = false;
-      },
-      error: (error) => {
-        console.error('Error loading distributors:', error);
-        this.errorMessage = 'Failed to load distributors. Please try again.';
-        this.isDistributorsLoading = false;
       },
     });
   }
 
   updateStats() {
-    const totalMonthly = this.distributors.reduce((sum, d) => sum + d.salesPerMonth, 0);
-    const active = this.distributors.filter(d => d.status === 'ACTIVE').length;
+    const pending = this.pendingOrders.filter(o => o.status === 'PLACED').length;
+    const approved = this.pendingOrders.filter(o => o.status === 'APPROVED').length;
 
     this.statCards = [
-      { label: 'Total Distributors', value: this.distributors.length, icon: 'storefront-outline', color: 'emerald' },
-      { label: 'Total Monthly Sales', value: `$${totalMonthly.toLocaleString()}`, icon: 'trending-up-outline', color: 'green' },
-      { label: 'Active', value: active, icon: 'checkmark-circle-outline', color: 'slate' },
+      { label: 'Total Orders', value: this.pendingOrders.length, icon: 'cart-outline', color: 'emerald' },
+      { label: 'Pending', value: pending, icon: 'time-outline', color: 'green' },
+      { label: 'Approved', value: approved, icon: 'checkmark-circle-outline', color: 'slate' },
     ];
   }
 
-  openAddModal() {
-    this.addForm.reset({ status: 'ACTIVE' });
-    this.isAddModalOpen = true;
-  }
-
-  closeAddModal() {
-    this.isAddModalOpen = false;
-  }
-
-  openEditModal(distributor: Distributor) {
-    this.selectedDistributor = distributor;
-    this.editForm.patchValue({
-      name: distributor.name,
-      salesPersonName: distributor.salesPersonName,
-      salesPerMonth: distributor.salesPerMonth,
-      salesPerQuarter: distributor.salesPerQuarter,
-      salesPerYear: distributor.salesPerYear,
-      status: distributor.status,
-    });
-    this.isEditModalOpen = true;
-  }
-
-  closeEditModal() {
-    this.isEditModalOpen = false;
-    this.selectedDistributor = null;
-  }
-
-  addDistributor() {
-    if (this.addForm.invalid) return;
-
-    this.isDistributorsLoading = true;
-    const formData = this.addForm.value;
-
-    this.salesService.createDistributor(formData).subscribe({
-      next: () => {
-        this.loadDistributors();
-        this.closeAddModal();
-        this.addForm.reset({ status: 'ACTIVE' });
-      },
-      error: (error) => {
-        console.error('Error creating distributor:', error);
-        this.errorMessage = 'Failed to create distributor. Please try again.';
-        this.isDistributorsLoading = false;
-      },
-    });
-  }
-
-  updateDistributor() {
-    if (!this.selectedDistributor || this.editForm.invalid) return;
-
-    this.isDistributorsLoading = true;
-    const formData = this.editForm.value;
-
-    this.salesService.updateDistributor(this.selectedDistributor.id, formData).subscribe({
-      next: () => {
-        this.loadDistributors();
-        this.closeEditModal();
-      },
-      error: (error) => {
-        console.error('Error updating distributor:', error);
-        this.errorMessage = 'Failed to update distributor. Please try again.';
-        this.isDistributorsLoading = false;
-      },
-    });
-  }
-
-  deleteDistributor(id: string) {
-    if (confirm('Are you sure you want to delete this distributor?')) {
-      this.isDistributorsLoading = true;
-      this.salesService.deleteDistributor(id).subscribe({
-        next: () => {
-          this.loadDistributors();
-        },
-        error: (error) => {
-          console.error('Error deleting distributor:', error);
-          this.errorMessage = 'Failed to delete distributor. Please try again.';
-          this.isDistributorsLoading = false;
-        },
-      });
-    }
-  }
-
-  toggleStatus(id: string) {
-    this.salesService.toggleDistributorStatus(id).subscribe({
-      next: () => {
-        this.loadDistributors();
-      },
-      error: (error) => {
-        console.error('Error toggling status:', error);
-      },
-    });
-  }
-
-  get filteredDistributors() {
-    if (!this.searchTerm.trim()) return this.distributors;
-    const term = this.searchTerm.toLowerCase();
-    return this.distributors.filter(d =>
-      d.name.toLowerCase().includes(term) ||
-      d.salesPersonName.toLowerCase().includes(term)
-    );
-  }
-
-  // ── Order Approval Helpers ───────────────────────────────
+  // ── Order Helpers ───────────────────────────────
   get filteredOrderSummaries(): PendingOrder[] {
     let filtered: PendingOrder[];
     if (this.orderFilterTab === 'all') {
       filtered = this.pendingOrders;
     } else if (this.orderFilterTab === 'pending') {
-      filtered = this.pendingOrders.filter(o => o.status === 'ACTIVE');
+      filtered = this.pendingOrders.filter(o => o.status === 'PLACED');
     } else if (this.orderFilterTab === 'approved') {
       filtered = this.pendingOrders.filter(o => o.status === 'APPROVED');
     } else if (this.orderFilterTab === 'rejected') {
@@ -313,8 +351,81 @@ export class SalesPage implements OnInit {
     return this.expandedOrderIds.has(id);
   }
 
+  // ── GDN View Methods ─────────────────────────────
+  viewGdnPdfModal(gdn: GDN) {
+    if (!gdn.hasPdf || !gdn.pdfUrl) {
+      return;
+    }
+    this.rawGdnPdfUrl = gdn.pdfUrl;
+    this.viewingGdnPdfUrl = this.sanitizer.bypassSecurityTrustResourceUrl(gdn.pdfUrl);
+  }
+
+  closeGdnPdfModal() {
+    this.viewingGdnPdfUrl = null;
+    this.rawGdnPdfUrl = null;
+  }
+
+  toggleGdnDetails(gdnId: number) {
+    if (this.expandedGdnId === gdnId) {
+      this.expandedGdnId = null;
+    } else {
+      this.expandedGdnId = gdnId;
+    }
+  }
+
+  getGdnStatusColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'emerald';
+      case 'PENDING':
+        return 'amber';
+      case 'CANCELLED':
+        return 'rose';
+      default:
+        return 'slate';
+    }
+  }
+
+  getGdnStatusBgColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-emerald-50';
+      case 'PENDING':
+        return 'bg-amber-50';
+      case 'CANCELLED':
+        return 'bg-rose-50';
+      default:
+        return 'bg-slate-50';
+    }
+  }
+
+  getGdnStatusBadgeColor(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'bg-emerald-200 text-emerald-800';
+      case 'PENDING':
+        return 'bg-amber-200 text-amber-800';
+      case 'CANCELLED':
+        return 'bg-rose-200 text-rose-800';
+      default:
+        return 'bg-slate-200 text-slate-800';
+    }
+  }
+
+  getGdnStatusAccentGradient(status: string): string {
+    switch (status) {
+      case 'DELIVERED':
+        return 'from-emerald-500 to-teal-600';
+      case 'PENDING':
+        return 'from-amber-500 to-orange-600';
+      case 'CANCELLED':
+        return 'from-rose-500 to-pink-600';
+      default:
+        return 'from-slate-500 to-slate-600';
+    }
+  }
+
   refreshSales() {
-    this.loadDistributors();
     this.loadPendingOrders();
   }
 }

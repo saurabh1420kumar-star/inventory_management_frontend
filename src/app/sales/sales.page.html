@@ -144,12 +144,12 @@
             *ngFor="let order of filteredOrderSummaries"
             class="rounded-xl overflow-hidden transition-all duration-300"
             [style.background]="'rgba(255,255,255,0.04)'"
-            [style.border]="order.status === 'ACTIVE' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'APPROVED' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(244,63,94,0.2)'"
+            [style.border]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'APPROVED' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(244,63,94,0.2)'"
             style="backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
 
             <!-- Card Top Accent Bar -->
             <div class="h-0.5 w-full"
-              [style.background]="order.status === 'ACTIVE' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'APPROVED' ? 'linear-gradient(to right, #10b981, #14b8a6)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
+              [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'APPROVED' ? 'linear-gradient(to right, #10b981, #14b8a6)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
             </div>
 
             <div class="p-4">
@@ -167,7 +167,7 @@
 
                 <!-- Status Badge -->
                 <div>
-                  <span *ngIf="order.status === 'ACTIVE'"
+                  <span *ngIf="order.status === 'ACTIVE' || order.status === 'PLACED'"
                     class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
                     style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
                     <span class="w-1.5 h-1.5 rounded-full animate-ping inline-block" style="background: #f59e0b;"></span>
@@ -193,7 +193,7 @@
 
               <!-- Distributor Info -->
               <div class="flex items-center gap-3 mb-3 rounded-lg p-2.5"
-                [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.06)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)'"
+                  [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.06)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)'"
                 [style.border]="'1px solid rgba(255,255,255,0.04)'">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6);">
@@ -214,8 +214,8 @@
                 <button
                   (click)="toggleOrderExpand(order.id)"
                   class="w-full flex items-center justify-between text-xs font-bold rounded-lg px-3 py-2 transition-colors mb-2"
-                  [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
-                  [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'"
+                  [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
+                  [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'"
                   [style.border]="'1px solid rgba(255,255,255,0.04)'">
                   <span class="flex items-center gap-2">
                     <ion-icon name="cube-outline" class="text-sm"></ion-icon>
@@ -244,16 +244,16 @@
 
               <!-- Total Amount -->
               <div class="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3"
-                [style.background]="order.status === 'ACTIVE' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
+                [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
                 [style.border]="'1px solid rgba(255,255,255,0.04)'">
                 <div class="flex items-center gap-2">
                   <ion-icon name="receipt-outline" class="text-base"
-                    [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
+                    [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
                   </ion-icon>
                   <span class="text-xs font-bold uppercase tracking-wider" style="color: #64748b;">Total</span>
                 </div>
                 <span class="text-base font-extrabold"
-                  [style.color]="order.status === 'ACTIVE' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
+                  [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
                   &#8377;{{ order.totalCartAmount.toLocaleString() }}
                 </span>
               </div>
@@ -262,7 +262,7 @@
               <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
 
               <!-- Action Buttons: Pending -->
-              <div *ngIf="order.status === 'ACTIVE'" class="flex gap-2">
+              <div *ngIf="order.status === 'ACTIVE' || order.status === 'PLACED'" class="flex gap-2">
                 <button
                   (click)="approveOrder(order)"
                   class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
@@ -324,335 +324,45 @@
 
       </div>
 
-      <!-- DISTRIBUTORS LIST WITH ACCORDION -->
-      <div *ngIf="!isDistributorsLoading && filteredDistributors.length > 0" class="space-y-3">
-        <div *ngFor="let distributor of filteredDistributors" class="rounded-xl overflow-hidden transition-all duration-300"
-          style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
 
-          <!-- Accordion Header -->
-          <div class="p-4 cursor-pointer transition-colors" [attr.data-distributor]="distributor.id">
-            <div class="flex items-center justify-between">
-              <div class="flex-1">
-                <div class="flex items-center gap-3">
-                  <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
-                    style="background: linear-gradient(135deg, #10b981, #14b8a6);">
-                    {{ distributor.name.charAt(0).toUpperCase() }}
-                  </div>
-                  <div class="flex-1">
-                    <h3 class="text-sm font-bold text-white mb-0.5">{{ distributor.name }}</h3>
-                    <p class="text-xs" style="color: #64748b;">
-                      <span style="color: #10b981;">&#9679;</span> {{ distributor.salesPersonName }}
-                    </p>
-                  </div>
-                </div>
-              </div>
-
-              <div class="flex items-center gap-3 flex-shrink-0">
-                <span class="px-2 py-0.5 rounded-full text-xs font-bold"
-                  [style.background]="distributor.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)'"
-                  [style.color]="distributor.status === 'ACTIVE' ? '#10b981' : '#94a3b8'"
-                  [style.border]="distributor.status === 'ACTIVE' ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(100,116,139,0.25)'">
-                  {{ distributor.status }}
-                </span>
-                <ion-icon name="chevron-down-outline" class="text-lg" style="color: #475569;"></ion-icon>
-              </div>
+      <!-- ═══════ QUICK LINKS ═══════ -->
+      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-8 mb-8">
+        <!-- Proforma Invoices Button -->
+        <a routerLink="/proforma-invoice"
+          class="group relative flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 overflow-hidden"
+          style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+          <div class="absolute inset-0 group-hover:from-emerald-400/5 group-hover:to-teal-400/5 transition-all duration-300" style="background: rgba(16,185,129,0.02);"></div>
+          <div class="relative flex items-center gap-4 w-full">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300" style="background: rgba(16,185,129,0.15);">
+              <ion-icon name="receipt-outline" class="text-2xl" style="color: #10b981;"></ion-icon>
             </div>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-white" style="color: #e2e8f0;">Paid Proforma Invoices</h3>
+              <p class="text-xs" style="color: #94a3b8;">View & download invoices</p>
+            </div>
+            <ion-icon name="arrow-forward-outline" class="text-2xl transition-all duration-300 group-hover:translate-x-1" style="color: #64748b;"></ion-icon>
           </div>
+        </a>
 
-          <!-- Accordion Content -->
-          <div class="px-4 py-4" style="border-top: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
-
-            <!-- Sales Performance Grid -->
-            <div class="grid grid-cols-3 gap-2 mb-4">
-              <div class="rounded-lg p-3"
-                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
-                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Monthly</p>
-                <p class="text-sm font-bold text-white">${{ distributor.salesPerMonth.toLocaleString() }}</p>
-              </div>
-              <div class="rounded-lg p-3"
-                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
-                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Quarterly</p>
-                <p class="text-sm font-bold text-white">${{ distributor.salesPerQuarter.toLocaleString() }}</p>
-              </div>
-              <div class="rounded-lg p-3"
-                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
-                <p class="text-xs font-bold uppercase mb-1" style="color: #475569;">Yearly</p>
-                <p class="text-sm font-bold text-white">${{ distributor.salesPerYear.toLocaleString() }}</p>
-              </div>
+        <!-- Good Delivery Notes Button -->
+        <a routerLink="/gdn"
+          class="group relative flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 overflow-hidden"
+          style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+          <div class="absolute inset-0 group-hover:from-blue-400/5 group-hover:to-cyan-400/5 transition-all duration-300" style="background: rgba(59,130,246,0.02);"></div>
+          <div class="relative flex items-center gap-4 w-full">
+            <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all duration-300" style="background: rgba(59,130,246,0.15);">
+              <ion-icon name="document-text-outline" class="text-2xl" style="color: #3b82f6;"></ion-icon>
             </div>
-
-            <!-- Actions -->
-            <div class="flex gap-2 justify-end">
-              <button (click)="openEditModal(distributor)"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                style="background: rgba(59,130,246,0.1); color: #60a5fa; border: 1px solid rgba(59,130,246,0.2);">
-                <ion-icon name="pencil-outline" class="text-xs"></ion-icon>
-                Edit
-              </button>
-              <button (click)="deleteDistributor(distributor.id)"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.2);">
-                <ion-icon name="trash-outline" class="text-xs"></ion-icon>
-                Delete
-              </button>
-              <button (click)="toggleStatus(distributor.id)"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-bold transition-all"
-                [style.background]="distributor.status === 'ACTIVE' ? 'rgba(16,185,129,0.1)' : 'rgba(100,116,139,0.1)'"
-                [style.color]="distributor.status === 'ACTIVE' ? '#10b981' : '#94a3b8'"
-                [style.border]="distributor.status === 'ACTIVE' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(100,116,139,0.2)'">
-                <ion-icon [name]="distributor.status === 'ACTIVE' ? 'pause-circle-outline' : 'checkmark-circle-outline'" class="text-xs"></ion-icon>
-                {{ distributor.status === 'ACTIVE' ? 'Deactivate' : 'Activate' }}
-              </button>
+            <div class="flex-1">
+              <h3 class="text-base font-bold text-white" style="color: #e2e8f0;">Good Delivery Notes</h3>
+              <p class="text-xs" style="color: #94a3b8;">Manage GDN & dispatch</p>
             </div>
+            <ion-icon name="arrow-forward-outline" class="text-2xl transition-all duration-300 group-hover:translate-x-1" style="color: #64748b;"></ion-icon>
           </div>
-        </div>
+        </a>
       </div>
 
-      <!-- EMPTY STATE -->
-      <div *ngIf="!isDistributorsLoading && filteredDistributors.length === 0" class="rounded-xl p-8 text-center"
-        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="w-14 h-14 rounded-xl flex items-center justify-center mx-auto mb-3"
-          style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-          <ion-icon name="storefront-outline" class="text-2xl" style="color: #475569;"></ion-icon>
-        </div>
-        <h3 class="text-base font-bold text-white mb-1">No Distributors Found</h3>
-        <p class="text-sm mb-4" style="color: #64748b;">{{ searchTerm ? 'No results match your search' : 'Start by adding your first distributor' }}</p>
-        <button (click)="openAddModal()"
-          class="inline-flex items-center gap-2 text-white font-bold text-sm rounded-lg px-5 py-2.5 active:scale-95 transition-all"
-          style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
-          <ion-icon name="add-circle-outline" class="text-base"></ion-icon>
-          Add Distributor
-        </button>
-      </div>
     </div>
   </div>
-
-  <!-- ADD DISTRIBUTOR MODAL -->
-  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" class="custom-modal">
-    <ng-template>
-      <div class="h-screen flex flex-col" style="background: #0d1117;">
-
-        <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between flex-shrink-0"
-          style="background: rgba(16,185,129,0.1); border-bottom: 1px solid rgba(16,185,129,0.15); backdrop-filter: blur(20px);">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
-              style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
-              <ion-icon name="add-circle-outline" class="text-xl" style="color: #10b981;"></ion-icon>
-            </div>
-            <div>
-              <h2 class="text-base font-bold text-white">Add Distributor</h2>
-              <p class="text-xs" style="color: #64748b;">Register a new distributor</p>
-            </div>
-          </div>
-          <button (click)="closeAddModal()" class="p-2 rounded-lg transition-colors"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
-            <ion-icon name="close-outline" class="text-lg" style="color: #e2e8f0;"></ion-icon>
-          </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto">
-          <div class="max-w-xl mx-auto p-5 pb-20">
-            <form [formGroup]="addForm" (ngSubmit)="addDistributor()" class="space-y-4">
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Distributor Name</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-                <div *ngIf="addForm.get('name')?.hasError('minlength')" class="text-xs mt-1 ml-1" style="color: #f43f5e;">Min 2 characters</div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Person Name</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-                <div *ngIf="addForm.get('salesPersonName')?.hasError('minlength')" class="text-xs mt-1 ml-1" style="color: #f43f5e;">Min 2 characters</div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Month ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerMonth" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Quarter ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerQuarter" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Year ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerYear" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Status</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-select formControlName="status" placeholder="Select Status" interface="popover"
-                    class="w-full px-4 py-3 font-medium text-sm" style="color: #e2e8f0; --placeholder-color: #475569;">
-                    <ion-select-option value="ACTIVE">Active</ion-select-option>
-                    <ion-select-option value="INACTIVE">Inactive</ion-select-option>
-                  </ion-select>
-                </div>
-              </div>
-
-              <div class="pt-6" style="border-top: 1px solid rgba(255,255,255,0.06);">
-                <button
-                  type="submit"
-                  [disabled]="addForm.invalid"
-                  [class.opacity-50]="addForm.invalid"
-                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-lg py-3.5 transition-all active:scale-95"
-                  style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 20px rgba(16,185,129,0.3);">
-                  <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
-                  Add Distributor
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-  </ion-modal>
-
-  <!-- EDIT DISTRIBUTOR MODAL -->
-  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" class="custom-modal">
-    <ng-template>
-      <div class="h-screen flex flex-col" style="background: #0d1117;">
-
-        <div class="sticky top-0 z-10 px-5 py-4 flex items-center justify-between flex-shrink-0"
-          style="background: rgba(6,182,212,0.1); border-bottom: 1px solid rgba(6,182,212,0.15); backdrop-filter: blur(20px);">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
-              style="background: rgba(6,182,212,0.15); border: 1px solid rgba(6,182,212,0.25);">
-              <ion-icon name="pencil-outline" class="text-xl" style="color: #06b6d4;"></ion-icon>
-            </div>
-            <div>
-              <h2 class="text-base font-bold text-white">Edit Distributor</h2>
-              <p class="text-xs" style="color: #64748b;">Update details & sales data</p>
-            </div>
-          </div>
-          <button (click)="closeEditModal()" class="p-2 rounded-lg transition-colors"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1);">
-            <ion-icon name="close-outline" class="text-lg" style="color: #e2e8f0;"></ion-icon>
-          </button>
-        </div>
-
-        <div class="flex-1 overflow-y-auto">
-          <div class="max-w-xl mx-auto p-5 pb-20">
-            <form [formGroup]="editForm" (ngSubmit)="updateDistributor()" class="space-y-4">
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Distributor Name</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="text" formControlName="name" placeholder="e.g. ABC Distribution"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Person Name</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="text" formControlName="salesPersonName" placeholder="e.g. John Doe"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Month ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerMonth" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Quarter ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerQuarter" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Sales Per Year ($)</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-item lines="none" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                    <ion-input type="number" formControlName="salesPerYear" placeholder="0"
-                      class="px-4 py-3 font-medium" style="color: #e2e8f0; --placeholder-color: #475569;"></ion-input>
-                  </ion-item>
-                </div>
-              </div>
-
-              <div class="group">
-                <label class="block text-xs font-bold uppercase tracking-wider mb-2 ml-1" style="color: #64748b;">Status</label>
-                <div class="rounded-lg overflow-hidden transition-all"
-                  style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.1);">
-                  <ion-select formControlName="status" placeholder="Select Status" interface="popover"
-                    class="w-full px-4 py-3 font-medium text-sm" style="color: #e2e8f0; --placeholder-color: #475569;">
-                    <ion-select-option value="ACTIVE">Active</ion-select-option>
-                    <ion-select-option value="INACTIVE">Inactive</ion-select-option>
-                  </ion-select>
-                </div>
-              </div>
-
-              <div class="pt-6" style="border-top: 1px solid rgba(255,255,255,0.06);">
-                <button
-                  type="submit"
-                  [disabled]="editForm.invalid"
-                  [class.opacity-50]="editForm.invalid"
-                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-lg py-3.5 transition-all active:scale-95"
-                  style="background: linear-gradient(135deg, #06b6d4, #0891b2); box-shadow: 0 4px 20px rgba(6,182,212,0.3);">
-                  <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
-                  Update Distributor
-                </button>
-              </div>
-
-            </form>
-          </div>
-        </div>
-      </div>
-    </ng-template>
-  </ion-modal>
 
 </ion-content>
