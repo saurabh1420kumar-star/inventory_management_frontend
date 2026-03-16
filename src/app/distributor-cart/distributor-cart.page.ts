@@ -203,36 +203,36 @@ export class DistributorCartPage implements OnInit {
 
   // Sync local cart with backend via edit API
   syncCartWithBackend() {
-    if (!this.distributorId) return;
-    
-    // Get cart ID first, then edit
-    this.cartService.getCart(this.distributorId).subscribe({
-      next: (cartResponse) => {
-        const cartData = cartResponse?.data || cartResponse?.cart || cartResponse;
-        const cartId = cartData?.id || cartData?.cartId;
-        
-        if (!cartId) {
-          console.log('No cart to sync');
-          return;
-        }
+    if (!this.distributorId || !this.currentCartId) {
+      console.log('Cannot sync: distributorId or currentCartId missing');
+      return;
+    }
 
-        // Convert cart items to API payload
-        const items = this.cartItems.map(item => ({
-          itemId: item.id?.toString() || '',
-          quantity: item.cartQuantity,
-          name: item.name || '',
-          sku: item.sku || '',
-          price: item.price || 0,
-          imageUrl: '',
-          active: true
-        }));
+    // Convert cart items to API payload (matching addToCart format)
+    const items = this.cartItems.map(item => ({
+      itemId: item.sku || item.id?.toString() || '',
+      quantity: item.cartQuantity,
+      name: item.name || '',
+      sku: item.sku || item.id?.toString() || '',
+      price: item.price || 0,
+      imageUrl: '',
+      active: true
+    }));
 
-        this.cartService.editCart(cartId, items).subscribe({
-          next: () => console.log('Cart synced with backend'),
-          error: (err) => console.error('Failed to sync cart', err)
-        });
+    console.log('=== SYNC CART PAYLOAD ===');
+    console.log('Cart ID:', this.currentCartId);
+    console.log('Distributor ID:', this.distributorId);
+    console.log('Items Payload:', JSON.stringify(items, null, 2));
+    console.log('Full Request URL: PUT /api/cart/' + this.currentCartId + '/edit');
+    console.log('=======================');
+
+    this.cartService.editCart(this.currentCartId, items).subscribe({
+      next: () => {
+        console.log('✓ Cart synced with backend successfully');
       },
-      error: (err) => console.error('Failed to get cart for sync', err)
+      error: (err) => {
+        console.error('✗ Failed to sync cart with backend:', err);
+      }
     });
   }
 
