@@ -14,6 +14,8 @@ import {
   shieldCheckmarkOutline, settingsOutline, helpCircleOutline,
   searchOutline, downloadOutline, callOutline
 } from 'ionicons/icons';
+import { DistributorService, DistributorOrder } from '../services/distributor.service';
+import { Auth } from '../services/auth';
 
 interface MetricCard {
   title: string;
@@ -87,14 +89,21 @@ export class DistributorDashboardPage implements OnInit {
 
   // Account Services Data
   distributorName = 'Rajesh Kumar';
-  distributorId = 'DIST-883492';
+  distributorId: number | null = null;
 
   // Orders Data
+  orders: DistributorOrder[] = [];
+  expandedOrderId: number | null = null;
+  isLoadingOrders = false;
   pendingOrdersCount = 8;
   dispatchedCount = 23;
   deliveredCount = 45;
 
-  constructor(private router: Router) {
+  constructor(
+    private router: Router,
+    private distributorService: DistributorService,
+    private auth: Auth
+  ) {
     addIcons({
       'arrow-up-outline': arrowUpOutline,
       'arrow-down-outline': arrowDownOutline,
@@ -139,6 +148,35 @@ export class DistributorDashboardPage implements OnInit {
 
   ngOnInit() {
     this.initializeMetrics();
+    this.getDistributorId();
+    this.loadOrders();
+  }
+
+  getDistributorId() {
+    this.distributorId = this.auth.getUserId();
+    console.log('Dashboard - Distributor ID:', this.distributorId);
+  }
+
+  loadOrders() {
+    if (!this.distributorId) {
+      console.warn('Distributor ID not available for loading orders');
+      return;
+    }
+
+    this.isLoadingOrders = true;
+    this.distributorService.getDistributorOrders(this.distributorId).subscribe({
+      next: (response) => {
+        this.orders = response.data.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+        this.isLoadingOrders = false;
+        console.log('Orders loaded:', this.orders.length);
+      },
+      error: (error) => {
+        console.error('Error loading orders:', error);
+        this.isLoadingOrders = false;
+      }
+    });
   }
 
   initializeMetrics() {
@@ -190,6 +228,41 @@ export class DistributorDashboardPage implements OnInit {
       case 'Pending': return 'rgba(59,130,246,0.12)';
       case 'Failed': return 'rgba(239,68,68,0.12)';
       default: return 'rgba(100,116,139,0.12)';
+    }
+  }
+
+  toggleOrderDetails(orderId: number) {
+    this.expandedOrderId = this.expandedOrderId === orderId ? null : orderId;
+  }
+
+  formatDate(dateString: string): string {
+    const date = new Date(dateString);
+    return date.toLocaleDateString('en-IN', {
+      year: 'numeric',
+      month: 'short',
+      day: 'numeric',
+      hour: '2-digit',
+      minute: '2-digit'
+    });
+  }
+
+  formatAmount(amount: number): string {
+    return new Intl.NumberFormat('en-IN', {
+      style: 'currency',
+      currency: 'INR'
+    }).format(amount);
+  }
+
+  getStatusColorClass(status: string): string {
+    switch(status) {
+      case 'APPROVED':
+        return 'text-emerald-400 bg-emerald-400/10 border-emerald-400/30';
+      case 'PAYMENT_APPROVED':
+        return 'text-teal-400 bg-teal-400/10 border-teal-400/30';
+      case 'DISMISSED':
+        return 'text-red-400 bg-red-400/10 border-red-400/30';
+      default:
+        return 'text-slate-400 bg-slate-400/10 border-slate-400/30';
     }
   }
 }

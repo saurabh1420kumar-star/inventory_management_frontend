@@ -55,6 +55,31 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+// ============= ORDER MODELS =============
+
+export interface OrderCartItem {
+  id: number;
+  itemId: number;
+  itemName: string;
+  itemSku: string;
+  priceAtTime: number;
+  quantity: number;
+  totalPrice: number;
+}
+
+export interface DistributorOrder {
+  id: number;
+  cartItems: OrderCartItem[];
+  createdAt: string;
+  distributorId: number;
+  distributorName: string;
+  salespersonId: number | null;
+  salespersonName: string | null;
+  status: 'APPROVED' | 'PAYMENT_APPROVED' | 'DISMISSED' | string;
+  totalCartAmount: number;
+  updatedAt: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -108,6 +133,17 @@ export class DistributorService {
   getSalesPersons(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
       `${environment.apiUrl}/hrmaster/salespersons`
+    );
+  }
+
+  /**
+   * Get all orders for a specific distributor
+   * @param distributorId The distributor ID (userId from login)
+   * @returns Observable<ApiResponse<DistributorOrder[]>>
+   */
+  getDistributorOrders(distributorId: number | string): Observable<ApiResponse<DistributorOrder[]>> {
+    return this.http.get<ApiResponse<DistributorOrder[]>>(
+      `${this.baseUrl}/${distributorId}/orders`
     );
   }
 }

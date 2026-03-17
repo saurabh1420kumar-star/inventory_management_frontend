@@ -1,12 +1,12 @@
 ﻿<!-- HEADER -->
 <ion-header class="ion-no-border">
-  <ion-toolbar style="--background: rgba(13,17,23,0.95); --border-width: 0; backdrop-filter: blur(20px);">
+  <ion-toolbar style="--background: white; --border-width: 0;">
     <ion-buttons slot="start">
-      <ion-menu-button style="color: #e2e8f0;"></ion-menu-button>
+      <ion-menu-button style="color: #64748b;"></ion-menu-button>
     </ion-buttons>
     <ion-title>
       <span style="color: #10b981; font-weight: 800; font-size: 1.125rem; letter-spacing: -0.025em;">Sales</span>
-      <span style="color: #e2e8f0; font-weight: 700; font-size: 1.125rem;"> Management</span>
+      <span style="color: #1e293b; font-weight: 700; font-size: 1.125rem;"> Management</span>
     </ion-title>
     <ion-buttons slot="end">
       <ion-button (click)="refreshSales()" style="--color: #64748b;" class="w-10 h-10">
@@ -17,86 +17,69 @@
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content style="--background: #0d1117;">
-  <div class="min-h-screen pb-20" style="background: #0d1117;">
-    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-6">
+<ion-content style="--background: #f8fafc;">
+  <div class="min-h-screen pb-20" style="background: #f8fafc;">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
 
-      <!-- Hero Banner Glass Card -->
-      <div class="relative rounded-2xl overflow-hidden mb-6"
-        style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2); backdrop-filter: blur(16px); box-shadow: 0 0 40px rgba(16,185,129,0.06);">
+      <!-- Hero Gradient Banner -->
+      <div class="relative rounded-3xl overflow-hidden mb-8 shadow-lg shadow-emerald-200/40"
+        style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #06b6d4 100%);">
         <!-- Decorative orbs -->
-        <div class="absolute top-0 right-0 -mr-12 -mt-12 w-48 h-48 rounded-full" style="background: rgba(16,185,129,0.06); filter: blur(40px);"></div>
-        <div class="absolute bottom-0 left-0 -ml-12 -mb-12 w-48 h-48 rounded-full" style="background: rgba(6,182,212,0.04); filter: blur(40px);"></div>
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full" style="background: rgba(255,255,255,0.1); filter: blur(40px);"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full" style="background: rgba(255,255,255,0.05); filter: blur(40px);"></div>
 
-        <div class="relative px-5 py-5 sm:px-6 sm:py-6">
-          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-3">
+        <div class="relative px-6 py-8 sm:px-8 sm:py-10">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
             <div>
-              <h1 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">Sales Management</h1>
-              <p class="text-xs font-medium flex items-center gap-2 w-fit px-3 py-1.5 rounded-full"
-                style="color: rgba(16,185,129,0.9); background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.2); backdrop-filter: blur(8px);">
-                <ion-icon name="bar-chart-outline" class="text-sm"></ion-icon>
-                Track Distributors & Sales Performance
+              <h1 class="text-3xl sm:text-4xl font-bold text-white mb-3 tracking-tight">Sales Management</h1>
+              <p class="text-cyan-50 text-sm font-medium flex items-center gap-2 w-fit px-3 py-1.5 rounded-full bg-white/10 border border-white/20 backdrop-blur-sm">
+                <ion-icon name="bar-chart-outline" class="text-lg"></ion-icon>
+                Track Orders & Sales Performance
               </p>
             </div>
+            <button class="w-fit bg-white text-emerald-600 font-bold px-6 py-3 rounded-full shadow-lg hover:shadow-xl transition-all active:scale-95">
+              + Create Order
+            </button>
           </div>
         </div>
       </div>
 
-      <!-- GDN Navigation Button -->
-      <a routerLink="/gdn"
-        class="group relative flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 overflow-hidden mb-6"
-        style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
-        <div class="absolute inset-0 group-hover:from-blue-400/5 group-hover:to-cyan-400/5 transition-all duration-300" style="background: rgba(59,130,246,0.02);"></div>
-        <div class="relative flex items-center gap-4 w-full">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all" style="background: rgba(59,130,246,0.15);">
-            <ion-icon name="document-text-outline" class="text-2xl" style="color: #3b82f6;"></ion-icon>
-          </div>
-          <div class="flex-1">
-            <h3 class="text-base font-bold text-white" style="color: #e2e8f0;">Good Delivery Notes</h3>
-            <p class="text-xs" style="color: #94a3b8;">Manage GDN & dispatch</p>
-          </div>
-          <ion-icon name="arrow-forward-outline" class="text-2xl transition-all duration-300 group-hover:translate-x-1" style="color: #64748b;"></ion-icon>
-        </div>
-      </a>
-
       <!-- ERROR -->
-      <div *ngIf="errorMessage" class="rounded-xl p-4 mb-6"
-        style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
+      <div *ngIf="errorMessage" class="rounded-xl p-4 mb-6 border-l-4" 
+        style="background: #fee2e2; border-color: #f43f5e;">
         <div class="flex items-center gap-3">
           <ion-icon name="alert-circle-outline" style="color: #f43f5e;" class="text-2xl"></ion-icon>
-          <p style="color: #fb7185;" class="font-medium text-sm">{{ errorMessage }}</p>
+          <p style="color: #b91c1c;" class="font-medium text-sm">{{ errorMessage }}</p>
         </div>
       </div>
 
       <!-- STATS -->
-      <div class="grid grid-cols-3 gap-3 mb-6">
-        <div *ngFor="let stat of statCards" class="rounded-xl p-3 sm:p-4 transition-all duration-300"
-          style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
-          <div class="flex items-center justify-between mb-3">
-            <div class="w-9 h-9 sm:w-10 sm:h-10 rounded-lg flex items-center justify-center"
-              [style.background]="stat.color === 'emerald' ? 'rgba(16,185,129,0.15)' : stat.color === 'green' ? 'rgba(20,184,166,0.15)' : 'rgba(100,116,139,0.15)'"
-              [style.border]="stat.color === 'emerald' ? '1px solid rgba(16,185,129,0.25)' : stat.color === 'green' ? '1px solid rgba(20,184,166,0.25)' : '1px solid rgba(100,116,139,0.25)'">
-              <ion-icon [name]="stat.icon" class="text-lg sm:text-xl"
-                [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#94a3b8'">
+      <div class="grid grid-cols-3 gap-4 mb-8">
+        <div *ngFor="let stat of statCards" class="rounded-xl p-4 sm:p-5 shadow-sm border border-slate-200 bg-white">
+          <div class="flex items-center justify-between mb-4">
+            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
+              [style.background]="stat.color === 'emerald' ? '#ecfdf5' : stat.color === 'green' ? '#f0fdfa' : '#f1f5f9'"
+              [style.border]="stat.color === 'emerald' ? '1px solid #10b981' : stat.color === 'green' ? '1px solid #14b8a6' : '1px solid #cbd5e1'">
+              <ion-icon [name]="stat.icon" class="text-lg"
+                [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#64748b'">
               </ion-icon>
             </div>
           </div>
           <h3 class="text-xs font-bold uppercase tracking-wider mb-1" style="color: #64748b;">{{ stat.label }}</h3>
-          <p class="text-lg sm:text-xl font-bold text-white">{{ stat.value }}</p>
+          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
         </div>
       </div>
 
       <!-- SEARCH BAR -->
-      <div class="rounded-xl p-3 mb-5"
-        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+      <div class="rounded-xl p-4 mb-6 bg-white shadow-sm border border-slate-200">
         <div class="flex-1 w-full relative">
-          <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-lg z-10" style="color: #475569;"></ion-icon>
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg z-10" style="color: #94a3b8;"></ion-icon>
           <input
             type="text"
             [(ngModel)]="orderSearchTerm"
             placeholder="Search orders..."
-            class="w-full rounded-lg py-2.5 pl-10 pr-4 outline-none text-sm font-medium"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #e2e8f0; backdrop-filter: blur(8px);"
+            class="w-full rounded-lg py-3 pl-11 pr-4 outline-none text-sm font-medium bg-slate-50 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50"
+            style="color: #1e293b;"
           />
         </div>
       </div>
@@ -105,78 +88,52 @@
       <div class="mb-8">
 
         <!-- Section Header -->
-        <div class="flex items-center justify-between mb-4">
+        <div class="flex items-center justify-between mb-6">
           <div class="flex items-center gap-3">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center"
-              style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
-              <ion-icon name="clipboard-outline" class="text-lg" style="color: #10b981;"></ion-icon>
+            <div class="w-12 h-12 rounded-lg flex items-center justify-center" style="background: #ecfdf5; border: 1px solid #10b981;">
+              <ion-icon name="clipboard-outline" class="text-xl" style="color: #10b981;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-base sm:text-lg font-bold text-white leading-tight">Order Approval</h2>
-              <p class="text-xs hidden sm:block" style="color: #64748b;">Review orders from distributors</p>
+              <h2 class="text-lg font-bold text-slate-800 leading-tight">Pending Orders</h2>
+              <p class="text-xs text-slate-500">Review and manage orders from distributors</p>
             </div>
           </div>
           <span *ngIf="orderTabCounts['pending'] > 0"
-            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full animate-pulse"
-            style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
-            <span class="w-1.5 h-1.5 rounded-full inline-block" style="background: #f59e0b;"></span>
+            class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full" 
+            style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;">
+            <span class="w-2 h-2 rounded-full inline-block animate-pulse" style="background: #f59e0b;"></span>
             {{ orderTabCounts['pending'] }} Pending
           </span>
           <span *ngIf="orderTabCounts['pending'] === 0"
-            class="flex items-center gap-1.5 text-xs font-bold px-2.5 py-1 rounded-full"
-            style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">
+            class="flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full"
+            style="background: #ecfdf5; color: #047857; border: 1px solid #86efac;">
             <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
-            All Reviewed
+            All Approved
           </span>
         </div>
 
-        <!-- Filter Tabs -->
-        <div class="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
-          <button
-            *ngFor="let tab of [
-              { key: 'pending', label: 'Pending', count: orderTabCounts['pending'], dotColor: '#f59e0b' },
-              { key: 'approved', label: 'Approved', count: orderTabCounts['approved'], dotColor: '#10b981' },
-              { key: 'rejected', label: 'Rejected', count: orderTabCounts['rejected'], dotColor: '#f43f5e' },
-              { key: 'all', label: 'All', count: orderTabCounts['all'], dotColor: '#94a3b8' }
-            ]"
-            (click)="orderFilterTab = $any(tab.key)"
-            class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 whitespace-nowrap flex-shrink-0"
-            [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'"
-            [style.border]="orderFilterTab === tab.key ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)'"
-            [style.color]="orderFilterTab === tab.key ? '#10b981' : '#94a3b8'"
-            [style.box-shadow]="orderFilterTab === tab.key ? '0 0 15px rgba(16,185,129,0.1)' : 'none'">
-            <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tab.dotColor"></span>
-            {{ tab.label }}
-            <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-              [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'"
-              [style.color]="orderFilterTab === tab.key ? '#10b981' : '#64748b'">
-              {{ tab.count }}
-            </span>
-          </button>
-        </div>
-
         <!-- Order Cards Grid -->
-        <div *ngIf="filteredOrderSummaries.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+        <div *ngIf="filteredOrderSummaries.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5">
           <div
             *ngFor="let order of filteredOrderSummaries"
-            class="rounded-xl overflow-hidden transition-all duration-300"
-            [style.background]="'rgba(255,255,255,0.04)'"
-            [style.border]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '1px solid rgba(245,158,11,0.2)' : order.status === 'APPROVED' ? '1px solid rgba(16,185,129,0.2)' : '1px solid rgba(244,63,94,0.2)'"
-            style="backdrop-filter: blur(12px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
+            class="rounded-2xl overflow-hidden transition-all duration-300 border"
+            [style.background]="'white'"
+            [style.border]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '1px solid #fcd34d' : order.status === 'APPROVED' ? '1px solid #86efac' : '1px solid #fca5a5'"
+            style="box-shadow: 0 4px 6px rgba(0,0,0,0.07);">
 
             <!-- Card Top Accent Bar -->
-            <div class="h-0.5 w-full"
+            <div class="h-1 w-full"
               [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'linear-gradient(to right, #f59e0b, #f97316)' : order.status === 'APPROVED' ? 'linear-gradient(to right, #10b981, #14b8a6)' : 'linear-gradient(to right, #f43f5e, #ec4899)'">
             </div>
 
-            <div class="p-4">
+            <div class="p-5">
 
               <!-- Card Header -->
-              <div class="flex items-start justify-between mb-3">
+              <div class="flex items-start justify-between mb-4">
                 <div>
-                  <p class="text-xs font-medium uppercase tracking-wider mb-0.5" style="color: #475569;">Order</p>
-                  <h3 class="text-sm font-bold text-white tracking-tight">ORD-{{ order.id }}</h3>
-                  <p class="text-xs mt-0.5 flex items-center gap-1" style="color: #475569;">
+                  <p class="text-xs font-bold uppercase tracking-wider mb-1" style="color: #64748b;">Order #{{ order.id }}</p>
+                  <h3 class="text-base font-bold text-slate-800">{{ order.distributorName || 'Unknown' }}</h3>
+                  <p class="text-xs mt-1 flex items-center gap-1" style="color: #475569;">
                     <ion-icon name="calendar-outline" class="text-xs"></ion-icon>
                     {{ order.createdAt | date: 'dd MMM yyyy' }}
                   </p>
@@ -185,20 +142,20 @@
                 <!-- Status Badge -->
                 <div>
                   <span *ngIf="order.status === 'ACTIVE' || order.status === 'PLACED'"
-                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
-                    style="background: rgba(245,158,11,0.1); color: #f59e0b; border: 1px solid rgba(245,158,11,0.25);">
-                    <span class="w-1.5 h-1.5 rounded-full animate-ping inline-block" style="background: #f59e0b;"></span>
+                    class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full"
+                    style="background: #fef3c7; color: #b45309; border: 1px solid #fcd34d;">
+                    <span class="w-1.5 h-1.5 rounded-full animate-pulse inline-block" style="background: #f59e0b;"></span>
                     Pending
                   </span>
                   <span *ngIf="order.status === 'APPROVED'"
-                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
-                    style="background: rgba(16,185,129,0.1); color: #10b981; border: 1px solid rgba(16,185,129,0.25);">
+                    class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full"
+                    style="background: #ecfdf5; color: #047857; border: 1px solid #6ee7b7;">
                     <ion-icon name="checkmark-circle-outline" class="text-xs"></ion-icon>
                     Approved
                   </span>
                   <span *ngIf="order.status === 'DISMISSED'"
-                    class="inline-flex items-center gap-1 text-xs font-bold px-2 py-1 rounded-full"
-                    style="background: rgba(244,63,94,0.1); color: #f43f5e; border: 1px solid rgba(244,63,94,0.25);">
+                    class="inline-flex items-center gap-1 text-xs font-bold px-3 py-1.5 rounded-full"
+                    style="background: #fee2e2; color: #b91c1c; border: 1px solid #fecaca;">
                     <ion-icon name="close-circle-outline" class="text-xs"></ion-icon>
                     Rejected
                   </span>
@@ -206,114 +163,69 @@
               </div>
 
               <!-- Divider -->
-              <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
+              <div class="mb-4" style="border-top: 1px solid #e2e8f0;"></div>
 
               <!-- Distributor Info -->
-              <div class="flex items-center gap-3 mb-3 rounded-lg p-2.5"
-                  [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.06)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.06)' : 'rgba(244,63,94,0.06)'"
-                [style.border]="'1px solid rgba(255,255,255,0.04)'">
+              <div class="flex items-center gap-3 mb-4 rounded-xl p-3 bg-slate-50 border border-slate-200">
                 <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-xs flex-shrink-0"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6);">
                   {{ (order.distributorName || 'D').charAt(0).toUpperCase() }}
                 </div>
                 <div class="flex-1 min-w-0">
-                  <p class="text-xs font-medium uppercase tracking-wider" style="color: #475569;">Distributor</p>
-                  <p class="text-xs font-bold text-white truncate">{{ order.distributorName || 'Unknown' }}</p>
-                  <p class="text-xs truncate flex items-center gap-1" style="color: #64748b;">
-                    <ion-icon name="person-outline" class="text-xs" style="color: #10b981;"></ion-icon>
-                    {{ order.salespersonName || 'N/A' }}
-                  </p>
+                  <p class="text-xs font-bold uppercase tracking-wider" style="color: #64748b;">Sales Person</p>
+                  <p class="text-sm font-bold text-slate-800">{{ order.salespersonName || 'N/A' }}</p>
                 </div>
               </div>
 
-              <!-- Order Items Collapsible -->
-              <div class="mb-3">
-                <button
-                  (click)="toggleOrderExpand(order.id)"
-                  class="w-full flex items-center justify-between text-xs font-bold rounded-lg px-3 py-2 transition-colors mb-2"
-                  [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
-                  [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'"
-                  [style.border]="'1px solid rgba(255,255,255,0.04)'">
-                  <span class="flex items-center gap-2">
+              <!-- Order Items Summary -->
+              <div class="mb-4 rounded-xl p-3 bg-slate-50 border border-slate-200">
+                <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color: #64748b;">Items & Total</p>
+                <div class="flex items-center justify-between">
+                  <span class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                     <ion-icon name="cube-outline" class="text-sm"></ion-icon>
                     {{ order.cartItems.length }} Item{{ order.cartItems.length !== 1 ? 's' : '' }}
                   </span>
-                  <ion-icon
-                    [name]="isOrderExpanded(order.id) ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-sm" style="color: #64748b;">
-                  </ion-icon>
-                </button>
-
-                <!-- Items List -->
-                <div *ngIf="isOrderExpanded(order.id)" class="rounded-lg overflow-hidden"
-                  style="border: 1px solid rgba(255,255,255,0.06);">
-                  <div *ngFor="let item of order.cartItems; let last = last"
-                    class="p-3"
-                    [style.border-bottom]="!last ? '1px solid rgba(255,255,255,0.04)' : 'none'">
-                    <p class="text-xs font-medium text-white mb-1">{{ item.itemName }}</p>
-                    <div class="flex justify-between text-xs" style="color: #64748b;">
-                      <span>{{ item.quantity }} x &#8377;{{ item.priceAtTime.toLocaleString() }}</span>
-                      <span class="font-bold text-white">&#8377;{{ item.totalPrice.toLocaleString() }}</span>
-                    </div>
-                  </div>
+                  <span class="text-lg font-bold text-emerald-600">
+                    ₹{{ order.totalCartAmount.toLocaleString() }}
+                  </span>
                 </div>
               </div>
-
-              <!-- Total Amount -->
-              <div class="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3"
-                [style.background]="order.status === 'ACTIVE' || order.status === 'PLACED' ? 'rgba(245,158,11,0.08)' : order.status === 'APPROVED' ? 'rgba(16,185,129,0.08)' : 'rgba(244,63,94,0.08)'"
-                [style.border]="'1px solid rgba(255,255,255,0.04)'">
-                <div class="flex items-center gap-2">
-                  <ion-icon name="receipt-outline" class="text-base"
-                    [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
-                  </ion-icon>
-                  <span class="text-xs font-bold uppercase tracking-wider" style="color: #64748b;">Total</span>
-                </div>
-                <span class="text-base font-extrabold"
-                  [style.color]="order.status === 'ACTIVE' || order.status === 'PLACED' ? '#f59e0b' : order.status === 'APPROVED' ? '#10b981' : '#f43f5e'">
-                  &#8377;{{ order.totalCartAmount.toLocaleString() }}
-                </span>
-              </div>
-
-              <!-- Divider before actions -->
-              <div class="mb-3" style="border-top: 1px solid rgba(255,255,255,0.06);"></div>
 
               <!-- Action Buttons: Pending -->
-              <div *ngIf="order.status === 'ACTIVE' || order.status === 'PLACED'" class="flex gap-2">
+              <div *ngIf="order.status === 'ACTIVE' || order.status === 'PLACED'" class="flex gap-3">
                 <button
                   (click)="approveOrder(order)"
-                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.25);">
-                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                  <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
                   Approve
                 </button>
                 <button
                   (click)="dismissOrder(order)"
-                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
-                  <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+                  <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
                   Reject
                 </button>
               </div>
 
-              <!-- Action: Approved - Generate & Download PI -->
-              <div *ngIf="order.status === 'APPROVED'" class="flex gap-2">
+              <!-- Action: Approved -->
+              <div *ngIf="order.status === 'APPROVED'" class="flex gap-3">
                 <button
                   (click)="generateAndDownloadPI(order)"
-                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
+                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.25);">
-                  <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
+                  <ion-icon name="document-text-outline" class="text-base"></ion-icon>
                   Generate &amp; Download PI
                 </button>
               </div>
 
               <!-- Rejected state -->
               <div *ngIf="order.status === 'DISMISSED'"
-                class="flex items-center justify-center gap-2 rounded-lg py-2.5 text-xs font-bold"
-                style="background: rgba(244,63,94,0.08); color: #f43f5e; border: 1px solid rgba(244,63,94,0.15);">
-                <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
-                Rejected
-
+                class="flex items-center justify-center gap-2 rounded-xl py-3 text-sm font-bold bg-red-50 border border-red-200"
+                style="color: #b91c1c;">
+                <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                Order Rejected
               </div>
 
             </div>
@@ -322,19 +234,14 @@
 
         <!-- Empty State -->
         <div *ngIf="filteredOrderSummaries.length === 0"
-          class="rounded-xl p-8 text-center"
-          style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-            <ion-icon
-              [name]="orderFilterTab === 'pending' ? 'clipboard-outline' : orderFilterTab === 'approved' ? 'checkmark-done-circle-outline' : 'close-circle-outline'"
-              class="text-2xl" style="color: #475569;">
-            </ion-icon>
+          class="rounded-xl p-10 text-center bg-slate-50 border-2 border-dashed border-slate-300">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 bg-white border border-slate-200">
+            <ion-icon name="clipboard-outline" class="text-3xl" style="color: #cbd5e1;"></ion-icon>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">
+          <h3 class="text-base font-bold text-slate-700 mb-1">
             No {{ orderFilterTab === 'all' ? '' : orderFilterTab }} orders
           </h3>
-          <p class="text-xs" style="color: #64748b;">
+          <p class="text-sm text-slate-500">
             {{ orderFilterTab === 'pending' ? 'All orders have been reviewed.' : 'No orders in this category yet.' }}
           </p>
         </div>
