@@ -22,9 +22,13 @@ export class SalesPage implements OnInit {
 
   // ── Order Approval ──────────────────────────────────────
   pendingOrders: PendingOrder[] = [];
+  approveCarts: PendingOrder[] = [];      // from GET /api/order/approve-carts
+  piReadyInvoices: ProformaInvoice[] = []; // from GET /api/order/proforma-invoice/all
   isOrdersLoading = false;
 
-  orderFilterTab: 'all' | 'pending' | 'approved' | 'rejected' = 'pending';
+  orderFilterTab: 'all' | 'pending' | 'approved' | 'pi_ready' | 'rejected' = 'pending';
+  approvingPaymentId: number | null = null;
+  downloadingPIId: number | null = null;
   orderSearchTerm = '';
   expandedOrderIds = new Set<number>();
 
@@ -61,8 +65,15 @@ export class SalesPage implements OnInit {
 
   ngOnInit() {
     this.loadPendingOrders();
+    this.loadApproveCarts();
     this.loadProformaInvoices();
     this.loadGdns();
+  }
+
+  ionViewWillEnter() {
+    this.loadPendingOrders();
+    this.loadApproveCarts();
+    this.loadProformaInvoices();
   }
 
   loadProformaInvoices() {
@@ -70,6 +81,10 @@ export class SalesPage implements OnInit {
       next: (data) => {
         this.allInvoices = data;
         this.groupInvoicesByOrder();
+        // Newest first for PI Ready tab
+        this.piReadyInvoices = [...data].sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
       },
       error: (error) => {
         console.error('Error loading proforma invoices:', error);
@@ -237,20 +252,31 @@ export class SalesPage implements OnInit {
 
   loadPendingOrders() {
     this.isOrdersLoading = true;
-    console.log('Loading active carts...');
     this.salesService.getActiveCarts().subscribe({
       next: (data) => {
-        console.log('Active carts response:', data);
         this.pendingOrders = Array.isArray(data) ? data : (data as any)?.data || [];
-        console.log('Pending orders:', this.pendingOrders);
         this.updateStats();
         this.isOrdersLoading = false;
       },
       error: (error) => {
         console.error('Error loading pending orders:', error);
-        console.error('Error response:', JSON.stringify(error?.error));
         this.isOrdersLoading = false;
       },
+    });
+  }
+
+  loadApproveCarts() {
+    this.salesService.getApproveCarts().subscribe({
+      next: (data) => {
+        const raw: PendingOrder[] = Array.isArray(data) ? data : (data as any)?.data || [];
+        // Newest first for Approved tab
+        this.approveCarts = raw.sort(
+          (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+        );
+      },
+      error: (error) => {
+        console.error('Error loading approve-carts:', error);
+      }
     });
   }
 
@@ -273,7 +299,8 @@ export class SalesPage implements OnInit {
     } else if (this.orderFilterTab === 'pending') {
       filtered = this.pendingOrders.filter(o => o.status === 'PLACED');
     } else if (this.orderFilterTab === 'approved') {
-      filtered = this.pendingOrders.filter(o => o.status === 'APPROVED');
+      // Powered by GET /api/order/approve-carts
+      filtered = this.approveCarts;
     } else if (this.orderFilterTab === 'rejected') {
       filtered = this.pendingOrders.filter(o => o.status === 'DISMISSED');
     } else {
@@ -292,11 +319,22 @@ export class SalesPage implements OnInit {
     return filtered;
   }
 
+  get filteredPIReadyInvoices(): ProformaInvoice[] {
+    if (!this.orderSearchTerm.trim()) return this.piReadyInvoices;
+    const term = this.orderSearchTerm.toLowerCase();
+    return this.piReadyInvoices.filter(inv =>
+      String(inv.cartId).includes(term) ||
+      String(inv.piNumber || '').toLowerCase().includes(term) ||
+      String(inv.distributorId).includes(term)
+    );
+  }
+
   get orderTabCounts(): Record<string, number> {
     return {
       all: this.pendingOrders.length,
-      pending: this.pendingOrders.filter(o => o.status === 'ACTIVE').length,
-      approved: this.pendingOrders.filter(o => o.status === 'APPROVED').length,
+      pending: this.pendingOrders.filter(o => o.status === 'ACTIVE' || o.status === 'PLACED').length,
+      approved: this.approveCarts.length,
+      pi_ready: this.piReadyInvoices.length,
       rejected: this.pendingOrders.filter(o => o.status === 'DISMISSED').length,
     };
   }
@@ -304,11 +342,9 @@ export class SalesPage implements OnInit {
   approveOrder(order: PendingOrder) {
     this.salesService.approveOrder(order.id).subscribe({
       next: () => {
-        const idx = this.pendingOrders.findIndex(o => o.id === order.id);
-        if (idx !== -1) {
-          this.pendingOrders[idx] = { ...this.pendingOrders[idx], status: 'APPROVED' };
-          this.pendingOrders = [...this.pendingOrders];
-        }
+        // Reload both lists fresh from API so Approved tab shows newest-first
+        this.loadPendingOrders();
+        this.loadApproveCarts();
         this.orderFilterTab = 'approved';
       },
       error: (error) => {
@@ -319,8 +355,51 @@ export class SalesPage implements OnInit {
   }
 
   generateAndDownloadPI(order: PendingOrder) {
-    // TODO: Integrate PI generation/download API
-    console.log('Generate & Download PI for order:', order.id);
+    // Legacy stub – superseded by approvePI
+    this.approvePI(order);
+  }
+
+  approvePI(order: PendingOrder) {
+    if (!order.distributorId) {
+      this.showToast('Distributor ID not found for this order.', 'warning');
+      return;
+    }
+
+    this.approvingPaymentId = order.id;
+    this.salesService.approvePayment(order.id, order.distributorId).subscribe({
+      next: async () => {
+        // Remove from approveCarts local list
+        this.approveCarts = this.approveCarts.filter(o => o.id !== order.id);
+        this.approvingPaymentId = null;
+        this.updateStats();
+        // Refresh PI list from /api/order/proforma-invoice/all so the new entry appears
+        this.loadProformaInvoices();
+        this.orderFilterTab = 'pi_ready';
+        this.showToast('Proforma Invoice approved successfully', 'success');
+      },
+      error: (err) => {
+        console.error('Error approving payment:', err);
+        this.approvingPaymentId = null;
+        this.showToast(err?.error?.message || 'Failed to approve Proforma Invoice. Please try again.', 'danger');
+      }
+    });
+  }
+
+  downloadPIFromInvoice(invoice: ProformaInvoice) {
+    this.downloadingPIId = invoice.id;
+    const filename = invoice.piNumber ? `${invoice.piNumber}.pdf` : `PI-${invoice.cartId}.pdf`;
+    this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
+      next: (blob) => {
+        this.downloadFromBlob(blob, filename);
+        this.downloadingPIId = null;
+        this.showToast('Proforma Invoice downloaded successfully', 'success');
+      },
+      error: (err) => {
+        console.error('Error downloading PI:', err);
+        this.downloadingPIId = null;
+        this.showToast('Failed to download Proforma Invoice', 'danger');
+      }
+    });
   }
 
   dismissOrder(order: PendingOrder) {

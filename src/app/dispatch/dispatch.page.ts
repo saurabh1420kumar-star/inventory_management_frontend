@@ -50,8 +50,9 @@ export interface DispatchOrderDisplay {
 export class DispatchPage implements OnInit {
   // ── Data ──────────────────────────────────────────
   orders: DispatchOrderDisplay[] = [];
+  paymentApprovedCarts: DispatchOrderDisplay[] = [];
   searchTerm = '';
-  activeTab: 'pending' | 'approved' | 'payment_approved' = 'pending';
+  activeTab: 'payment_approved' | 'download_gdn' = 'payment_approved';
   isLoading = false;
   errorMessage = '';
 
@@ -124,6 +125,7 @@ export class DispatchPage implements OnInit {
 
   ngOnInit() {
     this.loadOrders();
+    this.loadPaymentApprovedCarts();
     this.loadProformaInvoices();
     this.loadGdns();
   }
@@ -131,25 +133,31 @@ export class DispatchPage implements OnInit {
   loadOrders() {
     this.isLoading = true;
     this.errorMessage = '';
-    
+
     this.dispatchService.getActiveCarts().subscribe({
       next: (data) => {
-        console.log('Raw API Response:', JSON.stringify(data, null, 2));
-        this.orders = data.map((order) => {
-          const mapped = this.mapApiOrderToDisplay(order);
-          console.log(`Order ${order.id} - Backend Status: ${order.status}, Mapped Status: ${mapped.approvalStatus}, GDN Status: ${mapped.gdnStatus}`);
-          return mapped;
-        });
-        console.log('All Mapped Orders:', this.orders);
-        console.log('Pending Orders:', this.orders.filter(o => o.approvalStatus === 'pending'));
-        console.log('Approved Orders:', this.orders.filter(o => o.approvalStatus === 'approved'));
-        console.log('Payment Approved Orders:', this.orders.filter(o => o.approvalStatus === 'payment_approved'));
+        this.orders = data
+          .map((order) => this.mapApiOrderToDisplay(order))
+          .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Error loading orders:', err);
         this.errorMessage = 'Failed to load orders. Please try again.';
         this.isLoading = false;
+      },
+    });
+  }
+
+  loadPaymentApprovedCarts() {
+    this.dispatchService.getPaymentApprovedCarts().subscribe({
+      next: (data) => {
+        this.paymentApprovedCarts = data
+          .map((order) => this.mapApiOrderToDisplay(order))
+          .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+      },
+      error: (err) => {
+        console.error('Error loading payment-approved carts:', err);
       },
     });
   }
@@ -194,7 +202,7 @@ export class DispatchPage implements OnInit {
       items: (order.cartItems || []).map((item) => ({
         productName: item.itemName || 'Unknown Product',
         quantity: item.quantity,
-        unitPrice: item.priceAtTime,
+        unitPrice: item.price ?? item.priceAtTime ?? 0,
         batchNumber: item.itemSku,
       })),
       approvalStatus,
@@ -217,20 +225,8 @@ export class DispatchPage implements OnInit {
 
   // ── Filtering ─────────────────────────────────────
   get filteredOrders(): DispatchOrderDisplay[] {
-    let filtered = this.orders;
-
-    // Tab filter
-    switch (this.activeTab) {
-      case 'pending':
-        filtered = filtered.filter((o) => o.approvalStatus === 'pending');
-        break;
-      case 'approved':
-        filtered = filtered.filter((o) => o.approvalStatus === 'approved' && o.gdnStatus === 'not-generated');
-        break;
-      case 'payment_approved':
-        filtered = filtered.filter((o) => o.approvalStatus === 'payment_approved' && o.gdnStatus === 'not-generated');
-        break;
-    }
+    // Generate GDN tab uses dedicated payment-approved API data
+    let filtered = this.paymentApprovedCarts;
 
     // Search
     if (this.searchTerm.trim()) {
@@ -246,90 +242,59 @@ export class DispatchPage implements OnInit {
     return filtered;
   }
 
+  get filteredGdns(): GDN[] {
+    if (!this.searchTerm.trim()) return this.gdns;
+    const term = this.searchTerm.toLowerCase();
+    return this.gdns.filter(gdn =>
+      gdn.gdnNumber.toLowerCase().includes(term) ||
+      String(gdn.orderId).includes(term) ||
+      (gdn.transportName || '').toLowerCase().includes(term) ||
+      (gdn.driverName || '').toLowerCase().includes(term)
+    );
+  }
+
   get tabCounts() {
     return {
       pending: this.orders.filter((o) => o.approvalStatus === 'pending').length,
-      approved: this.orders.filter((o) => o.approvalStatus === 'approved' && o.gdnStatus === 'not-generated').length,
-      payment_approved: this.orders.filter((o) => o.approvalStatus === 'payment_approved' && o.gdnStatus === 'not-generated').length,
-      gdn: this.orders.filter((o) => o.gdnStatus === 'generated').length,
-      dispatched: this.orders.filter((o) => o.gdnStatus === 'dispatched').length,
+      approved: this.orders.filter((o) => o.approvalStatus === 'approved').length,
+      payment_approved: this.paymentApprovedCarts.length,
+      download_gdn: this.gdns.length,
     };
   }
 
   // ── Actions ───────────────────────────────────────
   approveOrder(order: DispatchOrderDisplay) {
     this.isLoading = true;
-    console.log('=== APPROVE ORDER START ===');
-    console.log('Order ID:', order.id);
-    console.log('Current Status:', order.approvalStatus);
-    
+
     this.dispatchService.approveOrder(order.id).subscribe({
       next: async (response) => {
-        console.log('=== APPROVE API SUCCESS ===');
-        console.log('API Response Status:', response.status);
-        console.log('API returned orderId:', response.orderId);
-        
-        // Update the local order object with the response data
-        // Transform API response to have 'id' field (API returns 'orderId')
-        const transformedResponse = {
-          ...response,
-          id: response.orderId || order.id,
-          cartItems: order.originalOrder?.cartItems || []  // Preserve original cart items
-        };
-        const updatedOrder = this.mapApiOrderToDisplay(transformedResponse);
-        console.log('Updated Order Approval Status:', updatedOrder.approvalStatus);
-        console.log('Updated order id:', updatedOrder.id);
-        console.log('Updated order items count:', updatedOrder.items.length);
-        
-        // Find and replace the order in the list
-        const index = this.orders.findIndex(o => o.id === order.id);
-        if (index !== -1) {
-          this.orders[index] = updatedOrder;
-          console.log('Order updated in list at index:', index);
-        }
-        
-        this.isLoading = false;
-        console.log('Tab Counts after update:', this.tabCounts);
-        console.log('Updated Orders in approved tab:', this.filteredOrders);
-        
+        // Reload orders from API (most reliable — avoid partial-response patching)
+        this.loadOrders();
+
         // Show success toast
         const successToast = await this.toastController.create({
-          message: `Order #${order.orderNumber} approved successfully`,
+          message: `Order ${order.orderNumber} approved successfully`,
           duration: 3000,
           position: 'top',
           color: 'success',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
+          buttons: [{ text: 'Close', role: 'cancel' }]
         });
         await successToast.present();
-        
-        // Switch to Approve PI tab
-        this.activeTab = 'approved';
+
+        // Switch to Generate GDN tab so the order is immediately visible
+        this.activeTab = 'payment_approved';
       },
       error: async (err) => {
-        console.error('=== APPROVE API ERROR ===');
-        console.error('Error Status Code:', err?.status);
-        console.error('Error Status Text:', err?.statusText);
-        console.error('Error Message:', err?.error?.message || err?.error || 'No message');
+        console.error('Approve order error:', err);
         this.errorMessage = err?.error?.message || 'Failed to approve order. Please try again.';
         this.isLoading = false;
-        
-        // Show error toast
+
         const errorToast = await this.toastController.create({
           message: this.errorMessage,
           duration: 4000,
           position: 'top',
           color: 'danger',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
+          buttons: [{ text: 'Close', role: 'cancel' }]
         });
         await errorToast.present();
       },
@@ -671,19 +636,20 @@ export class DispatchPage implements OnInit {
         
         this.closeGdnModal();
         this.isLoading = false;
-        
+
+        // Refresh both lists so the new GDN appears immediately
+        this.loadPaymentApprovedCarts();
+        this.loadGdns();
+        // Switch to Download GDN tab so user can immediately download
+        this.activeTab = 'download_gdn';
+
         // Show success toast
         const successToast = await this.toastController.create({
-          message: `GDN generated successfully! GDN #${this.orderForGdn?.gdnNumber}`,
+          message: `GDN generated successfully!`,
           duration: 3000,
           position: 'top',
           color: 'success',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
+          buttons: [{ text: 'Close', role: 'cancel' }]
         });
         await successToast.present();
       },
@@ -773,6 +739,8 @@ export class DispatchPage implements OnInit {
 
   refreshData() {
     this.loadOrders();
+    this.loadPaymentApprovedCarts();
+    this.loadGdns();
   }
 
   // ── Form Helpers ──────────────────────────────────
@@ -900,7 +868,7 @@ export class DispatchPage implements OnInit {
 
     this.downloadingGdnId = gdn.id;
 
-    this.gdnService.downloadGdnPdf(gdn.id).subscribe({
+    this.gdnService.downloadGdnPdf(gdn.orderId).subscribe({
       next: (blob) => {
         const url = window.URL.createObjectURL(blob);
         const link = document.createElement('a');

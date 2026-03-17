@@ -112,8 +112,105 @@
           </span>
         </div>
 
-        <!-- Order Cards Grid -->
-        <div *ngIf="filteredOrderSummaries.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-5">
+        <!-- Filter Tabs -->
+        <div class="flex gap-2 mb-5 overflow-x-auto pb-1 -mx-1 px-1">
+          <button
+            *ngFor="let tab of [
+              { key: 'pending', label: 'Pending', count: orderTabCounts['pending'], dotColor: '#f59e0b' },
+              { key: 'approved', label: 'Approved', count: orderTabCounts['approved'], dotColor: '#10b981' },
+              { key: 'pi_ready', label: 'PI Ready', count: orderTabCounts['pi_ready'], dotColor: '#06b6d4' },
+              { key: 'rejected', label: 'Rejected', count: orderTabCounts['rejected'], dotColor: '#f43f5e' },
+              { key: 'all', label: 'All', count: orderTabCounts['all'], dotColor: '#94a3b8' }
+            ]"
+            (click)="orderFilterTab = $any(tab.key)"
+            class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 whitespace-nowrap flex-shrink-0"
+            [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.15)' : 'rgba(255,255,255,0.04)'"
+            [style.border]="orderFilterTab === tab.key ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)'"
+            [style.color]="orderFilterTab === tab.key ? '#10b981' : '#94a3b8'"
+            [style.box-shadow]="orderFilterTab === tab.key ? '0 0 15px rgba(16,185,129,0.1)' : 'none'">
+            <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tab.dotColor"></span>
+            {{ tab.label }}
+            <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
+              [style.background]="orderFilterTab === tab.key ? 'rgba(16,185,129,0.2)' : 'rgba(255,255,255,0.06)'"
+              [style.color]="orderFilterTab === tab.key ? '#10b981' : '#64748b'">
+              {{ tab.count }}
+            </span>
+          </button>
+        </div>
+
+        <!-- ═══ PI READY CARDS (source: /api/order/proforma-invoice/all) ═══ -->
+        <div *ngIf="orderFilterTab === 'pi_ready' && filteredPIReadyInvoices.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
+          <div
+            *ngFor="let invoice of filteredPIReadyInvoices"
+            class="rounded-xl overflow-hidden transition-all duration-300 bg-white border border-slate-200 shadow-sm hover:shadow-md">
+
+            <!-- Cyan accent bar -->
+            <div class="h-1 w-full" style="background: linear-gradient(to right, #06b6d4, #0891b2);"></div>
+
+            <div class="p-4">
+              <!-- Header Row -->
+              <div class="flex items-start justify-between mb-3">
+                <div>
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400 mb-0.5">Proforma Invoice</p>
+                  <h3 class="text-base font-bold text-slate-800 tracking-tight">{{ invoice.piNumber || ('PI-' + invoice.cartId) }}</h3>
+                  <p class="text-xs mt-0.5 flex items-center gap-1 text-slate-500">
+                    <ion-icon name="calendar-outline" class="text-xs"></ion-icon>
+                    {{ invoice.createdAt | date: 'dd MMM yyyy' }}
+                  </p>
+                </div>
+                <span class="inline-flex items-center gap-1 text-xs font-bold px-2.5 py-1 rounded-full bg-cyan-50 text-cyan-700 border border-cyan-200">
+                  <ion-icon name="document-text-outline" class="text-xs"></ion-icon>
+                  PI Ready
+                </span>
+              </div>
+
+              <hr class="border-slate-100 mb-3">
+
+              <!-- Order Info Row -->
+              <div class="flex items-center gap-3 mb-3 rounded-lg p-2.5 bg-slate-50 border border-slate-100">
+                <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold text-sm flex-shrink-0"
+                  style="background: linear-gradient(135deg, #06b6d4, #0891b2);">#</div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Order Ref</p>
+                  <p class="text-sm font-bold text-cyan-700">ORD-{{ invoice.cartId }}</p>
+                  <p class="text-xs text-slate-500">Distributor ID: {{ invoice.distributorId }}</p>
+                </div>
+              </div>
+
+              <!-- Amount Row -->
+              <div class="flex items-center justify-between rounded-lg px-3 py-2.5 mb-3 bg-cyan-50 border border-cyan-100">
+                <div class="flex items-center gap-2">
+                  <ion-icon name="receipt-outline" class="text-base text-cyan-600"></ion-icon>
+                  <span class="text-xs font-bold uppercase tracking-wider text-slate-500">Total Amount</span>
+                </div>
+                <span class="text-base font-extrabold text-cyan-700">
+                  &#8377;{{ invoice.amount.toLocaleString() }}
+                </span>
+              </div>
+
+              <hr class="border-slate-100 mb-3">
+
+              <!-- Download Button -->
+              <button
+                (click)="downloadPIFromInvoice(invoice)"
+                [disabled]="downloadingPIId === invoice.id"
+                class="w-full flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95 disabled:opacity-60"
+                style="background: linear-gradient(135deg, #06b6d4, #0891b2); box-shadow: 0 4px 15px rgba(6,182,212,0.25);">
+                <ng-container *ngIf="downloadingPIId !== invoice.id">
+                  <ion-icon name="download-outline" class="text-sm"></ion-icon>
+                  Download PI
+                </ng-container>
+                <ng-container *ngIf="downloadingPIId === invoice.id">
+                  <ion-icon name="reload-outline" class="text-sm animate-spin"></ion-icon>
+                  Downloading...
+                </ng-container>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <!-- ═══ ORDER CARDS (Pending / Approved / Rejected / All tabs) ═══ -->
+        <div *ngIf="orderFilterTab !== 'pi_ready' && filteredOrderSummaries.length > 0" class="grid grid-cols-1 md:grid-cols-2 gap-4">
           <div
             *ngFor="let order of filteredOrderSummaries"
             class="rounded-2xl overflow-hidden transition-all duration-300 border"
@@ -209,16 +306,25 @@
                 </button>
               </div>
 
-              <!-- Action: Approved -->
-              <div *ngIf="order.status === 'APPROVED'" class="flex gap-3">
+              <!-- Action: Approved - Approve Proforma Invoice -->
+              <div *ngIf="order.status === 'APPROVED'" class="flex gap-2">
                 <button
-                  (click)="generateAndDownloadPI(order)"
-                  class="w-full flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
+                  (click)="approvePI(order)"
+                  [disabled]="approvingPaymentId === order.id"
+                  class="flex-1 flex items-center justify-center gap-1.5 text-white font-bold text-xs rounded-lg py-2.5 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #10b981, #14b8a6); box-shadow: 0 4px 15px rgba(16,185,129,0.25);">
-                  <ion-icon name="document-text-outline" class="text-base"></ion-icon>
-                  Generate &amp; Download PI
+                  <ng-container *ngIf="approvingPaymentId !== order.id">
+                    <ion-icon name="card-outline" class="text-sm"></ion-icon>
+                    Approve Proforma Invoice
+                  </ng-container>
+                  <ng-container *ngIf="approvingPaymentId === order.id">
+                    <ion-icon name="reload-outline" class="text-sm animate-spin"></ion-icon>
+                    Approving...
+                  </ng-container>
                 </button>
               </div>
+
+
 
               <!-- Rejected state -->
               <div *ngIf="order.status === 'DISMISSED'"
@@ -233,16 +339,21 @@
         </div>
 
         <!-- Empty State -->
-        <div *ngIf="filteredOrderSummaries.length === 0"
-          class="rounded-xl p-10 text-center bg-slate-50 border-2 border-dashed border-slate-300">
-          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-4 bg-white border border-slate-200">
-            <ion-icon name="clipboard-outline" class="text-3xl" style="color: #cbd5e1;"></ion-icon>
+        <div *ngIf="(orderFilterTab === 'pi_ready' ? filteredPIReadyInvoices.length === 0 : filteredOrderSummaries.length === 0)"
+          class="rounded-xl p-8 text-center"
+          style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
+            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+            <ion-icon
+              [name]="orderFilterTab === 'pending' ? 'clipboard-outline' : orderFilterTab === 'approved' ? 'checkmark-done-circle-outline' : 'close-circle-outline'"
+              class="text-2xl" style="color: #475569;">
+            </ion-icon>
           </div>
-          <h3 class="text-base font-bold text-slate-700 mb-1">
-            No {{ orderFilterTab === 'all' ? '' : orderFilterTab }} orders
+          <h3 class="text-sm font-bold text-white mb-1">
+            No {{ orderFilterTab === 'pi_ready' ? 'PI Ready' : orderFilterTab === 'all' ? '' : orderFilterTab }} orders
           </h3>
-          <p class="text-sm text-slate-500">
-            {{ orderFilterTab === 'pending' ? 'All orders have been reviewed.' : 'No orders in this category yet.' }}
+          <p class="text-xs" style="color: #64748b;">
+            {{ orderFilterTab === 'pending' ? 'All orders have been reviewed.' : orderFilterTab === 'pi_ready' ? 'No orders with approved PI yet.' : 'No orders in this category yet.' }}
           </p>
         </div>
 

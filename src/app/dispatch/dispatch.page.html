@@ -57,9 +57,8 @@
         <div class="flex gap-2 mt-4 overflow-x-auto pb-1">
           <button
             *ngFor="let tab of [
-              { key: 'pending', label: 'Pending Approval', count: tabCounts.pending, icon: 'time-outline', dot: 'bg-amber-400' },
-              { key: 'approved', label: 'Approve PI', count: tabCounts.approved, icon: 'card-outline', dot: 'bg-orange-400' },
-              { key: 'payment_approved', label: 'Generate GDN', count: tabCounts.payment_approved, icon: 'document-text-outline', dot: 'bg-emerald-400' }
+              { key: 'payment_approved', label: 'Generate GDN', count: tabCounts.payment_approved, dot: 'bg-emerald-400' },
+              { key: 'download_gdn',     label: 'Download GDN', count: tabCounts.download_gdn,     dot: 'bg-teal-400' }
             ]"
             (click)="activeTab = $any(tab.key)"
             [class.bg-gradient-to-r]="activeTab === tab.key"
@@ -88,7 +87,7 @@
       <!-- ═══════════════════════════════════════════════════════════ -->
       <!-- ORDER CARDS                                               -->
       <!-- ═══════════════════════════════════════════════════════════ -->
-      <div *ngIf="filteredOrders.length > 0" class="space-y-5">
+      <div *ngIf="activeTab !== 'download_gdn' && filteredOrders.length > 0" class="space-y-5">
         <div
           *ngFor="let order of filteredOrders"
           class="bg-white rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg"
@@ -388,43 +387,95 @@
 
 
 
-      <!-- ═══════ QUICK LINKS ═══════ -->
-      <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mt-12 mb-12">
-        <!-- Proforma Invoices Button -->
-        <a routerLink="/proforma-invoice"
-          class="group relative flex items-center gap-4 px-6 py-5 bg-gradient-to-br from-emerald-50 to-teal-50 hover:from-emerald-100 hover:to-teal-100 border border-emerald-200 rounded-2xl transition-all duration-300 overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-emerald-400/0 to-teal-400/0 group-hover:from-emerald-400/5 group-hover:to-teal-400/5 transition-all duration-300"></div>
-          <div class="relative flex items-center gap-4 w-full">
-            <div class="w-12 h-12 rounded-xl bg-emerald-100 group-hover:bg-emerald-200 flex items-center justify-center transition-all duration-300">
-              <ion-icon name="receipt-outline" class="text-2xl text-emerald-500"></ion-icon>
-            </div>
-            <div class="flex-1">
-              <h3 class="text-base font-bold text-slate-800 group-hover:text-emerald-700 transition-colors">Paid Proforma Invoices</h3>
-              <p class="text-xs text-slate-500 group-hover:text-slate-600">View & download invoices</p>
-            </div>
-            <ion-icon name="arrow-forward-outline" class="text-2xl text-slate-400 group-hover:text-emerald-500 transition-all duration-300 group-hover:translate-x-1"></ion-icon>
-          </div>
-        </a>
+      <!-- ═══════ GDN DOWNLOAD CARDS ═══════ -->
+      <div *ngIf="activeTab === 'download_gdn' && filteredGdns.length > 0" class="space-y-4">
+        <div
+          *ngFor="let gdn of filteredGdns"
+          class="bg-white rounded-2xl border border-teal-200 overflow-hidden transition-all duration-300 hover:shadow-lg"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
 
-        <!-- Good Delivery Notes Button -->
-        <a routerLink="/gdn"
-          class="group relative flex items-center gap-4 px-6 py-5 bg-gradient-to-br from-blue-50 to-cyan-50 hover:from-blue-100 hover:to-cyan-100 border border-blue-200 rounded-2xl transition-all duration-300 overflow-hidden">
-          <div class="absolute inset-0 bg-gradient-to-br from-blue-400/0 to-cyan-400/0 group-hover:from-blue-400/5 group-hover:to-cyan-400/5 transition-all duration-300"></div>
-          <div class="relative flex items-center gap-4 w-full">
-            <div class="w-12 h-12 rounded-xl bg-blue-100 group-hover:bg-blue-200 flex items-center justify-center transition-all duration-300">
-              <ion-icon name="document-text-outline" class="text-2xl text-blue-500"></ion-icon>
+          <!-- Top Accent -->
+          <div class="h-1 w-full bg-gradient-to-r from-teal-400 to-cyan-400"></div>
+
+          <div class="p-4 sm:p-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-gradient-to-br from-teal-400 to-cyan-500 flex items-center justify-center text-white font-bold text-sm flex-shrink-0 shadow-sm">
+                  <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                </div>
+                <div>
+                  <h3 class="text-lg font-bold text-slate-800">{{ gdn.gdnNumber }}</h3>
+                  <p class="text-sm text-slate-500">Order Ref: ORD-{{ gdn.orderId }}</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1.5 bg-teal-50 text-teal-600 border border-teal-200 text-xs font-bold px-3 py-1.5 rounded-full self-start">
+                <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                GDN Ready
+              </span>
             </div>
-            <div class="flex-1">
-              <h3 class="text-base font-bold text-slate-800 group-hover:text-blue-700 transition-colors">Good Delivery Notes</h3>
-              <p class="text-xs text-slate-500 group-hover:text-slate-600">Manage GDN & dispatch</p>
+
+            <!-- Info Grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div class="bg-teal-50 rounded-xl p-3">
+                <p class="text-[10px] text-teal-500 font-bold uppercase tracking-wider mb-0.5">GDN Date</p>
+                <p class="text-sm font-bold text-slate-700">{{ gdn.gdnDate | date:'dd MMM yyyy' }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Transporter</p>
+                <p class="text-sm font-bold text-slate-700 truncate">{{ gdn.transportName || '—' }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Vehicle No.</p>
+                <p class="text-sm font-bold text-slate-700">{{ gdn.vehicleNo || '—' }}</p>
+              </div>
+              <div class="bg-slate-50 rounded-xl p-3">
+                <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Driver</p>
+                <p class="text-sm font-bold text-slate-700 truncate">{{ gdn.driverName || '—' }}</p>
+              </div>
             </div>
-            <ion-icon name="arrow-forward-outline" class="text-2xl text-slate-400 group-hover:text-blue-500 transition-all duration-300 group-hover:translate-x-1"></ion-icon>
+
+            <!-- Shipping Address -->
+            <div *ngIf="gdn.shippingAddress" class="flex items-start gap-2 bg-teal-50/50 rounded-xl px-4 py-3 mb-4 text-sm text-slate-600">
+              <ion-icon name="location-outline" class="text-teal-400 text-lg flex-shrink-0 mt-0.5"></ion-icon>
+              <span class="font-medium">{{ gdn.shippingAddress }}</span>
+            </div>
+
+            <div class="border-t border-slate-100 pt-4"></div>
+
+            <!-- Download Button -->
+            <div class="flex gap-3">
+              <button
+                (click)="downloadGdnPdf(gdn)"
+                [disabled]="downloadingGdnId === gdn.id || !gdn.hasPdf"
+                class="flex-1 flex items-center justify-center gap-2 font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
+                [class.bg-gradient-to-r]="gdn.hasPdf"
+                [class.from-teal-500]="gdn.hasPdf"
+                [class.to-cyan-500]="gdn.hasPdf"
+                [class.hover\:from-teal-600]="gdn.hasPdf"
+                [class.hover\:to-cyan-600]="gdn.hasPdf"
+                [class.text-white]="gdn.hasPdf"
+                [class.shadow-md]="gdn.hasPdf"
+                [class.shadow-teal-200]="gdn.hasPdf"
+                [class.bg-slate-100]="!gdn.hasPdf"
+                [class.text-slate-400]="!gdn.hasPdf"
+                [class.cursor-not-allowed]="!gdn.hasPdf">
+                <ng-container *ngIf="downloadingGdnId !== gdn.id">
+                  <ion-icon name="download-outline" class="text-lg"></ion-icon>
+                  {{ gdn.hasPdf ? 'Download GDN' : 'PDF Not Available' }}
+                </ng-container>
+                <ng-container *ngIf="downloadingGdnId === gdn.id">
+                  <ion-icon name="reload-outline" class="text-lg animate-spin"></ion-icon>
+                  Downloading...
+                </ng-container>
+              </button>
+            </div>
           </div>
-        </a>
+        </div>
       </div>
 
       <!-- ═══════ EMPTY STATE ═══════ -->
-      <div *ngIf="filteredOrders.length === 0"
+      <div *ngIf="activeTab === 'download_gdn' ? filteredGdns.length === 0 : filteredOrders.length === 0"
         class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
         <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
           <ion-icon name="cube-outline" class="text-3xl text-slate-300"></ion-icon>

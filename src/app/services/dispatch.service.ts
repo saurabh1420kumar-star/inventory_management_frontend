@@ -11,7 +11,8 @@ export interface DispatchOrderItem {
   itemId: number;
   itemName: string;
   itemSku: string;
-  priceAtTime: number;
+  price: number;        // field name from /dispatch/carts/payment-approved
+  priceAtTime: number;  // field name from /order/placed-carts (may be absent)
   quantity: number;
   totalPrice: number;
 }
@@ -146,6 +147,16 @@ export class DispatchService {
    */
   markDispatchedOrder(orderId: number): Observable<any> {
     return this.http.put<any>(`${this.dispatchApiUrl}/${orderId}/dispatch`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Get all carts with PAYMENT_APPROVED status (ready for GDN generation)
+   * GET /api/dispatch/carts/payment-approved
+   */
+  getPaymentApprovedCarts(): Observable<DispatchOrder[]> {
+    return this.http.get<DispatchOrder[]>(`${this.dispatchApiUrl}/carts/payment-approved`, {
       headers: this.getAuthHeaders()
     });
   }

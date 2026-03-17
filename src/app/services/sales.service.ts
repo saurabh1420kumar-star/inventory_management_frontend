@@ -97,8 +97,24 @@ export class SalesService {
     return this.http.get<PendingOrder[]>(`${this.orderApiUrl}/placed-carts`, { headers: this.getAuthHeaders() });
   }
 
+  /**
+   * Get carts ready for PI approval
+   * GET /api/order/approve-carts
+   */
+  getApproveCarts(): Observable<PendingOrder[]> {
+    return this.http.get<PendingOrder[]>(`${this.orderApiUrl}/approve-carts`, { headers: this.getAuthHeaders() });
+  }
+
   approveOrder(cartId: number): Observable<any> {
     return this.http.put<any>(`${this.orderApiUrl}/approve/${cartId}`, {}, { headers: this.getAuthHeaders() });
+  }
+
+  approvePayment(orderId: number, distributorId: number): Observable<any> {
+    return this.http.post<any>(
+      `${environment.apiUrl}/accounts/approve-payment/${orderId}?distributorId=${distributorId}`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
   }
 
   dismissOrder(cartId: number): Observable<any> {

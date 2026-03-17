@@ -2,7 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../services/accountsLedger.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
 import { Auth } from '../../services/auth';
@@ -209,7 +209,8 @@ export class AccountsMasterPage implements OnInit {
     private proformaInvoiceService: ProformaInvoiceService,
     private elementRef: ElementRef,
     private toastSvc: ToastService,
-    private auth: Auth
+    private auth: Auth,
+    private router: Router
   ) {
     // Add specific icons shown in the images
     addIcons({
@@ -858,7 +859,7 @@ export class AccountsMasterPage implements OnInit {
   confirmReadyToDispatch() {
     this.isDispatchModalOpen = false;
     this.showToast('Order marked as Ready to Dispatch!', 'success');
-    // TODO: API call to mark as ready to dispatch
+    this.router.navigate(['/dispatch']);
   }
 
   // Download Proforma Invoice
