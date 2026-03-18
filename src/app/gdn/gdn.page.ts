@@ -16,6 +16,7 @@ import {
 
 import { ToastController } from '@ionic/angular';
 import { GdnService, GDN } from '../services/gdn.service';
+import { Toast } from '../services/toast';
 import { DownloadService } from '../services/download.service';
 import { addIcons } from 'ionicons';
 import { 
@@ -66,6 +67,7 @@ export class GdnPage implements OnInit {
     private gdnService: GdnService,
     private toastController: ToastController,
     private sanitizer: DomSanitizer,
+    private toast: Toast,
     private downloadService: DownloadService
   ) {
     addIcons({ downloadIcon, eyeOffIcon, closeCircleIcon, checkmarkCircleIcon });
@@ -191,13 +193,9 @@ export class GdnPage implements OnInit {
   }
 
   private async showToast(message: string, color: string = 'dark') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom'
-    });
-    await toast.present();
+    const mapped: 'success' | 'danger' | 'warning' =
+      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
+    await this.toast.present(message, mapped);
   }
 
   refresh() {

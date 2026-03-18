@@ -2,6 +2,7 @@ import { Component } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule, ToastController, NavController } from '@ionic/angular';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-feedback',
@@ -22,7 +23,8 @@ export class FeedbackPage {
   constructor(
     private fb: FormBuilder,
     private toastCtrl: ToastController,
-    private navCtrl: NavController
+    private navCtrl: NavController,
+    private toast: Toast
   ) {
     this.feedbackForm = this.fb.group({
       type: ['complaint', Validators.required],
@@ -38,24 +40,14 @@ export class FeedbackPage {
 
   async submit() {
     if (this.feedbackForm.invalid) {
-      const toast = await this.toastCtrl.create({
-        message: 'Please fill all required fields correctly',
-        color: 'danger',
-        duration: 2000,
-      });
-      toast.present();
+      await this.toast.present('Please fill all required fields correctly', 'danger');
       return;
     }
 
     this.isSubmitting = true;
 
     setTimeout(async () => {
-      const toast = await this.toastCtrl.create({
-        message: 'Your feedback has been submitted successfully!',
-        color: 'success',
-        duration: 2000,
-      });
-      toast.present();
+      await this.toast.present('Your feedback has been submitted successfully!', 'success');
 
       this.feedbackForm.reset({
         type: 'complaint',

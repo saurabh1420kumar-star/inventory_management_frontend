@@ -8,6 +8,7 @@ import { SalesService, PendingOrder } from '../services/sales.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { GdnService, GDN } from '../services/gdn.service';
 import { ToastController } from '@ionic/angular';
+import { Toast } from '../services/toast';
 import { DownloadService } from '../services/download.service';
 
 @Component({
@@ -62,6 +63,7 @@ export class SalesPage implements OnInit {
     private gdnService: GdnService,
     private toastController: ToastController,
     private sanitizer: DomSanitizer,
+    private toast: Toast,
     private downloadService: DownloadService
   ) {}
 
@@ -148,13 +150,9 @@ export class SalesPage implements OnInit {
   // downloadFromBlob and downloadFromUrl replaced by DownloadService
 
   private async showToast(message: string, color: string = 'dark') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom'
-    });
-    await toast.present();
+    const mapped: 'success' | 'danger' | 'warning' =
+      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
+    await this.toast.present(message, mapped);
   }
 
   // ── GDN Methods ───────────────────────────────────

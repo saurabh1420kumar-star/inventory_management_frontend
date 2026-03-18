@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ToastController, AlertController } from '@ionic/angular';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-user-right',
@@ -71,7 +72,8 @@ export class UserRightPage implements OnInit {
   constructor(
     private formBuilder: FormBuilder,
     private toastController: ToastController,
-    private alertController: AlertController
+    private alertController: AlertController,
+    private toast: Toast
   ) {}
 
   ngOnInit() {
@@ -307,19 +309,9 @@ export class UserRightPage implements OnInit {
    * Show toast message
    */
   async showToast(message: string, color: string = 'primary') {
-    const toast = await this.toastController.create({
-      message: message,
-      duration: 3000,
-      position: 'top',
-      color: color,
-      buttons: [
-        {
-          icon: 'close',
-          role: 'cancel'
-        }
-      ]
-    });
-    await toast.present();
+    const mapped: 'success' | 'danger' | 'warning' =
+      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
+    await this.toast.present(message, mapped);
   }
 
   /**

@@ -30,6 +30,7 @@ import {
 
 import { ModalController, ToastController, AlertController } from '@ionic/angular';
 import { UnitService, Unit, RawMaterial, FinishedProduct } from '../services/unit.service';
+import { Toast } from '../services/toast';
 
 /* ---------- COMPONENT ---------- */
 @Component({
@@ -96,7 +97,8 @@ export class UnitMasterPage implements OnInit {
     private modalCtrl: ModalController,
     private unitService: UnitService,
     private toastCtrl: ToastController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private toast: Toast
   ) {
     // Add Form - supports both Raw Material and Finished Product
     this.addForm = this.fb.group({
@@ -521,13 +523,9 @@ export class UnitMasterPage implements OnInit {
   /* ---------- NOTIFICATION METHODS ---------- */
 
   async showToast(message: string, color: string = 'success') {
-    const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 3000,
-      position: 'top',
-      color: color
-    });
-    await toast.present();
+    const mapped: 'success' | 'danger' | 'warning' =
+      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
+    await this.toast.present(message, mapped);
   }
 
   async showSuccessAlert(message: string, title: string = 'Success') {

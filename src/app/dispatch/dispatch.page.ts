@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
+import { Toast } from '../services/toast';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DispatchService, DispatchOrder, GdnGenerateRequest } from '../services/dispatch.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
@@ -113,6 +114,7 @@ export class DispatchPage implements OnInit {
     private fb: FormBuilder,
     private toastController: ToastController,
     private sanitizer: DomSanitizer,
+    private toast: Toast,
     private downloadService: DownloadService
   ) {
     this.gdnForm = this.fb.group({
@@ -140,7 +142,7 @@ export class DispatchPage implements OnInit {
       next: (data) => {
         this.orders = data
           .map((order) => this.mapApiOrderToDisplay(order))
-          .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+          .sort((a, b) => b.id - a.id);
         this.isLoading = false;
       },
       error: (err) => {
@@ -156,7 +158,7 @@ export class DispatchPage implements OnInit {
       next: (data) => {
         this.paymentApprovedCarts = data
           .map((order) => this.mapApiOrderToDisplay(order))
-          .sort((a, b) => new Date(b.orderDate).getTime() - new Date(a.orderDate).getTime());
+          .sort((a, b) => b.id - a.id);
       },
       error: (err) => {
         console.error('Error loading payment-approved carts:', err);
@@ -200,7 +202,8 @@ export class DispatchPage implements OnInit {
       distributorId: order.distributorId,
       salesPersonName: order.salespersonName || 'Unknown',
       orderDate: order.createdAt?.split('T')[0] || new Date().toISOString().split('T')[0],
-      totalAmount: order.totalCartAmount || 0,
+      totalAmount: order.totalCartAmount ||
+        (order.cartItems || []).reduce((sum, item) => sum + (item.totalPrice || item.price * item.quantity || 0), 0),
       items: (order.cartItems || []).map((item) => ({
         productName: item.itemName || 'Unknown Product',
         quantity: item.quantity,
@@ -274,14 +277,7 @@ export class DispatchPage implements OnInit {
         this.loadOrders();
 
         // Show success toast
-        const successToast = await this.toastController.create({
-          message: `Order ${order.orderNumber} approved successfully`,
-          duration: 3000,
-          position: 'top',
-          color: 'success',
-          buttons: [{ text: 'Close', role: 'cancel' }]
-        });
-        await successToast.present();
+        await this.toast.present(`Order ${order.orderNumber} approved successfully`, 'success');
 
         // Switch to Generate GDN tab so the order is immediately visible
         this.activeTab = 'payment_approved';
@@ -291,14 +287,7 @@ export class DispatchPage implements OnInit {
         this.errorMessage = err?.error?.message || 'Failed to approve order. Please try again.';
         this.isLoading = false;
 
-        const errorToast = await this.toastController.create({
-          message: this.errorMessage,
-          duration: 4000,
-          position: 'top',
-          color: 'danger',
-          buttons: [{ text: 'Close', role: 'cancel' }]
-        });
-        await errorToast.present();
+        await this.toast.present(this.errorMessage, 'danger');
       },
     });
   }
@@ -322,19 +311,7 @@ export class DispatchPage implements OnInit {
           this.isLoading = false;
           
           // Show error toast
-          const errorToast = await this.toastController.create({
-            message: this.errorMessage,
-            duration: 4000,
-            position: 'top',
-            color: 'danger',
-            buttons: [
-              {
-                text: 'Close',
-                role: 'cancel'
-              }
-            ]
-          });
-          await errorToast.present();
+          await this.toast.present(this.errorMessage, 'danger');
           return;
         }
         
@@ -364,19 +341,7 @@ export class DispatchPage implements OnInit {
           }
           
           // Show success toast
-          const successToast = await this.toastController.create({
-            message: `Payment for Order #${order.orderNumber} approved successfully`,
-            duration: 3000,
-            position: 'top',
-            color: 'success',
-            buttons: [
-              {
-                text: 'Close',
-                role: 'cancel'
-              }
-            ]
-          });
-          await successToast.present();
+          await this.toast.present(`Payment for Order #${order.orderNumber} approved successfully`, 'success');
           
           // Switch to Generate GDN tab
           this.activeTab = 'payment_approved';
@@ -391,21 +356,7 @@ export class DispatchPage implements OnInit {
         console.error('Error approving payment:', err);
         this.errorMessage = err?.error?.message || 'Failed to approve payment. Please try again.';
         this.isLoading = false;
-        
-        // Show error toast
-        const errorToast = await this.toastController.create({
-          message: this.errorMessage,
-          duration: 4000,
-          position: 'top',
-          color: 'danger',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
-        });
-        await errorToast.present();
+        await this.toast.present(this.errorMessage, 'danger');
       },
     });
   }
@@ -446,39 +397,13 @@ export class DispatchPage implements OnInit {
           this.isLoading = false;
           
           // Show success toast
-          const successToast = await this.toastController.create({
-            message: 'Order rejected successfully',
-            duration: 3000,
-            position: 'top',
-            color: 'success',
-            buttons: [
-              {
-                text: 'Close',
-                role: 'cancel'
-              }
-            ]
-          });
-          await successToast.present();
+          await this.toast.present('Order rejected successfully', 'success');
         },
         error: async (err) => {
           console.error('Error rejecting order:', err);
           this.errorMessage = 'Failed to reject order. Please try again.';
           this.isLoading = false;
-          
-          // Show error toast
-          const errorToast = await this.toastController.create({
-            message: this.errorMessage,
-            duration: 4000,
-            position: 'top',
-            color: 'danger',
-            buttons: [
-              {
-                text: 'Close',
-                role: 'cancel'
-              }
-            ]
-          });
-          await errorToast.present();
+          await this.toast.present(this.errorMessage, 'danger');
         },
       });
     }
@@ -537,19 +462,7 @@ export class DispatchPage implements OnInit {
         console.log('Verify Response:', verifyResponse);
         
         // Show verification success toast
-        const verifyToast = await this.toastController.create({
-          message: 'Inventory verified successfully. Generating GDN...',
-          duration: 2000,
-          position: 'top',
-          color: 'success',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
-        });
-        await verifyToast.present();
+        await this.toast.present('Inventory verified successfully. Generating GDN...', 'success');
         
         // Wait a moment, then proceed with GDN generation
         setTimeout(() => {
@@ -646,35 +559,14 @@ export class DispatchPage implements OnInit {
         this.activeTab = 'download_gdn';
 
         // Show success toast
-        const successToast = await this.toastController.create({
-          message: `GDN generated successfully!`,
-          duration: 3000,
-          position: 'top',
-          color: 'success',
-          buttons: [{ text: 'Close', role: 'cancel' }]
-        });
-        await successToast.present();
+        await this.toast.present('GDN generated successfully!', 'success');
       },
       error: async (err) => {
         console.error('Error generating GDN:', err);
         console.error('Error response:', JSON.stringify(err?.error));
         this.errorMessage = err?.error?.message || err?.error?.error || 'Failed to generate GDN. Please try again.';
         this.isLoading = false;
-        
-        // Show error toast
-        const errorToast = await this.toastController.create({
-          message: this.errorMessage,
-          duration: 4000,
-          position: 'top',
-          color: 'danger',
-          buttons: [
-            {
-              text: 'Close',
-              role: 'cancel'
-            }
-          ]
-        });
-        await errorToast.present();
+        await this.toast.present(this.errorMessage, 'danger');
       },
     });
   }

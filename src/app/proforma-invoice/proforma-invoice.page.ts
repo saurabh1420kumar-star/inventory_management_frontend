@@ -25,6 +25,7 @@ import {
 
 import { ToastController } from '@ionic/angular';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
+import { Toast } from '../services/toast';
 import { addIcons } from 'ionicons';
 import { 
   download as downloadIcon, 
@@ -82,7 +83,8 @@ export class ProformaInvoicePage implements OnInit {
   constructor(
     private proformaInvoiceService: ProformaInvoiceService,
     private toastController: ToastController,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private toast: Toast
   ) {
     addIcons({ downloadIcon, checkmarkIcon, eyeOffIcon, closeCircleIcon, checkmarkCircleIcon });
   }
@@ -240,13 +242,9 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   private async showToast(message: string, color: string = 'dark') {
-    const toast = await this.toastController.create({
-      message,
-      duration: 2000,
-      color,
-      position: 'bottom'
-    });
-    await toast.present();
+    const mapped: 'success' | 'danger' | 'warning' =
+      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
+    await this.toast.present(message, mapped);
   }
 
   refresh() {

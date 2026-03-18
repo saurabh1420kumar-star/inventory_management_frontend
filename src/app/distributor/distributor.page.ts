@@ -22,6 +22,7 @@ import {
   eyeOffOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto } from '../services/distributor.service';
+import { Toast } from '../services/toast';
 
 interface Distributor {
   id: string;
@@ -91,7 +92,8 @@ export class DistributorPage implements OnInit {
     private distributorService: DistributorService,
     private cdr: ChangeDetectorRef,
     private toastCtrl: ToastController,
-    private alertCtrl: AlertController
+    private alertCtrl: AlertController,
+    private toast: Toast
   ) {
     // Register icons
     addIcons({
@@ -412,7 +414,7 @@ export class DistributorPage implements OnInit {
         error: (err) => {
           console.error('Failed to update distributor', err);
           this.isLoading = false;
-          this.showToast('Failed to update distributor. Please try again.', 'danger');
+          this.toast.present('Failed to update distributor. Please try again.', 'danger');
         }
       });
     } else {
@@ -431,7 +433,7 @@ export class DistributorPage implements OnInit {
             this.calculateStats();
             this.closeAddModal();
             this.distributorForm.reset();
-            this.showSuccessAlert('Distributor is created successfully!', 'Distributor Created');
+            this.toast.present('Distributor created successfully!', 'success');
           }
           this.isLoading = false;
         },
@@ -441,7 +443,7 @@ export class DistributorPage implements OnInit {
           console.error('Error message:', err.error?.message || err.statusText);
           this.isLoading = false;
           const errorMsg = err.error?.message || 'Failed to create distributor. Please check the form and try again.';
-          this.showToast(errorMsg, 'danger');
+          this.toast.present(errorMsg, 'danger');
         }
       });
     }
@@ -450,17 +452,6 @@ export class DistributorPage implements OnInit {
   cancelEdit() {
     this.isEditing = false;
     this.distributorForm.reset();
-  }
-
-  // Show toast notification
-  async showToast(message: string, color: string = 'success') {
-    const toast = await this.toastCtrl.create({
-      message: message,
-      duration: 3000,
-      position: 'top',
-      color: color
-    });
-    await toast.present();
   }
 
   // Show success alert
@@ -505,14 +496,14 @@ export class DistributorPage implements OnInit {
           this.filteredDistributors = [...this.distributors];
           this.calculateStats();
           this.closeDetailsModal();
-          this.showToast('Distributor deleted successfully!', 'success');
+          this.toast.present('Distributor deleted successfully!', 'success');
         }
         this.isLoading = false;
       },
       error: (err) => {
         console.error('Failed to delete distributor', err);
         this.isLoading = false;
-        this.showToast('Failed to delete distributor. Please try again.', 'danger');
+        this.toast.present('Failed to delete distributor. Please try again.', 'danger');
       }
     });
   }
