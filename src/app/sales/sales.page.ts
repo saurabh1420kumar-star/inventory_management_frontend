@@ -8,6 +8,7 @@ import { SalesService, PendingOrder } from '../services/sales.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { GdnService, GDN } from '../services/gdn.service';
 import { ToastController } from '@ionic/angular';
+import { DownloadService } from '../services/download.service';
 
 @Component({
   selector: 'app-sales',
@@ -60,7 +61,8 @@ export class SalesPage implements OnInit {
     private proformaInvoiceService: ProformaInvoiceService,
     private gdnService: GdnService,
     private toastController: ToastController,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private downloadService: DownloadService
   ) {}
 
   ngOnInit() {
@@ -125,16 +127,15 @@ export class SalesPage implements OnInit {
     this.downloadingInvoiceId = invoice.id;
 
     if (invoice.pdfUrl) {
-      this.downloadFromUrl(invoice.pdfUrl, `${invoice.piNumber}.pdf`);
+      this.downloadService.downloadUrl(invoice.pdfUrl, `${invoice.piNumber}.pdf`);
       this.downloadingInvoiceId = null;
       return;
     }
 
     this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
-      next: (blob) => {
-        this.downloadFromBlob(blob, `${invoice.piNumber}.pdf`);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `${invoice.piNumber}.pdf`);
         this.downloadingInvoiceId = null;
-        this.showToast('PDF downloaded successfully', 'success');
       },
       error: (error) => {
         console.error('Error downloading PDF:', error);
@@ -144,23 +145,7 @@ export class SalesPage implements OnInit {
     });
   }
 
-  private downloadFromBlob(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  private downloadFromUrl(pdfUrl: string, filename: string) {
-    const link = document.createElement('a');
-    link.href = pdfUrl;
-    link.download = filename;
-    link.target = '_blank';
-    link.click();
-    this.showToast('PDF downloaded successfully', 'success');
-  }
+  // downloadFromBlob and downloadFromUrl replaced by DownloadService
 
   private async showToast(message: string, color: string = 'dark') {
     const toast = await this.toastController.create({
@@ -215,16 +200,15 @@ export class SalesPage implements OnInit {
     this.downloadingGdnId = gdn.id;
 
     if (gdn.pdfUrl) {
-      this.downloadFromUrl(gdn.pdfUrl, `${gdn.gdnNumber}.pdf`);
+      this.downloadService.downloadUrl(gdn.pdfUrl, `${gdn.gdnNumber}.pdf`);
       this.downloadingGdnId = null;
       return;
     }
 
     this.gdnService.downloadGdnPdf(gdn.id).subscribe({
-      next: (blob) => {
-        this.downloadFromBlob(blob, `${gdn.gdnNumber}.pdf`);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `${gdn.gdnNumber}.pdf`);
         this.downloadingGdnId = null;
-        this.showToast('GDN PDF downloaded successfully', 'success');
       },
       error: (error) => {
         console.error('Error downloading GDN PDF:', error);
@@ -389,10 +373,9 @@ export class SalesPage implements OnInit {
     this.downloadingPIId = invoice.id;
     const filename = invoice.piNumber ? `${invoice.piNumber}.pdf` : `PI-${invoice.cartId}.pdf`;
     this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
-      next: (blob) => {
-        this.downloadFromBlob(blob, filename);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, filename);
         this.downloadingPIId = null;
-        this.showToast('Proforma Invoice downloaded successfully', 'success');
       },
       error: (err) => {
         console.error('Error downloading PI:', err);

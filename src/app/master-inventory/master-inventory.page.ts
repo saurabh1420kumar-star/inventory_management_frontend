@@ -121,9 +121,15 @@ export class MasterInventoryPage implements OnInit {
     this.addForm = this.fb.group({
       category: ['', Validators.required],
       name: ['', Validators.required],
-      materialCode: ['', Validators.required],
-      unit: ['KG', Validators.required],
+      // raw material only
+      materialCode: [''],
       subUnit: ['KG'],
+      // finished product only
+      sku: [''],
+      description: [''],
+      price: [0, [Validators.min(0)]],
+      // common
+      unit: ['KG', Validators.required],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -375,6 +381,21 @@ export class MasterInventoryPage implements OnInit {
   onCategoryChange(category: 'raw_material' | 'finished_product') {
     this.selectedCategory = category;
     this.addForm.patchValue({ category });
+
+    // Apply dynamic validators based on category
+    const materialCodeCtrl = this.addForm.get('materialCode')!;
+    const skuCtrl = this.addForm.get('sku')!;
+
+    if (category === 'raw_material') {
+      materialCodeCtrl.setValidators([Validators.required]);
+      skuCtrl.clearValidators();
+    } else {
+      skuCtrl.setValidators([Validators.required]);
+      materialCodeCtrl.clearValidators();
+      materialCodeCtrl.setValue('');
+    }
+    materialCodeCtrl.updateValueAndValidity();
+    skuCtrl.updateValueAndValidity();
   }
 
   closeAddModal() {
@@ -383,11 +404,20 @@ export class MasterInventoryPage implements OnInit {
     this.selectedImageFile = null;
     this.selectedCategory = null;
 
+    // Reset validators so form is clean for re-open
+    this.addForm.get('materialCode')!.clearValidators();
+    this.addForm.get('materialCode')!.updateValueAndValidity();
+    this.addForm.get('sku')!.clearValidators();
+    this.addForm.get('sku')!.updateValueAndValidity();
+
     this.addForm.reset({
       unit: 'KG',
       subUnit: 'KG',
       quantity: 0,
-      minimumThreshold: 0
+      minimumThreshold: 0,
+      price: 0,
+      sku: '',
+      description: ''
     });
   }
 
@@ -395,10 +425,32 @@ export class MasterInventoryPage implements OnInit {
   addItem() {
     if (this.addForm.invalid || !this.selectedCategory) return;
 
-    const payload = {
-      ...this.addForm.value,
-      category: this.selectedCategory
-    };
+    const formVal = this.addForm.value;
+
+    // Build a clean payload: only send fields the target endpoint accepts.
+    let payload: Record<string, any>;
+    if (this.selectedCategory === 'raw_material') {
+      payload = {
+        category: 'raw_material',
+        name: formVal.name,
+        materialCode: formVal.materialCode,
+        unit: formVal.unit,
+        subUnit: formVal.subUnit || undefined,
+        quantity: formVal.quantity,
+        minimumThreshold: formVal.minimumThreshold
+      };
+    } else {
+      // finished product schema: { name, description, sku, price, quantity, minimumThreshold }
+      payload = {
+        category: 'finished_product',
+        name: formVal.name,
+        description: formVal.description || '',
+        sku: formVal.sku,
+        price: formVal.price ?? 0,
+        quantity: formVal.quantity,
+        minimumThreshold: formVal.minimumThreshold
+      };
+    }
 
     this.inventoryService.createItem(payload).subscribe({
       next: (created) => {

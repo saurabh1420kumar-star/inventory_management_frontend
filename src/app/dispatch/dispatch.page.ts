@@ -7,6 +7,7 @@ import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { DispatchService, DispatchOrder, GdnGenerateRequest } from '../services/dispatch.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { GdnService, GDN } from '../services/gdn.service';
+import { DownloadService } from '../services/download.service';
 
 // ── Local Display Interface ──────────────────────────────────────
 
@@ -111,7 +112,8 @@ export class DispatchPage implements OnInit {
     private gdnService: GdnService,
     private fb: FormBuilder,
     private toastController: ToastController,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private downloadService: DownloadService
   ) {
     this.gdnForm = this.fb.group({
       dispatchFromAddress: ['', Validators.required],
@@ -807,13 +809,8 @@ export class DispatchPage implements OnInit {
     this.downloadingInvoiceId = invoice.id;
 
     this.proformaInvoiceService.downloadInvoicePdf(invoice.id).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${invoice.piNumber}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `${invoice.piNumber}.pdf`);
         this.downloadingInvoiceId = null;
       },
       error: (error) => {
@@ -869,13 +866,8 @@ export class DispatchPage implements OnInit {
     this.downloadingGdnId = gdn.id;
 
     this.gdnService.downloadGdnPdf(gdn.orderId).subscribe({
-      next: (blob) => {
-        const url = window.URL.createObjectURL(blob);
-        const link = document.createElement('a');
-        link.href = url;
-        link.download = `${gdn.gdnNumber}.pdf`;
-        link.click();
-        window.URL.revokeObjectURL(url);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `${gdn.gdnNumber}.pdf`);
         this.downloadingGdnId = null;
       },
       error: (error) => {

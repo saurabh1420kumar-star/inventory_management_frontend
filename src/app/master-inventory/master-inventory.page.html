@@ -334,7 +334,9 @@
           <form *ngIf="selectedCategory" [formGroup]="addForm" (ngSubmit)="addItem()" class="space-y-5">
             
             <div class="group">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Material Name</label>
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">
+                {{ selectedCategory === 'finished_product' ? 'Product Name' : 'Material Name' }}
+              </label>
               <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
                   <ion-input type="text" formControlName="name" placeholder="e.g. Steel Rods" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
@@ -342,7 +344,8 @@
               </div>
             </div>
 
-            <div class="group">
+            <!-- Raw Material only: Material Code -->
+            <div class="group" *ngIf="selectedCategory === 'raw_material'">
               <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Material Code</label>
               <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
@@ -351,6 +354,38 @@
               </div>
             </div>
 
+            <!-- Finished Product only: SKU, Description, Price -->
+            <ng-container *ngIf="selectedCategory === 'finished_product'">
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">SKU</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="sku" placeholder="e.g. FP-001" class="px-4 py-3 text-slate-900 font-mono font-semibold"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Description</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="description" placeholder="e.g. High-quality finished product" class="px-4 py-3 text-slate-900 font-medium"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Price (₹)</label>
+                <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="price" placeholder="0.00" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- UNIT TYPE + SUB-UNIT: raw materials only -->
+            <ng-container *ngIf="selectedCategory === 'raw_material'">
             <!-- UNIT TYPE - Card-style buttons -->
             <div class="group">
               <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 ml-1">🏷️ Unit Type</label>
@@ -398,6 +433,7 @@
                 </ion-select>
               </div>
             </div>
+            </ng-container>
 
             <div class="grid grid-cols-2 gap-4">
               <div class="group">

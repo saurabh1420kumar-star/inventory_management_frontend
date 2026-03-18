@@ -16,6 +16,7 @@ import {
 
 import { ToastController } from '@ionic/angular';
 import { GdnService, GDN } from '../services/gdn.service';
+import { DownloadService } from '../services/download.service';
 import { addIcons } from 'ionicons';
 import { 
   download as downloadIcon, 
@@ -64,7 +65,8 @@ export class GdnPage implements OnInit {
   constructor(
     private gdnService: GdnService,
     private toastController: ToastController,
-    private sanitizer: DomSanitizer
+    private sanitizer: DomSanitizer,
+    private downloadService: DownloadService
   ) {
     addIcons({ downloadIcon, eyeOffIcon, closeCircleIcon, checkmarkCircleIcon });
   }
@@ -127,17 +129,16 @@ export class GdnPage implements OnInit {
 
     // If pdfUrl exists, download directly from the URL
     if (gdn.pdfUrl) {
-      this.downloadFromUrl(gdn.pdfUrl, `${gdn.gdnNumber}.pdf`);
+      this.downloadService.downloadUrl(gdn.pdfUrl, `${gdn.gdnNumber}.pdf`);
       this.downloadingId = null;
       return;
     }
 
     // Fallback: try to download from API endpoint
     this.gdnService.downloadGdnPdf(gdn.id).subscribe({
-      next: (blob) => {
-        this.downloadFromBlob(blob, `${gdn.gdnNumber}.pdf`);
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `${gdn.gdnNumber}.pdf`);
         this.downloadingId = null;
-        this.showToast('PDF downloaded successfully', 'success');
       },
       error: (error) => {
         console.error('Error downloading PDF:', error);
@@ -154,23 +155,7 @@ export class GdnPage implements OnInit {
     });
   }
 
-  private downloadFromBlob(blob: Blob, filename: string) {
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = filename;
-    link.click();
-    window.URL.revokeObjectURL(url);
-  }
-
-  private downloadFromUrl(pdfUrl: string, filename: string) {
-    const link = document.createElement('a');
-    link.href = pdfUrl;
-    link.download = filename;
-    link.target = '_blank';
-    link.click();
-    this.showToast('PDF downloaded successfully', 'success');
-  }
+  // downloadFromBlob and downloadFromUrl replaced by DownloadService
 
   toggleGdnDetails(gdnId: number) {
     if (this.expandedGdnId === gdnId) {
