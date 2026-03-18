@@ -274,7 +274,7 @@
               <!-- Order Items Summary -->
               <div class="mb-4 rounded-xl p-3 bg-slate-50 border border-slate-200">
                 <p class="text-xs font-bold uppercase tracking-wider mb-2" style="color: #64748b;">Items & Total</p>
-                <div class="flex items-center justify-between">
+                <div class="flex items-center justify-between mb-2">
                   <span class="text-sm font-bold text-slate-800 flex items-center gap-1.5">
                     <ion-icon name="cube-outline" class="text-sm"></ion-icon>
                     {{ order.cartItems.length }} Item{{ order.cartItems.length !== 1 ? 's' : '' }}
@@ -282,6 +282,13 @@
                   <span class="text-lg font-bold text-emerald-600">
                     ₹{{ order.totalCartAmount.toLocaleString() }}
                   </span>
+                </div>
+                <!-- Item list with quantities -->
+                <div class="border-t border-slate-200 pt-2 flex flex-col gap-1.5">
+                  <div *ngFor="let item of order.cartItems" class="flex items-center justify-between text-xs">
+                    <span class="text-slate-700 font-medium flex-1 pr-2" style="white-space: nowrap; overflow: hidden; text-overflow: ellipsis;">{{ item.itemName }}</span>
+                    <span class="flex-shrink-0 font-bold px-2 py-0.5 rounded-full" style="background: #e0f2fe; color: #0369a1; border: 1px solid #bae6fd;">× {{ item.quantity }}</span>
+                  </div>
                 </div>
               </div>
 
