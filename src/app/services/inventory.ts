@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable, forkJoin } from 'rxjs';
-import { map } from 'rxjs/operators';
+import { Observable, forkJoin, of } from 'rxjs';
+import { map, catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface InventoryItem {
@@ -39,6 +39,42 @@ export interface InventoryItem {
   updatedAt: string;
 }
 
+/* ========== BILL OF MATERIALS ========== */
+
+export interface BOMComponent {
+  id?: number;
+  rawMaterialId: number;
+  rawMaterialName: string;
+  quantity: number;
+  unit: string;
+  rate: number;
+  amount: number;
+}
+
+export interface AdditionalCost {
+  type: string;
+  percentage: number;
+  amount: number;
+}
+
+export interface BillOfMaterial {
+  id?: number;
+  finishedProductId: number;
+  finishedProductName: string;
+  bomName: string;
+  outputQuantity: number;
+  outputUnit: string;
+  costAllocationPercent: number;
+  components: BOMComponent[];
+  additionalCosts: AdditionalCost[];
+  totalComponentCost: number;
+  totalAdditionalCost: number;
+  effectiveCost: number;
+  effectiveRatePerUnit: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -47,6 +83,7 @@ export class InventoryService {
   private rawMaterialsUrl = `${environment.productsUrl}/raw-materials`;
   private finishedProductsUrl = `${environment.productsUrl}/finished-products`;
   private machinePartsUrl = `${environment.productsUrl}/machine-parts`;
+  private bomUrl = `${environment.productsUrl}/bom`;
 
   constructor(private http: HttpClient) {}
 
@@ -166,5 +203,33 @@ export class InventoryService {
     return this.http.delete<void>(
       `${this.machinePartsUrl}/${id}`
     );
+  }
+
+  // =======================================
+  // 🔹 BILL OF MATERIALS (BOM)
+  // =======================================
+
+  getBOMs(): Observable<BillOfMaterial[]> {
+    return this.http.get<BillOfMaterial[]>(this.bomUrl).pipe(
+      catchError(() => of([]))
+    );
+  }
+
+  getBOMsByProduct(finishedProductId: number): Observable<BillOfMaterial[]> {
+    return this.http.get<BillOfMaterial[]>(
+      `${this.bomUrl}/product/${finishedProductId}`
+    ).pipe(catchError(() => of([])));
+  }
+
+  createBOM(bom: Partial<BillOfMaterial>): Observable<BillOfMaterial> {
+    return this.http.post<BillOfMaterial>(this.bomUrl, bom);
+  }
+
+  updateBOM(id: number, bom: Partial<BillOfMaterial>): Observable<BillOfMaterial> {
+    return this.http.put<BillOfMaterial>(`${this.bomUrl}/${id}`, bom);
+  }
+
+  deleteBOM(id: number): Observable<void> {
+    return this.http.delete<void>(`${this.bomUrl}/${id}`);
   }
 }

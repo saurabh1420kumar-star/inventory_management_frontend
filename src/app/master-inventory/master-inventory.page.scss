@@ -9,6 +9,15 @@
   padding: 16px;
 }
 
+/* ---------- LARGE ADD / EDIT MODAL ---------- */
+
+.custom-modal {
+  --width: min(92vw, 780px);
+  --height: 92vh;
+  --border-radius: 24px;
+  --box-shadow: 0 32px 64px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
 /* ---------- STATS GRID ---------- */
 
 .stats-grid {
@@ -141,4 +150,232 @@
   justify-content: flex-end;
   gap: 10px;
   padding: 12px;
+}
+
+/* ============================================ */
+/*         BILL OF MATERIALS STYLES             */
+/* ============================================ */
+
+/* BOM Card */
+.bom-card {
+  transition: transform 0.2s ease, box-shadow 0.25s ease;
+
+  &:hover {
+    transform: translateY(-4px);
+  }
+}
+
+/* BOM Preview Table (Card list view) */
+.bom-preview-table {
+  table {
+    border-collapse: collapse;
+  }
+
+  th {
+    letter-spacing: 0.05em;
+  }
+
+  td, th {
+    white-space: nowrap;
+  }
+}
+
+/* BOM Edit Table (Create modal) */
+.bom-edit-table {
+  table {
+    border-collapse: collapse;
+  }
+
+  select,
+  input[type='number'] {
+    min-width: 60px;
+    font-size: 13px;
+    transition: border-color 0.2s ease, box-shadow 0.2s ease;
+  }
+
+  select:focus,
+  input[type='number']:focus {
+    box-shadow: 0 0 0 2px rgba(245, 158, 11, 0.15);
+  }
+}
+
+/* BOM View Table (Calculator modal — Tally-inspired) */
+.bom-view-table {
+  table {
+    border-collapse: collapse;
+  }
+
+  .bom-row {
+    transition: background-color 0.15s ease;
+  }
+
+  td {
+    font-size: 14px;
+  }
+
+  tfoot td {
+    font-size: 15px;
+  }
+}
+
+/* Select dropdown arrow fix */
+select.appearance-none {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='12' fill='%2364748b' viewBox='0 0 16 16'%3E%3Cpath d='M7.247 11.14 2.451 5.658C1.885 5.013 2.345 4 3.204 4h9.592a1 1 0 0 1 .753 1.659l-4.796 5.48a1 1 0 0 1-1.506 0z'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  padding-right: 32px;
+}
+
+/* BOM Section Animations */
+.bom-section {
+  animation: fadeInUp 0.3s ease-out;
+}
+
+@keyframes fadeInUp {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* BOM responsive tweaks */
+@media (max-width: 640px) {
+  .bom-view-table td,
+  .bom-view-table th {
+    padding: 8px 10px;
+    font-size: 12px;
+  }
+
+  .bom-edit-table td,
+  .bom-edit-table th {
+    padding: 6px 8px;
+    font-size: 12px;
+  }
+
+  .bom-edit-table select,
+  .bom-edit-table input[type='number'] {
+    font-size: 12px;
+    padding: 4px 6px;
+  }
+}
+
+/* ─────────────────────────────────────────── */
+/*  BOM HERO BANNER (new cards design)         */
+/* ─────────────────────────────────────────── */
+.bom-hero {
+  box-shadow: 0 8px 40px rgba(245, 158, 11, 0.25);
+}
+
+/* Stat chips inside the hero */
+.bom-stat-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  background: rgba(255, 255, 255, 0.15);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  border-radius: 100px;
+  font-size: 11px;
+  font-weight: 700;
+  color: #fff;
+  backdrop-filter: blur(4px);
+  letter-spacing: 0.02em;
+}
+
+/* Material cost contribution bars */
+.cost-bar-bg {
+  width: 100%;
+  height: 4px;
+  background: #e2e8f0;
+  border-radius: 9999px;
+  overflow: hidden;
+}
+
+.cost-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #f97316);
+  border-radius: 9999px;
+  transition: width 0.4s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+/* BOM card full components table */
+.bom-full-table {
+  table {
+    border-collapse: collapse;
+  }
+  td, th {
+    white-space: nowrap;
+    font-size: 11px;
+  }
+}
+
+/* Cost banner at bottom of card */
+.bom-cost-banner {
+  background: linear-gradient(135deg, #fffbeb 0%, #fff7ed 60%, #fef3c7 100%);
+  border: 1px solid #fcd34d;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.12);
+}
+
+/* ─────────────────────────────────────────── */
+/*  BOM VIEW/CALCULATOR MODAL (premium)        */
+/* ─────────────────────────────────────────── */
+.bom-view-hero {
+  background: linear-gradient(135deg, #1e293b 0%, #0f172a 40%, #1a1200 100%);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+  box-shadow: 0 12px 40px rgba(0, 0, 0, 0.35), 0 2px 8px rgba(245, 158, 11, 0.15);
+  position: relative;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    width: 250px;
+    height: 250px;
+    background: radial-gradient(circle, rgba(245, 158, 11, 0.12), transparent 70%);
+    pointer-events: none;
+  }
+}
+
+/* Info chips inside view modal */
+.bom-info-chip {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 5px 12px;
+  background: #f8fafc;
+  border: 1px solid #e2e8f0;
+  border-radius: 100px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #475569;
+}
+
+/* Per-piece cost mini sparkline row */
+.bom-material-row {
+  padding: 4px 0;
+}
+
+/* View modal cost bar (inline in table) */
+.view-cost-bar {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 80px;
+}
+
+/* Responsive tweaks for view modal on mobile */
+@media (max-width: 640px) {
+  .bom-view-hero {
+    border-radius: 16px;
+  }
+
+  .bom-info-chip {
+    font-size: 11px;
+    padding: 4px 8px;
+  }
 }

@@ -16,131 +16,184 @@
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content class="bg-slate-50">
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
-    <div class="max-w-7xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
+<ion-content>
+  <div class="page-wrapper">
+    <div class="page-inner">
 
-      <!-- HERO -->
-      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8">
-        <div class="relative px-6 py-8 sm:px-8">
-          <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2">Manage Complaints</h1>
-          <p class="text-cyan-50 text-sm flex items-center gap-2">
-            <ion-icon name="alert-outline" class="text-lg"></ion-icon>
-            Review and resolve customer complaints
-          </p>
+      <!-- PAGE HEADER -->
+      <div class="page-header">
+        <div class="page-header-text">
+          <h1>Manage Complaints</h1>
+          <p>Review and resolve customer complaints</p>
+        </div>
+        <div class="page-header-meta" *ngIf="!isLoading && complaints.length > 0">
+          <span class="total-badge">{{ stats.total }} loaded</span>
         </div>
       </div>
 
-      <!-- ERROR MESSAGE -->
-      <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 rounded-2xl p-4 mb-6 flex items-start gap-3">
-        <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl flex-shrink-0 mt-0.5"></ion-icon>
-        <div>
-          <p class="text-rose-800 font-bold text-sm">{{ errorMessage }}</p>
+      <!-- STATS ROW -->
+      <div *ngIf="!isLoading && complaints.length > 0" class="stats-row">
+        <div class="stat-card stat-open" [class.stat-active]="filterStatus === 'OPEN'" (click)="filterStatus = filterStatus === 'OPEN' ? '' : 'OPEN'">
+          <div class="stat-icon-wrap stat-icon-red">
+            <ion-icon name="radio-button-on-outline"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.open }}</span>
+            <span class="stat-label">Open</span>
+          </div>
+        </div>
+        <div class="stat-card stat-inprog" [class.stat-active]="filterStatus === 'IN_PROGRESS'" (click)="filterStatus = filterStatus === 'IN_PROGRESS' ? '' : 'IN_PROGRESS'">
+          <div class="stat-icon-wrap stat-icon-amber">
+            <ion-icon name="time-outline"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.inProgress }}</span>
+            <span class="stat-label">In Progress</span>
+          </div>
+        </div>
+        <div class="stat-card stat-resolved" [class.stat-active]="filterStatus === 'RESOLVED'" (click)="filterStatus = filterStatus === 'RESOLVED' ? '' : 'RESOLVED'">
+          <div class="stat-icon-wrap stat-icon-green">
+            <ion-icon name="checkmark-circle-outline"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.resolved }}</span>
+            <span class="stat-label">Resolved</span>
+          </div>
+        </div>
+        <div class="stat-card stat-closed" [class.stat-active]="filterStatus === 'CLOSED'" (click)="filterStatus = filterStatus === 'CLOSED' ? '' : 'CLOSED'">
+          <div class="stat-icon-wrap stat-icon-indigo">
+            <ion-icon name="lock-closed-outline"></ion-icon>
+          </div>
+          <div class="stat-content">
+            <span class="stat-number">{{ stats.closed }}</span>
+            <span class="stat-label">Closed</span>
+          </div>
         </div>
       </div>
 
-      <!-- FILTERS & SEARCH -->
-      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
-        <div class="grid sm:grid-cols-4 gap-3 mb-4">
-          <!-- Search -->
-          <input
-            type="text"
-            [(ngModel)]="searchTerm"
-            placeholder="Search by subject or name..."
-            class="sm:col-span-2 bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm"
-          />
+      <!-- ERROR BANNER -->
+      <div *ngIf="errorMessage" class="error-banner">
+        <ion-icon name="alert-circle-outline"></ion-icon>
+        <span>{{ errorMessage }}</span>
+        <button class="error-close" (click)="errorMessage = ''">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
 
-          <!-- Status Filter -->
-          <select
-            [(ngModel)]="filterStatus"
-            class="bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm">
-            <option value="">All Status</option>
-            <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
-          </select>
+      <!-- FILTER BAR -->
+      <div class="filter-bar">
+        <div class="search-wrap">
+          <ion-icon name="search-outline" class="search-icon"></ion-icon>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Search by name or subject…" class="search-input" />
+          <button *ngIf="searchTerm" class="search-clear" (click)="searchTerm = ''">
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </div>
+        <select [(ngModel)]="filterStatus" class="filter-select">
+          <option value="">All Statuses</option>
+          <option *ngFor="let s of statusOptions" [value]="s">{{ getStatusConfig(s).label }}</option>
+        </select>
+        <select [(ngModel)]="filterCategory" class="filter-select">
+          <option value="">All Categories</option>
+          <option *ngFor="let c of categoryOptions" [value]="c">{{ c }}</option>
+        </select>
+        <button *ngIf="hasActiveFilters" class="clear-filters-btn" (click)="clearFilters()">
+          <ion-icon name="close-outline"></ion-icon>
+          Clear
+        </button>
+      </div>
 
-          <!-- Category Filter -->
-          <select
-            [(ngModel)]="filterCategory"
-            class="bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all text-sm">
-            <option value="">All Categories</option>
-            <option *ngFor="let category of categoryOptions" [value]="category">{{ category }}</option>
-          </select>
+      <!-- LOADING SKELETON -->
+      <div *ngIf="isLoading" class="complaints-grid">
+        <div *ngFor="let i of [1,2,3,4]" class="complaint-card">
+          <div class="card-accent-bar" style="background:#e2e8f0"></div>
+          <div class="card-body">
+            <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px">
+              <div class="skeleton-pulse" style="width:48px;height:12px;border-radius:6px"></div>
+              <div class="skeleton-pulse" style="width:56px;height:20px;border-radius:20px"></div>
+            </div>
+            <div class="skeleton-pulse" style="width:75%;height:16px;border-radius:6px;margin-bottom:16px"></div>
+            <div style="display:flex;align-items:center;gap:12px;margin-bottom:12px">
+              <div class="skeleton-pulse" style="width:36px;height:36px;border-radius:50%"></div>
+              <div style="flex:1">
+                <div class="skeleton-pulse" style="width:50%;height:12px;border-radius:6px;margin-bottom:6px"></div>
+                <div class="skeleton-pulse" style="width:35%;height:10px;border-radius:6px"></div>
+              </div>
+            </div>
+            <div class="skeleton-pulse" style="width:100%;height:10px;border-radius:6px;margin-bottom:6px"></div>
+            <div class="skeleton-pulse" style="width:80%;height:10px;border-radius:6px;margin-bottom:16px"></div>
+            <div style="display:flex;gap:8px;padding-top:12px;border-top:1px solid #f1f5f9">
+              <div class="skeleton-pulse" style="flex:1;height:36px;border-radius:10px"></div>
+              <div class="skeleton-pulse" style="flex:1;height:36px;border-radius:10px"></div>
+            </div>
+          </div>
         </div>
       </div>
 
-      <!-- COMPLAINTS TABLE -->
-      <div *ngIf="!isLoading && filteredComplaints.length > 0" class="space-y-4">
-        <div *ngFor="let complaint of filteredComplaints"
-          class="bg-white rounded-2xl border border-slate-100 overflow-hidden hover:shadow-lg transition-all duration-300">
+      <!-- COMPLAINTS GRID -->
+      <div *ngIf="!isLoading && filteredComplaints.length > 0" class="complaints-grid">
+        <div *ngFor="let complaint of filteredComplaints" class="complaint-card">
 
-          <!-- Top Accent -->
-          <div class="h-1" [style.backgroundColor]="getStatusBadgeColor(complaint.status)"></div>
+          <!-- Left accent bar -->
+          <div class="card-accent-bar" [style.backgroundColor]="getStatusConfig(complaint.status).color"></div>
 
-          <div class="p-5 sm:p-6">
-            <!-- Header Row -->
-            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-4">
-              <div>
-                <h3 class="text-lg font-bold text-slate-800 mb-1">{{ complaint.subject }}</h3>
-                <p class="text-sm text-slate-500">Complaint ID: #{{ complaint.id }}</p>
-              </div>
-
-              <div class="flex items-center gap-2">
-                <!-- Status Badge -->
-                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border"
-                  [style.backgroundColor]="getStatusBadgeColor(complaint.status) + '10'"
-                  [style.color]="getStatusBadgeColor(complaint.status)"
-                  [style.borderColor]="getStatusBadgeColor(complaint.status) + '30'">
-                  <span class="w-1.5 h-1.5 rounded-full inline-block" [style.backgroundColor]="getStatusBadgeColor(complaint.status)"></span>
-                  {{ complaint.status }}
-                </span>
-
-                <!-- Priority Badge -->
-                <span class="inline-flex items-center gap-1.5 text-xs font-bold px-3 py-1.5 rounded-full border"
-                  [style.backgroundColor]="getPriorityBadgeColor(complaint.priorityLevel) + '10'"
-                  [style.color]="getPriorityBadgeColor(complaint.priorityLevel)"
-                  [style.borderColor]="getPriorityBadgeColor(complaint.priorityLevel) + '30'">
-                  {{ complaint.priorityLevel }}
-                </span>
-              </div>
+          <div class="card-body">
+            <!-- TOP ROW: ID + Priority -->
+            <div class="card-top-row">
+              <span class="complaint-id">#{{ complaint.id }}</span>
+              <span class="priority-badge"
+                [style.color]="getPriorityConfig(complaint.priorityLevel).color"
+                [style.backgroundColor]="getPriorityConfig(complaint.priorityLevel).bg">
+                {{ getPriorityConfig(complaint.priorityLevel).label }}
+              </span>
             </div>
 
-            <!-- Info Grid -->
-            <div class="grid sm:grid-cols-4 gap-3 mb-4">
-              <div class="bg-slate-50 rounded-lg p-3">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">From</p>
-                <p class="text-sm font-bold text-slate-700">{{ complaint.fullName }}</p>
-                <p class="text-xs text-slate-500">{{ complaint.emailAddress }}</p>
+            <!-- SUBJECT -->
+            <h3 class="card-subject">{{ complaint.subject }}</h3>
+
+            <!-- CUSTOMER ROW -->
+            <div class="customer-row">
+              <div class="avatar" [style.backgroundColor]="getStatusConfig(complaint.status).color">
+                {{ getInitials(complaint.fullName) }}
               </div>
-              <div class="bg-slate-50 rounded-lg p-3">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Phone</p>
-                <p class="text-sm font-bold text-slate-700">{{ complaint.phoneNumber }}</p>
+              <div class="customer-info">
+                <span class="customer-name">{{ complaint.fullName }}</span>
+                <span class="customer-email">{{ complaint.emailAddress }}</span>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Category</p>
-                <p class="text-sm font-bold text-slate-700">{{ complaint.category }}</p>
-              </div>
-              <div class="bg-slate-50 rounded-lg p-3">
-                <p class="text-[10px] text-slate-400 font-bold uppercase">Created</p>
-                <p class="text-sm font-bold text-slate-700">{{ complaint.createdAt | date:'dd MMM yyyy' }}</p>
-              </div>
+              <span class="status-badge"
+                [style.color]="getStatusConfig(complaint.status).color"
+                [style.backgroundColor]="getStatusConfig(complaint.status).bg"
+                [style.borderColor]="getStatusConfig(complaint.status).border">
+                <span class="status-dot" [style.backgroundColor]="getStatusConfig(complaint.status).color"></span>
+                {{ getStatusConfig(complaint.status).label }}
+              </span>
             </div>
 
-            <!-- Description Preview -->
-            <div class="bg-slate-50 rounded-lg p-3 mb-4">
-              <p class="text-[10px] text-slate-400 font-bold uppercase mb-1">Description</p>
-              <p class="text-sm text-slate-700 line-clamp-2">{{ complaint.description }}</p>
+            <!-- META ROW -->
+            <div class="meta-row">
+              <span class="meta-item">
+                <ion-icon name="folder-outline"></ion-icon>
+                {{ complaint.category }}
+              </span>
+              <span class="meta-dot"></span>
+              <span class="meta-item">
+                <ion-icon name="calendar-outline"></ion-icon>
+                {{ formatDate(complaint.createdAt) }}
+              </span>
             </div>
 
-            <!-- Action Buttons -->
-            <div class="flex gap-2">
-              <button (click)="openDetailModal(complaint)"
-                class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-xs rounded-lg px-4 py-2.5 transition-all">
-                <ion-icon name="eye-outline" class="text-base"></ion-icon>
+            <!-- DESCRIPTION -->
+            <p class="card-description">{{ complaint.description }}</p>
+
+            <!-- ACTIONS -->
+            <div class="card-actions">
+              <button class="btn-detail" (click)="openDetailModal(complaint)">
+                <ion-icon name="eye-outline"></ion-icon>
                 View Details
               </button>
-              <button (click)="openStatusModal(complaint)"
-                class="flex-1 flex items-center justify-center gap-2 bg-emerald-100 hover:bg-emerald-200 text-emerald-700 font-semibold text-xs rounded-lg px-4 py-2.5 transition-all">
-                <ion-icon name="checkmark-outline" class="text-base"></ion-icon>
+              <button class="btn-status" (click)="openStatusModal(complaint)"
+                [style.backgroundColor]="getStatusConfig(complaint.status).color">
+                <ion-icon name="create-outline"></ion-icon>
                 Update Status
               </button>
             </div>
@@ -148,130 +201,176 @@
         </div>
       </div>
 
-      <!-- EMPTY STATE -->
-      <div *ngIf="!isLoading && filteredComplaints.length === 0"
-        class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
-        <ion-icon name="document-outline" class="text-5xl text-slate-300 mb-3 block"></ion-icon>
-        <h3 class="text-lg font-bold text-slate-700 mb-1">No complaints found</h3>
-        <p class="text-sm text-slate-400">{{ searchTerm || filterStatus || filterCategory ? 'No results match your filters.' : 'No complaints yet.' }}</p>
-      </div>
 
-      <!-- LOADING STATE -->
-      <div *ngIf="isLoading" class="text-center py-12">
-        <div class="inline-block">
-          <ion-spinner name="crescent" color="emerald"></ion-spinner>
+      <!-- EMPTY STATE -->
+      <div *ngIf="!isLoading && filteredComplaints.length === 0" class="empty-state">
+        <div class="empty-icon-wrap">
+          <ion-icon name="chatbox-ellipses-outline"></ion-icon>
         </div>
+        <h3>No complaints found</h3>
+        <p *ngIf="hasActiveFilters">No results match your current filters.</p>
+        <p *ngIf="!hasActiveFilters">There are no complaints to display.</p>
+        <button *ngIf="hasActiveFilters" class="btn-clear-empty" (click)="clearFilters()">Clear filters</button>
       </div>
 
       <!-- PAGINATION -->
-      <div *ngIf="!isLoading && filteredComplaints.length > 0" class="flex items-center justify-between mt-6 px-4 py-3 bg-white rounded-xl border border-slate-100">
-        <button [disabled]="currentPage === 1" (click)="previousPage()"
-          class="flex items-center gap-1 text-sm font-semibold text-slate-700 disabled:text-slate-400">
+      <div *ngIf="!isLoading && complaints.length > 0" class="pagination">
+        <button class="page-btn" [disabled]="isFirstPage" (click)="previousPage()">
           <ion-icon name="chevron-back-outline"></ion-icon>
-          Previous
+          <span>Previous</span>
         </button>
-        <span class="text-sm font-medium text-slate-600">
-          Page {{ currentPage }} of {{ totalPages }}
-        </span>
-        <button [disabled]="currentPage >= totalPages" (click)="nextPage()"
-          class="flex items-center gap-1 text-sm font-semibold text-slate-700 disabled:text-slate-400">
-          Next
+        <span class="page-indicator">Page {{ currentPage }}</span>
+        <button class="page-btn" [disabled]="isLastPage" (click)="nextPage()">
+          <span>Next</span>
           <ion-icon name="chevron-forward-outline"></ion-icon>
         </button>
       </div>
-    </div>
-  </div>
+
+    </div><!-- end page-inner -->
+  </div><!-- end page-wrapper -->
 </ion-content>
 
-<!-- DETAIL MODAL -->
-<div *ngIf="isDetailModalOpen && selectedComplaint"
-  class="fixed inset-0 bg-black/50 z-40 flex items-end sm:items-center justify-center p-4">
-  <div class="bg-white rounded-3xl sm:rounded-2xl w-full sm:max-w-lg shadow-2xl max-h-screen sm:max-h-90vh overflow-y-auto">
-    <div class="sticky top-0 bg-white border-b border-slate-200 px-6 py-4 flex items-center justify-between">
-      <h2 class="text-lg font-bold text-slate-800">Complaint Details</h2>
-      <button (click)="closeDetailModal()" class="text-slate-400 hover:text-slate-600">
-        <ion-icon name="close-outline" class="text-2xl"></ion-icon>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- DETAIL BOTTOM SHEET -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div *ngIf="isDetailModalOpen && selectedComplaint" class="sheet-overlay" (click)="closeDetailModal()">
+  <div class="sheet-panel sheet-detail" (click)="$event.stopPropagation()">
+
+    <div class="sheet-handle-wrap">
+      <div class="sheet-handle"></div>
+    </div>
+
+    <div class="sheet-header">
+      <div>
+        <p class="sheet-sub">Complaint #{{ selectedComplaint.id }}</p>
+        <h2 class="sheet-title">{{ selectedComplaint.subject }}</h2>
+      </div>
+      <button class="sheet-close" (click)="closeDetailModal()">
+        <ion-icon name="close-outline"></ion-icon>
       </button>
     </div>
 
-    <div class="p-6 space-y-4">
-      <div>
-        <p class="text-xs text-slate-400 font-bold uppercase">Subject</p>
-        <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.subject }}</p>
+    <div class="sheet-body">
+      <div class="detail-badges">
+        <span class="status-badge"
+          [style.color]="getStatusConfig(selectedComplaint.status).color"
+          [style.backgroundColor]="getStatusConfig(selectedComplaint.status).bg"
+          [style.borderColor]="getStatusConfig(selectedComplaint.status).border">
+          <ion-icon [name]="getStatusConfig(selectedComplaint.status).icon"></ion-icon>
+          {{ getStatusConfig(selectedComplaint.status).label }}
+        </span>
+        <span class="priority-badge"
+          [style.color]="getPriorityConfig(selectedComplaint.priorityLevel).color"
+          [style.backgroundColor]="getPriorityConfig(selectedComplaint.priorityLevel).bg">
+          {{ getPriorityConfig(selectedComplaint.priorityLevel).label }} Priority
+        </span>
+        <span class="category-badge">{{ selectedComplaint.category }}</span>
       </div>
-      <div>
-        <p class="text-xs text-slate-400 font-bold uppercase">Description</p>
-        <p class="text-sm text-slate-700 whitespace-pre-wrap">{{ selectedComplaint.description }}</p>
+
+      <div class="detail-section">
+        <p class="detail-label">Description</p>
+        <p class="detail-text">{{ selectedComplaint.description }}</p>
       </div>
-      <div class="grid grid-cols-2 gap-3">
-        <div class="bg-slate-50 rounded-lg p-3">
-          <p class="text-xs text-slate-400 font-bold uppercase">Category</p>
-          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.category }}</p>
+
+      <div class="detail-section detail-contact">
+        <div class="contact-avatar" [style.backgroundColor]="getStatusConfig(selectedComplaint.status).color">
+          {{ getInitials(selectedComplaint.fullName) }}
         </div>
-        <div class="bg-slate-50 rounded-lg p-3">
-          <p class="text-xs text-slate-400 font-bold uppercase">Priority</p>
-          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.priorityLevel }}</p>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-3">
-          <p class="text-xs text-slate-400 font-bold uppercase">Status</p>
-          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.status }}</p>
-        </div>
-        <div class="bg-slate-50 rounded-lg p-3">
-          <p class="text-xs text-slate-400 font-bold uppercase">Created</p>
-          <p class="text-sm font-bold text-slate-700">{{ selectedComplaint.createdAt | date:'short' }}</p>
+        <div>
+          <p class="detail-label">Customer</p>
+          <p class="contact-name">{{ selectedComplaint.fullName }}</p>
+          <p class="contact-sub">{{ selectedComplaint.emailAddress }}</p>
+          <p class="contact-sub">{{ selectedComplaint.phoneNumber }}</p>
         </div>
       </div>
-      <div class="bg-slate-50 rounded-lg p-3">
-        <p class="text-xs text-slate-400 font-bold uppercase mb-1">Contact Info</p>
-        <p class="text-sm text-slate-700"><strong>Name:</strong> {{ selectedComplaint.fullName }}</p>
-        <p class="text-sm text-slate-700"><strong>Email:</strong> {{ selectedComplaint.emailAddress }}</p>
-        <p class="text-sm text-slate-700"><strong>Phone:</strong> {{ selectedComplaint.phoneNumber }}</p>
+
+      <div class="detail-grid">
+        <div class="detail-item">
+          <p class="detail-label">Created</p>
+          <p class="detail-value">{{ formatDate(selectedComplaint.createdAt) }}</p>
+        </div>
+        <div class="detail-item">
+          <p class="detail-label">Last Updated</p>
+          <p class="detail-value">{{ formatDate(selectedComplaint.updatedAt) }}</p>
+        </div>
+        <div class="detail-item">
+          <p class="detail-label">Type</p>
+          <p class="detail-value">{{ selectedComplaint.type || '—' }}</p>
+        </div>
+        <div class="detail-item">
+          <p class="detail-label">Phone</p>
+          <p class="detail-value">{{ selectedComplaint.phoneNumber }}</p>
+        </div>
       </div>
     </div>
 
-    <div class="border-t border-slate-200 px-6 py-4 flex gap-2">
-      <button (click)="closeDetailModal()"
-        class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg py-2.5 transition-all">
-        Close
-      </button>
-      <button (click)="openStatusModal(selectedComplaint); closeDetailModal()"
-        class="flex-1 bg-emerald-500 hover:bg-emerald-600 text-white font-semibold text-sm rounded-lg py-2.5 transition-all">
+    <div class="sheet-footer">
+      <button class="sheet-btn-secondary" (click)="closeDetailModal()">Close</button>
+      <button class="sheet-btn-primary" (click)="openStatusModal(selectedComplaint); closeDetailModal()">
+        <ion-icon name="create-outline"></ion-icon>
         Update Status
       </button>
     </div>
   </div>
 </div>
 
-<!-- STATUS UPDATE MODAL -->
-<div *ngIf="isStatusModalOpen && selectedComplaint"
-  class="fixed inset-0 bg-black/50 z-40 flex items-center justify-center p-4">
-  <div class="bg-white rounded-2xl w-full max-w-sm shadow-2xl">
-    <div class="border-b border-slate-200 px-6 py-4">
-      <h2 class="text-lg font-bold text-slate-800">Update Complaint Status</h2>
+<!-- ═══════════════════════════════════════════════════════ -->
+<!-- STATUS UPDATE BOTTOM SHEET -->
+<!-- ═══════════════════════════════════════════════════════ -->
+<div *ngIf="isStatusModalOpen && selectedComplaint" class="sheet-overlay" (click)="closeStatusModal()">
+  <div class="sheet-panel sheet-status" (click)="$event.stopPropagation()">
+
+    <div class="sheet-handle-wrap">
+      <div class="sheet-handle"></div>
     </div>
 
-    <div class="p-6 space-y-4">
-      <p class="text-sm text-slate-600">
-        Update status for <span class="font-bold">{{ selectedComplaint.subject }}</span>
-      </p>
-
+    <div class="sheet-header">
       <div>
-        <label class="block text-sm font-bold text-slate-700 mb-2">New Status *</label>
-        <select [(ngModel)]="newStatus"
-          class="w-full bg-slate-50 text-slate-700 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-2.5 outline-none transition-all">
-          <option *ngFor="let status of statusOptions" [value]="status">{{ status }}</option>
-        </select>
+        <p class="sheet-sub">Complaint #{{ selectedComplaint.id }}</p>
+        <h2 class="sheet-title">Change Status</h2>
+      </div>
+      <button class="sheet-close" (click)="closeStatusModal()">
+        <ion-icon name="close-outline"></ion-icon>
+      </button>
+    </div>
+
+    <div class="sheet-subject-preview">
+      <ion-icon name="document-text-outline"></ion-icon>
+      <span>{{ selectedComplaint.subject }}</span>
+    </div>
+
+    <div class="sheet-body">
+      <p class="status-picker-label">Select new status</p>
+      <div class="status-options">
+        <div *ngFor="let s of statusOptions"
+          class="status-option"
+          [class.status-option-selected]="newStatus === s"
+          [style.borderColor]="newStatus === s ? getStatusConfig(s).color : 'transparent'"
+          [style.backgroundColor]="newStatus === s ? getStatusConfig(s).bg : '#f8fafc'"
+          (click)="newStatus = s">
+          <div class="status-opt-icon" [style.backgroundColor]="getStatusConfig(s).bg + '80'">
+            <ion-icon [name]="getStatusConfig(s).icon" [style.color]="getStatusConfig(s).color"></ion-icon>
+          </div>
+          <div class="status-opt-text">
+            <span class="status-opt-label">{{ getStatusConfig(s).label }}</span>
+            <span class="status-opt-current" *ngIf="selectedComplaint.status === s">Current status</span>
+          </div>
+          <div class="status-opt-check" *ngIf="newStatus === s" [style.backgroundColor]="getStatusConfig(s).color">
+            <ion-icon name="checkmark" style="color:white;font-size:11px"></ion-icon>
+          </div>
+        </div>
       </div>
     </div>
 
-    <div class="border-t border-slate-200 px-6 py-4 flex gap-2">
-      <button (click)="closeStatusModal()"
-        class="flex-1 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm rounded-lg py-2.5 transition-all">
-        Cancel
-      </button>
-      <button (click)="updateStatus()" [disabled]="isLoading"
-        class="flex-1 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white font-semibold text-sm rounded-lg py-2.5 transition-all">
-        {{ isLoading ? 'Updating...' : 'Update' }}
+    <div class="sheet-footer">
+      <button class="sheet-btn-secondary" (click)="closeStatusModal()">Cancel</button>
+      <button class="sheet-btn-save"
+        [disabled]="isUpdatingStatus || !newStatus"
+        [style.backgroundColor]="newStatus ? getStatusConfig(newStatus).color : '#94a3b8'"
+        (click)="updateStatus()">
+        <ion-spinner *ngIf="isUpdatingStatus" name="crescent" style="width:16px;height:16px;color:white"></ion-spinner>
+        <ion-icon *ngIf="!isUpdatingStatus" name="checkmark-outline"></ion-icon>
+        {{ isUpdatingStatus ? 'Saving…' : 'Save Changes' }}
       </button>
     </div>
   </div>

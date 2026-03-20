@@ -104,6 +104,7 @@ export class DispatchPage implements OnInit {
   isGdnModalOpen = false;
   orderForGdn: DispatchOrderDisplay | null = null;
   gdnForm: FormGroup;
+  useCustomShippingAddress = false;
 
   expandedIds = new Set<number>();
 
@@ -421,12 +422,21 @@ export class DispatchPage implements OnInit {
     console.log('Order ID:', order?.id);
     console.log('Order number:', order?.orderNumber);
     this.orderForGdn = order;
+    this.useCustomShippingAddress = false;
     this.gdnForm.reset();
-    // Pre-fill shipping address if available
-    if (order.shippingAddress) {
-      this.gdnForm.patchValue({ shippingAddress: order.shippingAddress });
-    }
+    // Always pre-fill shipping address with distributor's address
+    this.gdnForm.patchValue({ shippingAddress: order.shippingAddress || '' });
     this.isGdnModalOpen = true;
+  }
+
+  onShippingToggle() {
+    if (!this.useCustomShippingAddress) {
+      // Restore distributor's address when unchecking
+      this.gdnForm.patchValue({ shippingAddress: this.orderForGdn?.shippingAddress || '' });
+    } else {
+      // Clear for custom input
+      this.gdnForm.patchValue({ shippingAddress: '' });
+    }
   }
 
   closeGdnModal() {

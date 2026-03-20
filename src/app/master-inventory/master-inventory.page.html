@@ -92,34 +92,42 @@
           </div>
 
           <!-- Category Filter Buttons -->
-          <div class="flex gap-2">
+          <div class="flex gap-2 flex-wrap">
             <button 
-              (click)="activeTab = 'all'"
+              (click)="onActiveTabChange('all')"
               [class]="activeTab === 'all' ? 'bg-emerald-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
             >
               All
             </button>
             <button 
-              (click)="activeTab = 'raw_material'"
+              (click)="onActiveTabChange('raw_material')"
               [class]="activeTab === 'raw_material' ? 'bg-blue-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
             >
               Raw Material
             </button>
             <button 
-              (click)="activeTab = 'finished_product'"
+              (click)="onActiveTabChange('finished_product')"
               [class]="activeTab === 'finished_product' ? 'bg-purple-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
               class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200"
             >
               Finished Product
+            </button>
+            <button 
+              (click)="onActiveTabChange('bom')"
+              [class]="activeTab === 'bom' ? 'bg-amber-500 text-white shadow-md' : 'bg-slate-100 text-slate-600 hover:bg-slate-200'"
+              class="px-4 py-3 rounded-xl font-semibold text-sm transition-all duration-200 flex items-center gap-1.5"
+            >
+              <ion-icon name="list-outline" class="text-base"></ion-icon>
+              Bill of Materials
             </button>
           </div>
         </div>
       </div>
 
       <!-- INVENTORY LIST -->
-      <div *ngIf="filteredInventory.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+      <div *ngIf="activeTab !== 'bom' && filteredInventory.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
         <div *ngFor="let item of paginatedInventory" class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 overflow-hidden group">
           
           <!-- Image -->
@@ -209,7 +217,7 @@
       </div>
 
       <!-- PAGINATION -->
-      <div *ngIf="showPagination" class="flex items-center justify-between mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
+      <div *ngIf="activeTab !== 'bom' && showPagination" class="flex items-center justify-between mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
         <!-- Pagination Info -->
         <div class="text-sm text-gray-600 font-medium">
           Showing
@@ -244,7 +252,7 @@
           </button>
         </div>
       </div>
-      <div *ngIf="!isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
+      <div *ngIf="activeTab !== 'bom' && !isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
         <div class="flex flex-col items-center justify-center">
           <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center shadow-sm mb-4">
             <ion-icon name="cube-outline" class="text-4xl text-slate-300"></ion-icon>
@@ -260,6 +268,249 @@
           </button>
         </div>
       </div>
+
+      <!-- ============================================ -->
+      <!--             BILL OF MATERIALS TAB            -->
+      <!-- ============================================ -->
+      <div *ngIf="activeTab === 'bom'" class="bom-section">
+
+        <!-- BOM Hero / Header -->
+        <div class="bom-hero rounded-3xl overflow-hidden mb-6 relative">
+          <div class="absolute inset-0 bg-gradient-to-br from-amber-500 via-orange-500 to-rose-500"></div>
+          <div class="absolute inset-0 bg-[url('data:image/svg+xml,%3Csvg width=\'60\' height=\'60\' viewBox=\'0 0 60 60\' xmlns=\'http://www.w3.org/2000/svg\'%3E%3Cg fill=\'none\' fill-rule=\'evenodd\'%3E%3Cg fill=\'%23ffffff\' fill-opacity=\'0.06\'%3E%3Cpath d=\'M36 34v-4h-2v4h-4v2h4v4h2v-4h4v-2h-4zm0-30V0h-2v4h-4v2h4v4h2V6h4V4h-4zM6 34v-4H4v4H0v2h4v4h2v-4h4v-2H6zM6 4V0H4v4H0v2h4v4h2V6h4V4H6z\'/%3E%3C/g%3E%3C/g%3E%3C/svg%3E')]"></div>
+          <div class="relative px-8 py-7">
+            <div class="flex flex-col lg:flex-row lg:items-center lg:justify-between gap-5">
+              <div>
+                <div class="flex items-center gap-3 mb-2">
+                  <div class="w-11 h-11 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+                    <ion-icon name="document-text-outline" class="text-2xl text-white"></ion-icon>
+                  </div>
+                  <div>
+                    <h2 class="text-2xl font-bold text-white tracking-tight">Bill of Materials</h2>
+                    <p class="text-amber-100 text-xs font-medium">Manufacture of Materials — Component Recipes & Cost Calculator</p>
+                  </div>
+                </div>
+                <!-- BOM Stats chips -->
+                <div class="flex flex-wrap gap-2 mt-3 ml-1">
+                  <span class="bom-stat-chip">
+                    <ion-icon name="documents-outline" class="text-sm"></ion-icon>
+                    {{ bomStats.total }} BOMs
+                  </span>
+                  <span class="bom-stat-chip">
+                    <ion-icon name="layers-outline" class="text-sm"></ion-icon>
+                    {{ bomStats.totalMaterials }} Materials
+                  </span>
+                  <span class="bom-stat-chip">
+                    <ion-icon name="trending-up-outline" class="text-sm"></ion-icon>
+                    Avg ₹{{ bomStats.avgRate }}/unit
+                  </span>
+                </div>
+              </div>
+              <div class="flex items-center gap-3">
+                <div class="relative">
+                  <ion-icon name="search-outline" class="absolute left-3 top-1/2 transform -translate-y-1/2 text-white/70 text-base z-10"></ion-icon>
+                  <input
+                    type="text"
+                    [(ngModel)]="bomSearchTerm"
+                    placeholder="Search BOMs..."
+                    class="bg-white/15 backdrop-blur-sm border border-white/30 rounded-xl py-2.5 pl-9 pr-4 text-sm text-white placeholder-white/60 focus:bg-white/25 focus:border-white/50 outline-none transition-all w-52"
+                  />
+                </div>
+                <button
+                  (click)="openBomModal()"
+                  class="px-5 py-2.5 bg-white text-amber-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 flex items-center gap-2 text-sm whitespace-nowrap"
+                >
+                  <ion-icon name="add-circle-outline" class="text-lg"></ion-icon>
+                  Create BOM
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOM Loading -->
+        <div *ngIf="isBomLoading" class="flex flex-col items-center justify-center py-16">
+          <ion-spinner name="crescent" class="text-amber-500"></ion-spinner>
+          <p class="text-slate-500 mt-4 font-medium">Loading bill of materials...</p>
+        </div>
+
+        <!-- BOM Cards Grid -->
+        <div *ngIf="!isBomLoading && filteredBomList.length > 0" class="grid grid-cols-1 xl:grid-cols-2 gap-6">
+          <div *ngFor="let bom of filteredBomList" class="bom-card bg-white rounded-2xl border border-slate-200/80 overflow-hidden hover:shadow-2xl hover:border-amber-300 transition-all duration-300 group">
+
+            <!-- Card Header -->
+            <div class="relative px-6 py-5 bg-gradient-to-r from-slate-800 to-slate-900 overflow-hidden">
+              <div class="absolute top-0 right-0 w-32 h-32 rounded-full bg-amber-500/10 -mr-10 -mt-10 blur-2xl"></div>
+              <div class="relative flex items-start justify-between gap-4">
+                <div class="flex-1 min-w-0">
+                  <div class="flex items-center gap-2 mb-1">
+                    <span class="w-2 h-2 rounded-full bg-amber-400 flex-shrink-0"></span>
+                    <span class="text-amber-400 text-xs font-bold uppercase tracking-wider">{{ bom.finishedProductName }}</span>
+                  </div>
+                  <h3 class="text-white font-bold text-lg leading-snug truncate">{{ bom.bomName }}</h3>
+                  <div class="flex items-center gap-3 mt-2">
+                    <span class="text-slate-400 text-xs flex items-center gap-1">
+                      <ion-icon name="layers-outline" class="text-sm"></ion-icon>{{ bom.components.length }} materials
+                    </span>
+                    <span class="text-slate-400 text-xs flex items-center gap-1">
+                      <ion-icon name="cube-outline" class="text-sm"></ion-icon>{{ bom.outputQuantity }} {{ bom.outputUnit }}
+                    </span>
+                  </div>
+                </div>
+                <!-- Cost Pill -->
+                <div class="flex-shrink-0 text-right">
+                  <div class="bg-amber-500/20 border border-amber-500/30 rounded-xl px-3 py-2">
+                    <p class="text-amber-400 text-xs font-bold uppercase tracking-wider">Per {{ bom.outputUnit }}</p>
+                    <p class="text-white font-bold text-xl leading-tight">₹{{ getCostPerPiece(bom) | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Key Metrics Row -->
+            <div class="grid grid-cols-3 divide-x divide-slate-100 border-b border-slate-100">
+              <div class="px-4 py-3 text-center">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Component Cost</p>
+                <p class="font-bold text-slate-800 text-sm">₹{{ bom.totalComponentCost | number:'1.2-2' }}</p>
+              </div>
+              <div class="px-4 py-3 text-center">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Effective Cost</p>
+                <p class="font-bold text-emerald-600 text-sm">₹{{ bom.effectiveCost | number:'1.2-2' }}</p>
+              </div>
+              <div class="px-4 py-3 text-center">
+                <p class="text-xs text-slate-400 font-bold uppercase tracking-wider mb-0.5">Cost Alloc.</p>
+                <p class="font-bold text-slate-800 text-sm">{{ bom.costAllocationPercent }}%</p>
+              </div>
+            </div>
+
+            <!-- Materials with Cost Bars -->
+            <div class="px-5 py-4">
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 flex items-center gap-1.5">
+                <ion-icon name="pie-chart-outline" class="text-amber-500"></ion-icon>
+                Top Cost Contributors
+              </p>
+              <div class="space-y-2.5">
+                <div *ngFor="let comp of getTopComponents(bom)" class="bom-material-row">
+                  <div class="flex items-center justify-between mb-1">
+                    <div class="flex items-center gap-2">
+                      <span class="w-1.5 h-1.5 rounded-full bg-amber-400 flex-shrink-0"></span>
+                      <span class="text-sm font-semibold text-slate-700 truncate max-w-[140px]">{{ comp.rawMaterialName }}</span>
+                    </div>
+                    <div class="flex items-center gap-2 flex-shrink-0 ml-2">
+                      <span class="text-xs text-slate-500">{{ comp.quantity }} {{ comp.unit }}</span>
+                      <span class="text-xs font-bold text-slate-800 bg-slate-50 px-1.5 py-0.5 rounded border border-slate-200">₹{{ comp.amount | number:'1.2-2' }}</span>
+                      <span class="text-xs font-bold text-amber-600 w-10 text-right">{{ getComponentPercent(bom, comp.amount) }}%</span>
+                    </div>
+                  </div>
+                  <div class="cost-bar-bg">
+                    <div class="cost-bar-fill" [style.width.%]="getComponentPercent(bom, comp.amount)"></div>
+                  </div>
+                </div>
+                <div *ngIf="bom.components.length > 3" class="text-xs text-slate-400 pl-3.5 pt-1">
+                  +{{ bom.components.length - 3 }} more materials
+                </div>
+              </div>
+            </div>
+
+            <!-- Full Components Table (collapsed by default) -->
+            <div class="bom-full-table mx-5 mb-4 rounded-xl overflow-hidden border border-slate-200">
+              <table class="w-full text-xs">
+                <thead>
+                  <tr class="bg-slate-50">
+                    <th class="text-left py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Material</th>
+                    <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Qty</th>
+                    <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Rate/KG</th>
+                    <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Amount</th>
+                    <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">%</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let comp of bom.components; let i = index"
+                      class="border-t border-slate-100"
+                      [class.bg-white]="i % 2 === 0"
+                      [class.bg-slate-50]="i % 2 !== 0">
+                    <td class="py-2 px-3 font-semibold text-slate-700">{{ comp.rawMaterialName }}</td>
+                    <td class="py-2 px-3 text-right text-slate-600 font-mono">{{ comp.quantity }} {{ comp.unit }}</td>
+                    <td class="py-2 px-3 text-right text-slate-500 font-mono">{{ comp.rate }}/{{ comp.unit }}</td>
+                    <td class="py-2 px-3 text-right font-bold text-slate-800 font-mono">{{ comp.amount | number:'1.2-2' }}</td>
+                    <td class="py-2 px-3 text-right">
+                      <span class="text-amber-600 font-bold">{{ getComponentPercent(bom, comp.amount) }}%</span>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-gradient-to-r from-amber-50 to-orange-50 border-t-2 border-amber-200">
+                    <td class="py-2.5 px-3 font-bold text-amber-800 uppercase text-xs" colspan="2">Total</td>
+                    <td class="py-2.5 px-3"></td>
+                    <td class="py-2.5 px-3 text-right font-bold text-amber-800 font-mono">₹{{ bom.totalComponentCost | number:'1.2-2' }}</td>
+                    <td class="py-2.5 px-3 text-right font-bold text-amber-800">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <!-- Additional Costs (if any) -->
+            <div *ngIf="bom.additionalCosts && bom.additionalCosts.length > 0" class="mx-5 mb-4 bg-slate-50 rounded-xl p-3 border border-slate-200">
+              <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">Additional Costs</p>
+              <div *ngFor="let ac of bom.additionalCosts" class="flex items-center justify-between py-1">
+                <span class="text-xs text-slate-600">{{ ac.type }} <span class="text-slate-400">({{ ac.percentage }}%)</span></span>
+                <span class="text-xs font-bold text-slate-700 font-mono">+₹{{ ac.amount | number:'1.2-2' }}</span>
+              </div>
+            </div>
+
+            <!-- Card Footer: Summary + Actions -->
+            <div class="px-5 pb-5">
+              <!-- Effective Cost Banner -->
+              <div class="bom-cost-banner rounded-xl p-4 mb-4 flex items-center justify-between">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-amber-700/80 mb-0.5">Effective Rate per {{ bom.outputUnit }}</p>
+                  <p class="text-2xl font-black text-amber-800">₹{{ bom.effectiveRatePerUnit | number:'1.2-2' }}</p>
+                </div>
+                <div class="text-right">
+                  <p class="text-xs font-bold uppercase tracking-wider text-orange-700/80 mb-0.5">Total Effective Cost</p>
+                  <p class="text-xl font-bold text-orange-800">₹{{ bom.effectiveCost | number:'1.2-2' }}</p>
+                </div>
+              </div>
+
+              <!-- Action Buttons -->
+              <div class="flex gap-2">
+                <button
+                  (click)="viewBOM(bom)"
+                  class="flex-1 px-4 py-2.5 bg-gradient-to-r from-amber-500 to-orange-500 text-white font-bold rounded-xl shadow-md hover:shadow-lg hover:scale-[1.02] active:scale-95 transition-all duration-200 flex items-center justify-center gap-2 text-sm"
+                >
+                  <ion-icon name="calculator-outline" class="text-base"></ion-icon>
+                  Calculate / View
+                </button>
+                <button
+                  (click)="deleteBOM(bom.id!)"
+                  class="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center border border-slate-200 hover:border-rose-200"
+                >
+                  <ion-icon name="trash-outline" class="text-base"></ion-icon>
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- BOM Empty State -->
+        <div *ngIf="!isBomLoading && filteredBomList.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-16 text-center">
+          <div class="flex flex-col items-center justify-center">
+            <div class="w-20 h-20 bg-amber-50 rounded-full flex items-center justify-center shadow-sm mb-4">
+              <ion-icon name="document-text-outline" class="text-4xl text-amber-300"></ion-icon>
+            </div>
+            <h3 class="text-lg font-bold text-slate-700 mb-1">No Bill of Materials Found</h3>
+            <p class="text-slate-500 mb-6 max-w-md">Create a BOM to define the raw material recipe for manufacturing your finished products</p>
+            <button
+              (click)="openBomModal()"
+              class="px-6 py-3 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all flex items-center gap-2"
+            >
+              <ion-icon name="add-circle-outline" class="text-lg"></ion-icon>
+              Create First BOM
+            </button>
+          </div>
+        </div>
+      </div>
+      <!-- END BOM TAB -->
     </div>
   </div>
 
@@ -291,7 +542,7 @@
           </button>
         </div>
 
-        <div class="max-w-xl mx-auto p-6 pb-20">
+        <div class="max-w-2xl mx-auto p-6 pb-20">
           <!-- CATEGORY SELECTION -->
           <div class="mb-8">
             <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 ml-1">✨ Select Item Type</label>
@@ -354,6 +605,83 @@
               </div>
             </div>
 
+            <!-- Raw Material only: Vendor & Transport/Driver info -->
+            <ng-container *ngIf="selectedCategory === 'raw_material'">
+
+              <!-- DIVIDER -->
+              <div class="flex items-center gap-3 my-2">
+                <div class="flex-1 h-px bg-slate-200"></div>
+                <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest whitespace-nowrap">Vendor &amp; Logistics</span>
+                <div class="flex-1 h-px bg-slate-200"></div>
+              </div>
+
+              <!-- Vendor ID + Vendor Name -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                    <ion-icon name="business-outline" class="text-emerald-500"></ion-icon>
+                    Vendor ID
+                  </label>
+                  <div class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background:transparent;--padding-start:0;--inner-padding-end:0;">
+                      <ion-input type="text" formControlName="vendorId" placeholder="e.g. VND-001" class="px-4 py-3 text-slate-900 font-mono font-semibold text-sm"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                    <ion-icon name="storefront-outline" class="text-emerald-500"></ion-icon>
+                    Vendor Name
+                  </label>
+                  <div class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background:transparent;--padding-start:0;--inner-padding-end:0;">
+                      <ion-input type="text" formControlName="vendorName" placeholder="e.g. Tata Steel Ltd." class="px-4 py-3 text-slate-900 font-medium text-sm"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Transport Name -->
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                  <ion-icon name="car-outline" class="text-blue-500"></ion-icon>
+                  Transport Name
+                </label>
+                <div class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background:transparent;--padding-start:0;--inner-padding-end:0;">
+                    <ion-input type="text" formControlName="transportName" placeholder="e.g. Delivery Express Pvt. Ltd." class="px-4 py-3 text-slate-900 font-medium"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <!-- Driver Name + Driver Mobile -->
+              <div class="grid grid-cols-2 gap-4">
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                    <ion-icon name="person-outline" class="text-blue-500"></ion-icon>
+                    Driver Name
+                  </label>
+                  <div class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background:transparent;--padding-start:0;--inner-padding-end:0;">
+                      <ion-input type="text" formControlName="driverName" placeholder="e.g. Ramesh Singh" class="px-4 py-3 text-slate-900 font-medium text-sm"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+                <div class="group">
+                  <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                    <ion-icon name="call-outline" class="text-blue-500"></ion-icon>
+                    Driver Mobile
+                  </label>
+                  <div class="bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                    <ion-item lines="none" class="bg-transparent rounded-xl" style="--background:transparent;--padding-start:0;--inner-padding-end:0;">
+                      <ion-input type="tel" formControlName="driverMobile" placeholder="e.g. 9876543210" class="px-4 py-3 text-slate-900 font-medium text-sm"></ion-input>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+
+            </ng-container>
+
             <!-- Finished Product only: SKU, Description, Price -->
             <ng-container *ngIf="selectedCategory === 'finished_product'">
               <div class="group">
@@ -379,6 +707,18 @@
                 <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
                   <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
                     <ion-input type="number" formControlName="price" placeholder="0.00" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                  <ion-icon name="scale-outline" class="text-blue-500"></ion-icon>
+                  Weight (KG)
+                </label>
+                <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="weight" placeholder="0.00" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
                   </ion-item>
                 </div>
               </div>
@@ -612,6 +952,491 @@
             </div>
 
           </form>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================ -->
+  <!--           CREATE BOM MODAL                   -->
+  <!-- ============================================ -->
+  <ion-modal [isOpen]="isBomModalOpen" (didDismiss)="closeBomModal()" class="custom-modal">
+    <ng-template>
+      <div class="h-full bg-slate-50 overflow-y-auto">
+        
+        <!-- Header -->
+        <div class="sticky top-0 z-10 bg-gradient-to-r from-amber-500 to-orange-500 px-6 py-6 flex items-center justify-between shadow-lg">
+          <div class="flex items-center gap-4">
+            <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+              <ion-icon name="document-text-outline" class="text-2xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-xl font-bold text-white">Create Bill of Materials</h2>
+              <p class="text-xs text-amber-50">Define manufacturing recipe for a product</p>
+            </div>
+          </div>
+          <button (click)="closeBomModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm border border-white/30">
+            <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+          </button>
+        </div>
+
+        <div class="max-w-3xl mx-auto p-6 pb-20">
+
+          <!-- STEP 1: BOM Details -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-4 flex items-center gap-2">
+              <span class="w-6 h-6 bg-amber-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">1</span>
+              Product Details
+            </h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">BOM Name</label>
+                <input 
+                  type="text" 
+                  [(ngModel)]="bomForm.bomName" 
+                  placeholder="e.g. MANKA MASH 20 KG"
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 font-medium focus:border-amber-400 focus:ring-2 focus:ring-amber-50 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Finished Product</label>
+                <select 
+                  [(ngModel)]="bomForm.finishedProductId" 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 font-medium focus:border-amber-400 focus:ring-2 focus:ring-amber-50 outline-none transition-all appearance-none"
+                >
+                  <option [ngValue]="null" disabled>Select a product...</option>
+                  <option *ngFor="let p of finishedProductsList" [ngValue]="p.id">{{ p.name }}</option>
+                </select>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Output Quantity</label>
+                <input 
+                  type="number" 
+                  [(ngModel)]="bomForm.outputQuantity" 
+                  min="1" 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 font-bold text-lg focus:border-amber-400 focus:ring-2 focus:ring-amber-50 outline-none transition-all"
+                />
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Output Unit</label>
+                <select 
+                  [(ngModel)]="bomForm.outputUnit" 
+                  class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 font-medium focus:border-amber-400 focus:ring-2 focus:ring-amber-50 outline-none transition-all appearance-none"
+                >
+                  <option value="BAG">BAG</option>
+                  <option value="PIECE">PIECE</option>
+                  <option value="KG">KG</option>
+                  <option value="LITER">LITER</option>
+                  <option value="METER">METER</option>
+                  <option value="BOX">BOX</option>
+                  <option value="PACK">PACK</option>
+                </select>
+              </div>
+            </div>
+          </div>
+
+          <!-- STEP 2: Components -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-6 h-6 bg-amber-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">2</span>
+                Components (Consumption)
+              </h3>
+              <button 
+                (click)="addBomComponent()" 
+                type="button" 
+                class="px-3 py-1.5 bg-emerald-50 text-emerald-600 font-semibold rounded-lg text-xs hover:bg-emerald-100 transition-colors border border-emerald-200 flex items-center gap-1"
+              >
+                <ion-icon name="add-outline"></ion-icon>
+                Add Material
+              </button>
+            </div>
+
+            <!-- Components Table -->
+            <div *ngIf="bomComponents.length > 0" class="bom-edit-table rounded-xl overflow-hidden border border-slate-200">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-slate-50">
+                    <th class="text-left py-2.5 px-3 text-xs font-bold text-slate-600 uppercase w-6">#</th>
+                    <th class="text-left py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Raw Material</th>
+                    <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Qty</th>
+                    <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Unit</th>
+                    <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Rate (₹)</th>
+                    <th class="text-right py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Amount (₹)</th>
+                    <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase w-10"></th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let comp of bomComponents; let i = index" class="border-t border-slate-100 hover:bg-slate-50 transition-colors">
+                    <td class="py-2 px-3 text-slate-400 font-mono text-xs">{{ i + 1 }}</td>
+                    <td class="py-2 px-3">
+                      <select 
+                        [ngModel]="comp.rawMaterialId" 
+                        (ngModelChange)="onBomComponentMaterialChange(i, $event)"
+                        class="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-sm text-slate-700 focus:border-amber-400 outline-none transition-all appearance-none"
+                      >
+                        <option [ngValue]="0" disabled>Select material</option>
+                        <option *ngFor="let m of rawMaterialsList" [ngValue]="m.id">{{ m.name }}</option>
+                      </select>
+                    </td>
+                    <td class="py-2 px-3">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="comp.quantity" 
+                        (ngModelChange)="recalcBomComponentAmount(i)"
+                        min="0" step="0.01"
+                        class="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-sm text-center font-semibold text-slate-800 focus:border-amber-400 outline-none transition-all"
+                      />
+                    </td>
+                    <td class="py-2 px-3 text-center text-slate-500 font-medium text-xs">{{ comp.unit }}</td>
+                    <td class="py-2 px-3">
+                      <input 
+                        type="number" 
+                        [(ngModel)]="comp.rate" 
+                        (ngModelChange)="recalcBomComponentAmount(i)"
+                        min="0" step="0.01"
+                        class="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-sm text-center font-semibold text-slate-800 focus:border-amber-400 outline-none transition-all"
+                      />
+                    </td>
+                    <td class="py-2 px-3 text-right font-bold text-slate-800">₹{{ comp.amount | number:'1.2-2' }}</td>
+                    <td class="py-2 px-3 text-center">
+                      <button (click)="removeBomComponent(i)" class="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                        <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                      </button>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-amber-50 border-t-2 border-amber-200">
+                    <td colspan="2" class="py-3 px-3 font-bold text-amber-800 text-sm uppercase">Total</td>
+                    <td class="py-3 px-3 text-center font-bold text-amber-800">{{ bomTotalWeight }}</td>
+                    <td class="py-3 px-3"></td>
+                    <td class="py-3 px-3"></td>
+                    <td class="py-3 px-3 text-right font-bold text-amber-800 text-base">₹{{ bomTotalComponentCost | number:'1.2-2' }}</td>
+                    <td></td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+
+            <div *ngIf="bomComponents.length === 0" class="text-center py-8 text-slate-400">
+              <ion-icon name="layers-outline" class="text-3xl mb-2"></ion-icon>
+              <p class="text-sm font-medium">No components added yet. Click "Add Material" to begin.</p>
+            </div>
+          </div>
+
+          <!-- STEP 3: Additional Costs -->
+          <div class="bg-white rounded-2xl border border-slate-200 p-6 mb-6">
+            <div class="flex items-center justify-between mb-4">
+              <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center gap-2">
+                <span class="w-6 h-6 bg-amber-500 text-white rounded-lg flex items-center justify-center text-xs font-bold">3</span>
+                Additional Costs (Optional)
+              </h3>
+              <button 
+                (click)="addAdditionalCost()" 
+                type="button" 
+                class="px-3 py-1.5 bg-slate-50 text-slate-600 font-semibold rounded-lg text-xs hover:bg-slate-100 transition-colors border border-slate-200 flex items-center gap-1"
+              >
+                <ion-icon name="add-outline"></ion-icon>
+                Add Cost
+              </button>
+            </div>
+
+            <div *ngFor="let cost of bomAdditionalCosts; let i = index" class="flex items-center gap-3 mb-3">
+              <input 
+                type="text" 
+                [(ngModel)]="cost.type" 
+                placeholder="Cost type (e.g. Labour, Transport)"
+                class="flex-1 bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-slate-700 focus:border-amber-400 outline-none transition-all"
+              />
+              <div class="flex items-center gap-1">
+                <input 
+                  type="number" 
+                  [(ngModel)]="cost.percentage" 
+                  (ngModelChange)="recalcAdditionalCostAmount(i)"
+                  min="0" step="0.1"
+                  class="w-20 bg-slate-50 border border-slate-200 rounded-lg py-2 px-3 text-sm text-center font-semibold text-slate-700 focus:border-amber-400 outline-none transition-all"
+                />
+                <span class="text-slate-400 text-sm font-medium">%</span>
+              </div>
+              <span class="text-sm font-semibold text-slate-600 w-24 text-right">₹{{ cost.amount | number:'1.2-2' }}</span>
+              <button (click)="removeAdditionalCost(i)" class="p-1 text-rose-400 hover:text-rose-600 rounded-lg transition-colors">
+                <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- COST SUMMARY -->
+          <div class="bg-gradient-to-br from-slate-800 to-slate-900 rounded-2xl p-6 mb-6 text-white">
+            <h3 class="text-sm font-bold uppercase tracking-wider mb-4 text-slate-300">Cost Summary</h3>
+            <div class="space-y-3">
+              <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                <span class="text-slate-400">Cost of Components</span>
+                <span class="font-bold text-lg">₹{{ bomTotalComponentCost | number:'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                <span class="text-slate-400">Total Additional Cost</span>
+                <span class="font-bold">₹{{ bomTotalAdditionalCost | number:'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                <span class="text-slate-400">Effective Cost</span>
+                <span class="font-bold text-emerald-400 text-lg">₹{{ bomEffectiveCost | number:'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-2 border-b border-slate-700">
+                <span class="text-slate-400">Allocation to Primary Item</span>
+                <span class="font-bold">₹{{ bomEffectiveCost | number:'1.2-2' }}</span>
+              </div>
+              <div class="flex justify-between items-center py-3 bg-amber-500/10 rounded-xl px-4 -mx-1">
+                <span class="text-amber-300 font-bold">Effective Rate / {{ bomForm.outputUnit }}</span>
+                <span class="font-bold text-amber-300 text-xl">₹{{ bomEffectiveRate | number:'1.2-2' }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- SAVE BUTTON -->
+          <button 
+            (click)="saveBOM()"
+            [disabled]="!bomForm.bomName || !bomForm.finishedProductId || bomComponents.length === 0"
+            [class.opacity-50]="!bomForm.bomName || !bomForm.finishedProductId || bomComponents.length === 0"
+            class="w-full py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-lg flex items-center justify-center gap-2"
+          >
+            <ion-icon name="checkmark-circle-outline" class="text-xl"></ion-icon>
+            Save Bill of Materials
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ============================================ -->
+  <!--         BOM VIEW / CALCULATOR MODAL          -->
+  <!-- ============================================ -->
+  <ion-modal [isOpen]="isBomViewOpen" (didDismiss)="closeBomView()" class="custom-modal">
+    <ng-template>
+      <div *ngIf="selectedBom" class="h-full bg-slate-50 overflow-y-auto">
+
+        <!-- Header Banner -->
+        <div class="sticky top-0 z-20 bg-slate-900 px-6 py-4 shadow-xl">
+          <div class="flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 bg-amber-500 rounded-xl flex items-center justify-center flex-shrink-0">
+                <ion-icon name="document-text-outline" class="text-lg text-white"></ion-icon>
+              </div>
+              <div>
+                <p class="text-slate-400 text-xs font-bold uppercase tracking-widest">Manufacture of Materials</p>
+                <h2 class="text-white font-bold text-base leading-tight">{{ selectedBom.bomName }}</h2>
+              </div>
+            </div>
+            <button (click)="closeBomView()" class="p-2 bg-slate-800 hover:bg-slate-700 rounded-xl transition-colors border border-slate-700">
+              <ion-icon name="close-outline" class="text-xl text-slate-300"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="max-w-3xl mx-auto p-5 pb-24 space-y-5">
+
+          <!-- Per-Piece Cost — Hero Metric -->
+          <div class="bom-view-hero rounded-2xl overflow-hidden">
+            <div class="relative px-6 pt-6 pb-5">
+              <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-5">
+                <!-- Left: main KPI -->
+                <div>
+                  <p class="text-amber-300 text-xs font-bold uppercase tracking-widest mb-1">Cost per {{ selectedBom.outputUnit }}</p>
+                  <div class="flex items-baseline gap-2">
+                    <span class="text-5xl font-black text-white tracking-tight">₹{{ scaledCostPerPiece | number:'1.2-2' }}</span>
+                    <span class="text-amber-300 font-bold text-lg">/ {{ selectedBom.outputUnit }}</span>
+                  </div>
+                  <p class="text-amber-100/70 text-xs mt-1">Based on {{ bomOutputQty }} {{ selectedBom.outputUnit }} total output</p>
+                </div>
+                <!-- Right: secondary KPIs -->
+                <div class="flex gap-4 md:flex-col md:items-end md:text-right">
+                  <div>
+                    <p class="text-amber-300/70 text-xs font-bold uppercase tracking-wider">Total Effective Cost</p>
+                    <p class="text-white font-bold text-xl font-mono">₹{{ scaledEffectiveCost | number:'1.2-2' }}</p>
+                  </div>
+                  <div>
+                    <p class="text-amber-300/70 text-xs font-bold uppercase tracking-wider">Components Cost</p>
+                    <p class="text-amber-100 font-semibold text-lg font-mono">₹{{ scaledTotalComponentCost | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+              </div>
+
+              <!-- Quantity Scaler -->
+              <div class="mt-5 pt-4 border-t border-white/10">
+                <div class="flex flex-col sm:flex-row sm:items-center gap-3">
+                  <div class="flex items-center gap-1.5">
+                    <ion-icon name="calculator-outline" class="text-amber-300 text-base flex-shrink-0"></ion-icon>
+                    <span class="text-amber-200 text-sm font-semibold">Recalculate for</span>
+                  </div>
+                  <div class="flex items-center gap-2">
+                    <button
+                      (click)="bomOutputQty = bomOutputQty > 1 ? bomOutputQty - 1 : 1"
+                      class="w-9 h-9 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white font-bold flex items-center justify-center transition-colors flex-shrink-0">
+                      <ion-icon name="remove-outline" class="text-base"></ion-icon>
+                    </button>
+                    <input
+                      type="number"
+                      [(ngModel)]="bomOutputQty"
+                      min="1"
+                      class="w-24 bg-white/15 border-2 border-amber-400/60 rounded-xl py-2 px-3 text-xl font-bold text-white focus:border-amber-400 focus:bg-white/25 outline-none transition-all text-center"
+                    />
+                    <button
+                      (click)="bomOutputQty = bomOutputQty + 1"
+                      class="w-9 h-9 bg-white/10 hover:bg-white/20 border border-white/20 rounded-xl text-white font-bold flex items-center justify-center transition-colors flex-shrink-0">
+                      <ion-icon name="add-outline" class="text-base"></ion-icon>
+                    </button>
+                    <span class="text-amber-200 font-bold text-base px-2">{{ selectedBom.outputUnit }}</span>
+                  </div>
+                  <span class="text-amber-200/50 text-xs italic">All amounts update live</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <!-- Product Info Chips -->
+          <div class="flex flex-wrap gap-2">
+            <span class="bom-info-chip">
+              <ion-icon name="cube-outline" class="text-sm text-amber-500"></ion-icon>
+              <span>{{ selectedBom.finishedProductName }}</span>
+            </span>
+            <span class="bom-info-chip">
+              <ion-icon name="layers-outline" class="text-sm text-amber-500"></ion-icon>
+              <span>{{ selectedBom.components.length }} Components</span>
+            </span>
+            <span class="bom-info-chip">
+              <ion-icon name="scale-outline" class="text-sm text-amber-500"></ion-icon>
+              <span>{{ scaledTotalWeight }} KG total weight</span>
+            </span>
+            <span *ngIf="selectedBom.costAllocationPercent < 100" class="bom-info-chip bg-orange-50 border-orange-200 text-orange-700">
+              <ion-icon name="git-branch-outline" class="text-sm text-orange-500"></ion-icon>
+              <span>{{ selectedBom.costAllocationPercent }}% cost allocation</span>
+            </span>
+          </div>
+
+          <!-- Components Table -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="flex items-center justify-between px-5 py-3.5 bg-slate-800 border-b border-slate-700">
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider flex items-center gap-2">
+                <ion-icon name="layers-outline" class="text-amber-400"></ion-icon>
+                Components — Consumption
+              </h3>
+              <span class="text-slate-400 text-xs">{{ bomOutputQty }} {{ selectedBom.outputUnit }} output</span>
+            </div>
+            <div class="overflow-x-auto">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-slate-50 border-b border-slate-200">
+                    <th class="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
+                    <th class="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name of Item</th>
+                    <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Quantity</th>
+                    <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Rate</th>
+                    <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount ₹</th>
+                    <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">% Share</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let comp of selectedBom.components; let i = index"
+                      class="border-t border-slate-100 hover:bg-amber-50/40 transition-colors"
+                      [class.bg-white]="i % 2 === 0"
+                      [class.bg-slate-50]="i % 2 !== 0">
+                    <td class="py-3 px-4 text-xs text-slate-400 font-mono">{{ i + 1 }}</td>
+                    <td class="py-3 px-4">
+                      <span class="font-semibold text-slate-800">{{ comp.rawMaterialName }}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-700">
+                      {{ getScaledQuantity(comp.quantity) }} <span class="text-xs text-slate-400">{{ comp.unit }}</span>
+                    </td>
+                    <td class="py-3 px-4 text-right font-mono text-slate-500 text-xs">
+                      ₹{{ comp.rate | number:'1.2-2' }}/{{ comp.unit }}
+                    </td>
+                    <td class="py-3 px-4 text-right font-bold font-mono text-slate-800">
+                      ₹{{ getScaledAmount(comp.amount) | number:'1.2-2' }}
+                    </td>
+                    <td class="py-3 px-4 text-right">
+                      <div class="flex items-center justify-end gap-1.5">
+                        <div class="w-12 bg-slate-200 rounded-full h-1.5 overflow-hidden">
+                          <div class="h-1.5 rounded-full bg-amber-400" [style.width.%]="getComponentPercent(selectedBom, comp.amount)"></div>
+                        </div>
+                        <span class="text-xs font-bold text-amber-600 w-8 text-right">{{ getComponentPercent(selectedBom, comp.amount) }}%</span>
+                      </div>
+                    </td>
+                  </tr>
+                </tbody>
+                <tfoot>
+                  <tr class="bg-slate-800 text-white">
+                    <td colspan="2" class="py-3 px-4 font-bold text-xs uppercase tracking-wider">Total</td>
+                    <td class="py-3 px-4 text-right font-bold font-mono text-sm">{{ scaledTotalWeight }} KG</td>
+                    <td class="py-3 px-4"></td>
+                    <td class="py-3 px-4 text-right font-bold font-mono text-base text-amber-300">₹{{ scaledTotalComponentCost | number:'1.2-2' }}</td>
+                    <td class="py-3 px-4 text-right font-bold text-amber-300">100%</td>
+                  </tr>
+                </tfoot>
+              </table>
+            </div>
+          </div>
+
+          <!-- Cost Summary Card -->
+          <div class="bg-white rounded-2xl border border-slate-200 overflow-hidden shadow-sm">
+            <div class="flex items-center gap-2 px-5 py-3.5 bg-slate-800 border-b border-slate-700">
+              <ion-icon name="calculator-outline" class="text-amber-400"></ion-icon>
+              <h3 class="text-sm font-bold text-white uppercase tracking-wider">Cost Analysis</h3>
+            </div>
+            <div class="p-5 space-y-1">
+              <!-- Component cost -->
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-amber-400"></span>
+                  <span class="text-slate-600 font-medium">Cost of Components</span>
+                </div>
+                <span class="font-bold text-slate-800 font-mono text-base">₹{{ scaledTotalComponentCost | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- Additional costs -->
+              <div *ngIf="selectedBom.additionalCosts && selectedBom.additionalCosts.length > 0">
+                <p class="text-xs font-bold text-slate-400 uppercase tracking-wider py-2 px-1">Additional Overheads</p>
+                <div *ngFor="let cost of selectedBom.additionalCosts" class="flex items-center justify-between py-2 pl-5 pr-1 border-b border-slate-50">
+                  <span class="text-sm text-slate-500">
+                    {{ cost.type }}
+                    <span class="text-xs text-slate-400 ml-1 bg-slate-100 px-1.5 py-0.5 rounded-md">{{ cost.percentage }}%</span>
+                  </span>
+                  <span class="font-semibold text-orange-600 font-mono">+₹{{ (cost.amount * viewScaleFactor) | number:'1.2-2' }}</span>
+                </div>
+              </div>
+
+              <div *ngIf="selectedBom.totalAdditionalCost > 0" class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-orange-400"></span>
+                  <span class="text-slate-600 font-medium">Total Additional Cost</span>
+                </div>
+                <span class="font-bold text-orange-600 font-mono">₹{{ (selectedBom.totalAdditionalCost * viewScaleFactor) | number:'1.2-2' }}</span>
+              </div>
+
+              <div class="flex items-center justify-between py-3 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <span class="w-2 h-2 rounded-full bg-emerald-500"></span>
+                  <span class="text-slate-600 font-medium">Total Effective Cost</span>
+                  <span class="text-xs text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-md">{{ bomOutputQty }} {{ selectedBom.outputUnit }}</span>
+                </div>
+                <span class="font-bold text-emerald-600 font-mono text-base">₹{{ scaledEffectiveCost | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- Final Rate Callout -->
+              <div class="mt-3 rounded-2xl bg-gradient-to-r from-amber-500 to-orange-500 p-5 shadow-md">
+                <div class="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-3">
+                  <div>
+                    <p class="text-amber-100 text-xs font-bold uppercase tracking-widest mb-1">Effective Rate per {{ selectedBom.outputUnit }}</p>
+                    <p class="text-white font-black text-4xl tracking-tight">₹{{ scaledCostPerPiece | number:'1.2-2' }}</p>
+                    <p class="text-amber-200 text-xs mt-1">Allocation: {{ selectedBom.costAllocationPercent }}% of total cost</p>
+                  </div>
+                  <div class="sm:text-right">
+                    <p class="text-amber-100 text-xs font-bold uppercase tracking-widest mb-1">For {{ bomOutputQty }} {{ selectedBom.outputUnit }}</p>
+                    <p class="text-white font-bold text-xl font-mono">₹{{ scaledEffectiveCost | number:'1.2-2' }}</p>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </div>
+
         </div>
       </div>
     </ng-template>

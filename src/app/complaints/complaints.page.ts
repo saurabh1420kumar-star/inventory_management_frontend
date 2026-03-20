@@ -18,7 +18,7 @@ export class ComplaintsPage implements OnInit {
   errorMessage = '';
   showSuccess = false;
 
-  categories = ['PAYMENT', 'PRODUCT', 'SERVICE', 'DELIVERY', 'OTHER'];
+  categories = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
   priorityLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
 
   constructor(
@@ -59,11 +59,11 @@ export class ComplaintsPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-    console.log('Submitting complaint with data:', this.complaintForm.value);
+    console.log('🚀 Submitting complaint with data:', this.complaintForm.value);
 
     this.complaintsService.createComplaint(this.complaintForm.value).subscribe({
       next: (response) => {
-        console.log('Complaint created:', response);
+        console.log('✨ Complaint created successfully:', response);
         this.isLoading = false;
         this.successMessage = 'Complaint submitted successfully. We will review it shortly.';
         this.showSuccess = true;
@@ -75,12 +75,25 @@ export class ComplaintsPage implements OnInit {
         setTimeout(() => this.showSuccess = false, 5000);
       },
       error: (err) => {
-        console.error('Error submitting complaint:', err);
+        console.error('❌ Error submitting complaint:', err);
         console.error('Error status:', err?.status);
         console.error('Error message:', err?.error?.message);
-        console.error('Error response:', err?.error);
+        console.error('Full error response:', err?.error);
+        
         this.isLoading = false;
-        this.errorMessage = err?.error?.message || 'Failed to submit complaint. Please try again.';
+        
+        // Check for specific error types
+        if (err?.status === 0) {
+          this.errorMessage = 'Network error. Please check your internet connection.';
+        } else if (err?.status === 401 || err?.status === 403) {
+          this.errorMessage = 'Unauthorized. Please login again.';
+        } else if (err?.status === 400) {
+          this.errorMessage = err?.error?.message || 'Invalid form data. Please check your input.';
+        } else if (err?.status >= 500) {
+          this.errorMessage = 'Server error. Please try again later.';
+        } else {
+          this.errorMessage = err?.error?.message || 'Failed to submit complaint. Please try again.';
+        }
       },
     });
   }

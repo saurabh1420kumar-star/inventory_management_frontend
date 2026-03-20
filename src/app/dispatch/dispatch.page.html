@@ -765,21 +765,63 @@
 
             <!-- Shipping Address -->
             <div class="mb-4">
-              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">Shipping Address *</label>
-              <textarea
-                formControlName="shippingAddress"
-                placeholder="Enter delivery/shipping address"
-                rows="2"
-                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm"
-                [class.border-slate-200]="!gdnForm.get('shippingAddress')?.touched || !gdnForm.get('shippingAddress')?.invalid"
-                [class.border-rose-400]="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid"
-                [class.focus:border-teal-400]="!gdnForm.get('shippingAddress')?.invalid"
-                [class.focus:ring-teal-50]="!gdnForm.get('shippingAddress')?.invalid"
-                [class.focus:ring-rose-50]="gdnForm.get('shippingAddress')?.invalid">
-              </textarea>
-              <p *ngIf="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid" class="text-xs text-rose-500 mt-1">
-                {{ getGdnFieldError('shippingAddress') }}
-              </p>
+
+              <!-- Unified shipping card: shows distributor address OR custom input -->
+              <div class="rounded-xl border overflow-hidden transition-all duration-200"
+                [class]="useCustomShippingAddress ? 'border-amber-300' : 'border-teal-200'">
+
+                <!-- Header row with checkbox -->
+                <label class="flex items-center gap-3 cursor-pointer select-none px-4 py-3 transition-all duration-200"
+                  [class]="useCustomShippingAddress ? 'bg-amber-50' : 'bg-teal-50'">
+                  <input
+                    type="checkbox"
+                    [(ngModel)]="useCustomShippingAddress"
+                    [ngModelOptions]="{standalone: true}"
+                    (ngModelChange)="onShippingToggle()"
+                    style="width:17px; height:17px; accent-color: #f59e0b; flex-shrink:0; cursor:pointer;">
+                  <div class="flex-1">
+                    <p class="text-xs font-bold uppercase tracking-wider"
+                      [class]="useCustomShippingAddress ? 'text-amber-700' : 'text-teal-600'">
+                      {{ useCustomShippingAddress ? 'Custom Shipping Address' : 'Shipping To' }}
+                    </p>
+                  </div>
+                  <ion-icon
+                    [name]="useCustomShippingAddress ? 'pencil-outline' : 'location-outline'"
+                    class="text-sm flex-shrink-0"
+                    [class]="useCustomShippingAddress ? 'text-amber-500' : 'text-teal-500'">
+                  </ion-icon>
+                </label>
+
+                <!-- Divider -->
+                <div class="h-px" [class]="useCustomShippingAddress ? 'bg-amber-200' : 'bg-teal-100'"></div>
+
+                <!-- Default: distributor address display -->
+                <div *ngIf="!useCustomShippingAddress" class="px-4 py-3 bg-white flex items-start gap-2.5">
+                  <ion-icon name="checkmark-circle-outline" class="text-teal-500 text-base mt-0.5 flex-shrink-0"></ion-icon>
+                  <div>
+                    <p class="text-sm font-semibold text-slate-800 leading-snug">
+                      {{ orderForGdn?.shippingAddress || orderForGdn?.distributorName || 'Distributor\'s address' }}
+                    </p>
+                    <p class="text-xs text-slate-400 mt-0.5">Same as distributor's registered address · <span class="text-teal-500 font-medium">Check above to change</span></p>
+                  </div>
+                </div>
+
+                <!-- Custom: editable textarea -->
+                <div *ngIf="useCustomShippingAddress" class="px-4 py-3 bg-white">
+                  <textarea
+                    formControlName="shippingAddress"
+                    placeholder="Enter custom delivery / shipping address"
+                    rows="3"
+                    class="w-full bg-amber-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 focus:ring-amber-50 focus:border-amber-400 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm"
+                    [class.border-amber-200]="!gdnForm.get('shippingAddress')?.touched || !gdnForm.get('shippingAddress')?.invalid"
+                    [class.border-rose-400]="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid">
+                  </textarea>
+                  <p *ngIf="gdnForm.get('shippingAddress')?.touched && gdnForm.get('shippingAddress')?.invalid" class="text-xs text-rose-500 mt-1">
+                    {{ getGdnFieldError('shippingAddress') }}
+                  </p>
+                </div>
+
+              </div>
             </div>
 
             <!-- Vehicle Number -->

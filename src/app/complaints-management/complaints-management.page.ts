@@ -3,6 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ComplaintsService, Complaint } from '../services/complaints.service';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-complaints-management',
@@ -14,23 +15,42 @@ import { ComplaintsService, Complaint } from '../services/complaints.service';
 export class ComplaintsManagementPage implements OnInit {
   complaints: Complaint[] = [];
   isLoading = false;
+  isUpdatingStatus = false;
   errorMessage = '';
   currentPage = 1;
   pageSize = 10;
-  totalPages = 1;
+  isLastPage = false;
+  isFirstPage = true;
   searchTerm = '';
   filterStatus = '';
   filterCategory = '';
 
   statusOptions = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
-  categoryOptions = ['PAYMENT', 'PRODUCT', 'SERVICE', 'DELIVERY', 'OTHER'];
+  categoryOptions = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
 
   selectedComplaint: Complaint | null = null;
   isDetailModalOpen = false;
   isStatusModalOpen = false;
   newStatus = '';
 
-  constructor(private complaintsService: ComplaintsService) {}
+  private readonly statusConfigs: Record<string, { color: string; bg: string; border: string; label: string; icon: string }> = {
+    'OPEN':        { color: '#ef4444', bg: '#fef2f2', border: '#fecaca', label: 'Open',        icon: 'radio-button-on-outline' },
+    'IN_PROGRESS': { color: '#f59e0b', bg: '#fffbeb', border: '#fde68a', label: 'In Progress', icon: 'time-outline' },
+    'RESOLVED':    { color: '#10b981', bg: '#ecfdf5', border: '#a7f3d0', label: 'Resolved',    icon: 'checkmark-circle-outline' },
+    'CLOSED':      { color: '#6366f1', bg: '#eef2ff', border: '#c7d2fe', label: 'Closed',      icon: 'lock-closed-outline' },
+  };
+
+  private readonly priorityConfigs: Record<string, { color: string; bg: string; label: string }> = {
+    'LOW':      { color: '#3b82f6', bg: '#eff6ff', label: 'Low' },
+    'MEDIUM':   { color: '#f59e0b', bg: '#fffbeb', label: 'Medium' },
+    'HIGH':     { color: '#ef4444', bg: '#fef2f2', label: 'High' },
+    'CRITICAL': { color: '#7c3aed', bg: '#f5f3ff', label: 'Critical' },
+  };
+
+  constructor(
+    private complaintsService: ComplaintsService,
+    private toast: Toast
+  ) {}
 
   ngOnInit() {
     this.loadComplaints();
@@ -39,16 +59,16 @@ export class ComplaintsManagementPage implements OnInit {
   loadComplaints() {
     this.isLoading = true;
     this.errorMessage = '';
+    const pageIndex = this.currentPage - 1;
 
-    this.complaintsService.getComplaints(this.currentPage, this.pageSize).subscribe({
+    this.complaintsService.getComplaints(pageIndex, this.pageSize).subscribe({
       next: (response) => {
-        console.log('Complaints loaded:', response);
         this.complaints = response.data?.content || [];
-        this.totalPages = response.data?.pageable?.pageNumber || 1;
+        this.isLastPage = response.data?.last || false;
+        this.isFirstPage = response.data?.first || false;
         this.isLoading = false;
       },
-      error: (err) => {
-        console.error('Error loading complaints:', err);
+      error: () => {
         this.errorMessage = 'Failed to load complaints. Please try again.';
         this.isLoading = false;
       },
@@ -56,16 +76,34 @@ export class ComplaintsManagementPage implements OnInit {
   }
 
   get filteredComplaints(): Complaint[] {
-    return this.complaints.filter(complaint => {
-      const matchesSearchTerm = this.searchTerm === '' || 
-        complaint.subject.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
-        complaint.fullName.toLowerCase().includes(this.searchTerm.toLowerCase());
-
-      const matchesStatus = this.filterStatus === '' || complaint.status === this.filterStatus;
-      const matchesCategory = this.filterCategory === '' || complaint.category === this.filterCategory;
-
-      return matchesSearchTerm && matchesStatus && matchesCategory;
+    return this.complaints.filter(c => {
+      const matchesSearch = !this.searchTerm ||
+        c.subject.toLowerCase().includes(this.searchTerm.toLowerCase()) ||
+        c.fullName.toLowerCase().includes(this.searchTerm.toLowerCase());
+      const matchesStatus = !this.filterStatus || c.status === this.filterStatus;
+      const matchesCategory = !this.filterCategory || c.category === this.filterCategory;
+      return matchesSearch && matchesStatus && matchesCategory;
     });
+  }
+
+  get hasActiveFilters(): boolean {
+    return !!(this.searchTerm || this.filterStatus || this.filterCategory);
+  }
+
+  get stats() {
+    return {
+      open:       this.complaints.filter(c => c.status === 'OPEN').length,
+      inProgress: this.complaints.filter(c => c.status === 'IN_PROGRESS').length,
+      resolved:   this.complaints.filter(c => c.status === 'RESOLVED').length,
+      closed:     this.complaints.filter(c => c.status === 'CLOSED').length,
+      total:      this.complaints.length,
+    };
+  }
+
+  clearFilters() {
+    this.searchTerm = '';
+    this.filterStatus = '';
+    this.filterCategory = '';
   }
 
   openDetailModal(complaint: Complaint) {
@@ -92,25 +130,30 @@ export class ComplaintsManagementPage implements OnInit {
 
   updateStatus() {
     if (!this.selectedComplaint || !this.newStatus) return;
+    const targetId = this.selectedComplaint.id;
+    const targetStatus = this.newStatus as Complaint['status'];
+    this.isUpdatingStatus = true;
 
-    this.isLoading = true;
-    this.complaintsService.updateComplaintStatus(this.selectedComplaint.id, this.newStatus).subscribe({
+    this.complaintsService.updateComplaintStatus(targetId, targetStatus).subscribe({
       next: () => {
-        console.log('Complaint status updated');
-        this.selectedComplaint!.status = this.newStatus as 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+        const idx = this.complaints.findIndex(c => c.id === targetId);
+        if (idx !== -1) {
+          this.complaints[idx] = { ...this.complaints[idx], status: targetStatus };
+        }
+        this.isUpdatingStatus = false;
         this.closeStatusModal();
-        this.loadComplaints(); // Reload to get updated data
+        this.toast.present('Complaint status updated successfully!', 'success');
       },
       error: (err) => {
-        console.error('Error updating status:', err);
-        this.errorMessage = err?.error?.message || 'Failed to update status.';
-        this.isLoading = false;
+        this.isUpdatingStatus = false;
+        const msg = err?.error?.message || 'Failed to update status. Please try again.';
+        this.toast.present(msg, 'danger');
       },
     });
   }
 
   nextPage() {
-    if (this.currentPage < this.totalPages) {
+    if (!this.isLastPage) {
       this.currentPage++;
       this.loadComplaints();
     }
@@ -123,33 +166,21 @@ export class ComplaintsManagementPage implements OnInit {
     }
   }
 
-  getStatusBadgeColor(status: string): string {
-    switch (status) {
-      case 'OPEN':
-        return '#ef4444'; // red
-      case 'IN_PROGRESS':
-        return '#f59e0b'; // amber
-      case 'RESOLVED':
-        return '#10b981'; // green
-      case 'CLOSED':
-        return '#6366f1'; // indigo
-      default:
-        return '#64748b'; // slate
-    }
+  getStatusConfig(status: string) {
+    return this.statusConfigs[status] ?? { color: '#64748b', bg: '#f8fafc', border: '#e2e8f0', label: status, icon: 'help-outline' };
   }
 
-  getPriorityBadgeColor(priority: string): string {
-    switch (priority) {
-      case 'LOW':
-        return '#3b82f6'; // blue
-      case 'MEDIUM':
-        return '#f59e0b'; // amber
-      case 'HIGH':
-        return '#ef4444'; // red
-      case 'CRITICAL':
-        return '#7c3aed'; // violet
-      default:
-        return '#64748b'; // slate
-    }
+  getPriorityConfig(priority: string) {
+    return this.priorityConfigs[priority] ?? { color: '#64748b', bg: '#f8fafc', label: priority };
+  }
+
+  getInitials(name: string): string {
+    if (!name) return '?';
+    return name.split(' ').filter(Boolean).map(w => w[0]).slice(0, 2).join('').toUpperCase();
+  }
+
+  formatDate(dateStr: string): string {
+    if (!dateStr) return '—';
+    return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
   }
 }

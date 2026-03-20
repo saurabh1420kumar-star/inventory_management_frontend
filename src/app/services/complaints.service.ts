@@ -10,7 +10,7 @@ export interface Complaint {
   fullName: string;
   emailAddress: string;
   phoneNumber: string;
-  category: 'PAYMENT' | 'PRODUCT' | 'SERVICE' | 'DELIVERY' | 'OTHER';
+  category: 'PAYMENT' | 'ACCOUNT' | 'TECHNICAL' | 'DELIVERY' | 'OTHER';
   subject: string;
   priorityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
@@ -58,6 +58,7 @@ export class ComplaintsService {
   private getAuthHeaders(): HttpHeaders {
     const token = this.auth.getToken();
     return new HttpHeaders({
+      'Content-Type': 'application/json',
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     });
   }
@@ -67,6 +68,10 @@ export class ComplaintsService {
    * POST /api/complaints/create
    */
   createComplaint(complaint: CreateComplaintRequest): Observable<any> {
+    console.log('🎯 Submitting complaint to:', `${this.apiUrl}/create`);
+    console.log('📦 Payload:', complaint);
+    console.log('🔐 Token present:', !!this.auth.getToken());
+    
     return this.http.post<any>(`${this.apiUrl}/create`, complaint, {
       headers: this.getAuthHeaders()
     });

@@ -36,11 +36,6 @@ const routes: Routes = [
     canActivate: [AuthGuard] // Protected route
   },
   {
-    path: 'complaints',
-    loadChildren: () => import('./feedback/feedback.module').then(m => m.FeedbackPageModule),
-    canActivate: [AuthGuard] // Protected route
-  },
-  {
     path: 'accounts-master',
     loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then(m => m.AccountsMasterPageModule),
     canActivate: [AuthGuard] // Protected route
