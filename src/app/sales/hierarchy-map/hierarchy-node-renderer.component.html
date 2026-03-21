@@ -1,0 +1,68 @@
+<!-- Person Card -->
+<div class="node-card-wrapper" [ngClass]="'level-' + level">
+  <div 
+    class="node-card" 
+    [class.selected]="isSelected()"
+    [style.border-left-color]="getRoleColor(node.person.role)"
+  >
+    <!-- Card Header -->
+    <div class="card-header" [style.background]="getRoleColor(node.person.role)">
+      <div class="avatar">{{ node.person.name.charAt(0).toUpperCase() }}</div>
+      <div class="header-info">
+        <h4 class="person-name">{{ node.person.name }}</h4>
+        <span class="role-tag">{{ getRoleShort(node.person.role) }}</span>
+      </div>
+      <div class="header-actions">
+        <button 
+          *ngIf="hasChildren()" 
+          (click)="onToggleNode()" 
+          class="expand-btn"
+          [class.expanded]="node.isExpanded"
+          title="Toggle children"
+        >
+          <ion-icon [name]="node.isExpanded ? 'chevron-up' : 'chevron-down'"></ion-icon>
+        </button>
+        <button 
+          (click)="onSelectPerson()" 
+          class="select-btn"
+          title="View details"
+        >
+          <ion-icon name="information-circle-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Card Body -->
+    <div class="card-body">
+      <div class="info-row">
+        <span class="info-label">Code:</span>
+        <span class="info-value">{{ node.person.employeeCode }}</span>
+      </div>
+      <div class="info-row" *ngIf="node.person.zone">
+        <span class="info-label">Zone:</span>
+        <span class="info-value">{{ node.person.zone }}</span>
+      </div>
+      <div class="info-row" *ngIf="node.person.email">
+        <span class="info-label">Email:</span>
+        <span class="info-value truncate">{{ node.person.email }}</span>
+      </div>
+    </div>
+  </div>
+
+  <!-- Children Container - Horizontal Grid Layout -->
+  <div *ngIf="hasChildren() && node.isExpanded" class="children-container">
+    <div class="connector-line-vertical"></div>
+    <div class="children-grid">
+      <app-hierarchy-node-renderer 
+        *ngFor="let childNode of node.children;let i = index" 
+        [node]="childNode" 
+        [level]="level + 1"
+        [selectedPersonId]="selectedPersonId"
+        [childIndex]="i"
+        [totalChildren]="node.children.length"
+        (selectPerson)="selectPerson.emit($event)"
+        (toggleNode)="toggleNode.emit($event)"
+      ></app-hierarchy-node-renderer>
+    </div>
+  </div>
+</div>

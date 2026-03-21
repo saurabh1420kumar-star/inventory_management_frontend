@@ -1,0 +1,312 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/sales" style="color: #ffffff;"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span style="color: #10b981; font-weight: 800; font-size: 1.125rem;">Hierarchy</span>
+      <span style="color: #ffffff; font-weight: 700; font-size: 1.125rem;"> Orders</span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openHierarchyMap()" style="--color: #ffffff;" title="View Org Chart">
+        <ion-icon slot="icon-only" name="git-network-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="loadData()" style="--color: #ffffff;">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content style="--background: #f1f5f9;">
+  <div class="min-h-screen pb-24" style="background: #f1f5f9;">
+    <div class="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+
+      <!-- Hero Banner -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 mb-6">
+        <div>
+          <h1 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">Orders by Hierarchy</h1>
+          <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+            <ion-icon name="git-network-outline" class="text-white text-sm"></ion-icon>
+            <span class="text-white text-xs sm:text-sm font-medium">State → RSM → ASM → Sales Executive</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Summary Stats -->
+      <div class="grid grid-cols-3 gap-3 mb-6">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 transition-all">
+          <div class="flex items-center gap-2 mb-2">
+            <ion-icon name="receipt-outline" class="text-xl text-emerald-500"></ion-icon>
+          </div>
+          <div class="text-2xl font-bold text-slate-800">{{ totalOrders }}</div>
+          <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Total Orders</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 transition-all">
+          <div class="flex items-center gap-2 mb-2">
+            <ion-icon name="cash-outline" class="text-xl text-emerald-600"></ion-icon>
+          </div>
+          <div class="text-2xl font-bold" style="color: #10b981;">{{ formatCurrency(totalAmount) }}</div>
+          <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Total Value</div>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 transition-all">
+          <div class="flex items-center gap-2 mb-2">
+            <ion-icon name="people-outline" class="text-xl text-blue-500"></ion-icon>
+          </div>
+          <div class="text-2xl font-bold" style="color: #0ea5e9;">{{ salesPersons.length }}</div>
+          <div class="text-xs text-slate-500 font-bold uppercase tracking-wider mt-1">Team Members</div>
+        </div>
+      </div>
+
+      <!-- Filters -->
+      <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-200 mb-6 hover:border-emerald-300 transition-all">
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-3 mb-3">
+          <!-- Search -->
+          <div class="relative sm:col-span-1">
+            <ion-icon name="search-outline" class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 text-base z-10"></ion-icon>
+            <input type="text" [(ngModel)]="filterSearch" (ngModelChange)="applyFilters()"
+              placeholder="Search distributor, salesperson..."
+              class="w-full pl-10 pr-3 py-2.5 rounded-xl text-sm outline-none"
+              style="background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b;" />
+          </div>
+          <!-- Zone -->
+          <select [(ngModel)]="filterZone" (ngModelChange)="applyFilters()"
+            class="px-3 py-2.5 rounded-xl text-sm outline-none"
+            style="background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b; appearance: auto;">
+            <option value="">All Zones</option>
+            <option *ngFor="let z of zones" [value]="z">{{ z }}</option>
+          </select>
+          <!-- Status -->
+          <select [(ngModel)]="filterStatus" (ngModelChange)="applyFilters()"
+            class="px-3 py-2.5 rounded-xl text-sm outline-none"
+            style="background: #f8fafc; border: 1px solid #e2e8f0; color: #1e293b; appearance: auto;">
+            <option value="">All Statuses</option>
+            <option *ngFor="let s of statuses" [value]="s">{{ s | titlecase }}</option>
+          </select>
+        </div>
+        <button *ngIf="filterZone || filterStatus || filterSearch" (click)="resetFilters()"
+          class="text-xs font-semibold flex items-center gap-1 px-3 py-1.5 rounded-lg transition-all"
+          style="color: #f43f5e; background: #fff1f2; border: 1px solid #fecdd3;">
+          <ion-icon name="close-circle-outline"></ion-icon> Clear Filters
+        </button>
+      </div>
+
+      <!-- Error -->
+      <div *ngIf="errorMessage" class="rounded-xl p-4 mb-5 border-l-4"
+        style="background: #fee2e2; border-color: #f43f5e;">
+        <p class="text-sm font-medium" style="color: #b91c1c;">{{ errorMessage }}</p>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-20">
+        <ion-spinner name="crescent" style="color: #10b981; width: 2.5rem; height: 2.5rem;"></ion-spinner>
+      </div>
+
+      <!-- Hierarchy Tree -->
+      <ng-container *ngIf="!isLoading">
+
+        <!-- Empty State -->
+        <div *ngIf="groupedData.length === 0" class="text-center py-16">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4"
+            style="background: #e0f2fe;">
+            <ion-icon name="git-network-outline" class="text-3xl" style="color: #0ea5e9;"></ion-icon>
+          </div>
+          <p class="text-slate-600 font-semibold text-base mb-1">No hierarchy data found</p>
+          <p class="text-slate-400 text-sm">Onboard your sales team first to see orders by hierarchy.</p>
+          <a routerLink="/sales/salesperson-onboarding"
+            class="inline-flex items-center gap-2 mt-4 px-4 py-2 rounded-xl text-sm font-bold text-white"
+            style="background: linear-gradient(135deg, #10b981, #14b8a6);">
+            <ion-icon name="person-add-outline"></ion-icon> Go to Onboarding
+          </a>
+        </div>
+
+        <!-- ZONE LEVEL -->
+        <div *ngFor="let zoneData of groupedData" class="mb-5">
+          <!-- Zone Header -->
+          <button (click)="toggleZone(zoneData.zone)"
+            class="w-full flex items-center justify-between px-5 py-3.5 rounded-2xl shadow-md mb-3 transition-all bg-gradient-to-r from-emerald-500 to-teal-500"
+            style="color: #ffffff;">
+            <div class="flex items-center gap-3">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.25);">
+                <ion-icon name="location-outline" class="text-lg text-white"></ion-icon>
+              </div>
+              <div class="text-left">
+                <div class="font-bold text-base">{{ zoneData.zone }}</div>
+                <div class="text-xs text-white/75">
+                  {{ zoneData.rsms.length }} RSM{{ zoneData.rsms.length !== 1 ? 's' : '' }} •
+                  {{ zoneData.totalOrders }} order{{ zoneData.totalOrders !== 1 ? 's' : '' }}
+                </div>
+              </div>
+            </div>
+            <div class="flex items-center gap-3">
+              <div class="text-right">
+                <div class="font-bold text-sm" style="color: #34d399;">{{ formatCurrency(zoneData.totalAmount) }}</div>
+              </div>
+              <ion-icon [name]="isZoneExpanded(zoneData.zone) ? 'chevron-up-outline' : 'chevron-down-outline'"
+                class="text-lg text-white/80"></ion-icon>
+            </div>
+          </button>
+
+          <!-- RSM LEVEL -->
+          <div *ngIf="isZoneExpanded(zoneData.zone)" class="space-y-4 pl-3 sm:pl-5">
+            <div *ngFor="let rsmGroup of zoneData.rsms" class="border-l-2 border-blue-300 pl-3">
+
+              <!-- RSM Card -->
+              <div class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 mb-3">
+                <button (click)="rsmGroup.isExpanded = !rsmGroup.isExpanded"
+                  class="w-full px-4 py-3.5 flex items-center justify-between"
+                  style="background: #eff6ff;">
+                  <div class="flex items-center gap-3">
+                    <div class="w-9 h-9 rounded-full flex items-center justify-center text-white font-bold"
+                      style="background: #8b5cf6;">
+                      {{ rsmGroup.rsmName.charAt(0) }}
+                    </div>
+                    <div class="text-left">
+                      <div class="font-bold text-sm text-slate-800">{{ rsmGroup.rsmName }}</div>
+                      <div class="flex items-center gap-1.5 mt-0.5">
+                          <span class="text-xs font-bold px-2 py-0.5 rounded-full text-white" style="background: #8b5cf6;">{{ getRoleLabel('RSM') }}</span>
+                        <span class="text-xs text-slate-500">{{ rsmGroup.asms.length }} ASM{{ rsmGroup.asms.length !== 1 ? 's' : '' }}</span>
+                      </div>
+                    </div>
+                  </div>
+                  <div class="flex items-center gap-3">
+                    <div class="text-right">
+                      <div class="text-xs font-bold text-slate-800">{{ rsmGroup.totalOrders }} orders</div>
+                      <div class="text-xs font-semibold" style="color: #8b5cf6;">{{ formatCurrency(rsmGroup.totalAmount) }}</div>
+                    </div>
+                    <ion-icon [name]="rsmGroup.isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+                      class="text-base text-slate-400"></ion-icon>
+                  </div>
+                </button>
+              </div>
+
+              <!-- ASM LEVEL -->
+              <div *ngIf="rsmGroup.isExpanded" class="space-y-3 pl-3 sm:pl-5 border-l-2 border-purple-200">
+                <div *ngFor="let asmGroup of rsmGroup.asms">
+
+                  <!-- ASM Card -->
+                  <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200 mb-2">
+                    <button (click)="asmGroup.isExpanded = !asmGroup.isExpanded"
+                      class="w-full px-4 py-3 flex items-center justify-between"
+                      style="background: #fffbeb;">
+                      <div class="flex items-center gap-3">
+                        <div class="w-8 h-8 rounded-full flex items-center justify-center text-white font-bold text-sm"
+                          style="background: #f59e0b;">
+                          {{ asmGroup.asmName.charAt(0) }}
+                        </div>
+                        <div class="text-left">
+                          <div class="font-bold text-sm text-slate-800">{{ asmGroup.asmName }}</div>
+                          <div class="flex items-center gap-1.5 mt-0.5">
+                            <span class="text-xs font-bold px-2 py-0.5 rounded-full text-white" style="background: #f59e0b;">{{ getRoleLabel('ASM') }}</span>
+                            <span class="text-xs text-slate-500">{{ asmGroup.executives.length }} SE{{ asmGroup.executives.length !== 1 ? 's' : '' }}</span>
+                          </div>
+                        </div>
+                      </div>
+                      <div class="flex items-center gap-3">
+                        <div class="text-right">
+                          <div class="text-xs font-bold text-slate-800">{{ asmGroup.totalOrders }} orders</div>
+                          <div class="text-xs font-semibold" style="color: #f59e0b;">{{ formatCurrency(asmGroup.totalAmount) }}</div>
+                        </div>
+                        <ion-icon [name]="asmGroup.isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+                          class="text-base text-slate-400"></ion-icon>
+                      </div>
+                    </button>
+                  </div>
+
+                  <!-- SALES EXECUTIVE LEVEL -->
+                  <div *ngIf="asmGroup.isExpanded" class="space-y-2 pl-3 sm:pl-5 border-l-2 border-amber-200">
+                    <div *ngFor="let seGroup of asmGroup.executives">
+
+                      <!-- SE Card -->
+                      <div class="bg-white rounded-xl overflow-hidden shadow-sm border border-slate-200">
+                        <button (click)="seGroup.isExpanded = !seGroup.isExpanded"
+                          class="w-full px-3 py-2.5 flex items-center justify-between"
+                          style="background: #f0fdf4;">
+                          <div class="flex items-center gap-2.5">
+                            <div class="w-7 h-7 rounded-full flex items-center justify-center text-white font-bold text-xs"
+                              style="background: #10b981;">
+                              {{ seGroup.seName.charAt(0) }}
+                            </div>
+                            <div class="text-left">
+                              <div class="font-bold text-xs text-slate-800">{{ seGroup.seName }}</div>
+                              <span class="text-xs font-bold px-1.5 py-0.5 rounded-full text-white" style="background: #10b981;">{{ getRoleLabel('SALES_EXECUTIVE') }}</span>
+                            </div>
+                          </div>
+                          <div class="flex items-center gap-2.5">
+                            <div class="text-right">
+                              <div class="text-xs font-bold text-slate-800">{{ seGroup.orders.length }} orders</div>
+                              <div class="text-xs font-semibold" style="color: #10b981;">{{ formatCurrency(seGroup.totalAmount) }}</div>
+                            </div>
+                            <ion-icon [name]="seGroup.isExpanded ? 'chevron-up-outline' : 'chevron-down-outline'"
+                              class="text-sm text-slate-400"></ion-icon>
+                          </div>
+                        </button>
+
+                        <!-- ORDERS LIST -->
+                        <div *ngIf="seGroup.isExpanded && seGroup.orders.length > 0"
+                          class="border-t border-slate-100 divide-y divide-slate-100 bg-gradient-to-b from-transparent to-emerald-50/30">
+                          <div *ngFor="let order of seGroup.orders"
+                            class="px-4 py-3.5 hover:bg-emerald-50/50 transition-all group relative">
+                            <!-- Order Card -->
+                            <div class="flex items-start justify-between gap-4">
+                              <!-- Left Section -->
+                              <div class="flex-1 min-w-0">
+                                <div class="flex items-center gap-2.5 mb-2">
+                                  <div class="flex items-center gap-1.5 px-2.5 py-1 rounded-lg"
+                                    [style.background]="getStatusBg(order.status)"
+                                    [style.border]="'1px solid ' + getStatusColor(order.status)">
+                                    <ion-icon [name]="getStatusIcon(order.status)" 
+                                      class="text-base"
+                                      [style.color]="getStatusColor(order.status)"></ion-icon>
+                                    <span class="text-xs font-bold" 
+                                      [style.color]="getStatusColor(order.status)">
+                                      {{ order.status | titlecase }}
+                                    </span>
+                                  </div>
+                                  <span class="text-xs font-semibold text-slate-500 bg-slate-100 px-2 py-1 rounded-md">
+                                    #{{ order.orderId }}
+                                  </span>
+                                </div>
+                                <p class="text-sm font-semibold text-slate-800 truncate">
+                                  {{ order.distributorName || 'Unknown Distributor' }}
+                                </p>
+                                <div class="flex items-center gap-2 mt-1.5 text-xs text-slate-500">
+                                  <ion-icon name="calendar-outline" class="text-sm"></ion-icon>
+                                  <span>{{ formatDate(order.createdAt) }}</span>
+                                </div>
+                              </div>
+                              <!-- Right Section -->
+                              <div class="text-right flex-shrink-0">
+                                <div class="text-lg font-bold text-emerald-600">{{ formatCurrency(order.amount) }}</div>
+                                <div class="text-xs text-slate-400 mt-1">Invoice Value</div>
+                              </div>
+                            </div>
+                            <!-- Hover indicator line -->
+                            <div class="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-l"></div>
+                          </div>
+                        </div>
+
+                        <!-- No orders -->
+                        <div *ngIf="seGroup.isExpanded && seGroup.orders.length === 0"
+                          class="px-4 py-4 text-center border-t border-slate-100">
+                          <ion-icon name="receipt-outline" class="text-2xl text-slate-300"></ion-icon>
+                          <p class="text-xs text-slate-400 mt-1">No orders found</p>
+                        </div>
+                      </div>
+
+                    </div>
+                  </div>
+
+                </div>
+              </div>
+
+            </div>
+          </div>
+        </div>
+
+      </ng-container>
+    </div>
+  </div>
+</ion-content>

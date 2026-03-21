@@ -1,0 +1,128 @@
+// salesperson-onboarding.page.scss
+:host {
+  display: block;
+}
+
+ion-toolbar.bg-gradient-to-r {
+  --background: transparent;
+}
+
+// ─── Custom Input & Select Styles ───────────────────────────────
+.custom-input {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 0;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus {
+    --background: #ffffff;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  &.ion-valid.ion-touched {
+    border-color: #10b981;
+  }
+
+  &.ion-invalid.ion-touched {
+    border-color: #f43f5e;
+  }
+}
+
+.custom-select {
+  --background: #f8fafc;
+  --border-radius: 12px;
+  --padding-start: 16px;
+  --padding-end: 16px;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  margin-bottom: 0;
+  width: 100%;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus {
+    --background: #ffffff;
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.1);
+  }
+
+  &.ion-invalid.ion-touched {
+    border-color: #f43f5e;
+  }
+}
+
+// ─── Form Field Styling ─────────────────────────────────────────
+input[type="text"],
+input[type="email"],
+input[type="tel"],
+select {
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+
+  &:focus {
+    transform: translateY(-2px);
+  }
+
+  &:hover {
+    border-color: #cbd5e1;
+  }
+}
+
+// ─── Button Styles ──────────────────────────────────────────────
+button {
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  &:not(:disabled) {
+    &:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 8px 16px rgba(0, 0, 0, 0.1);
+    }
+
+    &:active {
+      transform: translateY(0);
+    }
+  }
+}
+
+// ─── Section Dividers ───────────────────────────────────────────
+.section-divider {
+  height: 2px;
+  background: linear-gradient(90deg, #10b981 0%, transparent 100%);
+  margin: 1.5rem 0;
+}
+
+// ─── Animations ─────────────────────────────────────────────────
+@keyframes slideInUp {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes pulse-glow {
+  0%, 100% {
+    box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  }
+  50% {
+    box-shadow: 0 0 0 8px rgba(16, 185, 129, 0);
+  }
+}
+
+// ─── Person Card Hover State ────────────────────────────────────
+.person-card {
+  animation: slideInUp 0.3s ease-out;
+
+  &:hover {
+    animation: pulse-glow 2s infinite;
+  }
+}

@@ -1,0 +1,368 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-back-button defaultHref="/sales" style="color: #ffffff;"></ion-back-button>
+    </ion-buttons>
+    <ion-title>
+      <span style="color: #10b981; font-weight: 800; font-size: 1.125rem;">Sales</span>
+      <span style="color: #ffffff; font-weight: 700; font-size: 1.125rem;"> Onboarding</span>
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="openHierarchyMap()" style="--color: #ffffff;" title="View Org Chart">
+        <ion-icon slot="icon-only" name="git-network-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="loadSalesPersons()" style="--color: #ffffff;">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content style="--background: #f8fafc;">
+  <div class="min-h-screen pb-24" style="background: #f8fafc;">
+    <div class="max-w-4xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
+
+      <!-- Hero Banner -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-2xl p-5 sm:p-8 mb-6">
+        <div class="flex items-center justify-between gap-4">
+          <div>
+            <h1 class="text-xl sm:text-2xl font-bold text-white mb-2 tracking-tight">
+              Salesperson Onboarding
+            </h1>
+            <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+              <ion-icon name="peoples-outline" class="text-white text-sm"></ion-icon>
+              <span class="text-white text-xs sm:text-sm font-medium">Manage Bihar sales hierarchy</span>
+            </div>
+          </div>
+          <!-- Add Button desktop -->
+          <button (click)="openAddForm()"
+            class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all"
+            style="background: #ffffff; color: #10b981; white-space: nowrap;">
+            <ion-icon name="person-add-outline"></ion-icon>
+            Add Person
+          </button>
+        </div>
+      </div>
+
+      <!-- Stats Row -->
+      <div class="grid grid-cols-4 gap-2.5 sm:gap-4 mb-6">
+        <div *ngFor="let role of roles" class="bg-white rounded-2xl p-3.5 text-center shadow-sm border border-slate-200 hover:shadow-md hover:border-emerald-300 transition-all">
+          <div class="text-2xl font-bold mb-1.5" [style.color]="getRoleColor(role.value)">
+            {{ countByRole(role.value) }}
+          </div>
+          <div class="text-xs text-slate-500 font-medium">{{ role.label }}</div>
+        </div>
+      </div>
+
+      <!-- Search -->
+      <div class="rounded-2xl p-4 mb-6 bg-white shadow-sm border border-slate-200 hover:border-emerald-300 transition-all">
+        <div class="relative">
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg z-10"></ion-icon>
+          <input type="text" [(ngModel)]="searchTerm" placeholder="Search by name, role, zone, code..."
+            class="w-full rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none bg-slate-50"
+            style="border: 1px solid #e2e8f0; color: #1e293b;" />
+        </div>
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoading" class="flex justify-center items-center py-16">
+        <ion-spinner name="crescent" style="color: #10b981; width: 2.5rem; height: 2.5rem;"></ion-spinner>
+      </div>
+
+      <!-- Hierarchy Levels -->
+      <ng-container *ngIf="!isLoading">
+        <div *ngFor="let role of roles" class="mb-6">
+          <!-- Only show if there are people with this role (or in search mode) -->
+          <ng-container *ngIf="filteredPersons | roleFilter: role.value as rolePersons">
+            <div *ngIf="rolePersons.length > 0">
+              <!-- Role Heading -->
+              <div class="flex items-center gap-3 mb-4 p-3 rounded-xl"
+                [style.background]="getRoleColor(role.value) + '15'">
+                <div class="w-9 h-9 rounded-lg flex items-center justify-center text-white font-bold"
+                  [style.background]="getRoleColor(role.value)">
+                  <ion-icon [name]="role.icon" class="text-base"></ion-icon>
+                </div>
+                <div class="flex-1">
+                  <div class="text-sm font-bold text-slate-800">{{ role.label }}</div>
+                  <div class="text-xs text-slate-500">{{ rolePersons.length }} member{{ rolePersons.length !== 1 ? 's' : '' }}</div>
+                </div>
+              </div>
+
+              <!-- Person Cards -->
+              <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                <div *ngFor="let person of rolePersons"
+                  class="bg-white rounded-2xl overflow-hidden shadow-sm border border-slate-200 hover:shadow-xl hover:border-emerald-300 transition-all group relative">
+                  <!-- Status Indicator -->
+                  <div class="absolute top-0 right-0 h-1 w-full bg-gradient-to-r from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity"></div>
+                  
+                  <!-- Card Content -->
+                  <div class="p-4">
+                    <!-- Header Row: Avatar + Name + Actions -->
+                    <div class="flex items-start justify-between gap-3 mb-4">
+                      <!-- Avatar + Info -->
+                      <div class="flex items-center gap-3 flex-1 min-w-0">
+                        <div class="w-12 h-12 rounded-xl flex items-center justify-center text-white font-bold text-base flex-shrink-0 shadow-md"
+                          [style.background]="getRoleColor(person.role)">
+                          {{ person.name.charAt(0).toUpperCase() }}
+                        </div>
+                        <div class="min-w-0 flex-1">
+                          <h3 class="font-bold text-slate-900 text-sm leading-snug">{{ person.name }}</h3>
+                          <p class="text-xs text-slate-500 font-medium">{{ person.employeeCode }}</p>
+                        </div>
+                      </div>
+                      <!-- Quick Actions -->
+                      <div class="flex gap-1.5 flex-shrink-0">
+                        <button (click)="openEditForm(person)" 
+                          class="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                          style="background: #eff6ff; color: #3b82f6; border: 1px solid #bfdbfe;">
+                          <ion-icon name="pencil-outline" class="text-sm"></ion-icon>
+                        </button>
+                        <button (click)="confirmDelete(person)"
+                          class="w-8 h-8 rounded-lg flex items-center justify-center transition-all hover:scale-110"
+                          style="background: #fff1f2; color: #f43f5e; border: 1px solid #fecdd3;">
+                          <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+                        </button>
+                      </div>
+                    </div>
+
+                    <!-- Role & Zone Badges -->
+                    <div class="flex flex-wrap gap-2 mb-4">
+                      <span class="text-xs font-bold px-2.5 py-1 rounded-full text-white shadow-sm"
+                        [style.background]="getRoleColor(person.role)">
+                        {{ getRoleLabel(person.role) }}
+                      </span>
+                      <span *ngIf="person.zone" class="text-xs font-semibold px-2.5 py-1 rounded-full"
+                        style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); color: #065f46; border: 1px solid #a7f3d0;">
+                        <ion-icon name="location-outline" class="text-xs mr-0.5"></ion-icon>{{ person.zone }}
+                      </span>
+                      <span *ngIf="person.region" class="text-xs font-medium px-2.5 py-1 rounded-full bg-blue-50 text-blue-700 border border-blue-200">
+                        {{ person.region }}
+                      </span>
+                    </div>
+
+                    <!-- Divider -->
+                    <div class="h-px bg-gradient-to-r from-slate-100 via-slate-200 to-transparent mb-3"></div>
+
+                    <!-- Contact & Manager Info -->
+                    <div class="space-y-2">
+                      <!-- Phone -->
+                      <div *ngIf="person.phone" class="flex items-center gap-2.5 text-xs text-slate-600">
+                        <ion-icon name="call-outline" class="text-sm text-emerald-500 flex-shrink-0"></ion-icon>
+                        <span class="font-medium">{{ person.phone }}</span>
+                      </div>
+
+                      <!-- Email -->
+                      <div *ngIf="person.email" class="flex items-center gap-2.5 text-xs text-slate-600">
+                        <ion-icon name="mail-outline" class="text-sm text-blue-500 flex-shrink-0"></ion-icon>
+                        <span class="font-medium truncate">{{ person.email }}</span>
+                      </div>
+
+                      <!-- Manager -->
+                      <div class="pt-1">
+                        <div *ngIf="person.managerId" class="flex items-center gap-2.5 text-xs">
+                          <ion-icon name="git-branch-outline" class="text-sm text-purple-500 flex-shrink-0"></ion-icon>
+                          <span class="text-slate-600">Reports to:</span>
+                          <span class="font-bold text-slate-800">{{ getManagerName(person.managerId) }}</span>
+                        </div>
+                        <div *ngIf="!person.managerId && person.role !== 'SSM'" class="flex items-center gap-2.5 text-xs opacity-50">
+                          <ion-icon name="git-branch-outline" class="text-sm text-slate-400 flex-shrink-0"></ion-icon>
+                          <span class="text-slate-500">No manager assigned</span>
+                        </div>
+                        <div *ngIf="person.role === 'SSM'" class="flex items-center gap-2.5 text-xs">
+                          <ion-icon name="ribbon-outline" class="text-sm text-yellow-500 flex-shrink-0"></ion-icon>
+                          <span class="text-slate-500 font-medium">Head of Region</span>
+                        </div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </ng-container>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="filteredPersons.length === 0" class="text-center py-16 bg-white rounded-2xl shadow-sm border border-slate-100">
+          <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 bg-emerald-50">
+            <ion-icon name="people-outline" class="text-3xl text-emerald-400"></ion-icon>
+          </div>
+          <p class="text-slate-600 font-semibold text-base mb-1">No salespersons found</p>
+          <p class="text-slate-400 text-sm">{{ searchTerm ? 'Try a different search term.' : 'Get started by adding your first salesperson.' }}</p>
+          <button *ngIf="!searchTerm" (click)="openAddForm()"
+            class="mt-4 inline-flex items-center gap-2 px-5 py-2.5 bg-emerald-500 text-white rounded-xl font-semibold text-sm hover:bg-emerald-600 transition-all">
+            <ion-icon name="person-add-outline"></ion-icon> Add Person
+          </button>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+
+  <!-- ════════════════════════════════════════════
+       ADD / EDIT MODAL
+  ════════════════════════════════════════════ -->
+  <!-- Mobile FAB -->
+  <button (click)="openAddForm()"
+    class="sm:hidden fixed bottom-6 right-5 z-50 flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold text-white shadow-2xl"
+    style="background: linear-gradient(135deg, #10b981, #14b8a6);">
+    <ion-icon name="person-add-outline" class="text-lg"></ion-icon>
+    Add Person
+  </button>
+
+  <ion-modal [isOpen]="showForm" (didDismiss)="closeForm()">
+    <ng-template>
+      <ion-header class="ion-no-border">
+        <ion-toolbar class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500">
+          <ion-title style="color: #ffffff; font-weight: 700;">
+            {{ editingPerson ? 'Edit Salesperson' : 'Onboard Salesperson' }}
+          </ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeForm()" style="--color: #ffffff;">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content style="--background: #f8fafc;">
+        <form [formGroup]="onboardingForm" (ngSubmit)="submitForm()" class="px-4 py-6 space-y-5 max-w-2xl mx-auto">
+
+          <!-- Section: Basic Information -->
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div class="flex items-center gap-2 mb-4 pb-4 border-b border-slate-200">
+              <ion-icon name="person-outline" class="text-xl text-emerald-500"></ion-icon>
+              <h3 class="font-bold text-slate-800">Basic Information</h3>
+            </div>
+
+            <!-- Name -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Full Name *</label>
+              <input formControlName="name" type="text" placeholder="e.g. Vikas Kumar"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border transition-all"
+                [class.border-emerald-500]="onboardingForm.get('name')!.valid && onboardingForm.get('name')!.touched"
+                [class.border-red-400]="onboardingForm.get('name')!.invalid && onboardingForm.get('name')!.touched"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0;" />
+              <p *ngIf="onboardingForm.get('name')!.invalid && onboardingForm.get('name')!.touched"
+                class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <ion-icon name="alert-circle-outline" class="text-sm"></ion-icon> Name is required (min 2 characters)
+              </p>
+            </div>
+
+            <!-- Employee Code -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Employee Code *</label>
+              <input formControlName="employeeCode" type="text" placeholder="e.g. SE-001"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border transition-all"
+                [class.border-emerald-500]="onboardingForm.get('employeeCode')!.valid && onboardingForm.get('employeeCode')!.touched"
+                [class.border-red-400]="onboardingForm.get('employeeCode')!.invalid && onboardingForm.get('employeeCode')!.touched"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0;" />
+              <p *ngIf="onboardingForm.get('employeeCode')!.invalid && onboardingForm.get('employeeCode')!.touched"
+                class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <ion-icon name="alert-circle-outline" class="text-sm"></ion-icon> Employee code is required
+              </p>
+            </div>
+
+            <!-- Role -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Role *</label>
+              <select formControlName="role"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0; appearance: auto;">
+                <option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section: Organization Structure -->
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div class="flex items-center gap-2 mb-4 pb-4 border-b border-slate-200">
+              <ion-icon name="git-network-outline" class="text-xl text-purple-500"></ion-icon>
+              <h3 class="font-bold text-slate-800">Organization Structure</h3>
+            </div>
+
+            <!-- Zone -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Zone</label>
+              <select formControlName="zone"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0; appearance: auto;">
+                <option value="">— All Zones —</option>
+                <option *ngFor="let z of zones" [value]="z">{{ z }}</option>
+              </select>
+            </div>
+
+            <!-- Manager -->
+            <div *ngIf="potentialManagers.length > 0">
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Reports To</label>
+              <select formControlName="managerId"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0; appearance: auto;">
+                <option [ngValue]="null">— None / Team Lead —</option>
+                <option *ngFor="let mgr of potentialManagers" [ngValue]="mgr.id">
+                  {{ mgr.name }} ({{ getRoleLabel(mgr.role) }}) — {{ mgr.zone || mgr.region }}
+                </option>
+              </select>
+            </div>
+          </div>
+
+          <!-- Section: Contact Information -->
+          <div class="bg-white rounded-2xl p-5 shadow-sm border border-slate-200">
+            <div class="flex items-center gap-2 mb-4 pb-4 border-b border-slate-200">
+              <ion-icon name="call-outline" class="text-xl text-blue-500"></ion-icon>
+              <h3 class="font-bold text-slate-800">Contact Information</h3>
+            </div>
+
+            <!-- Phone -->
+            <div class="mb-4">
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Phone Number</label>
+              <input formControlName="phone" type="tel" placeholder="10-digit mobile number"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border transition-all"
+                [class.border-emerald-500]="onboardingForm.get('phone')!.valid && onboardingForm.get('phone')!.touched"
+                [class.border-red-400]="onboardingForm.get('phone')!.invalid && onboardingForm.get('phone')!.touched"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0;" />
+              <p *ngIf="onboardingForm.get('phone')!.invalid && onboardingForm.get('phone')!.touched"
+                class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <ion-icon name="alert-circle-outline" class="text-sm"></ion-icon> Enter a valid 10-digit mobile
+              </p>
+            </div>
+
+            <!-- Email -->
+            <div>
+              <label class="block text-xs font-bold text-slate-700 mb-2 uppercase tracking-wider">Email Address</label>
+              <input formControlName="email" type="email" placeholder="name@company.com"
+                class="w-full px-4 py-3 rounded-xl text-sm outline-none border transition-all"
+                [class.border-emerald-500]="onboardingForm.get('email')!.valid && onboardingForm.get('email')!.touched"
+                [class.border-red-400]="onboardingForm.get('email')!.invalid && onboardingForm.get('email')!.touched"
+                style="background: #ffffff; color: #1e293b; border-color: #e2e8f0;" />
+              <p *ngIf="onboardingForm.get('email')!.invalid && onboardingForm.get('email')!.touched"
+                class="text-xs text-red-500 mt-1.5 flex items-center gap-1">
+                <ion-icon name="alert-circle-outline" class="text-sm"></ion-icon> Enter a valid email address
+              </p>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-4">
+            <button type="button" (click)="closeForm()"
+              class="flex-1 py-3 rounded-xl font-bold text-sm transition-all"
+              style="background: #f1f5f9; color: #64748b; border: 1px solid #e2e8f0;">
+              Cancel
+            </button>
+            <button type="submit" [disabled]="isSubmitting"
+              class="flex-1 py-3 rounded-xl font-bold text-sm text-white transition-all flex items-center justify-center gap-2"
+              style="background: linear-gradient(135deg, #10b981, #14b8a6);"
+              [style.opacity]="isSubmitting ? '0.7' : '1'">
+              <ion-spinner *ngIf="isSubmitting" name="crescent" style="width: 1rem; height: 1rem;"></ion-spinner>
+              <ion-icon *ngIf="!isSubmitting" name="checkmark-circle-outline"></ion-icon>
+              {{ isSubmitting ? 'Saving…' : (editingPerson ? 'Update' : 'Onboard') }}
+            </button>
+          </div>
+
+        </form>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

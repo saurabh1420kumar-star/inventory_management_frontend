@@ -1,0 +1,133 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border header">
+  <ion-toolbar style="--background: linear-gradient(135deg, #10b981, #14b8a6); --border-width: 0;">
+    <ion-title style="color: #ffffff; font-weight: 700; font-size: 1.15rem;">
+      <ion-icon name="git-network-outline" class="mr-2"></ion-icon>Organization Chart
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="closeModal()" style="--color: #ffffff;">
+        <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+
+  <!-- SEARCH BAR -->
+  <div class="search-container">
+    <div class="search-input-wrapper">
+      <ion-icon name="search-outline" class="search-icon"></ion-icon>
+      <input 
+        type="text" 
+        class="search-input" 
+        placeholder="Search by name, role, zone, or code..."
+        [(ngModel)]="searchTerm"
+        (ngModelChange)="searchHierarchy()"
+      />
+      <button *ngIf="searchTerm" (click)="clearSearch()" class="clear-btn">
+        <ion-icon name="close-circle"></ion-icon>
+      </button>
+    </div>
+    <span *ngIf="isSearching" class="search-results-count">{{ searchResults.length }} result(s)</span>
+  </div>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="hierarchy-content">
+  <div class="hierarchy-container">
+    <!-- Loading State -->
+    <div *ngIf="isLoading" class="loading-state">
+      <ion-spinner name="crescent" style="color: #10b981; width: 2.5rem; height: 2.5rem;"></ion-spinner>
+      <p>Loading organization hierarchy...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && getDisplayHierarchy().length === 0" class="empty-state">
+      <ion-icon name="people-outline"></ion-icon>
+      <p>{{ isSearching ? 'No results found' : 'No hierarchy data available' }}</p>
+    </div>
+
+    <!-- Tree View -->
+    <div *ngIf="!isLoading && getDisplayHierarchy().length > 0" class="tree-view">
+      <div *ngFor="let rootNode of getDisplayHierarchy()" class="tree-node">
+        <app-hierarchy-node-renderer 
+          [node]="rootNode" 
+          (selectPerson)="selectPerson($event)"
+          (toggleNode)="toggleExpanded($event)"
+          [selectedPersonId]="selectedPerson?.id?.toString()"
+          [level]="0">
+        </app-hierarchy-node-renderer>
+      </div>
+    </div>
+  </div>
+
+  <!-- Selected Person Panel - Sticky at bottom -->
+  <div *ngIf="selectedPerson" class="selected-person-panel" [@slideIn]>
+    <div class="panel-header">
+      <div class="person-avatar" [style.background]="getRoleColor(selectedPerson.role)">
+        {{ selectedPerson.name.charAt(0).toUpperCase() }}
+      </div>
+      <div class="person-header-info">
+        <h3>{{ selectedPerson.name }}</h3>
+        <span class="role-badge" [style.background]="getRoleColor(selectedPerson.role)">{{ selectedPerson.role }}</span>
+      </div>
+      <button (click)="selectedPerson = null" class="close-btn">
+        <ion-icon name="close-circle"></ion-icon>
+      </button>
+    </div>
+
+    <div class="panel-details">
+      <div class="detail-row">
+        <span class="detail-label">
+          <ion-icon name="id-card-outline"></ion-icon> Employee Code
+        </span>
+        <span class="detail-value">{{ selectedPerson.employeeCode }}</span>
+      </div>
+      <div class="detail-row">
+        <span class="detail-label">
+          <ion-icon name="briefcase-outline"></ion-icon> Designation
+        </span>
+        <span class="detail-value">{{ getRoleShort(selectedPerson.role) }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedPerson.zone">
+        <span class="detail-label">
+          <ion-icon name="location-outline"></ion-icon> Zone
+        </span>
+        <span class="detail-value">{{ selectedPerson.zone }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedPerson.phone">
+        <span class="detail-label">
+          <ion-icon name="call-outline"></ion-icon> Phone
+        </span>
+        <span class="detail-value">{{ selectedPerson.phone }}</span>
+      </div>
+      <div class="detail-row" *ngIf="selectedPerson.email">
+        <span class="detail-label">
+          <ion-icon name="mail-outline"></ion-icon> Email
+        </span>
+        <span class="detail-value">{{ selectedPerson.email }}</span>
+      </div>
+    </div>
+  </div>
+</ion-content>
+
+<!-- Legend Footer -->
+<ion-footer class="ion-no-border legend-footer">
+  <div class="legend">
+    <div class="legend-item">
+      <div class="legend-color" style="background: #8b5cf6;"></div>
+      <span>SSM (Purple)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #0d9488;"></div>
+      <span>RSM (Teal)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #dc2626;"></div>
+      <span>ASM (Red)</span>
+    </div>
+    <div class="legend-item">
+      <div class="legend-color" style="background: #059669;"></div>
+      <span>SE (Green)</span>
+    </div>
+  </div>
+</ion-footer>
+

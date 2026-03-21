@@ -100,6 +100,9 @@ export class SignupPage implements OnInit {
         country: ['', [Validators.required]],
         zip: ['', [Validators.required]],
         
+        // Employment Information
+        employeeRollNo: ['', [Validators.required]],
+        
         // Account Information
         username: ['', [Validators.required]],
         roleType: ['', [Validators.required]],
@@ -147,6 +150,7 @@ export class SignupPage implements OnInit {
       country: v.country,
       zip: v.zip,
       roleType: v.roleType,
+      employeeRollNo:v.employeeRollNo,
     };
 
     this.loading = true;

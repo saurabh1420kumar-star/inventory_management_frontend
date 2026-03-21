@@ -50,6 +50,34 @@
         </div>
       </div>
 
+      <!-- QUICK ACCESS: Team & Hierarchy Pages -->
+      <div class="grid grid-cols-2 gap-3 mb-6">
+        <a routerLink="/sales/salesperson-onboarding"
+          class="flex items-center gap-3 p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow no-underline"
+          style="background: linear-gradient(135deg, #f5f3ff 0%, #ede9fe 100%); border-color: #ddd6fe;">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style="background: #7c3aed;">
+            <ion-icon name="person-add-outline" class="text-lg text-white"></ion-icon>
+          </div>
+          <div>
+            <p class="font-bold text-sm" style="color: #4c1d95;">Onboarding</p>
+            <p class="text-xs" style="color: #7c3aed;">Add &amp; manage team</p>
+          </div>
+        </a>
+        <a routerLink="/sales/hierarchy-orders"
+          class="flex items-center gap-3 p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow no-underline"
+          style="background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%); border-color: #bae6fd;">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+            style="background: #0284c7;">
+            <ion-icon name="git-network-outline" class="text-lg text-white"></ion-icon>
+          </div>
+          <div>
+            <p class="font-bold text-sm" style="color: #0c4a6e;">Hierarchy Orders</p>
+            <p class="text-xs" style="color: #0284c7;">View by RSM / ASM / SE</p>
+          </div>
+        </a>
+      </div>
+
       <!-- STATS -->
       <div class="grid grid-cols-3 gap-4 mb-8">
         <div *ngFor="let stat of statCards" class="rounded-xl p-4 sm:p-5 shadow-sm border border-slate-200 bg-white">
