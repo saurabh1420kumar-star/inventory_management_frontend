@@ -83,7 +83,7 @@ interface Transaction {
   date: string; // YYYY-MM-DD format
   description: string;
   reference: string;
-  type:  'credit' | 'debit';
+  type:  'credit' | 'debit' | 'jv';
   debit: number;
   credit: number;
   balance: number;
@@ -174,12 +174,18 @@ export class AccountsMasterPage implements OnInit {
   isFormModalOpen: boolean = false;
   isDetailsModalOpen: boolean = false;
   isConfirmDeleteOpen: boolean = false;
+  isJVModalOpen: boolean = false;
+  isPendingPaymentsModalOpen: boolean = false;
   selectedTransaction: Transaction | null = null;
+  
+  // Pending payments
+  pendingPayments: any[] = [];
+  isLoadingPayments: boolean = false;
 
   // Form data for new transaction (Update Balance)
   formData = {
     date: new Date().toISOString().split('T')[0],
-    balanceType: 'credit' as 'credit' | 'debit',
+    balanceType: 'credit' as 'credit' | 'debit' | 'jv',
     description: '',
     reference: '',
     amount: '',
@@ -190,6 +196,16 @@ export class AccountsMasterPage implements OnInit {
     transactionNumber: '',
     notes: ''
   };
+
+  // Form data for Journal Voucher
+  jvFormData = {
+    entries: [
+      { accountNumber: '', accountName: '', description: '', debit: '', credit: '' }
+    ],
+    narration: ''
+  };
+
+  isSubmittingJV: boolean = false;
 
   paymentMethods = [
     { value: 'rtgs', label: 'RTGS', icon: 'business-outline', color: 'blue' },
@@ -310,7 +326,6 @@ export class AccountsMasterPage implements OnInit {
       next: (response: ApiResponse<Distributor[]>) => {
         if (response.success && response.data) {
           this.distributors = response.data;
-          console.log('Distributors loaded successfully:', this.distributors);
           this.showToast(`${this.distributors.length} distributors loaded successfully`, 'success');
         } else {
           this.showToast('Failed to load distributors: ' + response.message, 'warning');
@@ -318,7 +333,6 @@ export class AccountsMasterPage implements OnInit {
         this.isLoadingAccounts = false;
       },
       error: (error) => {
-        console.error('Error loading distributors:', error);
         this.showToast('Error loading distributors from server', 'danger');
         this.isLoadingAccounts = false;
       }
@@ -334,15 +348,12 @@ export class AccountsMasterPage implements OnInit {
           
           if (payments.length > 0) {
             this.selectedAccount.transactions = this.mapPaymentHistoryToTransactions(payments);
-            console.log('Payment history loaded:', this.selectedAccount.transactions);
             this.showToast(`${payments.length} transactions loaded`, 'success');
           } else {
-            console.log('No payment history found');
           }
         }
       },
       error: (error) => {
-        console.error('Error loading payment history:', error);
         // Keep using existing transactions if API fails
       }
     });
@@ -676,7 +687,6 @@ export class AccountsMasterPage implements OnInit {
 
       this.showToast('Transactions exported successfully', 'success');
     } catch (error) {
-      console.error('Export error:', error);
       this.showToast('Failed to export transactions', 'danger');
     }
   }
@@ -744,8 +754,8 @@ export class AccountsMasterPage implements OnInit {
     const parsedAmount = parseFloat(amount);
     const isDebit = balanceType === 'debit';
     const debit = isDebit ? parsedAmount : 0;
-    const credit = !isDebit ? parsedAmount : 0;
-    const transactionType = balanceType.toUpperCase(); // 'CREDIT' or 'DEBIT'
+    const credit = (balanceType === 'credit' || balanceType === 'jv') ? parsedAmount : 0;
+    const transactionType = balanceType === 'jv' ? 'JV' : balanceType.toUpperCase(); // 'CREDIT', 'DEBIT', or 'JV'
 
     // Call API to update balance
     this.ledgerService.updateBalance(
@@ -755,7 +765,6 @@ export class AccountsMasterPage implements OnInit {
       transactionType
     ).subscribe({
       next: (response: ApiResponse<any>) => {
-        console.log('Update Balance Response:', response);
         
         // Success if response is received without error (HTTP 200)
         // Check success flag if it exists, otherwise treat as success
@@ -772,7 +781,7 @@ export class AccountsMasterPage implements OnInit {
             date: date,
             description,
             reference,
-            type: balanceType,
+            type: balanceType as 'credit' | 'debit' | 'jv',
             debit,
             credit,
             balance: newBalance,
@@ -799,7 +808,6 @@ export class AccountsMasterPage implements OnInit {
         }
       },
       error: (error: any) => {
-        console.error('Error updating balance:', error);
         this.showToast(error?.error?.message || error?.message || 'Error updating balance', 'danger');
       }
     });
@@ -846,10 +854,8 @@ export class AccountsMasterPage implements OnInit {
     this.ledgerService.approvePI(Number(accountId), distributorId, salespersonId).subscribe({
       next: (response: any) => {
         this.showToast('PI approved successfully', 'success');
-        console.log('Approve PI Response:', response);
       },
       error: (error: any) => {
-        console.error('Error approving PI:', error);
         this.showToast(error?.error?.message || 'Error approving PI', 'danger');
       }
     });
@@ -860,6 +866,89 @@ export class AccountsMasterPage implements OnInit {
     this.isDispatchModalOpen = false;
     this.showToast('Order marked as Ready to Dispatch!', 'success');
     this.router.navigate(['/dispatch']);
+  }
+
+  // Fetch Pending Payments
+  fetchPendingPayments() {
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+
+    this.isLoadingPayments = true;
+    console.log('💳 Fetching pending payments for distributorId:', this.selectedAccount.distributorId);
+    
+    this.ledgerService.getPendingPayments(this.selectedAccount.distributorId).subscribe({
+      next: (response: any) => {
+        console.log('✅ Pending payments fetched:', response);
+        this.pendingPayments = response;
+        this.isPendingPaymentsModalOpen = true;
+        this.isLoadingPayments = false;
+      },
+      error: (error: any) => {
+        console.error('❌ Error fetching pending payments:', error);
+        this.showToast('Error fetching pending payments', 'danger');
+        this.isLoadingPayments = false;
+      }
+    });
+  }
+
+  // Approve Single Payment
+  approveSinglePayment(payment: any) {
+    const userId = localStorage.getItem('auth_user_id');
+    if (!userId) {
+      this.showToast('User ID not found. Please login again.', 'warning');
+      return;
+    }
+
+    console.log('💰 Approving payment:', payment, 'by user:', userId);
+    
+    this.ledgerService.approvePayment(payment.id, Number(userId)).subscribe({
+      next: (response: any) => {
+        console.log('✅ Payment approved:', response);
+        this.showToast(response?.message || 'Payment approved successfully', 'success');
+        // Remove approved payment from list
+        this.pendingPayments = this.pendingPayments.filter(p => p.id !== payment.id);
+      },
+      error: (error: any) => {
+        console.error('❌ Error approving payment:', error);
+        this.showToast(error?.error?.message || error?.message || 'Error approving payment', 'danger');
+      }
+    });
+  }
+
+  // Approve All Payments
+  approveAllPayments() {
+    if (this.pendingPayments.length === 0) {
+      this.showToast('No payments to approve', 'warning');
+      return;
+    }
+
+    const userId = localStorage.getItem('auth_user_id');
+    if (!userId) {
+      this.showToast('User ID not found. Please login again.', 'warning');
+      return;
+    }
+
+    console.log('💰 Approving all payments by user:', userId);
+    let approvedCount = 0;
+    const totalPayments = this.pendingPayments.length;
+
+    this.pendingPayments.forEach(payment => {
+      this.ledgerService.approvePayment(payment.id, Number(userId)).subscribe({
+        next: () => {
+          approvedCount++;
+          if (approvedCount === totalPayments) {
+            this.showToast(`All ${totalPayments} payments approved successfully`, 'success');
+            this.pendingPayments = [];
+            this.isPendingPaymentsModalOpen = false;
+          }
+        },
+        error: () => {
+          this.showToast('Error approving some payments', 'danger');
+        }
+      });
+    });
   }
 
   // Download Proforma Invoice
@@ -964,7 +1053,6 @@ export class AccountsMasterPage implements OnInit {
         this.isLoadingInvoices = false;
       },
       error: (error) => {
-        console.error('Error loading proforma invoices:', error);
         this.isLoadingInvoices = false;
       }
     });
@@ -988,8 +1076,137 @@ export class AccountsMasterPage implements OnInit {
         this.downloadingInvoiceId = null;
       },
       error: (error) => {
-        console.error('Error downloading PDF:', error);
         this.downloadingInvoiceId = null;
+      }
+    });
+  }
+
+  // ── Journal Voucher Methods ──────────────────────
+  openJVModal() {
+    console.log('🟦 openJVModal() - Opening JV Modal');
+    this.isJVModalOpen = true;
+    this.resetJVForm();
+  }
+
+  closeJVModal() {
+    console.log('🔴 closeJVModal() - Closing JV Modal');
+    this.isJVModalOpen = false;
+    this.resetJVForm();
+  }
+
+  resetJVForm() {
+    this.jvFormData = {
+      entries: [
+        { accountNumber: '', accountName: '', description: '', debit: '', credit: '' }
+      ],
+      narration: ''
+    };
+    this.isSubmittingJV = false;
+  }
+
+  addJVEntry() {
+    this.jvFormData.entries.push({
+      accountNumber: '',
+      accountName: '',
+      description: '',
+      debit: '',
+      credit: ''
+    });
+  }
+
+  removeJVEntry(index: number) {
+    if (this.jvFormData.entries.length > 1) {
+      this.jvFormData.entries.splice(index, 1);
+    } else {
+      this.showToast('At least one entry is required', 'warning');
+    }
+  }
+
+  submitJVForm() {
+    console.log('🔵 submitJVForm() called');
+    console.log('📋 JV Form Data:', this.jvFormData);
+    
+    // Validation
+    if (!this.jvFormData.narration.trim()) {
+      this.showToast('Narration is required', 'warning');
+      return;
+    }
+
+    if (this.jvFormData.entries.length === 0) {
+      this.showToast('At least one entry is required', 'warning');
+      return;
+    }
+
+    // Validate all entries
+    for (let i = 0; i < this.jvFormData.entries.length; i++) {
+      const entry = this.jvFormData.entries[i];
+      console.log(`\ud83d\udd0d Validating Entry ${i + 1}:`, entry);
+      
+      if (!entry.accountNumber.trim()) {
+        console.warn(`\u274c Entry ${i + 1}: Missing Account Number`);
+        this.showToast(`Entry ${i + 1}: Account Number is required`, 'warning');
+        return;
+      }
+      if (!entry.accountName.trim()) {
+        console.warn(`\u274c Entry ${i + 1}: Missing Account Name`);
+        this.showToast(`Entry ${i + 1}: Account Name is required`, 'warning');
+        return;
+      }
+      
+      // Parse values properly
+      const debitValue = entry.debit ? parseFloat(entry.debit.toString()) : 0;
+      const creditValue = entry.credit ? parseFloat(entry.credit.toString()) : 0;
+      
+      // Check that at least one side has a value
+      if (debitValue === 0 && creditValue === 0) {
+        this.showToast(`Entry ${i + 1}: Either Debit or Credit is required`, 'warning');
+        return;
+      }
+      
+      // Check that both sides don't have values
+      if (debitValue > 0 && creditValue > 0) {
+        this.showToast(`Entry ${i + 1}: Cannot have both Debit and Credit`, 'warning');
+        return;
+      }
+    }
+
+    console.log('✅ All validations passed!');
+    // Prepare payload
+    const payload = {
+      entries: this.jvFormData.entries.map(entry => ({
+        accountNumber: entry.accountNumber,
+        accountName: entry.accountName,
+        description: entry.description,
+        debit: entry.debit ? parseFloat(entry.debit.toString()) : 0,
+        credit: entry.credit ? parseFloat(entry.credit.toString()) : 0
+      })),
+      narration: this.jvFormData.narration
+    };
+
+    console.log('🔵 Creating Journal Voucher with payload:', payload);
+    this.isSubmittingJV = true;
+
+    // Call service to create JV
+    this.ledgerService.createJournalVoucher(payload).subscribe({
+      next: (response) => {
+        console.log('✅ Create JV Success Response:', response);
+        console.log('Response Message:', response.message);
+        this.showToast(response?.message || 'Journal Voucher created successfully', 'success');
+        this.isJVModalOpen = false;
+        this.resetJVForm();
+        this.isSubmittingJV = false;
+      },
+      error: (error) => {
+        console.error('❌ Create JV Error:', error);
+        console.error('Error Status:', error?.status);
+        console.error('Error Message:', error?.message);
+        console.error('Error Body:', error?.error);
+        const errorMsg = error?.error?.message || error?.message || error?.error?.msg || 'Failed to create Journal Voucher';
+        this.showToast(errorMsg, 'danger');
+        this.isSubmittingJV = false;
+      },
+      complete: () => {
+        console.log('✔️ API Request Completed');
       }
     });
   }

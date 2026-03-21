@@ -8,7 +8,7 @@ import { environment } from '../../environments/environment';
 export interface DistributorDto {
   id: number;
   name: string;
-  assignedPerson: string;
+  assignedPerson?: string;
   distributorType: string;
   companyType: string;
   contactEmail: string;
@@ -29,8 +29,8 @@ export interface DistributorDto {
  */
 export interface CreateDistributorRequest {
   name: string;
-  assignedPerson: string;
-  salespersonId: number;
+  assignedPerson?: string;
+  salespersonId?: number;
   distributorType: string;
   companyType: string;
   contactEmail: string;

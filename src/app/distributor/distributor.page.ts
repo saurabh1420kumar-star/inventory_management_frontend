@@ -65,6 +65,15 @@ export class DistributorPage implements OnInit {
   filteredDistributors: Distributor[] = [];
   searchQuery: string = '';
   salesPersons: any[] = [];
+  roles = [
+    { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager' },
+    { value: 'STATE_SALES_MGR', label: 'State Sales Manager' },
+    { value: 'ZONAL_SALES_MGR', label: 'Zonal Sales Manager' },
+    { value: 'REGIONAL_SALES_MGR', label: 'Regional Sales Manager' },
+    { value: 'AREA_SALES_MGR', label: 'Area Sales Manager' },
+    { value: 'SALES_OFFICER', label: 'Sales Officer' },
+    { value: 'SALES_EXECUTIVE', label: 'Sales Executive' },
+  ];
 
   // Modal states
   showAddModal: boolean = false;
@@ -124,9 +133,10 @@ export class DistributorPage implements OnInit {
 
   initializeForm() {
     this.distributorForm = this.fb.group({
-      name: ['', [Validators.required]],
+      firstName: ['', [Validators.required]],
+      lastName: ['', [Validators.required]],
       assignedPerson: ['', [Validators.required]],
-      salespersonId: ['', [Validators.required]],
+      keyPerson: [''],
       distributorType: ['', [Validators.required]],
       companyType: ['', [Validators.required]],
       email: ['', [Validators.required, Validators.email]],
@@ -150,7 +160,7 @@ export class DistributorPage implements OnInit {
     return {
       id: dto.id.toString(),
       name: dto.name,
-      assignedPerson: dto.assignedPerson,
+      assignedPerson: dto.assignedPerson || '',
       salespersonId: (dto as any).salespersonId,
       distributorType: dto.distributorType,
       companyType: dto.companyType,
@@ -173,19 +183,10 @@ export class DistributorPage implements OnInit {
 
   // Helper method to map form data to API payload
   private mapFormToPayload(formData: any) {
-    // If assignedPerson is empty, try to get it from selected salesperson
-    let assignedPerson = formData.assignedPerson;
-    if (!assignedPerson && formData.salespersonId) {
-      const person = this.salesPersons.find((p: any) => p.id === formData.salespersonId);
-      if (person) {
-        assignedPerson = (person.firstName || '') + ' ' + (person.lastName || '');
-      }
-    }
-
     const payload = {
-      name: formData.name,
-      assignedPerson: (assignedPerson?.trim() || '').toUpperCase(),
-      salespersonId: formData.salespersonId,
+      name: ((formData.firstName || '') + ' ' + (formData.lastName || '')).trim(),
+      assignedPerson: formData.assignedPerson || '',
+      keyPerson: formData.keyPerson || '',
       distributorType: formData.distributorType,
       companyType: formData.companyType,
       contactEmail: formData.email,
@@ -235,15 +236,7 @@ export class DistributorPage implements OnInit {
   // Handle sales person selection
   onSalesPersonChange(event: any) {
     const salespersonId = event.detail.value;
-    const selectedPerson = this.salesPersons.find((p: any) => p.id === salespersonId);
-    
-    if (selectedPerson) {
-      const fullName = (selectedPerson.firstName || '') + ' ' + (selectedPerson.lastName || '');
-      this.distributorForm.patchValue({
-        salespersonId: salespersonId,
-        assignedPerson: fullName.trim()
-      });
-    }
+    this.distributorForm.patchValue({ salespersonId });
   }
 
   // API Method 1: Get All Distributors
@@ -344,10 +337,14 @@ export class DistributorPage implements OnInit {
       // setTimeout ensures the *ngIf="isEditing" DOM (including ion-select) is fully
       // rendered before patchValue is called, otherwise selects ignore the value.
       setTimeout(() => {
+        const nameParts = (this.selectedDistributor!.name || '').split(' ');
+        const firstName = nameParts[0] || '';
+        const lastName = nameParts.slice(1).join(' ') || '';
         this.distributorForm.patchValue({
-          name: this.selectedDistributor!.name,
-          assignedPerson: this.selectedDistributor!.assignedPerson,
-          salespersonId: this.selectedDistributor!.salespersonId,
+          firstName,
+          lastName,
+          assignedPerson: this.selectedDistributor!.assignedPerson || '',
+          keyPerson: (this.selectedDistributor as any).keyPerson || '',
           distributorType: this.selectedDistributor!.distributorType,
           companyType: this.selectedDistributor!.companyType,
           email: this.selectedDistributor!.email,
@@ -530,7 +527,11 @@ export class DistributorPage implements OnInit {
   getFieldLabel(fieldName: string): string {
     const labels: { [key: string]: string } = {
       name: 'Name',
+      firstName: 'First name',
+      lastName: 'Last name',
       assignedPerson: 'Assigned person',
+      salespersonId: 'Sales person',
+      keyPerson: 'Key person',
       distributorType: 'Distributor type',
       companyType: 'Company type',
       email: 'Email',

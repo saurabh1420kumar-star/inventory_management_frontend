@@ -1,9 +1,12 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
+  addOutline,
   arrowUpOutline, arrowDownOutline, arrowBackOutline, businessOutline, statsChartOutline,
   trendingUpOutline, checkmarkDoneOutline, chevronUpOutline, chevronDownOutline,
   chevronForwardOutline, barChartOutline, checkmarkCircleOutline, receiptOutline, walletOutline,
@@ -12,10 +15,13 @@ import {
   cubeOutline, appsOutline, gridOutline, cartOutline, personOutline,
   funnelOutline, calendarOutline, cashOutline, cardOutline,
   shieldCheckmarkOutline, settingsOutline, helpCircleOutline,
-  searchOutline, downloadOutline, callOutline
+  searchOutline, downloadOutline, callOutline,
+  closeOutline, refreshOutline, createOutline, informationCircleOutline,
+  chatbubbleEllipsesOutline, cloudUploadOutline, imageOutline, phonePortraitOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorOrder } from '../services/distributor.service';
 import { Auth } from '../services/auth';
+import { LedgerService } from '../services/accountsLedger.service';
 
 interface MetricCard {
   title: string;
@@ -50,7 +56,7 @@ interface Transaction {
   templateUrl: './distributor-dashboard.page.html',
   styleUrls: ['./distributor-dashboard.page.scss'],
   standalone: true,
-  imports: [CommonModule, IonicModule]
+  imports: [CommonModule, FormsModule, IonicModule]
 })
 export class DistributorDashboardPage implements OnInit {
   activeTab: 'dashboard' | 'operations' = 'dashboard';
@@ -91,6 +97,31 @@ export class DistributorDashboardPage implements OnInit {
   distributorName = 'Rajesh Kumar';
   distributorId: number | null = null;
 
+  showAddPaymentModal = false;
+  isSubmittingPayment = false;
+  receiptFile: File | null = null;
+  receiptFileName = '';
+  paymentForm = {
+    date: new Date().toISOString().split('T')[0],
+    balanceType: 'credit' as 'credit' | 'debit',
+    reference: '',
+    amount: '',
+    description: '',
+    paymentMethod: '' as '' | 'rtgs' | 'neft' | 'cheque' | 'imps' | 'upi',
+    utrNumber: '',
+    bankName: '',
+    chequeNumber: '',
+    transactionNumber: '',
+    notes: ''
+  };
+  paymentMethods = [
+    { value: 'rtgs', label: 'RTGS', icon: 'business-outline' },
+    { value: 'neft', label: 'NEFT', icon: 'document-outline' },
+    { value: 'cheque', label: 'Cheque', icon: 'document-text-outline' },
+    { value: 'imps', label: 'IMPS', icon: 'phone-portrait-outline' },
+    { value: 'upi', label: 'UPI', icon: 'wallet-outline' },
+  ];
+
   // Orders Data
   orders: DistributorOrder[] = [];
   expandedOrderId: number | null = null;
@@ -102,9 +133,12 @@ export class DistributorDashboardPage implements OnInit {
   constructor(
     private router: Router,
     private distributorService: DistributorService,
-    private auth: Auth
+    private auth: Auth,
+    private ledgerService: LedgerService,
+    private toastController: ToastController
   ) {
     addIcons({
+      'add-outline': addOutline,
       'arrow-up-outline': arrowUpOutline,
       'arrow-down-outline': arrowDownOutline,
       'arrow-back-outline': arrowBackOutline,
@@ -142,7 +176,15 @@ export class DistributorDashboardPage implements OnInit {
       'help-circle-outline': helpCircleOutline,
       'search-outline': searchOutline,
       'download-outline': downloadOutline,
-      'call-outline': callOutline
+      'call-outline': callOutline,
+      'close-outline': closeOutline,
+      'refresh-outline': refreshOutline,
+      'create-outline': createOutline,
+      'information-circle-outline': informationCircleOutline,
+      'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
+      'cloud-upload-outline': cloudUploadOutline,
+      'image-outline': imageOutline,
+      'phone-portrait-outline': phonePortraitOutline
     });
   }
 
@@ -207,6 +249,120 @@ export class DistributorDashboardPage implements OnInit {
     this.activeOperationView = view;
   }
 
+  openAddPaymentModal() {
+    this.generatePaymentReference();
+    this.showAddPaymentModal = true;
+  }
+
+  closeAddPaymentModal() {
+    this.showAddPaymentModal = false;
+    this.resetPaymentForm();
+  }
+
+  generatePaymentReference() {
+    const prefix = this.paymentForm.balanceType === 'credit' ? 'CR' : 'DR';
+    const randomNum = Math.floor(1000 + Math.random() * 9000);
+    this.paymentForm.reference = `${prefix}-${randomNum}`;
+  }
+
+  onPaymentReceiptSelected(event: Event) {
+    const input = event.target as HTMLInputElement;
+    if (input.files && input.files.length > 0) {
+      this.receiptFile = input.files[0];
+      this.receiptFileName = input.files[0].name;
+    }
+  }
+
+  removePaymentReceipt() {
+    this.receiptFile = null;
+    this.receiptFileName = '';
+  }
+
+  submitPayment() {
+    if (!this.distributorId) {
+      this.showToast('Distributor account not found', 'danger');
+      return;
+    }
+
+    const { date, balanceType, reference, amount, description, paymentMethod, utrNumber, bankName, chequeNumber, transactionNumber } = this.paymentForm;
+
+    if (!date || !reference || !amount || !description) {
+      this.showToast('Please fill all required fields', 'danger');
+      return;
+    }
+
+    if ((paymentMethod === 'rtgs' || paymentMethod === 'neft') && !utrNumber) {
+      this.showToast('Please enter UTR Number', 'danger');
+      return;
+    }
+
+    if (paymentMethod === 'cheque' && (!bankName || !chequeNumber)) {
+      this.showToast('Please enter Bank Name and Cheque Number', 'danger');
+      return;
+    }
+
+    if ((paymentMethod === 'imps' || paymentMethod === 'upi') && !transactionNumber) {
+      this.showToast('Please enter Transaction Number', 'danger');
+      return;
+    }
+
+    const parsedAmount = Number(amount);
+    if (!parsedAmount || parsedAmount <= 0) {
+      this.showToast('Please enter a valid amount', 'danger');
+      return;
+    }
+
+    this.isSubmittingPayment = true;
+    this.ledgerService.updateBalance(
+      this.distributorId,
+      parsedAmount,
+      description,
+      balanceType.toUpperCase()
+    ).subscribe({
+      next: (response) => {
+        this.transactions.unshift({
+          date: new Date(date).toLocaleDateString('en-US', {
+            month: 'short',
+            day: 'numeric',
+            year: 'numeric'
+          }),
+          amount: this.formatAmount(parsedAmount),
+          txnId: reference,
+          status: 'In Process',
+          type: paymentMethod ? paymentMethod.toUpperCase() : balanceType.toUpperCase()
+        });
+
+        const msg = response?.message || 'Payment added for approval';
+        this.showToast(msg, 'success');
+        this.isSubmittingPayment = false;
+        this.closeAddPaymentModal();
+        this.paymentFilter = 'all';
+      },
+      error: (error) => {
+        console.error('Error adding payment:', error);
+        this.isSubmittingPayment = false;
+        this.showToast(error?.error?.message || 'Failed to add payment', 'danger');
+      }
+    });
+  }
+
+  resetPaymentForm() {
+    this.paymentForm = {
+      date: new Date().toISOString().split('T')[0],
+      balanceType: 'credit',
+      reference: '',
+      amount: '',
+      description: '',
+      paymentMethod: '',
+      utrNumber: '',
+      bankName: '',
+      chequeNumber: '',
+      transactionNumber: '',
+      notes: ''
+    };
+    this.removePaymentReceipt();
+  }
+
   goBackToOperations() {
     this.activeOperationView = null;
   }
@@ -251,6 +407,16 @@ export class DistributorDashboardPage implements OnInit {
       style: 'currency',
       currency: 'INR'
     }).format(amount);
+  }
+
+  async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+    const toast = await this.toastController.create({
+      message,
+      duration: 2500,
+      color,
+      position: 'top'
+    });
+    await toast.present();
   }
 
   getStatusColorClass(status: string): string {

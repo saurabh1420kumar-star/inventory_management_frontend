@@ -275,6 +275,13 @@
               Update Balance
             </button>
 
+            <!-- Create JV Button -->
+            <button *ngIf="selectedAccount" (click)="openJVModal()"
+              class="flex items-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+              <ion-icon name="receipt-outline" class="text-lg"></ion-icon>
+              Create JV
+            </button>
+
             <!-- Date Filter -->
             <div class="relative date-filter-wrap">
               <button (click)="isDateDropdownOpen = !isDateDropdownOpen"
@@ -485,6 +492,11 @@
           <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
           Approve PI
         </button>
+        <button (click)="fetchPendingPayments()"
+          class="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
+          <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
+          Approve Payment
+        </button>
         <button (click)="isDispatchModalOpen = true"
           class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
           <ion-icon name="send-outline" class="text-lg"></ion-icon>
@@ -530,20 +542,20 @@
           </div>
         </div>
 
-        <!-- Credit / Debit Selector -->
+        <!-- Credit / Debit / JV Selector -->
         <div class="px-6 pt-5 pb-6 bg-white border-b border-slate-100">
           <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Balance Type</label>
-          <div class="grid grid-cols-2 gap-4">
+          <div class="grid grid-cols-3 gap-3">
             <button type="button" (click)="formData.balanceType = 'credit'"
               [class]="formData.balanceType === 'credit'
                 ? 'bg-emerald-50 border-emerald-400 text-emerald-700 shadow-md ring-2 ring-emerald-200'
                 : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'"
-              class="flex items-center justify-center gap-3 py-4 rounded-xl text-base font-bold transition-all border-2">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+              class="flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold transition-all border-2">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center"
                 [class]="formData.balanceType === 'credit' ? 'bg-emerald-100' : 'bg-slate-100'">
                 <ion-icon name="arrow-up-outline"
                   [class]="formData.balanceType === 'credit' ? 'text-emerald-600' : 'text-slate-400'"
-                  class="text-xl"></ion-icon>
+                  class="text-lg"></ion-icon>
               </div>
               Credit
             </button>
@@ -551,14 +563,27 @@
               [class]="formData.balanceType === 'debit'
                 ? 'bg-red-50 border-red-400 text-red-700 shadow-md ring-2 ring-red-200'
                 : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'"
-              class="flex items-center justify-center gap-3 py-4 rounded-xl text-base font-bold transition-all border-2">
-              <div class="w-9 h-9 rounded-lg flex items-center justify-center"
+              class="flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold transition-all border-2">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center"
                 [class]="formData.balanceType === 'debit' ? 'bg-red-100' : 'bg-slate-100'">
                 <ion-icon name="arrow-down-outline"
                   [class]="formData.balanceType === 'debit' ? 'text-red-600' : 'text-slate-400'"
-                  class="text-xl"></ion-icon>
+                  class="text-lg"></ion-icon>
               </div>
               Debit
+            </button>
+            <button type="button" (click)="formData.balanceType = 'jv'"
+              [class]="formData.balanceType === 'jv'
+                ? 'bg-blue-50 border-blue-400 text-blue-700 shadow-md ring-2 ring-blue-200'
+                : 'bg-slate-50 border-slate-200 text-slate-500 hover:bg-slate-100'"
+              class="flex items-center justify-center gap-2 py-4 rounded-xl text-sm font-bold transition-all border-2">
+              <div class="w-8 h-8 rounded-lg flex items-center justify-center"
+                [class]="formData.balanceType === 'jv' ? 'bg-blue-100' : 'bg-slate-100'">
+                <ion-icon name="receipt-outline"
+                  [class]="formData.balanceType === 'jv' ? 'text-blue-600' : 'text-slate-400'"
+                  class="text-lg"></ion-icon>
+              </div>
+              JV
             </button>
           </div>
         </div>
@@ -747,6 +772,133 @@
             Update Balance
           </button>
         </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Journal Voucher Modal -->
+  <ion-modal [isOpen]="isJVModalOpen" (didDismiss)="closeJVModal()" class="modal-xl">
+    <ng-template>
+      <div class="txn-modal-wrap bg-white h-full flex flex-col">
+        <!-- Modal Header -->
+        <div class="txn-modal-header relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-500 to-indigo-600"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-44 h-44 rounded-full bg-white/10 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-36 h-36 rounded-full bg-blue-300/15 blur-2xl"></div>
+          <div class="relative p-5 pb-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <ion-icon name="receipt-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div>
+                  <h2 class="text-lg font-bold text-white tracking-tight">Create Journal Voucher</h2>
+                  <p class="text-blue-100 text-xs mt-0.5">Record accounting entries with multiple accounts</p>
+                </div>
+              </div>
+              <button (click)="closeJVModal()"
+                class="txn-modal-close-btn w-9 h-9 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-all shadow-md border border-white/30 backdrop-blur-sm">
+                <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ion-content class="bg-slate-50/70">
+          <form (ngSubmit)="submitJVForm()" class="p-6 space-y-5">
+            <!-- Narration Field -->
+            <div class="txn-field-group">
+              <label class="txn-field-label">
+                <ion-icon name="document-text-outline" class="text-blue-400"></ion-icon>
+                Narration <span class="text-red-400">*</span>
+              </label>
+              <textarea [(ngModel)]="jvFormData.narration" name="narration" required
+                placeholder="Enter narration for this voucher"
+                class="w-full px-4 py-3 border border-slate-200 rounded-xl focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all resize-none"
+                rows="3"></textarea>
+            </div>
+
+            <!-- Entries Section -->
+            <div class="space-y-4">
+              <div class="flex items-center justify-between">
+                <label class="block text-[10px] font-bold text-slate-400 uppercase tracking-widest">Journal Entries</label>
+                <button type="button" (click)="addJVEntry()"
+                  class="flex items-center gap-1 px-3 py-1.5 bg-blue-50 text-blue-600 rounded-lg text-xs font-semibold hover:bg-blue-100 border border-blue-200 transition-colors">
+                  <ion-icon name="add-outline" class="text-sm"></ion-icon>
+                  Add Entry
+                </button>
+              </div>
+
+              <!-- Entries List -->
+              <div class="space-y-4 max-h-96 overflow-y-auto">
+                <div *ngFor="let entry of jvFormData.entries; let i = index" class="bg-white rounded-xl p-4 border border-slate-200 space-y-3">
+                  <!-- Entry Header -->
+                  <div class="flex items-center justify-between pb-3 border-b border-slate-100">
+                    <span class="text-xs font-bold text-slate-500 uppercase tracking-wide">Entry {{ i + 1 }}</span>
+                    <button type="button" *ngIf="jvFormData.entries.length > 1" (click)="removeJVEntry(i)"
+                      class="px-2 py-1 text-red-500 hover:bg-red-50 rounded-lg text-xs font-semibold transition-colors">
+                      <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+                      Remove
+                    </button>
+                  </div>
+
+                  <!-- Account Number -->
+                  <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Account Number *</label>
+                    <input type="text" [(ngModel)]="entry.accountNumber" [name]="'accountNumber_' + i" required
+                      placeholder="e.g., 1001"
+                      class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-sm">
+                  </div>
+
+                  <!-- Account Name -->
+                  <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Account Name *</label>
+                    <input type="text" [(ngModel)]="entry.accountName" [name]="'accountName_' + i" required
+                      placeholder="e.g., Cash, Bank, Expense"
+                      class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-sm">
+                  </div>
+
+                  <!-- Description -->
+                  <div>
+                    <label class="block text-xs font-bold text-slate-600 mb-1.5">Description</label>
+                    <input type="text" [(ngModel)]="entry.description" [name]="'description_' + i"
+                      placeholder="Optional description"
+                      class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-sm">
+                  </div>
+
+                  <!-- Debit and Credit -->
+                  <div class="grid grid-cols-2 gap-4">
+                    <div>
+                      <label class="block text-xs font-bold text-slate-600 mb-1.5">Debit (₹)</label>
+                      <input type="number" [(ngModel)]="entry.debit" [name]="'debit_' + i"
+                        placeholder="0.00" step="0.01" min="0"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-sm">
+                    </div>
+                    <div>
+                      <label class="block text-xs font-bold text-slate-600 mb-1.5">Credit (₹)</label>
+                      <input type="number" [(ngModel)]="entry.credit" [name]="'credit_' + i"
+                        placeholder="0.00" step="0.01" min="0"
+                        class="w-full px-4 py-2.5 border border-slate-200 rounded-lg focus:outline-none focus:border-blue-400 focus:ring-2 focus:ring-blue-100 transition-all text-sm">
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons -->
+            <div class="flex gap-3 pt-4 border-t border-slate-200">
+              <button type="button" (click)="closeJVModal()"
+                class="flex-1 px-5 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl font-semibold text-sm transition-all">
+                Cancel
+              </button>
+              <button type="submit" [disabled]="isSubmittingJV"
+                class="flex-1 flex items-center justify-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 disabled:opacity-50 text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl">
+                <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                {{ isSubmittingJV ? 'Creating...' : 'Create JV' }}
+              </button>
+            </div>
+          </form>
+        </ion-content>
       </div>
     </ng-template>
   </ion-modal>
@@ -944,6 +1096,135 @@
             </button>
           </div>
         </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- Pending Payments Modal -->
+  <ion-modal [isOpen]="isPendingPaymentsModalOpen" (didDismiss)="isPendingPaymentsModalOpen = false" class="modal-xl">
+    <ng-template>
+      <div class="txn-modal-wrap bg-white h-full flex flex-col">
+        <!-- Modal Header -->
+        <div class="txn-modal-header relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-blue-500 via-blue-600 to-indigo-700"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-44 h-44 rounded-full bg-white/10 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-36 h-36 rounded-full bg-blue-300/15 blur-2xl"></div>
+          <div class="relative p-5 pb-4">
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-sm">
+                  <ion-icon name="wallet-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div>
+                  <h2 class="text-lg font-bold text-white tracking-tight">Pending Payments</h2>
+                  <p class="text-blue-100 text-xs mt-0.5">Review and approve pending payment requests</p>
+                </div>
+              </div>
+              <button (click)="isPendingPaymentsModalOpen = false"
+                class="txn-modal-close-btn w-9 h-9 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-all shadow-md border border-white/30 backdrop-blur-sm">
+                <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+
+        <ion-content class="bg-slate-50/70">
+          <!-- Loading State -->
+          <div *ngIf="isLoadingPayments" class="p-6 flex items-center justify-center">
+            <ion-spinner name="circles" color="primary"></ion-spinner>
+          </div>
+
+          <!-- Empty State -->
+          <div *ngIf="!isLoadingPayments && pendingPayments.length === 0" class="p-6 text-center">
+            <div class="w-16 h-16 rounded-full bg-blue-100 flex items-center justify-center mx-auto mb-4">
+              <ion-icon name="checkmark-circle-outline" class="text-3xl text-blue-600"></ion-icon>
+            </div>
+            <h3 class="text-lg font-bold text-slate-800 mb-2">No Pending Payments</h3>
+            <p class="text-sm text-slate-500">All payments have been approved or there are no pending requests.</p>
+          </div>
+
+          <!-- Payments List -->
+          <div *ngIf="!isLoadingPayments && pendingPayments.length > 0" class="p-6 space-y-4">
+            <div class="bg-blue-50 border border-blue-200 rounded-xl p-4 mb-4">
+              <div class="flex items-center gap-2">
+                <ion-icon name="information-circle-outline" class="text-blue-600 text-lg"></ion-icon>
+                <span class="text-sm font-semibold text-blue-700">{{ pendingPayments.length }} pending payment(s)</span>
+              </div>
+            </div>
+
+            <div *ngFor="let payment of pendingPayments; let i = index" 
+              class="bg-white rounded-xl border border-slate-200 p-4 hover:shadow-md transition-all">
+              
+              <!-- Payment Info -->
+              <div class="space-y-3">
+                <!-- Status Badge -->
+                <div class="flex items-center justify-between">
+                  <span class="text-xs font-bold text-slate-600 uppercase tracking-wide">Payment #{{ payment.id }}</span>
+                  <span class="inline-flex items-center gap-1 px-3 py-1 bg-amber-100 text-amber-700 rounded-full text-xs font-semibold">
+                    <ion-icon name="time-outline" class="text-sm"></ion-icon>
+                    {{ payment.status }}
+                  </span>
+                </div>
+
+                <!-- Payment Details Grid -->
+                <div class="grid grid-cols-2 gap-3">
+                  <!-- Distributor Name -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Distributor</label>
+                    <p class="text-sm font-bold text-slate-800">{{ payment.distributorName }}</p>
+                  </div>
+
+                  <!-- Amount -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Amount</label>
+                    <p class="text-sm font-bold text-emerald-600">₹{{ payment.amount | number: '1.2-2' }}</p>
+                  </div>
+
+                  <!-- Transaction Type -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Type</label>
+                    <p class="text-sm font-medium text-slate-700">{{ payment.transactionType }}</p>
+                  </div>
+
+                  <!-- Date Created -->
+                  <div>
+                    <label class="block text-xs font-semibold text-slate-500 mb-1">Created</label>
+                    <p class="text-sm text-slate-600">{{ payment.createdAt | date: 'MMM dd, yyyy' }}</p>
+                  </div>
+                </div>
+
+                <!-- Description -->
+                <div *ngIf="payment.description">
+                  <label class="block text-xs font-semibold text-slate-500 mb-1">Description</label>
+                  <p class="text-sm text-slate-700 bg-slate-50 p-2 rounded-lg">{{ payment.description }}</p>
+                </div>
+
+                <!-- Action Buttons -->
+                <div class="flex gap-2 pt-2 border-t border-slate-100">
+                  <button (click)="approveSinglePayment(payment)"
+                    class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-all">
+                    <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                    Approve
+                  </button>
+                </div>
+              </div>
+            </div>
+
+            <!-- Action Buttons at Bottom -->
+            <div class="sticky bottom-0 flex gap-3 pt-4 mt-6 border-t border-slate-200 bg-white">
+              <button (click)="isPendingPaymentsModalOpen = false"
+                class="flex-1 px-4 py-3 bg-slate-200 hover:bg-slate-300 text-slate-800 rounded-xl text-sm font-semibold transition-all">
+                <ion-icon name="close-outline" class="mr-1"></ion-icon>
+                Close
+              </button>
+              <button (click)="approveAllPayments()" [disabled]="pendingPayments.length === 0"
+                class="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white rounded-xl text-sm font-semibold transition-all">
+                <ion-icon name="checkmark-circle-outline" class="mr-1"></ion-icon>
+                Approve All
+              </button>
+            </div>
+          </div>
+        </ion-content>
       </div>
     </ng-template>
   </ion-modal>

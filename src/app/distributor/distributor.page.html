@@ -192,38 +192,28 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Distributor Name *</label>
+              <label class="block text-sm font-medium text-slate-600 mb-1">First Name *</label>
               <ion-input
-                formControlName="name"
-                placeholder="Enter distributor name"
+                formControlName="firstName"
+                placeholder="Enter first name"
                 class="custom-input"
               ></ion-input>
-              <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" 
+              <div *ngIf="distributorForm.get('firstName')?.invalid && distributorForm.get('firstName')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('name') }}
+                {{ getErrorMessage('firstName') }}
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person *</label>
-              <ion-select
-                formControlName="salespersonId"
-                placeholder="Select a sales person"
-                class="custom-select black-select"
-                [disabled]="salesPersons.length === 0"
-                (ionChange)="onSalesPersonChange($event)"
-              >
-                <ion-select-option *ngFor="let person of salesPersons" 
-                  [value]="person.id">
-                  {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
-                </ion-select-option>
-              </ion-select>
-              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">
-                Loading sales persons...
-              </div>
-              <div *ngIf="(distributorForm.get('assignedPerson')?.invalid || distributorForm.get('salespersonId')?.invalid) && (distributorForm.get('assignedPerson')?.touched || distributorForm.get('salespersonId')?.touched)" 
+              <label class="block text-sm font-medium text-slate-600 mb-1">Last Name *</label>
+              <ion-input
+                formControlName="lastName"
+                placeholder="Enter last name"
+                class="custom-input"
+              ></ion-input>
+              <div *ngIf="distributorForm.get('lastName')?.invalid && distributorForm.get('lastName')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('salespersonId') }}
+                {{ getErrorMessage('lastName') }}
               </div>
             </div>
 
@@ -261,6 +251,41 @@
                    class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('companyType') }}
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales & Assignment -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="person-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Sales &amp; Assignment</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
+              <ion-select
+                formControlName="assignedPerson"
+                placeholder="Select assigned person"
+                class="custom-select black-select"
+              >
+                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
+                Assigned person is required
+              </div>
+            </div>
+
+            <div *ngIf="distributorForm.get('assignedPerson')?.value">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <ion-select
+                formControlName="keyPerson"
+                placeholder="Select key person"
+                class="custom-select black-select"
+              >
+                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+              </ion-select>
             </div>
           </div>
         </div>
@@ -684,29 +709,18 @@
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Distributor Name *</label>
-              <ion-input formControlName="name" placeholder="Enter distributor name" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('name')?.invalid && distributorForm.get('name')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('name') }}
+              <label class="block text-sm font-medium text-slate-600 mb-1">First Name *</label>
+              <ion-input formControlName="firstName" placeholder="Enter first name" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('firstName')?.invalid && distributorForm.get('firstName')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('firstName') }}
               </div>
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person *</label>
-              <ion-select
-                formControlName="salespersonId"
-                placeholder="Select a sales person"
-                class="custom-select black-select"
-                [disabled]="salesPersons.length === 0"
-                (ionChange)="onSalesPersonChange($event)"
-              >
-                <ion-select-option *ngFor="let person of salesPersons" [value]="person.id">
-                  {{ (person.firstName || '') + ' ' + (person.lastName || '') }}
-                </ion-select-option>
-              </ion-select>
-              <div *ngIf="salesPersons.length === 0" class="text-xs text-blue-600 mt-1">Loading sales persons...</div>
-              <div *ngIf="distributorForm.get('salespersonId')?.invalid && distributorForm.get('salespersonId')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('salespersonId') }}
+              <label class="block text-sm font-medium text-slate-600 mb-1">Last Name *</label>
+              <ion-input formControlName="lastName" placeholder="Enter last name" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('lastName')?.invalid && distributorForm.get('lastName')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('lastName') }}
               </div>
             </div>
 
@@ -738,6 +752,41 @@
               <div *ngIf="distributorForm.get('companyType')?.invalid && distributorForm.get('companyType')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('companyType') }}
               </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Sales & Assignment -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="person-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Sales &amp; Assignment</h3>
+          </div>
+
+          <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
+              <ion-select
+                formControlName="assignedPerson"
+                placeholder="Select assigned person"
+                class="custom-select black-select"
+              >
+                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+              </ion-select>
+              <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
+                Assigned person is required
+              </div>
+            </div>
+
+            <div *ngIf="distributorForm.get('assignedPerson')?.value">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <ion-select
+                formControlName="keyPerson"
+                placeholder="Select key person"
+                class="custom-select black-select"
+              >
+                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+              </ion-select>
             </div>
           </div>
         </div>

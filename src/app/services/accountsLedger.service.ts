@@ -1,7 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable, of } from 'rxjs';
-import { catchError, map } from 'rxjs/operators';
+import { catchError, map, tap } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 export interface LedgerDto {
@@ -134,6 +134,78 @@ export class LedgerService {
                 return of({
                     success: true,
                     message: error.statusText || 'PI approved successfully',
+                    data: null
+                });
+            })
+        );
+    }
+
+    createJournalVoucher(payload: any): Observable<ApiResponse<any>> {
+        console.log('🔄 API Request - POST /api/accounts/journal-voucher');
+        console.log('📤 Request Payload:', payload);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/journal-voucher`);
+        
+        return this.http.post(`${this.apiUrl}/accounts/journal-voucher`, payload, { 
+            responseType: 'text' 
+        }).pipe(
+            map((response: any) => {
+                console.log('✅ API Response (Status 200):', response);
+                return {
+                    success: true,
+                    message: response || 'Journal Voucher created successfully',
+                    data: null
+                };
+            }),
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                console.error('Error Status:', error.status);
+                console.error('Error Details:', error.error);
+                return of({
+                    success: false,
+                    message: error?.error?.message || error?.message || 'Failed to create journal voucher',
+                    data: null
+                });
+            })
+        );
+    }
+
+    getPendingPayments(distributorId: number): Observable<any[]> {
+        console.log('🔄 API Request - GET /api/accounts/pending-payments');
+        console.log('📤 DistributorId:', distributorId);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/pending-payments?distributorId=${distributorId}`);
+        
+        return this.http.get<any[]>(
+            `${this.apiUrl}/accounts/pending-payments?distributorId=${distributorId}`
+        ).pipe(
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                return of([]);
+            })
+        );
+    }
+
+    approvePayment(paymentId: number, approvedBy: number): Observable<any> {
+        console.log('🔄 API Request - POST /api/accounts/payment-approval/' + paymentId);
+        console.log('📤 PaymentId:', paymentId);
+        console.log('📤 ApprovedBy:', approvedBy);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/payment-approval/${paymentId}?approvedBy=${approvedBy}`);
+        
+        return this.http.post(`${this.apiUrl}/accounts/payment-approval/${paymentId}?approvedBy=${approvedBy}`, '', { 
+            responseType: 'text' 
+        }).pipe(
+            map((response: any) => {
+                console.log('✅ API Response (Status 200):', response);
+                return {
+                    success: true,
+                    message: response || 'Payment approved successfully',
+                    data: null
+                };
+            }),
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                return of({
+                    success: false,
+                    message: error?.error?.message || error?.message || 'Failed to approve payment',
                     data: null
                 });
             })
