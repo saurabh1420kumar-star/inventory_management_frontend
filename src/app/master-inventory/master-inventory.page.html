@@ -419,7 +419,6 @@
                   <tr class="bg-slate-50">
                     <th class="text-left py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Material</th>
                     <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Qty</th>
-                    <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Rate/KG</th>
                     <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">Amount</th>
                     <th class="text-right py-2 px-3 font-bold text-slate-500 uppercase tracking-wider">%</th>
                   </tr>
@@ -431,7 +430,6 @@
                       [class.bg-slate-50]="i % 2 !== 0">
                     <td class="py-2 px-3 font-semibold text-slate-700">{{ comp.rawMaterialName }}</td>
                     <td class="py-2 px-3 text-right text-slate-600 font-mono">{{ comp.quantity }} {{ comp.unit }}</td>
-                    <td class="py-2 px-3 text-right text-slate-500 font-mono">{{ comp.rate }}/{{ comp.unit }}</td>
                     <td class="py-2 px-3 text-right font-bold text-slate-800 font-mono">{{ comp.amount | number:'1.2-2' }}</td>
                     <td class="py-2 px-3 text-right">
                       <span class="text-amber-600 font-bold">{{ getComponentPercent(bom, comp.amount) }}%</span>
@@ -441,7 +439,6 @@
                 <tfoot>
                   <tr class="bg-gradient-to-r from-amber-50 to-orange-50 border-t-2 border-amber-200">
                     <td class="py-2.5 px-3 font-bold text-amber-800 uppercase text-xs" colspan="2">Total</td>
-                    <td class="py-2.5 px-3"></td>
                     <td class="py-2.5 px-3 text-right font-bold text-amber-800 font-mono">₹{{ bom.totalComponentCost | number:'1.2-2' }}</td>
                     <td class="py-2.5 px-3 text-right font-bold text-amber-800">100%</td>
                   </tr>
@@ -1061,7 +1058,6 @@
                     <th class="text-left py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Raw Material</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Qty</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Unit</th>
-                    <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Rate (₹)</th>
                     <th class="text-right py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Amount (₹)</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase w-10"></th>
                   </tr>
@@ -1089,15 +1085,6 @@
                       />
                     </td>
                     <td class="py-2 px-3 text-center text-slate-500 font-medium text-xs">{{ comp.unit }}</td>
-                    <td class="py-2 px-3">
-                      <input 
-                        type="number" 
-                        [(ngModel)]="comp.rate" 
-                        (ngModelChange)="recalcBomComponentAmount(i)"
-                        min="0" step="0.01"
-                        class="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-sm text-center font-semibold text-slate-800 focus:border-amber-400 outline-none transition-all"
-                      />
-                    </td>
                     <td class="py-2 px-3 text-right font-bold text-slate-800">₹{{ comp.amount | number:'1.2-2' }}</td>
                     <td class="py-2 px-3 text-center">
                       <button (click)="removeBomComponent(i)" class="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
@@ -1110,7 +1097,6 @@
                   <tr class="bg-amber-50 border-t-2 border-amber-200">
                     <td colspan="2" class="py-3 px-3 font-bold text-amber-800 text-sm uppercase">Total</td>
                     <td class="py-3 px-3 text-center font-bold text-amber-800">{{ bomTotalWeight }}</td>
-                    <td class="py-3 px-3"></td>
                     <td class="py-3 px-3"></td>
                     <td class="py-3 px-3 text-right font-bold text-amber-800 text-base">₹{{ bomTotalComponentCost | number:'1.2-2' }}</td>
                     <td></td>
@@ -1329,7 +1315,6 @@
                     <th class="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
                     <th class="text-left py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Name of Item</th>
                     <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Quantity</th>
-                    <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Rate</th>
                     <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">Amount ₹</th>
                     <th class="text-right py-3 px-4 text-xs font-bold text-slate-500 uppercase tracking-wider">% Share</th>
                   </tr>
@@ -1345,9 +1330,6 @@
                     </td>
                     <td class="py-3 px-4 text-right font-mono text-slate-700">
                       {{ getScaledQuantity(comp.quantity) }} <span class="text-xs text-slate-400">{{ comp.unit }}</span>
-                    </td>
-                    <td class="py-3 px-4 text-right font-mono text-slate-500 text-xs">
-                      ₹{{ comp.rate | number:'1.2-2' }}/{{ comp.unit }}
                     </td>
                     <td class="py-3 px-4 text-right font-bold font-mono text-slate-800">
                       ₹{{ getScaledAmount(comp.amount) | number:'1.2-2' }}
@@ -1366,7 +1348,6 @@
                   <tr class="bg-slate-800 text-white">
                     <td colspan="2" class="py-3 px-4 font-bold text-xs uppercase tracking-wider">Total</td>
                     <td class="py-3 px-4 text-right font-bold font-mono text-sm">{{ scaledTotalWeight }} KG</td>
-                    <td class="py-3 px-4"></td>
                     <td class="py-3 px-4 text-right font-bold font-mono text-base text-amber-300">₹{{ scaledTotalComponentCost | number:'1.2-2' }}</td>
                     <td class="py-3 px-4 text-right font-bold text-amber-300">100%</td>
                   </tr>

@@ -45,7 +45,8 @@ export interface CreateUserRequest {
   dateOfBirth: string; // ✅ Added (required)
   gender: string; // ✅ Added (required)
   bloodGroup?: string; // ✅ Added (optional but API may require it)
-  completeAddress: string; // ✅ Added (required)
+  completeAddress: string;
+  employeeRollNo:string; // ✅ Added (required)
 }
 
 export interface CreateUserResponse {
