@@ -279,12 +279,17 @@
 
             <div *ngIf="distributorForm.get('assignedPerson')?.value">
               <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <div *ngIf="isLoadingKeyPersons" class="flex items-center gap-2 text-slate-500 text-sm">
+                <ion-spinner name="dots"></ion-spinner>
+                <span>Loading key persons...</span>
+              </div>
               <ion-select
+                *ngIf="!isLoadingKeyPersons"
                 formControlName="keyPerson"
                 placeholder="Select key person"
                 class="custom-select black-select"
               >
-                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+                <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
               </ion-select>
             </div>
           </div>
@@ -780,12 +785,17 @@
 
             <div *ngIf="distributorForm.get('assignedPerson')?.value">
               <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <div *ngIf="isLoadingKeyPersons" class="flex items-center gap-2 text-slate-500 text-sm">
+                <ion-spinner name="dots"></ion-spinner>
+                <span>Loading key persons...</span>
+              </div>
               <ion-select
+                *ngIf="!isLoadingKeyPersons"
                 formControlName="keyPerson"
                 placeholder="Select key person"
                 class="custom-select black-select"
               >
-                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+                <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
               </ion-select>
             </div>
           </div>

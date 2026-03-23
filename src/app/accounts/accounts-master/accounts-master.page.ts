@@ -207,6 +207,12 @@ export class AccountsMasterPage implements OnInit {
 
   isSubmittingJV: boolean = false;
 
+  // Journal Voucher List
+  isJVListModalOpen: boolean = false;
+  journalVouchers: any[] = [];
+  isLoadingJVs: boolean = false;
+  selectedJV: any = null;
+
   paymentMethods = [
     { value: 'rtgs', label: 'RTGS', icon: 'business-outline', color: 'blue' },
     { value: 'neft', label: 'NEFT', icon: 'swap-vertical-outline', color: 'violet' },
@@ -1186,8 +1192,15 @@ export class AccountsMasterPage implements OnInit {
     console.log('🔵 Creating Journal Voucher with payload:', payload);
     this.isSubmittingJV = true;
 
+    // Validate distributor ID
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) {
+      this.showToast('Distributor ID is required', 'warning');
+      this.isSubmittingJV = false;
+      return;
+    }
+
     // Call service to create JV
-    this.ledgerService.createJournalVoucher(payload).subscribe({
+    this.ledgerService.createJournalVoucher(payload, this.selectedAccount.distributorId).subscribe({
       next: (response) => {
         console.log('✅ Create JV Success Response:', response);
         console.log('Response Message:', response.message);
@@ -1209,5 +1222,47 @@ export class AccountsMasterPage implements OnInit {
         console.log('✔️ API Request Completed');
       }
     });
+  }
+
+  // ── View Journal Vouchers Methods ──────────────────────
+  openJVListModal() {
+    console.log('🟦 openJVListModal() - Opening JV List Modal');
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+    this.isJVListModalOpen = true;
+    this.fetchJournalVouchers();
+  }
+
+  closeJVListModal() {
+    console.log('🔴 closeJVListModal() - Closing JV List Modal');
+    this.isJVListModalOpen = false;
+    this.selectedJV = null;
+  }
+
+  fetchJournalVouchers() {
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) return;
+
+    console.log('💳 Fetching journal vouchers for distributorId:', this.selectedAccount.distributorId);
+    this.isLoadingJVs = true;
+
+    this.ledgerService.getJournalVouchersByDistributor(this.selectedAccount.distributorId).subscribe({
+      next: (response: any) => {
+        console.log('✅ Journal Vouchers Fetched:', response);
+        this.journalVouchers = Array.isArray(response) ? response : response?.data || [];
+        this.isLoadingJVs = false;
+      },
+      error: (error) => {
+        console.error('❌ Error Fetching JVs:', error);
+        this.showToast('Failed to fetch journal vouchers', 'danger');
+        this.isLoadingJVs = false;
+      }
+    });
+  }
+
+  viewJVDetails(jv: any) {
+    console.log('👁️ Viewing JV Details:', jv);
+    this.selectedJV = jv;
   }
 }

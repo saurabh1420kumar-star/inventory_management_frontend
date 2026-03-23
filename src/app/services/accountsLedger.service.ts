@@ -140,12 +140,13 @@ export class LedgerService {
         );
     }
 
-    createJournalVoucher(payload: any): Observable<ApiResponse<any>> {
+    createJournalVoucher(payload: any, distributorId: number): Observable<ApiResponse<any>> {
         console.log('🔄 API Request - POST /api/accounts/journal-voucher');
         console.log('📤 Request Payload:', payload);
-        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/journal-voucher`);
+        console.log('📤 DistributorId:', distributorId);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/journal-voucher?distributorId=${distributorId}`);
         
-        return this.http.post(`${this.apiUrl}/accounts/journal-voucher`, payload, { 
+        return this.http.post(`${this.apiUrl}/accounts/journal-voucher?distributorId=${distributorId}`, payload, { 
             responseType: 'text' 
         }).pipe(
             map((response: any) => {
@@ -165,6 +166,37 @@ export class LedgerService {
                     message: error?.error?.message || error?.message || 'Failed to create journal voucher',
                     data: null
                 });
+            })
+        );
+    }
+
+    getJournalVouchersByDistributor(distributorId: number): Observable<any[]> {
+        console.log('🔄 API Request - GET /api/accounts/jv-by-distributor');
+        console.log('📤 DistributorId:', distributorId);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/jv-by-distributor/${distributorId}`);
+        
+        return this.http.get<any[]>(
+            `${this.apiUrl}/accounts/jv-by-distributor/${distributorId}`
+        ).pipe(
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                return of([]);
+            })
+        );
+    }
+
+    getPaymentsByDistributorAndStatus(distributorId: number, status: string): Observable<any[]> {
+        console.log('🔄 API Request - GET /api/accounts/payments');
+        console.log('📤 DistributorId:', distributorId);
+        console.log('📤 Status:', status);
+        console.log('🌐 Full URL:', `${this.apiUrl}/accounts/payments/${distributorId}?status=${status}`);
+        
+        return this.http.get<any[]>(
+            `${this.apiUrl}/accounts/payments/${distributorId}?status=${status}`
+        ).pipe(
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                return of([]);
             })
         );
     }

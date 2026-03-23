@@ -75,6 +75,10 @@ export class DistributorPage implements OnInit {
     { value: 'SALES_EXECUTIVE', label: 'Sales Executive' },
   ];
 
+  // Key person dropdown
+  keyPersonsList: any[] = [];
+  isLoadingKeyPersons: boolean = false;
+
   // Modal states
   showAddModal: boolean = false;
   showDetailsModal: boolean = false;
@@ -129,6 +133,38 @@ export class DistributorPage implements OnInit {
     this.initializeForm();
     this.fetchSalesPersons();
     this.fetchDistributors();
+    this.setupFormValueChanges();
+  }
+
+  // Setup listener for assignedPerson field changes
+  setupFormValueChanges() {
+    this.distributorForm.get('assignedPerson')?.valueChanges.subscribe((role: string) => {
+      if (role) {
+        this.fetchKeyPersonsByRole(role);
+      } else {
+        this.keyPersonsList = [];
+      }
+    });
+  }
+
+  // Fetch key persons from API based on selected role
+  fetchKeyPersonsByRole(role: string) {
+    console.log('🔄 Fetching key persons for role:', role);
+    this.isLoadingKeyPersons = true;
+
+    this.distributorService.getKeyPersonsByRole(role).subscribe({
+      next: (response: any) => {
+        console.log('✅ Key persons fetched:', response);
+        // Check if response is an array directly or wrapped in data property
+        this.keyPersonsList = Array.isArray(response) ? response : (response?.data || []);
+        this.isLoadingKeyPersons = false;
+      },
+      error: (err) => {
+        console.error('❌ Failed to fetch key persons', err);
+        this.keyPersonsList = [];
+        this.isLoadingKeyPersons = false;
+      }
+    });
   }
 
   initializeForm() {
@@ -183,10 +219,15 @@ export class DistributorPage implements OnInit {
 
   // Helper method to map form data to API payload
   private mapFormToPayload(formData: any) {
+    // Find the selected key person to extract name and role
+    const selectedKeyPerson = this.keyPersonsList.find(person => person.id === formData.keyPerson);
+    
     const payload = {
-      name: ((formData.firstName || '') + ' ' + (formData.lastName || '')).trim(),
-      assignedPerson: formData.assignedPerson || '',
-      keyPerson: formData.keyPerson || '',
+      firstName: formData.firstName || '',
+      lastName: formData.lastName || '',
+      salesPersonRoleType: selectedKeyPerson?.role || formData.assignedPerson || '',
+      salespersonId: formData.keyPerson || 0,
+      assignedPerson: selectedKeyPerson ? (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim() : '',
       distributorType: formData.distributorType,
       companyType: formData.companyType,
       contactEmail: formData.email,
@@ -206,6 +247,7 @@ export class DistributorPage implements OnInit {
     };
 
     console.log('Final payload after mapping:', payload);
+    console.log('Selected key person:', selectedKeyPerson);
     return payload;
   }
 

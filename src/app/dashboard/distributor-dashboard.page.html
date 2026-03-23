@@ -282,6 +282,68 @@
     </div>
   </div>
 
+  <!-- ==================== MY PAYMENTS VIEW (Ledger Updated Payments) ==================== -->
+  <div *ngIf="activeOperationView === 'collections'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">My Payments</h1>
+        <p class="text-xs text-green-400">All cleared & settled payments</p>
+      </div>
+    </div>
+
+    <!-- Total Collections Card -->
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(34,197,94,0.08); border: 1.5px solid rgba(34,197,94,0.25);">
+      <p class="text-xs text-green-400 font-semibold uppercase tracking-widest mb-1">Total Collections</p>
+      <p class="text-4xl font-extrabold text-white tracking-tight mb-2">₹{{ totalCollectionAmount | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-500 mt-1">{{ paymentCollections.length }} payment(s) collected</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoadingPaymentCollections" class="rounded-2xl p-8 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-spinner name="crescent" style="color: #22c55e; width: 50px; height: 50px; margin: 0 auto;"></ion-spinner>
+      <p class="text-sm text-slate-400 mt-4">Loading collections...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length === 0" class="rounded-2xl p-8 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-icon name="wallet-outline" style="font-size: 48px; color: #64748b; opacity: 0.5;"></ion-icon>
+      <p class="text-sm font-bold text-slate-400 mt-4">No Collections</p>
+      <p class="text-xs text-slate-600 mt-1">No cleared payments found</p>
+    </div>
+
+    <!-- Collections List -->
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length > 0" class="space-y-3">
+      <div *ngFor="let payment of paymentCollections" class="rounded-2xl p-4 flex items-center justify-between" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.25);">
+            <ion-icon *ngIf="payment.transactionType === 'CREDIT'" name="arrow-down-outline" style="color: #22c55e; font-size: 20px;"></ion-icon>
+            <ion-icon *ngIf="payment.transactionType === 'DEBIT'" name="arrow-up-outline" style="color: #ef4444; font-size: 20px;"></ion-icon>
+          </div>
+          <div>
+            <p class="font-bold text-white text-sm">{{ payment.description }}</p>
+            <p class="text-xs text-slate-500 mt-0.5">{{ payment.createdAt | date: 'MMM dd, yyyy · HH:mm' }}</p>
+            <p class="text-xs text-slate-600 mt-1">
+              <span [style]="payment.transactionType === 'CREDIT' ? 'color: #22c55e' : 'color: #ef4444'">
+                <strong>{{ payment.transactionType }}</strong> · ID: {{ payment.paymentId }}
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-xl font-extrabold" [style]="payment.transactionType === 'CREDIT' ? 'color: #22c55e' : 'color: #ef4444'">
+            {{ payment.transactionType === 'CREDIT' ? '+' : '-' }}₹{{ payment.amount | number:'1.2-2' }}
+          </p>
+          <p class="text-xs text-slate-500 mt-1" style="color: #10b981;">
+            <strong>{{ payment.status }}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+  </div>
+
   <!-- ==================== ORDER STATUS VIEW ==================== -->
   <div *ngIf="activeOperationView === 'order-status'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
     <div class="flex items-center gap-3 mb-5">
@@ -645,6 +707,19 @@
         <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
       </button>
 
+      <!-- Payment Collections -->
+      <button (click)="openOperationView('payment-collections')" class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
+              style="background: rgba(34,197,94,0.08); border: 1.5px solid rgba(34,197,94,0.2); backdrop-filter: blur(12px);">
+        <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.25);">
+          <ion-icon name="cash-outline" class="text-green-400 text-xl"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <p class="font-bold text-white text-sm">Payment Collections</p>
+          <p class="text-xs text-slate-500">View cleared payments & transactions</p>
+        </div>
+        <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg"></ion-icon>
+      </button>
+
       <!-- Profile Settings -->
       <button class="w-full rounded-2xl p-4 flex items-center gap-4 text-left"
               style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
@@ -755,6 +830,82 @@
           <p class="text-sm font-bold text-emerald-400">+₹15,000</p>
         </div>
         <p class="text-xs text-slate-500">Oct 20 · Credit Restored</p>
+      </div>
+    </div>
+  </div>
+
+  <!-- ==================== PAYMENT COLLECTIONS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'payment-collections'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="openOperationView('account-services')" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">Payment Collections</h1>
+        <p class="text-xs text-green-400">All cleared & ledger updated payments</p>
+      </div>
+    </div>
+
+    <!-- Total Collections Card -->
+    <div class="rounded-2xl p-5 mb-5" style="background: rgba(34,197,94,0.08); border: 1.5px solid rgba(34,197,94,0.25);">
+      <p class="text-xs text-green-400 font-semibold uppercase tracking-widest mb-1">Total Collections</p>
+      <p class="text-4xl font-extrabold text-white tracking-tight">₹{{ totalCollectionAmount | number:'1.2-2' }}</p>
+      <p class="text-xs text-slate-500 mt-1">{{ paymentCollections.length }} payment(s) collected</p>
+    </div>
+
+    <!-- Loading State -->
+    <div *ngIf="isLoadingPaymentCollections" class="rounded-2xl p-8 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-spinner name="crescent" style="color: #10b981; width: 50px; height: 50px; margin: 0 auto;"></ion-spinner>
+      <p class="text-sm text-slate-400 mt-4">Loading payment collections...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length === 0" class="rounded-2xl p-8 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-icon name="wallet-outline" style="font-size: 48px; color: #64748b; opacity: 0.5;"></ion-icon>
+      <p class="text-sm font-bold text-slate-400 mt-4">No Payment Collections</p>
+      <p class="text-xs text-slate-600 mt-1">No cleared payments found for this period</p>
+    </div>
+
+    <!-- Payments List -->
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length > 0" class="space-y-3">
+      <div *ngFor="let payment of paymentCollections" class="rounded-2xl p-4 flex items-center justify-between" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="flex items-center gap-4">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(34,197,94,0.15); border: 1px solid rgba(34,197,94,0.25);">
+            <ion-icon *ngIf="payment.transactionType === 'CREDIT'" name="arrow-down-outline" style="color: #22c55e; font-size: 20px;"></ion-icon>
+            <ion-icon *ngIf="payment.transactionType === 'DEBIT'" name="arrow-up-outline" style="color: #ef4444; font-size: 20px;"></ion-icon>
+          </div>
+          <div>
+            <p class="font-bold text-white text-sm">{{ payment.description }}</p>
+            <p class="text-xs text-slate-500 mt-0.5">{{ payment.createdAt | date: 'MMM dd, yyyy · HH:mm' }}</p>
+            <p class="text-xs text-slate-600 mt-1">
+              <span [style]="payment.transactionType === 'CREDIT' ? 'color: #22c55e' : 'color: #ef4444'">
+                <strong>{{ payment.transactionType }}</strong> · Payment ID: {{ payment.paymentId }}
+              </span>
+            </p>
+          </div>
+        </div>
+        <div class="text-right">
+          <p class="text-xl font-extrabold" [style]="payment.transactionType === 'CREDIT' ? 'color: #22c55e' : 'color: #ef4444'">
+            {{ payment.transactionType === 'CREDIT' ? '+' : '-' }}₹{{ payment.amount | number:'1.2-2' }}
+          </p>
+          <p class="text-xs text-slate-500 mt-1" [style]="payment.status === 'LEDGER_UPDATED' ? 'color: #10b981' : ''">
+            <strong>{{ payment.status }}</strong>
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary Footer -->
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length > 0" class="rounded-2xl p-4 mt-5" style="background: rgba(139,92,246,0.08); border: 1px solid rgba(139,92,246,0.25);">
+      <div class="flex justify-between items-center">
+        <div>
+          <p class="text-xs text-violet-400 font-semibold uppercase">Total Payments</p>
+          <p class="text-lg font-bold text-white mt-0.5">{{ paymentCollections.length }} Transactions</p>
+        </div>
+        <div class="text-right">
+          <p class="text-xs text-violet-400 font-semibold uppercase">Total Amount</p>
+          <p class="text-xl font-extrabold text-green-400 mt-0.5">₹{{ totalCollectionAmount | number:'1.2-2' }}</p>
+        </div>
       </div>
     </div>
   </div>
@@ -1172,23 +1323,14 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'payment'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button (click)="openOperationView('payment-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.12);">
-              <ion-icon name="receipt-outline" class="text-emerald-400 text-lg"></ion-icon>
+          <!-- My Payments View -->
+          <button (click)="openOperationView('collections')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.1);">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(34,197,94,0.12);">
+              <ion-icon name="cash-outline" class="text-green-400 text-lg"></ion-icon>
             </div>
             <div>
-              <p class="font-semibold text-white text-sm">Payment Due</p>
-              <p class="text-xs text-slate-500">View outstanding payments</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-          <button (click)="openOperationView('collection-status')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(16,185,129,0.12);">
-              <ion-icon name="wallet-outline" class="text-emerald-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Collection Status</p>
-              <p class="text-xs text-slate-500">Track collection progress</p>
+              <p class="font-semibold text-white text-sm">My Payments</p>
+              <p class="text-xs text-slate-500">View cleared & settled payments</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>

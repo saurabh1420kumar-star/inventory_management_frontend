@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
-import { Observable } from 'rxjs';
+import { Observable, of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 
 // ============= DISTRIBUTOR MODELS =============
@@ -28,9 +29,11 @@ export interface DistributorDto {
  * Used when creating a new distributor account with credentials
  */
 export interface CreateDistributorRequest {
-  name: string;
-  assignedPerson?: string;
-  salespersonId?: number;
+  firstName: string;
+  lastName: string;
+  assignedPerson: string;
+  salesPersonRoleType: string;
+  salespersonId: number;
   distributorType: string;
   companyType: string;
   contactEmail: string;
@@ -44,6 +47,9 @@ export interface CreateDistributorRequest {
   creditLimit: boolean;
   username: string;
   password: string;
+  accountNumber?: string;
+  accountName?: string;
+  ifsc?: string;
 }
 
 /**
@@ -133,6 +139,21 @@ export class DistributorService {
   getSalesPersons(): Observable<ApiResponse<any[]>> {
     return this.http.get<ApiResponse<any[]>>(
       `${environment.apiUrl}/hrmaster/salespersons`
+    );
+  }
+
+  getKeyPersonsByRole(role: string): Observable<any[]> {
+    console.log('🔄 API Request - GET /api/sales-hierarchy/by-role');
+    console.log('📤 Role:', role);
+    console.log('🌐 Full URL:', `${environment.apiUrl}/sales-hierarchy/by-role?role=${role}`);
+    
+    return this.http.get<any[]>(
+      `${environment.apiUrl}/sales-hierarchy/by-role?role=${role}`
+    ).pipe(
+      catchError((error: any) => {
+        console.error('❌ API Error Response:', error);
+        return of([]);
+      })
     );
   }
 

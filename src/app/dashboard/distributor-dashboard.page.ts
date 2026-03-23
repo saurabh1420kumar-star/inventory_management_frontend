@@ -130,6 +130,11 @@ export class DistributorDashboardPage implements OnInit {
   dispatchedCount = 23;
   deliveredCount = 45;
 
+  // Payment Collections
+  paymentCollections: any[] = [];
+  isLoadingPaymentCollections = false;
+  totalCollectionAmount = 0;
+
   constructor(
     private router: Router,
     private distributorService: DistributorService,
@@ -235,6 +240,9 @@ export class DistributorDashboardPage implements OnInit {
   switchTab(tab: 'dashboard' | 'operations') {
     this.activeTab = tab;
     this.activeOperationView = null;
+    if (tab === 'dashboard') {
+      this.loadPaymentCollections();
+    }
   }
 
   goToCatalog() {
@@ -247,6 +255,11 @@ export class DistributorDashboardPage implements OnInit {
 
   openOperationView(view: string) {
     this.activeOperationView = view;
+    if (view === 'account-services') {
+      this.loadPaymentCollections();
+    } else if (view === 'collections') {
+      this.loadPaymentCollections();
+    }
   }
 
   openAddPaymentModal() {
@@ -365,6 +378,29 @@ export class DistributorDashboardPage implements OnInit {
 
   goBackToOperations() {
     this.activeOperationView = null;
+  }
+
+  loadPaymentCollections() {
+    if (!this.distributorId) {
+      console.warn('Distributor ID not available for loading payment collections');
+      return;
+    }
+
+    console.log('💳 Fetching payment collections for distributorId:', this.distributorId);
+    this.isLoadingPaymentCollections = true;
+
+    this.ledgerService.getPaymentsByDistributorAndStatus(this.distributorId, 'LEDGER_UPDATED').subscribe({
+      next: (response: any) => {
+        console.log('✅ Payment Collections Fetched:', response);
+        this.paymentCollections = Array.isArray(response) ? response : response?.data || [];
+        this.totalCollectionAmount = this.paymentCollections.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        this.isLoadingPaymentCollections = false;
+      },
+      error: (error) => {
+        console.error('❌ Error Fetching Payment Collections:', error);
+        this.isLoadingPaymentCollections = false;
+      }
+    });
   }
 
   getStatusColor(status: string): string {

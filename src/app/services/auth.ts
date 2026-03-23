@@ -82,8 +82,11 @@ export interface CreateUserResponse {
  * - password: Login password for distributor portal
  */
 export interface CreateDistributorRequest {
-  name: string;
+  firstName: string;
+  lastName: string;
   assignedPerson: string;
+  salesPersonRoleType: string;
+  salespersonId: number;
   distributorType: string;
   companyType: string;
   contactEmail: string;
@@ -97,6 +100,9 @@ export interface CreateDistributorRequest {
   creditLimit: boolean;
   username: string;
   password: string;
+  accountNumber?: string;
+  accountName?: string;
+  ifsc?: string;
 }
 
 export interface CreateDistributorResponse {
