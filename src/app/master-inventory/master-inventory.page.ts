@@ -7,6 +7,7 @@ import {
   FormGroup,
   Validators
 } from '@angular/forms';
+import { forkJoin } from 'rxjs';
 
 import {
   IonHeader,
@@ -103,6 +104,11 @@ export class MasterInventoryPage implements OnInit {
   isEditModalOpen = false;
   isLoading = false;
   errorMessage = '';
+  successMessage = '';
+  messageTimeout: any;
+  isConfirmOpen = false;
+  confirmMessage = '';
+  confirmCallback: (() => void) | null = null;
   selectedItem: DisplayInventoryItem | null = null;
   currentPage = 1;
   itemsPerPage = 6;
@@ -112,8 +118,10 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- BOM STATE ---------- */
   bomList: BillOfMaterial[] = [];
+  bomSummary: any = {};
   isBomModalOpen = false;
   isBomViewOpen = false;
+  editingBomId: number | null = null;
   selectedBom: BillOfMaterial | null = null;
   bomOutputQty = 1;
   bomSearchTerm = '';
@@ -128,6 +136,10 @@ export class MasterInventoryPage implements OnInit {
     costAllocationPercent: 100
   };
   isBomLoading = false;
+  
+  // Raw API data for BOM (before mapping to DisplayItem)
+  rawMaterialsRawData: any[] = [];
+  finishedProductsRawData: any[] = [];
   /* ---------- FORM ---------- */
   addForm: FormGroup;
   editForm: FormGroup;
@@ -170,6 +182,7 @@ export class MasterInventoryPage implements OnInit {
       materialCode: ['', Validators.required],
       unit: ['KG', Validators.required],
       subUnit: ['KG'],
+      price: [0, [Validators.min(0)]],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -177,6 +190,9 @@ export class MasterInventoryPage implements OnInit {
 
   ngOnInit() {
     this.loadInventory();
+    // Also load BOMs on page init
+    this.loadBOMs();
+    this.loadBOMSummary();
   }
 
   /* ---------- LOAD INVENTORY ---------- */
@@ -283,6 +299,7 @@ export class MasterInventoryPage implements OnInit {
     // ✔ USE category from API (set in service)
     const category = (item as any).category as ItemCategory;
 
+    // Preserve the price fields from API during mapping
     return {
       ...item,
       status,
@@ -290,6 +307,8 @@ export class MasterInventoryPage implements OnInit {
       lowStock: isLowStock,
       materialCode: (item as any).materialCode,
       minimumThreshold,
+      price: item.price,  // <— Explicitly preserve price from API
+      perItemPrice: item.perItemPrice,  // <— Preserve perItemPrice for BOM
       imageUrl: this.getImageUrlForItem(item.name, category)
     };
   }
@@ -473,6 +492,7 @@ export class MasterInventoryPage implements OnInit {
         materialCode: formVal.materialCode,
         unit: formVal.unit,
         subUnit: formVal.subUnit || undefined,
+        price: formVal.price ?? 0,
         quantity: formVal.quantity,
         minimumThreshold: formVal.minimumThreshold,
         vendorId: formVal.vendorId || undefined,
@@ -500,20 +520,18 @@ export class MasterInventoryPage implements OnInit {
         this.inventory.unshift(this.mapToDisplayItem(created));
         this.resetPagination();
         this.closeAddModal();
-        alert('Item added successfully!');
+        this.showMessage('success', 'Item added successfully!');
       },
       error: (err) => {
         console.error(err);
-        alert('Failed to create item.');
+        this.showMessage('error', 'Failed to create item.');
       }
     });
   }
 
   /* ---------- ACTIONS ---------- */
   viewItem(item: DisplayInventoryItem) {
-    alert(
-      `Name: ${item.name}\nMaterial Code: ${item.materialCode}\nUnit: ${item.unit}\nQuantity: ${item.quantity}\nMin Threshold: ${item.minimumThreshold}`
-    );
+    this.showMessage('success', `Name: ${item.name}\nMaterial Code: ${item.materialCode}\nUnit: ${item.unit}\nQuantity: ${item.quantity}\nMin Threshold: ${item.minimumThreshold}`);
   }
 
   editItem(item: DisplayInventoryItem) {
@@ -522,6 +540,7 @@ export class MasterInventoryPage implements OnInit {
       name: item.name,
       materialCode: item.materialCode,
       unit: item.unit,
+      price: item.price || 0,
       quantity: item.quantity,
       minimumThreshold: item.minimumThreshold
     });
@@ -551,24 +570,24 @@ export class MasterInventoryPage implements OnInit {
           this.inventory[index] = this.mapToDisplayItem(updated);
         }
         this.closeEditModal();
-        alert('Item updated successfully!');
+        this.showMessage('success', 'Item updated successfully!');
       },
       error: (err) => {
         console.error(err);
-        alert('Failed to update item.');
+        this.showMessage('error', 'Failed to update item.');
       }
     });
   }
 
   deleteItem(id: number, category: ItemCategory) {
-    if (!confirm('Are you sure you want to delete this item?')) return;
-
-    this.inventoryService.deleteItem(id, category).subscribe({
-      next: () => {
-        this.inventory = this.inventory.filter(i => i.id !== id);
-        alert('Item deleted successfully!');
-      },
-      error: () => alert('Delete failed')
+    this.openConfirmDialog('Are you sure you want to delete this item?', () => {
+      this.inventoryService.deleteItem(id, category).subscribe({
+        next: () => {
+          this.inventory = this.inventory.filter(i => i.id !== id);
+          this.showMessage('success', 'Item deleted successfully!');
+        },
+        error: () => this.showMessage('error', 'Delete failed')
+      });
     });
   }
 
@@ -607,11 +626,51 @@ export class MasterInventoryPage implements OnInit {
     this.resetPagination();
   }
 
+  showMessage(type: 'success' | 'error', message: string, duration: number = 3000) {
+    if (type === 'success') {
+      this.successMessage = message;
+      this.errorMessage = '';
+    } else {
+      this.errorMessage = message;
+      this.successMessage = '';
+    }
+    
+    // Auto-clear message after duration
+    if (this.messageTimeout) {
+      clearTimeout(this.messageTimeout);
+    }
+    
+    this.messageTimeout = setTimeout(() => {
+      this.successMessage = '';
+      this.errorMessage = '';
+    }, duration);
+  }
+
+  openConfirmDialog(message: string, callback: () => void) {
+    this.confirmMessage = message;
+    this.confirmCallback = callback;
+    this.isConfirmOpen = true;
+  }
+
+  confirmAction() {
+    if (this.confirmCallback) {
+      this.confirmCallback();
+    }
+    this.closeConfirmDialog();
+  }
+
+  closeConfirmDialog() {
+    this.isConfirmOpen = false;
+    this.confirmMessage = '';
+    this.confirmCallback = null;
+  }
+
   onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom') {
     this.activeTab = tab;
     this.resetPagination();
     if (tab === 'bom') {
       this.loadBOMs();
+      this.loadBOMSummary();
     }
   }
 
@@ -625,14 +684,33 @@ export class MasterInventoryPage implements OnInit {
 
   loadBOMs() {
     this.isBomLoading = true;
-    this.inventoryService.getBOMs().subscribe({
-      next: (boms) => {
-        this.bomList = boms && boms.length > 0 ? boms : this.getDummyBOMs();
+    // Use the new list endpoint with pagination
+    this.inventoryService.getBOMsList(0, 10, 'createdAt', 'desc').subscribe({
+      next: (response) => {
+        // Response structure: { content: [], totalElements, etc }
+        const boms = response.content || response || [];
+        this.bomList = (boms && Array.isArray(boms) && boms.length > 0) ? boms : this.getDummyBOMs();
+        console.log('✅ BOMs loaded from API:', this.bomList.length, 'items');
         this.isBomLoading = false;
       },
-      error: () => {
+      error: (err) => {
+        console.error('Failed to load BOMs from API:', err);
         this.bomList = this.getDummyBOMs();
         this.isBomLoading = false;
+      }
+    });
+  }
+
+  loadBOMSummary() {
+    // Load BOM summary statistics
+    this.inventoryService.getBOMSSummary().subscribe({
+      next: (summary) => {
+        this.bomSummary = summary || {};
+        console.log('✅ BOM Summary loaded:', this.bomSummary);
+      },
+      error: (err) => {
+        console.error('Failed to load BOM Summary:', err);
+        this.bomSummary = {};
       }
     });
   }
@@ -783,10 +861,48 @@ export class MasterInventoryPage implements OnInit {
     };
     this.bomComponents = [];
     this.bomAdditionalCosts = [];
+
+    // Load finished products and raw materials for dropdowns
+    this.loadBomDropdownData();
+  }
+
+  loadBomDropdownData() {
+    forkJoin([
+      this.inventoryService.getFinishedProducts(),
+      this.inventoryService.getRawMaterials()
+    ]).subscribe({
+      next: ([finishedProducts, rawMaterials]) => {
+        // Store raw API data before mapping
+        this.rawMaterialsRawData = rawMaterials;
+        this.finishedProductsRawData = finishedProducts;
+        
+        this.finishedProducts = finishedProducts.map(item => this.mapToDisplayItem(item));
+        this.rawMaterials = rawMaterials.map(item => this.mapToDisplayItem(item));
+        console.log('✅ API Finished Products loaded:', this.finishedProducts.length, 'items');
+        console.log('✅ API Raw Materials loaded:', this.rawMaterials.length, 'items');
+        if (this.rawMaterialsRawData.length > 0) {
+          console.log('📦 First raw material (RAW DATA):', this.rawMaterialsRawData[0]);
+          console.log('📦 First raw material (MAPPED):', this.rawMaterials[0]);
+        }
+      },
+      error: (err) => {
+        console.error('Failed to load BOM dropdown data:', err);
+        // Fallback to filtered inventory
+        this.finishedProducts = this.inventory.filter(i => i.category === 'finished_product');
+        this.rawMaterials = this.inventory.filter(i => i.category === 'raw_material');
+        this.rawMaterialsRawData = this.rawMaterials as any;
+        this.finishedProductsRawData = this.finishedProducts as any;
+        console.log('📍 Using fallback - Inventory raw materials:', this.rawMaterials.length);
+        if (this.rawMaterials.length > 0) {
+          console.log('📦 First fallback raw material sample:', this.rawMaterials[0]);
+        }
+      }
+    });
   }
 
   closeBomModal() {
     this.isBomModalOpen = false;
+    this.editingBomId = null;
     this.bomComponents = [];
     this.bomAdditionalCosts = [];
     this.bomForm = {
@@ -815,19 +931,68 @@ export class MasterInventoryPage implements OnInit {
   }
 
   onBomComponentMaterialChange(index: number, materialId: number) {
-    const material = this.rawMaterialsList.find(m => m.id === materialId);
-    if (material) {
-      this.bomComponents[index].rawMaterialId = material.id;
-      this.bomComponents[index].rawMaterialName = material.name;
-      this.bomComponents[index].unit = material.unit || 'KG';
-      this.bomComponents[index].rate = material.price || 0;
-      this.recalcBomComponentAmount(index);
+    console.log('🔄 Material selection triggered:', { index, materialId });
+    
+    // Try to get price from raw API data first (before mapping transformation)
+    let price = 0;
+    let materialName = '';
+    let unit = 'KG';
+    
+    // Find in raw data (has original API response with perItemPrice field)
+    if (this.rawMaterialsRawData.length > 0) {
+      const rawMaterial = this.rawMaterialsRawData.find(m => m.id === materialId);
+      if (rawMaterial) {
+        materialName = rawMaterial.name || '';
+        unit = rawMaterial.unit || 'KG';
+        // API returns perItemPrice field
+        price = rawMaterial.perItemPrice || rawMaterial.price || 0;
+        console.log('✅ Material found in RAW API data:', { materialName, unit, perItemPrice: rawMaterial.perItemPrice, price });
+      }
     }
+    
+    // If not found or raw data empty, try mapped materials
+    if (price === 0 && this.rawMaterials.length > 0) {
+      const material = this.rawMaterials.find(m => m.id === materialId);
+      if (material) {
+        materialName = material.name || '';
+        unit = material.unit || 'KG';
+        price = (material as any).perItemPrice || (material as any).price || 0;
+        console.log('✅ Material found in MAPPED materials:', { materialName, unit, perItemPrice: (material as any).perItemPrice, price });
+      }
+    }
+    
+    // Last resort: check inventory filter (fallback source)
+    if (price === 0) {
+      const material = this.rawMaterialsList.find(m => m.id === materialId);
+      if (material) {
+        materialName = material.name || '';
+        unit = material.unit || 'KG';
+        price = (material as any).perItemPrice || material.price || 0;
+        console.log('✅ Material found in FALLBACK inventory:', { materialName, unit, perItemPrice: (material as any).perItemPrice, price });
+      }
+    }
+    
+    // Update component with found values
+    this.bomComponents[index].rawMaterialId = materialId;
+    this.bomComponents[index].rawMaterialName = materialName;
+    this.bomComponents[index].unit = unit;
+    this.bomComponents[index].rate = price;
+    
+    console.log('📊 Component updated:', this.bomComponents[index]);
+    this.recalcBomComponentAmount(index);
   }
 
   recalcBomComponentAmount(index: number) {
     const c = this.bomComponents[index];
-    c.amount = +(c.quantity * c.rate).toFixed(2);
+    const newAmount = +(c.quantity * c.rate).toFixed(2);
+    c.amount = newAmount;
+    console.log(`💰 AMOUNT CALC [${index}]:`, { 
+      material: c.rawMaterialName, 
+      quantity: c.quantity, 
+      rate: c.rate, 
+      calculation: `${c.quantity} × ${c.rate}`,
+      amount: newAmount
+    });
   }
 
   /* ---------- BOM ADDITIONAL COSTS ---------- */
@@ -873,11 +1038,19 @@ export class MasterInventoryPage implements OnInit {
   /* ---------- SAVE BOM ---------- */
   saveBOM() {
     if (!this.bomForm.finishedProductId || !this.bomForm.bomName || this.bomComponents.length === 0) {
-      alert('Please fill all required fields and add at least one component.');
+      this.showMessage('error', 'Please fill all required fields and add at least one component.');
       return;
     }
 
-    const product = this.finishedProductsList.find(p => p.id === this.bomForm.finishedProductId);
+    // If editing, call updateBOM instead
+    if (this.editingBomId) {
+      this.updateBOM(this.editingBomId);
+      return;
+    }
+
+    // Use API-fetched finishedProducts if available, fallback to filtered inventory
+    const products = this.finishedProducts.length > 0 ? this.finishedProducts : this.finishedProductsList;
+    const product = products.find(p => p.id === this.bomForm.finishedProductId);
 
     const bom: Partial<BillOfMaterial> = {
       finishedProductId: this.bomForm.finishedProductId,
@@ -887,22 +1060,55 @@ export class MasterInventoryPage implements OnInit {
       outputUnit: this.bomForm.outputUnit,
       costAllocationPercent: this.bomForm.costAllocationPercent,
       components: this.bomComponents,
-      additionalCosts: this.bomAdditionalCosts,
-      totalComponentCost: this.bomTotalComponentCost,
-      totalAdditionalCost: this.bomTotalAdditionalCost,
-      effectiveCost: this.bomEffectiveCost,
-      effectiveRatePerUnit: this.bomEffectiveRate
+      additionalCosts: this.bomAdditionalCosts
     };
 
     this.inventoryService.createBOM(bom).subscribe({
       next: (created) => {
         this.bomList.unshift(created);
         this.closeBomModal();
-        alert('Bill of Materials created successfully!');
+        this.showMessage('success', 'Bill of Materials created successfully!');
       },
       error: (err) => {
-        console.error(err);
-        alert('Failed to create BOM. Backend may not be available.');
+        console.error('Failed to create BOM:', err);
+        this.showMessage('error', 'Failed to create BOM. Please try again.');
+      }
+    });
+  }
+
+  updateBOM(id: number) {
+    if (!this.bomForm.finishedProductId || !this.bomForm.bomName || this.bomComponents.length === 0) {
+      this.showMessage('error', 'Please fill all required fields and add at least one component.');
+      return;
+    }
+
+    // Use API-fetched finishedProducts if available, fallback to filtered inventory
+    const products = this.finishedProducts.length > 0 ? this.finishedProducts : this.finishedProductsList;
+    const product = products.find(p => p.id === this.bomForm.finishedProductId);
+
+    const bom: Partial<BillOfMaterial> = {
+      finishedProductId: this.bomForm.finishedProductId,
+      finishedProductName: product?.name || '',
+      bomName: this.bomForm.bomName,
+      outputQuantity: this.bomForm.outputQuantity,
+      outputUnit: this.bomForm.outputUnit,
+      costAllocationPercent: this.bomForm.costAllocationPercent,
+      components: this.bomComponents,
+      additionalCosts: this.bomAdditionalCosts
+    };
+
+    this.inventoryService.updateBOM(id, bom).subscribe({
+      next: (updated) => {
+        const index = this.bomList.findIndex(b => b.id === id);
+        if (index !== -1) {
+          this.bomList[index] = updated;
+        }
+        this.closeBomModal();
+        this.showMessage('success', 'Bill of Materials updated successfully!');
+      },
+      error: (err) => {
+        console.error('Failed to update BOM:', err);
+        this.showMessage('error', 'Failed to update BOM. Please try again.');
       }
     });
   }
@@ -918,6 +1124,28 @@ export class MasterInventoryPage implements OnInit {
     this.isBomViewOpen = false;
     this.selectedBom = null;
     this.bomOutputQty = 1;
+  }
+
+  /* ---------- EDIT BOM ---------- */
+  editBOMCard(bom: BillOfMaterial) {
+    // Populate form with existing BOM data
+    this.bomForm.finishedProductId = bom.finishedProductId;
+    this.bomForm.bomName = bom.bomName;
+    this.bomForm.outputQuantity = bom.outputQuantity;
+    this.bomForm.outputUnit = bom.outputUnit;
+    this.bomForm.costAllocationPercent = bom.costAllocationPercent;
+
+    // Populate components
+    this.bomComponents = bom.components.map(comp => ({
+      ...comp
+    }));
+
+    // Populate additional costs
+    this.bomAdditionalCosts = bom.additionalCosts?.map(ac => ({ ...ac })) || [];
+
+    // Set edit mode and open modal
+    this.editingBomId = bom.id || null;
+    this.isBomModalOpen = true;
   }
 
   /* ---------- DYNAMIC RECALC FOR VIEW ---------- */
@@ -962,14 +1190,18 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- DELETE BOM ---------- */
   deleteBOM(id: number) {
-    if (!confirm('Are you sure you want to delete this Bill of Materials?')) return;
-
-    this.inventoryService.deleteBOM(id).subscribe({
-      next: () => {
-        this.bomList = this.bomList.filter(b => b.id !== id);
-        alert('BOM deleted successfully!');
-      },
-      error: () => alert('Failed to delete BOM.')
+    this.openConfirmDialog('Are you sure you want to delete this Bill of Materials?', () => {
+      this.inventoryService.deleteBOM(id).subscribe({
+        next: () => {
+          this.bomList = this.bomList.filter(b => b.id !== id);
+          console.log('✅ BOM deleted successfully:', id);
+          this.showMessage('success', 'BOM deleted successfully!');
+        },
+        error: (err) => {
+          console.error('Failed to delete BOM:', err);
+          this.showMessage('error', 'Failed to delete BOM. Please try again.');
+        }
+      });
     });
   }
 

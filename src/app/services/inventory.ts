@@ -11,6 +11,8 @@ export interface InventoryItem {
   /** Raw material only */
   materialCode?: string;
   unit?: 'KG' | 'LITER' | 'PIECE' | 'METER';
+  price?: number;  // Unit cost/price from API
+  perItemPrice?: number;  // Per item price (used in BOM)
 
   /** Machine parts only */
   partCode?: string;
@@ -49,9 +51,11 @@ export interface BOMComponent {
   unit: string;
   rate: number;
   amount: number;
+  contributionPercent?: number;
 }
 
 export interface AdditionalCost {
+  id?: number;
   type: string;
   percentage: number;
   amount: number;
@@ -206,12 +210,56 @@ export class InventoryService {
   }
 
   // =======================================
+  // 🔹 FETCH RAW MATERIALS & FINISHED PRODUCTS (for BOM dropdowns)
+  // =======================================
+  getRawMaterials(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(
+      `${this.rawMaterialsUrl}`
+    ).pipe(
+      map(items =>
+        items.map(i => ({
+          ...i,
+          category: 'raw_material' as const
+        }))
+      ),
+      catchError(() => of([]))
+    );
+  }
+
+  getFinishedProducts(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(
+      `${this.finishedProductsUrl}`
+    ).pipe(
+      map(items =>
+        items.map(i => ({
+          ...i,
+          category: 'finished_product' as const
+        }))
+      ),
+      catchError(() => of([]))
+    );
+  }
+
+  // =======================================
   // 🔹 BILL OF MATERIALS (BOM)
   // =======================================
 
   getBOMs(): Observable<BillOfMaterial[]> {
     return this.http.get<BillOfMaterial[]>(this.bomUrl).pipe(
       catchError(() => of([]))
+    );
+  }
+
+  getBOMsList(page: number = 0, size: number = 10, sortBy: string = 'createdAt', sortDir: string = 'desc'): Observable<any> {
+    const url = `${environment.apiUrl}/bill-of-materials/list?page=${page}&size=${size}&sortBy=${sortBy}&sortDir=${sortDir}`;
+    return this.http.get<any>(url).pipe(
+      catchError(() => of({ content: [], totalElements: 0 }))
+    );
+  }
+
+  getBOMSSummary(): Observable<any> {
+    return this.http.get<any>(`${environment.apiUrl}/bill-of-materials/summary`).pipe(
+      catchError(() => of({}))
     );
   }
 
@@ -222,14 +270,22 @@ export class InventoryService {
   }
 
   createBOM(bom: Partial<BillOfMaterial>): Observable<BillOfMaterial> {
-    return this.http.post<BillOfMaterial>(this.bomUrl, bom);
+    return this.http.post<BillOfMaterial>(
+      `${environment.apiUrl}/bill-of-materials/create`,
+      bom
+    );
   }
 
   updateBOM(id: number, bom: Partial<BillOfMaterial>): Observable<BillOfMaterial> {
-    return this.http.put<BillOfMaterial>(`${this.bomUrl}/${id}`, bom);
+    return this.http.put<BillOfMaterial>(
+      `${environment.apiUrl}/bill-of-materials/update/${id}`,
+      bom
+    );
   }
 
   deleteBOM(id: number): Observable<void> {
-    return this.http.delete<void>(`${this.bomUrl}/${id}`);
+    return this.http.delete<void>(
+      `${environment.apiUrl}/bill-of-materials/delete/${id}`
+    );
   }
 }

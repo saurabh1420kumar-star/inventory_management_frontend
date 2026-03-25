@@ -49,18 +49,61 @@
         </div>
       </div>
 
+      <!-- Toast Notifications -->
+      <div *ngIf="successMessage || errorMessage" class="fixed top-4 right-4 z-50 max-w-sm">
+        <!-- Success Toast -->
+        <div *ngIf="successMessage" class="toast toast-success mb-2 animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="flex items-center gap-3">
+            <ion-icon name="checkmark-circle-outline" class="text-xl flex-shrink-0"></ion-icon>
+            <span>{{ successMessage }}</span>
+          </div>
+        </div>
+        
+        <!-- Error Toast -->
+        <div *ngIf="errorMessage" class="toast toast-error animate-in fade-in slide-in-from-top-2 duration-300">
+          <div class="flex items-center gap-3">
+            <ion-icon name="alert-circle-outline" class="text-xl flex-shrink-0"></ion-icon>
+            <span>{{ errorMessage }}</span>
+          </div>
+        </div>
+      </div>
+
+      <!-- Confirmation Dialog Modal -->
+      <div *ngIf="isConfirmOpen" class="fixed inset-0 z-50 flex items-center justify-center bg-black/40 backdrop-blur-sm">
+        <div class="bg-white rounded-2xl shadow-2xl p-8 max-w-sm mx-4 animate-in fade-in zoom-in duration-300">
+          <div class="flex items-start gap-4 mb-6">
+            <div class="flex-shrink-0 w-12 h-12 rounded-full bg-amber-50 flex items-center justify-center">
+              <ion-icon name="alert-circle-outline" class="text-2xl text-amber-600"></ion-icon>
+            </div>
+            <div class="flex-1">
+              <h3 class="text-lg font-bold text-slate-900">Confirm Action</h3>
+              <p class="text-slate-600 text-sm mt-1">{{ confirmMessage }}</p>
+            </div>
+          </div>
+          
+          <div class="flex gap-3 justify-end">
+            <ion-button 
+              (click)="closeConfirmDialog()"
+              class="font-semibold"
+              style="--color: #64748b;"
+            >
+              Cancel
+            </ion-button>
+            <ion-button 
+              (click)="confirmAction()"
+              class="font-semibold bg-rose-500"
+              style="--background: #ef4444; --color: white;"
+            >
+              Delete
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
       <!-- LOADER -->
       <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
         <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
         <p class="text-slate-500 mt-4 font-medium">Loading inventory...</p>
-      </div>
-
-      <!-- ERROR -->
-      <div *ngIf="errorMessage" class="bg-rose-50 border border-rose-200 rounded-2xl p-6 mb-8">
-        <div class="flex items-center gap-3">
-          <ion-icon name="alert-circle-outline" class="text-rose-500 text-2xl"></ion-icon>
-          <p class="text-rose-700 font-medium">{{ errorMessage }}</p>
-        </div>
       </div>
 
       <!-- STATS -->
@@ -479,8 +522,16 @@
                   Calculate / View
                 </button>
                 <button
+                  (click)="editBOMCard(bom)"
+                  class="px-3.5 py-2.5 bg-blue-50 hover:bg-blue-100 text-blue-600 hover:text-blue-700 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center border border-blue-200 hover:border-blue-300"
+                  title="Edit BOM"
+                >
+                  <ion-icon name="pencil-outline" class="text-base"></ion-icon>
+                </button>
+                <button
                   (click)="deleteBOM(bom.id!)"
                   class="px-3.5 py-2.5 bg-slate-100 hover:bg-rose-50 text-slate-500 hover:text-rose-600 font-semibold rounded-xl transition-all duration-200 flex items-center justify-center border border-slate-200 hover:border-rose-200"
+                  title="Delete BOM"
                 >
                   <ion-icon name="trash-outline" class="text-base"></ion-icon>
                 </button>
@@ -598,6 +649,19 @@
               <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
                 <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
                   <ion-input type="text" formControlName="materialCode" placeholder="e.g. MAT-001" class="px-4 py-3 text-slate-900 font-mono font-semibold"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
+            <!-- Raw Material only: Price -->
+            <div class="group" *ngIf="selectedCategory === 'raw_material'">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                <ion-icon name="pricetag-outline" class="text-emerald-500"></ion-icon>
+                Price (₹)
+              </label>
+              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-2 focus-within:ring-emerald-100 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="number" formControlName="price" placeholder="0.00" step="0.01" min="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
                 </ion-item>
               </div>
             </div>
@@ -865,6 +929,18 @@
               </div>
             </div>
 
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1 flex items-center gap-1">
+                <ion-icon name="pricetag-outline" class="text-blue-500"></ion-icon>
+                Price (₹)
+              </label>
+              <div class="relative bg-white rounded-xl border border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-2 focus-within:ring-blue-100 transition-all">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-input type="number" formControlName="price" placeholder="0.00" step="0.01" min="0" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
+                </ion-item>
+              </div>
+            </div>
+
             <!-- UNIT TYPE - Card-style buttons -->
             <div class="group">
               <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 ml-1">🏷️ Unit Type</label>
@@ -968,8 +1044,8 @@
               <ion-icon name="document-text-outline" class="text-2xl text-white"></ion-icon>
             </div>
             <div>
-              <h2 class="text-xl font-bold text-white">Create Bill of Materials</h2>
-              <p class="text-xs text-amber-50">Define manufacturing recipe for a product</p>
+              <h2 class="text-xl font-bold text-white">{{ editingBomId ? 'Edit Bill of Materials' : 'Create Bill of Materials' }}</h2>
+              <p class="text-xs text-amber-50">{{ editingBomId ? 'Update manufacturing recipe details' : 'Define manufacturing recipe for a product' }}</p>
             </div>
           </div>
           <button (click)="closeBomModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm border border-white/30">
@@ -1002,7 +1078,7 @@
                   class="w-full bg-slate-50 border border-slate-200 rounded-xl py-3 px-4 text-slate-800 font-medium focus:border-amber-400 focus:ring-2 focus:ring-amber-50 outline-none transition-all appearance-none"
                 >
                   <option [ngValue]="null" disabled>Select a product...</option>
-                  <option *ngFor="let p of finishedProductsList" [ngValue]="p.id">{{ p.name }}</option>
+                  <option *ngFor="let p of (finishedProducts.length > 0 ? finishedProducts : finishedProductsList)" [ngValue]="p.id">{{ p.name }}</option>
                 </select>
               </div>
               <div>
@@ -1058,6 +1134,7 @@
                     <th class="text-left py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Raw Material</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Qty</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Unit</th>
+                    <th class="text-right py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Rate (₹)</th>
                     <th class="text-right py-2.5 px-3 text-xs font-bold text-slate-600 uppercase">Amount (₹)</th>
                     <th class="text-center py-2.5 px-3 text-xs font-bold text-slate-600 uppercase w-10"></th>
                   </tr>
@@ -1072,7 +1149,7 @@
                         class="w-full bg-white border border-slate-200 rounded-lg py-1.5 px-2 text-sm text-slate-700 focus:border-amber-400 outline-none transition-all appearance-none"
                       >
                         <option [ngValue]="0" disabled>Select material</option>
-                        <option *ngFor="let m of rawMaterialsList" [ngValue]="m.id">{{ m.name }}</option>
+                        <option *ngFor="let m of (rawMaterials.length > 0 ? rawMaterials : rawMaterialsList)" [ngValue]="m.id">{{ m.name }}</option>
                       </select>
                     </td>
                     <td class="py-2 px-3">
@@ -1085,6 +1162,7 @@
                       />
                     </td>
                     <td class="py-2 px-3 text-center text-slate-500 font-medium text-xs">{{ comp.unit }}</td>
+                    <td class="py-2 px-3 text-right font-bold text-slate-700 bg-blue-50">₹{{ comp.rate | number:'1.2-2' }}</td>
                     <td class="py-2 px-3 text-right font-bold text-slate-800">₹{{ comp.amount | number:'1.2-2' }}</td>
                     <td class="py-2 px-3 text-center">
                       <button (click)="removeBomComponent(i)" class="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
@@ -1097,6 +1175,7 @@
                   <tr class="bg-amber-50 border-t-2 border-amber-200">
                     <td colspan="2" class="py-3 px-3 font-bold text-amber-800 text-sm uppercase">Total</td>
                     <td class="py-3 px-3 text-center font-bold text-amber-800">{{ bomTotalWeight }}</td>
+                    <td class="py-3 px-3"></td>
                     <td class="py-3 px-3"></td>
                     <td class="py-3 px-3 text-right font-bold text-amber-800 text-base">₹{{ bomTotalComponentCost | number:'1.2-2' }}</td>
                     <td></td>
@@ -1186,8 +1265,8 @@
             [class.opacity-50]="!bomForm.bomName || !bomForm.finishedProductId || bomComponents.length === 0"
             class="w-full py-4 bg-gradient-to-r from-amber-400 to-orange-500 text-white font-bold rounded-xl shadow-lg hover:shadow-xl transition-all duration-200 text-lg flex items-center justify-center gap-2"
           >
-            <ion-icon name="checkmark-circle-outline" class="text-xl"></ion-icon>
-            Save Bill of Materials
+            <ion-icon [name]="editingBomId ? 'create-outline' : 'checkmark-circle-outline'" class="text-xl"></ion-icon>
+            {{ editingBomId ? 'Update Bill of Materials' : 'Save Bill of Materials' }}
           </button>
         </div>
       </div>
