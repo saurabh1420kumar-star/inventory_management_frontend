@@ -95,7 +95,7 @@ export class HierarchyMapComponent implements OnInit {
         person.name.toLowerCase().includes(term) ||
         person.role.toLowerCase().includes(term) ||
         person.zone?.toLowerCase().includes(term) ||
-        person.employeeCode.toLowerCase().includes(term) ||
+        (person.employeeCode ?? person.employeeRollNo ?? '').toLowerCase().includes(term) ||
         person.phone?.toLowerCase().includes(term) ||
         person.email?.toLowerCase().includes(term)
       ) {
@@ -126,23 +126,31 @@ export class HierarchyMapComponent implements OnInit {
 
   getRoleColor(role: string): string {
     const map: Record<string, string> = {
-      'SSM': '#8b5cf6',
-      'RSM': '#0d9488',
-      'ASM': '#dc2626',
-      'SALES_EXECUTIVE': '#059669'
+      NATIONAL_SALES_MGR: '#7c3aed',
+      STATE_SALES_MGR:    '#0ea5e9',
+      ZONAL_SALES_MGR:    '#0d9488',
+      REGIONAL_SALES_MGR: '#8b5cf6',
+      AREA_SALES_MGR:     '#f59e0b',
+      SALES_OFFICER:      '#f97316',
+      SALES_EXECUTIVE:    '#10b981',
+      // legacy mock values
+      SSM: '#0ea5e9', RSM: '#8b5cf6', ASM: '#dc2626'
     };
-    const key = Object.keys(map).find(k => role.toUpperCase().includes(k));
-    return key ? map[key] : '#6366f1';
+    return map[role] ?? '#6366f1';
   }
 
   getRoleShort(role: string): string {
     const map: Record<string, string> = {
-      SSM: 'State Manager',
-      RSM: 'Regional Manager',
-      ASM: 'Area Manager',
-      SALES_EXECUTIVE: 'Sales Executive'
+      NATIONAL_SALES_MGR: 'National Manager',
+      STATE_SALES_MGR:    'State Manager',
+      ZONAL_SALES_MGR:    'Zonal Manager',
+      REGIONAL_SALES_MGR: 'Regional Manager',
+      AREA_SALES_MGR:     'Area Manager',
+      SALES_OFFICER:      'Sales Officer',
+      SALES_EXECUTIVE:    'Sales Executive',
+      SSM: 'State Manager', RSM: 'Regional Manager', ASM: 'Area Manager'
     };
-    return map[role] ?? role;
+    return map[role] ?? role.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase());
   }
 
   closeModal() {

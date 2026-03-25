@@ -8,7 +8,7 @@ import { Auth } from './auth';
 // ──────────────────────────────────────────────────────────
 // TODO: Set USE_MOCK = false when backend API is ready.
 // ──────────────────────────────────────────────────────────
-const USE_MOCK = true;
+const USE_MOCK = false;
 const MOCK_KEY = 'sales_hierarchy_persons';
 const ORDERS_MOCK_KEY = 'sales_hierarchy_orders';
 
@@ -92,23 +92,56 @@ export interface HierarchyRole {
 }
 
 export const HIERARCHY_ROLES: HierarchyRole[] = [
-  { value: 'SSM', label: 'State Sales Manager', shortLabel: 'SSM', icon: 'ribbon-outline' },
-  { value: 'RSM', label: 'Regional Sales Manager', shortLabel: 'RSM', icon: 'map-outline' },
-  { value: 'ASM', label: 'Area Sales Manager', shortLabel: 'ASM', icon: 'business-outline' },
-  { value: 'SALES_EXECUTIVE', label: 'Sales Executive', shortLabel: 'SE', icon: 'person-outline' }
+  { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager', shortLabel: 'NSM', icon: 'star-outline' },
+  { value: 'STATE_SALES_MGR',    label: 'State Sales Manager',    shortLabel: 'SSM', icon: 'ribbon-outline' },
+  { value: 'ZONAL_SALES_MGR',    label: 'Zonal Sales Manager',    shortLabel: 'ZSM', icon: 'earth-outline' },
+  { value: 'REGIONAL_SALES_MGR', label: 'Regional Sales Manager', shortLabel: 'RSM', icon: 'map-outline' },
+  { value: 'AREA_SALES_MGR',     label: 'Area Sales Manager',     shortLabel: 'ASM', icon: 'business-outline' },
+  { value: 'SALES_OFFICER',      label: 'Sales Officer',          shortLabel: 'SO',  icon: 'briefcase-outline' },
+  { value: 'SALES_EXECUTIVE',    label: 'Sales Executive',        shortLabel: 'SE',  icon: 'person-outline' }
 ];
+
+export const MOCK_ROLES: RoleOption[] = [
+  { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager' },
+  { value: 'STATE_SALES_MGR', label: 'State Sales Manager' },
+  { value: 'ZONAL_SALES_MGR', label: 'Zonal Sales Manager' },
+  { value: 'REGIONAL_SALES_MGR', label: 'Regional Sales Manager' },
+  { value: 'AREA_SALES_MGR', label: 'Area Sales Manager' },
+  { value: 'SALES_OFFICER', label: 'Sales Officer' },
+  { value: 'SALES_EXECUTIVE', label: 'Sales Executive' }
+];
+
+export interface RoleOption {
+  value: string;
+  label: string;
+}
 
 export interface SalesPerson {
   id: number;
   name: string;
-  employeeCode: string;
-  role: 'SSM' | 'RSM' | 'ASM' | 'SALES_EXECUTIVE';
+  firstName?: string;
+  lastName?: string;
+  employeeCode?: string;
+  employeeRollNo?: string;
+  role: string;
   zone?: string;
   region?: string;
   phone?: string;
+  contactNo?: string;
+  alternateContactNo?: string;
   email?: string;
   managerId?: number | null;
   managerName?: string;
+  username?: string;
+  password?: string;
+  status?: string;
+  bloodGroup?: string;
+  completeAddress?: string;
+  dateOfBirth?: string;
+  gender?: string;
+  city?: string;
+  country?: string;
+  zip?: string;
   createdAt?: string;
 }
 
@@ -170,7 +203,7 @@ export class SalesHierarchyService {
     if (USE_MOCK) {
       return of(readStore()).pipe(delay(300));
     }
-    return this.http.get<SalesPerson[]>(this.baseUrl, { headers: this.getHeaders() });
+    return this.http.get<SalesPerson[]>(`${this.baseUrl}/list`, { headers: this.getHeaders() });
   }
 
   createSalesPerson(data: Partial<SalesPerson>): Observable<SalesPerson> {
@@ -192,7 +225,7 @@ export class SalesHierarchyService {
       writeStore(store);
       return of(newPerson).pipe(delay(400));
     }
-    return this.http.post<SalesPerson>(this.baseUrl, data, { headers: this.getHeaders() });
+    return this.http.post<SalesPerson>(`${this.baseUrl}/create`, data, { headers: this.getHeaders() });
   }
 
   updateSalesPerson(id: number, data: Partial<SalesPerson>): Observable<SalesPerson> {
@@ -232,6 +265,23 @@ export class SalesHierarchyService {
     if (status) query.push(`status=${encodeURIComponent(status)}`);
     if (query.length) url += '?' + query.join('&');
     return this.http.get<OrderWithSalesPerson[]>(url, { headers: this.getHeaders() });
+  }
+
+  getRolesDropdown(): Observable<RoleOption[]> {
+    if (USE_MOCK) {
+      return of(MOCK_ROLES).pipe(delay(200));
+    }
+    return this.http.get<RoleOption[]>(`${this.baseUrl}/roles/dropdown`, { headers: this.getHeaders() });
+  }
+
+  getPersonsByRole(role: string): Observable<SalesPerson[]> {
+    if (USE_MOCK) {
+      return of(readStore().filter(p => p.role === role)).pipe(delay(200));
+    }
+    return this.http.get<SalesPerson[]>(`${this.baseUrl}/by-role`, {
+      headers: this.getHeaders(),
+      params: { role }
+    });
   }
 
   buildHierarchyTree(persons: SalesPerson[]): HierarchyNode[] {

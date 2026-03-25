@@ -3,7 +3,7 @@ import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ToastController, AlertController, ModalController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
-import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES } from '../../services/sales-hierarchy.service';
+import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES, RoleOption } from '../../services/sales-hierarchy.service';
 import { RoleCountPipe, RoleFilterPipe } from './hierarchy.pipes';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
 
@@ -25,9 +25,30 @@ export class SalespersonOnboardingPage implements OnInit {
   searchTerm = '';
 
   readonly roles: HierarchyRole[] = HIERARCHY_ROLES;
-  potentialManagers: SalesPerson[] = [];
+  collapsedRoles = new Set<string>();
 
-  zones = ['S BIHAR', 'N BIHAR'];
+  toggleRoleGroup(roleValue: string) {
+    if (this.collapsedRoles.has(roleValue)) {
+      this.collapsedRoles.delete(roleValue);
+    } else {
+      this.collapsedRoles.add(roleValue);
+    }
+  }
+  get visibleRoles(): HierarchyRole[] {
+    const knownValues = new Set(HIERARCHY_ROLES.map(r => r.value));
+    const extra = [...new Set(this.salesPersons.map(p => p.role))]
+      .filter(r => r && !knownValues.has(r))
+      .map(r => ({
+        value: r,
+        label: r.replace(/_/g, ' ').replace(/\b\w/g, c => c.toUpperCase()),
+        shortLabel: r.split('_').map((w: string) => w[0]).join(''),
+        icon: 'person-circle-outline'
+      } as HierarchyRole));
+    return [...HIERARCHY_ROLES, ...extra];
+  }
+  roleOptions: RoleOption[] = [];
+  managersByDesignation: SalesPerson[] = [];
+  isLoadingManagers = false;
 
   constructor(
     private fb: FormBuilder,
@@ -40,36 +61,65 @@ export class SalespersonOnboardingPage implements OnInit {
   ngOnInit() {
     this.initForm();
     this.loadSalesPersons();
+    this.loadRoleOptions();
   }
 
   initForm() {
     this.onboardingForm = this.fb.group({
-      name:         ['', [Validators.required, Validators.minLength(2)]],
-      employeeCode: ['', [Validators.required]],
-      role:         ['SALES_EXECUTIVE', [Validators.required]],
-      zone:         [''],
-      region:       ['BIHAR'],
-      phone:        ['', [Validators.pattern(/^[6-9]\d{9}$/)]],
-      email:        ['', [Validators.email]],
-      managerId:    [null]
+      // Basic Information
+      name:               ['', [Validators.required, Validators.minLength(2)]],
+      firstName:          [''],
+      lastName:           [''],
+      employeeCode:       ['', [Validators.required]],
+      role:               ['', [Validators.required]],
+      // Personal Details
+      gender:             [''],
+      dateOfBirth:        [''],
+      bloodGroup:         [''],
+      status:             ['ACTIVE'],
+      // Login Credentials
+      username:           [''],
+      password:           [''],
+      // Organization Structure
+      zone:               [''],
+      region:             ['BIHAR'],
+      managerDesignation: [''],
+      managerId:          [null],
+      // Contact Information
+      phone:              ['', [Validators.pattern(/^[6-9]\d{9}$/)]],
+      alternateContactNo: [''],
+      email:              ['', [Validators.email]],
+      // Address
+      completeAddress:    [''],
+      city:               [''],
+      country:            [''],
+      zip:                ['']
     });
 
-    this.onboardingForm.get('role')!.valueChanges.subscribe(role => {
-      this.updateManagerOptions(role);
+    this.onboardingForm.get('managerDesignation')!.valueChanges.subscribe(role => {
+      this.onManagerDesignationChange(role ?? '');
     });
   }
 
-  updateManagerOptions(role: string) {
-    const managerRoleMap: Record<string, string> = {
-      RSM:             'SSM',
-      ASM:             'RSM',
-      SALES_EXECUTIVE: 'ASM'
-    };
-    const managerRole = managerRoleMap[role];
-    this.potentialManagers = managerRole
-      ? this.salesPersons.filter(p => p.role === managerRole)
-      : [];
+  loadRoleOptions() {
+    this.hierarchyService.getRolesDropdown().subscribe({
+      next: (opts) => { this.roleOptions = opts; },
+      error: () => {}
+    });
+  }
+
+  onManagerDesignationChange(role: string) {
+    this.managersByDesignation = [];
     this.onboardingForm.patchValue({ managerId: null });
+    if (!role) return;
+    this.isLoadingManagers = true;
+    this.hierarchyService.getPersonsByRole(role).subscribe({
+      next: (persons) => {
+        this.managersByDesignation = persons;
+        this.isLoadingManagers = false;
+      },
+      error: () => { this.isLoadingManagers = false; }
+    });
   }
 
   loadSalesPersons() {
@@ -77,8 +127,6 @@ export class SalespersonOnboardingPage implements OnInit {
     this.hierarchyService.getAllSalesPersons().subscribe({
       next: (data: SalesPerson[]) => {
         this.salesPersons = data;
-        const currentRole = this.onboardingForm.get('role')?.value;
-        if (currentRole) this.updateManagerOptions(currentRole);
         this.isLoading = false;
       },
       error: () => { this.isLoading = false; }
@@ -92,7 +140,15 @@ export class SalespersonOnboardingPage implements OnInit {
       p.name.toLowerCase().includes(t) ||
       p.role.toLowerCase().includes(t) ||
       (p.zone ?? '').toLowerCase().includes(t) ||
-      p.employeeCode.toLowerCase().includes(t)
+      (p.region ?? '').toLowerCase().includes(t) ||
+      (p.employeeCode ?? '').toLowerCase().includes(t) ||
+      (p.employeeRollNo ?? '').toLowerCase().includes(t) ||
+      (p.email ?? '').toLowerCase().includes(t) ||
+      (p.contactNo ?? p.phone ?? '').toLowerCase().includes(t) ||
+      (p.city ?? '').toLowerCase().includes(t) ||
+      (p.firstName ?? '').toLowerCase().includes(t) ||
+      (p.lastName ?? '').toLowerCase().includes(t) ||
+      (p.managerName ?? '').toLowerCase().includes(t)
     );
   }
 
@@ -107,34 +163,88 @@ export class SalespersonOnboardingPage implements OnInit {
 
   getRoleColor(role: string): string {
     const map: Record<string, string> = {
-      SSM:             '#0ea5e9',
-      RSM:             '#8b5cf6',
-      ASM:             '#f59e0b',
-      SALES_EXECUTIVE: '#10b981'
+      NATIONAL_SALES_MGR: '#7c3aed',
+      STATE_SALES_MGR:    '#0ea5e9',
+      ZONAL_SALES_MGR:    '#0d9488',
+      REGIONAL_SALES_MGR: '#8b5cf6',
+      AREA_SALES_MGR:     '#f59e0b',
+      SALES_OFFICER:      '#f97316',
+      SALES_EXECUTIVE:    '#10b981',
+      // legacy mock values
+      SSM: '#0ea5e9', RSM: '#8b5cf6', ASM: '#f59e0b'
     };
     return map[role] ?? '#64748b';
   }
 
+  getInitials(person: SalesPerson): string {
+    if (person.firstName && person.lastName) {
+      return (person.firstName[0] + person.lastName[0]).toUpperCase();
+    }
+    const parts = person.name.trim().split(/\s+/);
+    return parts.length > 1
+      ? (parts[0][0] + parts[parts.length - 1][0]).toUpperCase()
+      : parts[0].slice(0, 2).toUpperCase();
+  }
+
   openAddForm() {
     this.editingPerson = null;
-    this.onboardingForm.reset({ role: 'SALES_EXECUTIVE', region: 'BIHAR', zone: '', phone: '', email: '' });
-    this.updateManagerOptions('SALES_EXECUTIVE');
+    this.managersByDesignation = [];
+    this.onboardingForm.reset({
+      name: '', firstName: '', lastName: '', employeeCode: '', role: '',
+      gender: '', dateOfBirth: '', bloodGroup: '', status: 'ACTIVE',
+      username: '', password: '',
+      zone: '', region: 'BIHAR', managerDesignation: '', managerId: null,
+      phone: '', alternateContactNo: '', email: '',
+      completeAddress: '', city: '', country: '', zip: ''
+    });
     this.showForm = true;
   }
 
   openEditForm(person: SalesPerson) {
     this.editingPerson = person;
+    this.managersByDesignation = [];
+
+    const managerDesignation = person.managerId
+      ? (this.salesPersons.find(p => p.id === person.managerId)?.role ?? '')
+      : '';
+
     this.onboardingForm.patchValue({
-      name:         person.name,
-      employeeCode: person.employeeCode,
-      role:         person.role,
-      zone:         person.zone ?? '',
-      region:       person.region ?? 'BIHAR',
-      phone:        person.phone ?? '',
-      email:        person.email ?? '',
-      managerId:    person.managerId ?? null
+      name:               person.name,
+      firstName:          person.firstName ?? '',
+      lastName:           person.lastName ?? '',
+      employeeCode:       person.employeeCode,
+      role:               person.role,
+      gender:             person.gender ?? '',
+      dateOfBirth:        person.dateOfBirth ?? '',
+      bloodGroup:         person.bloodGroup ?? '',
+      status:             person.status ?? 'ACTIVE',
+      username:           person.username ?? '',
+      password:           '',
+      zone:               person.zone ?? '',
+      region:             person.region ?? 'BIHAR',
+      managerDesignation: managerDesignation,
+      managerId:          null,
+      phone:              person.phone ?? person.contactNo ?? '',
+      alternateContactNo: person.alternateContactNo ?? '',
+      email:              person.email ?? '',
+      completeAddress:    person.completeAddress ?? '',
+      city:               person.city ?? '',
+      country:            person.country ?? '',
+      zip:                person.zip ?? ''
     });
-    this.updateManagerOptions(person.role);
+
+    if (managerDesignation) {
+      this.isLoadingManagers = true;
+      this.hierarchyService.getPersonsByRole(managerDesignation).subscribe({
+        next: (persons) => {
+          this.managersByDesignation = persons;
+          this.onboardingForm.patchValue({ managerId: person.managerId ?? null });
+          this.isLoadingManagers = false;
+        },
+        error: () => { this.isLoadingManagers = false; }
+      });
+    }
+
     this.showForm = true;
   }
 
@@ -150,16 +260,29 @@ export class SalespersonOnboardingPage implements OnInit {
     }
     this.isSubmitting = true;
     const raw = this.onboardingForm.value;
-    // Convert empty strings to undefined for cleanliness
+    // Build payload that matches the /api/sales-hierarchy/create schema exactly
     const payload: Partial<SalesPerson> = {
-      name:         raw.name?.trim(),
-      employeeCode: raw.employeeCode?.trim(),
-      role:         raw.role,
-      zone:         raw.zone || undefined,
-      region:       raw.region || 'BIHAR',
-      phone:        raw.phone || undefined,
-      email:        raw.email || undefined,
-      managerId:    raw.managerId ?? null
+      name:               raw.name?.trim(),
+      firstName:          raw.firstName?.trim() || undefined,
+      lastName:           raw.lastName?.trim() || undefined,
+      employeeRollNo:     raw.employeeCode?.trim() || undefined,
+      role:               raw.role,
+      gender:             raw.gender || undefined,
+      dateOfBirth:        raw.dateOfBirth || undefined,
+      bloodGroup:         raw.bloodGroup?.trim() || undefined,
+      status:             raw.status || 'ACTIVE',
+      username:           raw.username?.trim() || undefined,
+      password:           raw.password || undefined,
+      zone:               raw.zone?.trim() || undefined,
+      region:             raw.region?.trim() || undefined,
+      managerId:          raw.managerId ?? null,
+      contactNo:          raw.phone?.trim() || undefined,
+      alternateContactNo: raw.alternateContactNo?.trim() || undefined,
+      email:              raw.email?.trim() || undefined,
+      completeAddress:    raw.completeAddress?.trim() || undefined,
+      city:               raw.city?.trim() || undefined,
+      country:            raw.country?.trim() || undefined,
+      zip:                raw.zip?.trim() || undefined
     };
 
     const request$ = this.editingPerson
