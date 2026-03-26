@@ -265,12 +265,17 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
+              <div *ngIf="isLoadingRoles" class="flex items-center gap-2 text-slate-500 text-sm py-2">
+                <ion-spinner name="dots"></ion-spinner>
+                <span>Loading roles...</span>
+              </div>
               <ion-select
+                *ngIf="!isLoadingRoles"
                 formControlName="assignedPerson"
                 placeholder="Select assigned person"
                 class="custom-select black-select"
               >
-                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+                <ion-select-option *ngFor="let role of roleOptions" [value]="role.value">{{ role.label }}</ion-select-option>
               </ion-select>
               <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
                 Assigned person is required
@@ -771,12 +776,17 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Assigned Person *</label>
+              <div *ngIf="isLoadingRoles" class="flex items-center gap-2 text-slate-500 text-sm py-2">
+                <ion-spinner name="dots"></ion-spinner>
+                <span>Loading roles...</span>
+              </div>
               <ion-select
+                *ngIf="!isLoadingRoles"
                 formControlName="assignedPerson"
                 placeholder="Select assigned person"
                 class="custom-select black-select"
               >
-                <ion-select-option *ngFor="let role of roles" [value]="role.value">{{ role.label }}</ion-select-option>
+                <ion-select-option *ngFor="let role of roleOptions" [value]="role.value">{{ role.label }}</ion-select-option>
               </ion-select>
               <div *ngIf="distributorForm.get('assignedPerson')?.invalid && distributorForm.get('assignedPerson')?.touched" class="text-xs text-red-500 mt-1">
                 Assigned person is required

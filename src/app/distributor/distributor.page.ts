@@ -22,6 +22,7 @@ import {
   eyeOffOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto } from '../services/distributor.service';
+import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
 
 interface Distributor {
@@ -75,6 +76,10 @@ export class DistributorPage implements OnInit {
     { value: 'SALES_EXECUTIVE', label: 'Sales Executive' },
   ];
 
+  // Role options from API
+  roleOptions: RoleOption[] = [];
+  isLoadingRoles: boolean = false;
+
   // Key person dropdown
   keyPersonsList: any[] = [];
   isLoadingKeyPersons: boolean = false;
@@ -103,6 +108,7 @@ export class DistributorPage implements OnInit {
     private fb: FormBuilder,
     private modalCtrl: ModalController,
     private distributorService: DistributorService,
+    private salesHierarchyService: SalesHierarchyService,
     private cdr: ChangeDetectorRef,
     private toastCtrl: ToastController,
     private alertCtrl: AlertController,
@@ -131,9 +137,24 @@ export class DistributorPage implements OnInit {
 
   ngOnInit() {
     this.initializeForm();
+    this.loadRoleOptions();
     this.fetchSalesPersons();
     this.fetchDistributors();
     this.setupFormValueChanges();
+  }
+
+  loadRoleOptions() {
+    this.isLoadingRoles = true;
+    this.salesHierarchyService.getRolesDropdown().subscribe({
+      next: (opts) => {
+        this.roleOptions = opts;
+        this.isLoadingRoles = false;
+      },
+      error: () => {
+        // fallback: keep empty, user won't see options until API recovers
+        this.isLoadingRoles = false;
+      }
+    });
   }
 
   // Setup listener for assignedPerson field changes

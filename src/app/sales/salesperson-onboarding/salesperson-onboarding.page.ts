@@ -1,7 +1,7 @@
 import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { IonicModule, ToastController, AlertController, ModalController } from '@ionic/angular';
+import { IonicModule, ToastController, ModalController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES, RoleOption } from '../../services/sales-hierarchy.service';
 import { RoleCountPipe, RoleFilterPipe } from './hierarchy.pipes';
@@ -23,6 +23,10 @@ export class SalespersonOnboardingPage implements OnInit {
   editingPerson: SalesPerson | null = null;
   showForm = false;
   searchTerm = '';
+
+  showDeleteModal = false;
+  deletingPerson: SalesPerson | null = null;
+  isDeleting = false;
 
   readonly roles: HierarchyRole[] = HIERARCHY_ROLES;
   collapsedRoles = new Set<string>();
@@ -54,7 +58,6 @@ export class SalespersonOnboardingPage implements OnInit {
     private fb: FormBuilder,
     private hierarchyService: SalesHierarchyService,
     private toastController: ToastController,
-    private alertController: AlertController,
     private modalController: ModalController
   ) {}
 
@@ -212,7 +215,7 @@ export class SalespersonOnboardingPage implements OnInit {
       name:               person.name,
       firstName:          person.firstName ?? '',
       lastName:           person.lastName ?? '',
-      employeeCode:       person.employeeCode,
+      employeeCode:       person.employeeRollNo ?? person.employeeCode,
       role:               person.role,
       gender:             person.gender ?? '',
       dateOfBirth:        person.dateOfBirth ?? '',
@@ -260,7 +263,9 @@ export class SalespersonOnboardingPage implements OnInit {
     }
     this.isSubmitting = true;
     const raw = this.onboardingForm.value;
-    // Build payload that matches the /api/sales-hierarchy/create schema exactly
+    // Build payload that matches the /api/sales-hierarchy/update & /create schema exactly
+    const contactValue = raw.phone?.trim() || undefined;
+    const statusValue  = raw.status || 'ACTIVE';
     const payload: Partial<SalesPerson> = {
       name:               raw.name?.trim(),
       firstName:          raw.firstName?.trim() || undefined,
@@ -270,13 +275,16 @@ export class SalespersonOnboardingPage implements OnInit {
       gender:             raw.gender || undefined,
       dateOfBirth:        raw.dateOfBirth || undefined,
       bloodGroup:         raw.bloodGroup?.trim() || undefined,
-      status:             raw.status || 'ACTIVE',
+      status:             statusValue,
+      active:             statusValue === 'ACTIVE',
       username:           raw.username?.trim() || undefined,
-      password:           raw.password || undefined,
+      // Only send password if user typed something (on edit: leave blank = keep current)
+      ...(raw.password ? { password: raw.password } : {}),
       zone:               raw.zone?.trim() || undefined,
       region:             raw.region?.trim() || undefined,
       managerId:          raw.managerId ?? null,
-      contactNo:          raw.phone?.trim() || undefined,
+      contactNo:          contactValue,
+      phone:              contactValue,
       alternateContactNo: raw.alternateContactNo?.trim() || undefined,
       email:              raw.email?.trim() || undefined,
       completeAddress:    raw.completeAddress?.trim() || undefined,
@@ -304,26 +312,32 @@ export class SalespersonOnboardingPage implements OnInit {
     });
   }
 
-  async confirmDelete(person: SalesPerson) {
-    const alert = await this.alertController.create({
-      header: 'Confirm Delete',
-      message: `Remove ${person.name} (${this.getRoleLabel(person.role)}) from the team?`,
-      cssClass: 'custom-alert',
-      buttons: [
-        { text: 'Cancel', role: 'cancel' },
-        { text: 'Delete', role: 'destructive', handler: () => this.deletePerson(person) }
-      ]
-    });
-    await alert.present();
+  confirmDelete(person: SalesPerson) {
+    this.deletingPerson = person;
+    this.showDeleteModal = true;
   }
 
-  deletePerson(person: SalesPerson) {
+  cancelDelete() {
+    this.showDeleteModal = false;
+    this.deletingPerson = null;
+  }
+
+  async deletePerson() {
+    if (!this.deletingPerson) return;
+    const person = this.deletingPerson;
+    this.isDeleting = true;
     this.hierarchyService.deleteSalesPerson(person.id).subscribe({
       next: async () => {
+        this.isDeleting = false;
+        this.showDeleteModal = false;
+        this.deletingPerson = null;
         this.loadSalesPersons();
         await this.toast(`${person.name} removed`, 'success');
       },
-      error: async () => { await this.toast('Failed to delete', 'danger'); }
+      error: async () => {
+        this.isDeleting = false;
+        await this.toast('Failed to delete', 'danger');
+      }
     });
   }
 
