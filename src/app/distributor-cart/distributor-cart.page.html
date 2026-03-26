@@ -63,7 +63,6 @@
           </div>
           <div class="flex-1 min-w-0">
             <h3 class="text-white font-bold text-base truncate">{{ product.name }}</h3>
-            <p class="text-slate-500 text-xs mt-0.5">Stock: {{ product.quantity }}</p>
           </div>
         </div>
         <div class="px-4 pb-3 flex items-center justify-between">
@@ -241,11 +240,7 @@
           </div>
 
           <!-- Stats (Glass) -->
-          <div class="grid grid-cols-2 gap-3 mb-5 pb-5" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
-            <div class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-              <p class="text-xs text-slate-500 mb-1">Available Stock</p>
-              <p class="text-xl font-bold text-emerald-400">{{ selectedProduct.quantity }}</p>
-            </div>
+          <div class="mb-5 pb-5" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div *ngIf="selectedProduct.price" class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
               <p class="text-xs text-slate-500 mb-1">Per Piece Rate</p>
               <p class="text-xl font-bold text-emerald-400">₹{{ $any(selectedProduct).perPieceRate || selectedProduct.price }}</p>

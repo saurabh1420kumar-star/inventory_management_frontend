@@ -1502,4 +1502,61 @@
     </ng-template>
   </ion-modal>
 
-</ion-content>
+  <!-- ===== ITEM DETAILS VIEW MODAL ===== -->
+  <ion-modal [isOpen]="isViewItemModalOpen" (didDismiss)="closeViewItemModal()">
+    <ng-template>
+      <ion-header class="ion-no-border" style="--background: #000000;">
+        <ion-toolbar style="--background: #000000;">
+          <ion-title class="text-white font-bold">Item Details</ion-title>
+          <ion-buttons slot="end">
+            <ion-button (click)="closeViewItemModal()" class="text-white">
+              <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+            </ion-button>
+          </ion-buttons>
+        </ion-toolbar>
+      </ion-header>
+
+      <ion-content class="bg-slate-800" *ngIf="viewItemSelectedItem">
+        <div class="p-6 text-white">
+          <h2 class="text-2xl font-bold mb-4">{{ viewItemSelectedItem.name }}</h2>
+          
+          <div class="space-y-3">
+            <div class="bg-slate-700 p-4 rounded-lg">
+              <p class="text-slate-400 text-sm">Material Code</p>
+              <p class="text-white font-bold">{{ viewItemSelectedItem.materialCode }}</p>
+            </div>
+
+            <div class="bg-slate-700 p-4 rounded-lg">
+              <p class="text-slate-400 text-sm">Unit</p>
+              <p class="text-white font-bold">{{ viewItemSelectedItem.unit }}</p>
+            </div>
+
+            <div class="bg-slate-700 p-4 rounded-lg">
+              <p class="text-slate-400 text-sm">Current Quantity</p>
+              <p class="text-white font-bold text-xl">{{ viewItemSelectedItem.quantity }}</p>
+            </div>
+
+            <div class="bg-slate-700 p-4 rounded-lg">
+              <p class="text-slate-400 text-sm">Minimum Threshold</p>
+              <p class="text-white font-bold text-xl">{{ viewItemSelectedItem.minimumThreshold }}</p>
+            </div>
+
+            <div class="bg-slate-700 p-4 rounded-lg" *ngIf="viewItemSelectedItem.price">
+              <p class="text-slate-400 text-sm">Price</p>
+              <p class="text-white font-bold text-xl">₹{{ viewItemSelectedItem.price | number:'1.2-2' }}</p>
+            </div>
+
+            <div class="bg-slate-700 p-4 rounded-lg" *ngIf="viewItemSelectedItem.category">
+              <p class="text-slate-400 text-sm">Category</p>
+              <p class="text-white font-bold">{{ viewItemSelectedItem.category === 'raw_material' ? 'Raw Material' : 'Finished Product' }}</p>
+            </div>
+          </div>
+
+          <div class="flex gap-2 mt-6">
+            <ion-button expand="block" color="primary" (click)="editItem(viewItemSelectedItem); closeViewItemModal()">Edit</ion-button>
+            <ion-button expand="block" color="medium" (click)="closeViewItemModal()">Close</ion-button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>

@@ -102,6 +102,7 @@ export class MasterInventoryPage implements OnInit {
   searchTerm = '';
   isAddModalOpen = false;
   isEditModalOpen = false;
+  isViewItemModalOpen = false;
   isLoading = false;
   errorMessage = '';
   successMessage = '';
@@ -110,6 +111,7 @@ export class MasterInventoryPage implements OnInit {
   confirmMessage = '';
   confirmCallback: (() => void) | null = null;
   selectedItem: DisplayInventoryItem | null = null;
+  viewItemSelectedItem: DisplayInventoryItem | null = null;
   currentPage = 1;
   itemsPerPage = 6;
   selectedCategory: 'raw_material' | 'finished_product' | null = null;
@@ -531,7 +533,15 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- ACTIONS ---------- */
   viewItem(item: DisplayInventoryItem) {
-    this.showMessage('success', `Name: ${item.name}\nMaterial Code: ${item.materialCode}\nUnit: ${item.unit}\nQuantity: ${item.quantity}\nMin Threshold: ${item.minimumThreshold}`);
+    console.log('View item clicked:', item);
+    this.viewItemSelectedItem = item;
+    this.isViewItemModalOpen = true;
+    console.log('Modal should open now. isViewItemModalOpen:', this.isViewItemModalOpen);
+  }
+
+  closeViewItemModal() {
+    this.isViewItemModalOpen = false;
+    this.viewItemSelectedItem = null;
   }
 
   editItem(item: DisplayInventoryItem) {
