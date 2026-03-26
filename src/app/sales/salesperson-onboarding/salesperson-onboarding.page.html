@@ -560,4 +560,56 @@
     </ng-template>
   </ion-modal>
 
+<!-- ── Delete Confirmation Overlay ─────────────────────────────────── -->
+  <div *ngIf="showDeleteModal"
+    class="fixed inset-0 flex items-center justify-center"
+    style="z-index: 99999; background: rgba(0,0,0,0.55); padding: 24px;">
+
+    <div class="w-full flex flex-col items-center rounded-3xl p-6"
+      style="max-width: 380px; background: #ffffff; box-shadow: 0 24px 64px rgba(0,0,0,0.28);">
+
+      <!-- Icon -->
+      <div class="w-16 h-16 rounded-full flex items-center justify-center mb-4"
+        style="background: linear-gradient(135deg, #fff1f2, #ffe4e6); border: 2px solid #fecdd3;">
+        <ion-icon name="trash-outline" style="font-size: 1.75rem; color: #f43f5e;"></ion-icon>
+      </div>
+
+      <!-- Heading -->
+      <h2 class="text-lg font-bold text-slate-800 mb-1">Delete Salesperson</h2>
+      <p class="text-sm text-slate-500 text-center mb-0.5">Are you sure you want to remove</p>
+      <p class="text-base font-bold text-slate-800 text-center mb-0.5">{{ deletingPerson?.name }}</p>
+      <p class="text-xs text-slate-400 text-center mb-5">
+        {{ getRoleLabel(deletingPerson?.role ?? '') }}
+        <span *ngIf="deletingPerson?.employeeRollNo"> · {{ deletingPerson?.employeeRollNo }}</span>
+      </p>
+
+      <!-- Warning -->
+      <div class="w-full rounded-xl px-4 py-3 mb-5 flex items-start gap-2"
+        style="background: #fff7ed; border: 1px solid #fed7aa;">
+        <ion-icon name="warning-outline" style="color: #f97316; font-size: 1rem; flex-shrink: 0; margin-top: 1px;"></ion-icon>
+        <p class="text-xs text-orange-700 leading-relaxed m-0">
+          This action cannot be undone. All data associated with this salesperson will be permanently deleted.
+        </p>
+      </div>
+
+      <!-- Buttons -->
+      <div class="flex gap-3 w-full">
+        <button type="button" (click)="cancelDelete()" [disabled]="isDeleting"
+          class="flex-1 py-3 rounded-2xl text-sm font-semibold"
+          style="background: #f1f5f9; color: #475569; border: 1px solid #e2e8f0; cursor: pointer;">
+          Cancel
+        </button>
+        <button type="button" (click)="deletePerson()" [disabled]="isDeleting"
+          class="flex-1 py-3 rounded-2xl text-sm font-bold flex items-center justify-center gap-2"
+          style="background: linear-gradient(135deg, #f43f5e, #e11d48); color: #fff; cursor: pointer;"
+          [style.opacity]="isDeleting ? '0.7' : '1'">
+          <ion-spinner *ngIf="isDeleting" name="crescent" style="width: 1rem; height: 1rem;"></ion-spinner>
+          <ion-icon *ngIf="!isDeleting" name="trash-outline"></ion-icon>
+          {{ isDeleting ? 'Deleting…' : 'Yes, Delete' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+
 </ion-content>

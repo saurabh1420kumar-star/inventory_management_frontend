@@ -143,6 +143,7 @@ export interface SalesPerson {
   country?: string;
   zip?: string;
   createdAt?: string;
+  active?: boolean;
 }
 
 export interface HierarchyNode {
@@ -237,7 +238,7 @@ export class SalesHierarchyService {
       writeStore(store);
       return of(store[idx]).pipe(delay(400));
     }
-    return this.http.put<SalesPerson>(`${this.baseUrl}/${id}`, data, { headers: this.getHeaders() });
+    return this.http.put<SalesPerson>(`${this.baseUrl}/update/${id}`, data, { headers: this.getHeaders() });
   }
 
   deleteSalesPerson(id: number): Observable<void> {
@@ -246,7 +247,7 @@ export class SalesHierarchyService {
       writeStore(store);
       return of(undefined).pipe(delay(300));
     }
-    return this.http.delete<void>(`${this.baseUrl}/${id}`, { headers: this.getHeaders() });
+    return this.http.delete<void>(`${this.baseUrl}/delete/${id}`, { headers: this.getHeaders() });
   }
 
   getHierarchyOrders(_params?: {

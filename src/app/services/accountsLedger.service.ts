@@ -32,6 +32,8 @@ export interface ApiResponse<T> {
 export interface Distributor {
     id: number;
     name: string;
+    firstName?: string;
+    lastName?: string;
     accountName: string;
     accountNumber: string;
     email: string;
