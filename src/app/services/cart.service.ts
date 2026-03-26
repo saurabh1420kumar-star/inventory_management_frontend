@@ -13,6 +13,8 @@ export interface Product {
   active?: boolean;
   unit?: string;
   price?: number;
+  perItemPrice?: number;
+  perPieceRate?: number;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -28,6 +30,7 @@ export interface CartItemPayload {
   name: string;
   sku: string;
   price: number;
+  perItemPrice?: number;
   imageUrl?: string;
   active: boolean;
 }
@@ -133,16 +136,27 @@ export class CartService {
   addToCart(product: Product, quantity: number): void {
     const currentCart = this.cartItems.value;
     const existingItem = currentCart.find(item => item.id === product.id);
+    const itemPrice = (product as any).perPieceRate || product.perItemPrice || product.price || 0;
+
+    console.log('🛒 Cart add item:', {
+      product: product.name,
+      perPieceRate: (product as any).perPieceRate,
+      perItemPrice: product.perItemPrice,
+      price: product.price,
+      usingPrice: itemPrice,
+      quantity
+    });
 
     if (existingItem) {
       existingItem.cartQuantity += quantity;
-      existingItem.subtotal = existingItem.cartQuantity * (existingItem.price || 0);
+      existingItem.subtotal = existingItem.cartQuantity * itemPrice;
     } else {
       const cartItem: CartItem = {
         ...product,
         cartQuantity: quantity,
-        subtotal: quantity * (product.price || 0)
+        subtotal: quantity * itemPrice
       };
+      console.log('✅ CartItem created:', cartItem);
       currentCart.push(cartItem);
     }
 
@@ -164,7 +178,8 @@ export class CartService {
     
     if (item) {
       item.cartQuantity = quantity;
-      item.subtotal = quantity * (item.price || 0);
+      const itemPrice = (item as any).perPieceRate || (item as any).perItemPrice || item.price || 0;
+      item.subtotal = quantity * itemPrice;
       this.cartItems.next([...currentCart]);
       this.saveCartToLocalStorage();
     }

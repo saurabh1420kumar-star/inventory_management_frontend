@@ -68,8 +68,8 @@
         </div>
         <div class="px-4 pb-3 flex items-center justify-between">
           <div>
-            <p class="text-slate-500 text-xs mb-0.5">Price</p>
-            <p class="font-bold text-white text-base">&#8377;{{ product.price }}</p>
+            <p class="text-slate-500 text-xs mb-0.5">Per Piece Rate</p>
+            <p class="font-bold text-white text-base">₹{{ $any(product).perPieceRate || product.price }}</p>
           </div>
           <button (click)="openProductModal(product)"
                   class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-1"
@@ -145,8 +145,8 @@
             <!-- Item Body -->
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-500 text-sm">Unit Price:</p>
-                <p class="font-semibold text-emerald-400 text-sm">&#8377;{{ item.price }}</p>
+                <p class="text-slate-500 text-sm">Per Piece Rate:</p>
+                <p class="font-semibold text-emerald-400 text-sm">₹{{ item.perPieceRate || item.perItemPrice || item.price }}</p>
               </div>
 
               <!-- Quantity Controls (Glass teal) -->
@@ -247,8 +247,8 @@
               <p class="text-xl font-bold text-emerald-400">{{ selectedProduct.quantity }}</p>
             </div>
             <div *ngIf="selectedProduct.price" class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-              <p class="text-xs text-slate-500 mb-1">Price / Unit</p>
-              <p class="text-xl font-bold text-emerald-400">&#8377;{{ selectedProduct.price }}</p>
+              <p class="text-xs text-slate-500 mb-1">Per Piece Rate</p>
+              <p class="text-xl font-bold text-emerald-400">₹{{ $any(selectedProduct).perPieceRate || selectedProduct.price }}</p>
             </div>
           </div>
 
@@ -272,7 +272,7 @@
           <!-- Subtotal -->
           <div class="rounded-xl p-4 flex justify-between items-center" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.12);">
             <span class="font-medium text-slate-400">Subtotal</span>
-            <span class="text-2xl font-bold text-emerald-400">&#8377;{{ quantityToAdd * (selectedProduct.price || 0) }}</span>
+            <span class="text-2xl font-bold text-emerald-400">₹{{ quantityToAdd * ($any(selectedProduct).perPieceRate || selectedProduct.price || 0) }}</span>
           </div>
         </div>
 
