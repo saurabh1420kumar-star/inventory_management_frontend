@@ -1,0 +1,44 @@
+app-payment-request {
+  --ion-background-color: #f8fafc;
+
+  ion-content {
+    --background: transparent;
+  }
+
+  ion-header ion-toolbar {
+    --background: #000000;
+    --border-width: 0;
+  }
+}
+
+.pr-card {
+  transition: box-shadow 0.2s ease, transform 0.15s ease;
+
+  &:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px -4px rgba(0, 0, 0, 0.12);
+  }
+}
+
+.pr-stat-card {
+  transition: transform 0.15s ease, box-shadow 0.15s ease;
+
+  &:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 4px 16px -4px rgba(0, 0, 0, 0.1);
+  }
+}
+
+.pr-tab {
+  transition: background 0.18s ease, color 0.18s ease;
+}
+
+.pr-modal-wrap ion-content {
+  --background: #f8fafc;
+}
+
+ion-modal {
+  &::part(content) {
+    border-radius: 28px;
+  }
+}

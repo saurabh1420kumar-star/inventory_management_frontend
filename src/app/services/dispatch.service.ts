@@ -114,6 +114,18 @@ export class DispatchService {
   }
 
   /**
+   * Reject GDN (payment-approved cart)
+   * POST /api/dispatch/carts/{cartId}/reject-gdn
+   */
+  rejectGdn(cartId: number, reason: string): Observable<any> {
+    return this.http.post<any>(
+      `${this.dispatchApiUrl}/carts/${cartId}/reject-gdn`,
+      { reason },
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
+  /**
    * Approve Payment (PI Approval)
    * POST /api/accounts/approve-payment/{orderId}?distributorId={distributorId}
    */

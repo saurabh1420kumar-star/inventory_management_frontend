@@ -1509,7 +1509,7 @@
     </div>
   </div>
   <!-- ==================== ADD PAYMENT MODAL ==================== -->
-  <ion-modal [isOpen]="showAddPaymentModal" (didDismiss)="closeAddPaymentModal()">
+  <ion-modal [isOpen]="showAddPaymentModal" (didDismiss)="closeAddPaymentModal()" [backdropDismiss]="false">
     <ng-template>
       <div class="h-full flex flex-col" style="background: #0d1117;">
 
