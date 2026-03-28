@@ -20,6 +20,13 @@ const routes: Routes = [
       import('./hierarchy-orders/hierarchy-orders.page').then(
         m => m.HierarchyOrdersPage
       )
+  },
+  {
+    path: 'sales-dashboard',
+    loadComponent: () =>
+      import('./sales-dashboard/sales-dashboard.page').then(
+        m => m.SalesDashboardPage
+      )
   }
 ];
 

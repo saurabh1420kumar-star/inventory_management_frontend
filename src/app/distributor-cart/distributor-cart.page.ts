@@ -19,6 +19,7 @@ import {
 } from 'ionicons/icons';
 import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } from '../services/cart.service';
 import { Auth } from '../services/auth';
+import { DistributorService } from '../services/distributor.service';
 
 @Component({
   selector: 'app-distributor-cart',
@@ -58,6 +59,9 @@ export class DistributorCartPage implements OnInit {
   // Cart modal open state
   showCartModal: boolean = false;
 
+  // Distributor address for delivery
+  distributorAddress: string = '';
+
   // Make Math available in template
   Math = Math;
 
@@ -66,7 +70,8 @@ export class DistributorCartPage implements OnInit {
     private cartService: CartService,
     private modalCtrl: ModalController,
     private auth: Auth,
-    private router: Router
+    private router: Router,
+    private distributorService: DistributorService
   ) {
     addIcons({
       'cart-outline': cartOutline,
@@ -86,6 +91,7 @@ export class DistributorCartPage implements OnInit {
   ngOnInit() {
     this.initializeForm();
     this.getDistributorId();
+    this.loadDistributorAddress();
     this.fetchFinishedProducts();
     this.subscribeToCart();
   }
@@ -94,6 +100,28 @@ export class DistributorCartPage implements OnInit {
     // Login response userId IS the distributor entity ID
     this.distributorId = this.auth.getUserId();
     console.log('Distributor ID:', this.distributorId);
+  }
+
+  /**
+   * Load distributor address from server
+   */
+  loadDistributorAddress() {
+    if (!this.distributorId) return;
+    
+    this.distributorService.getDistributorById(Number(this.distributorId)).subscribe({
+      next: (response) => {
+        if (response.data && response.data.address) {
+          this.distributorAddress = response.data.address;
+          console.log('Distributor address loaded:', this.distributorAddress);
+          // Pre-fill the form with the address
+          this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
+          this.orderForm.get('deliveryAddress')?.disable();
+        }
+      },
+      error: (error) => {
+        console.error('Failed to load distributor address:', error);
+      }
+    });
   }
 
   initializeForm() {
@@ -338,7 +366,7 @@ export class DistributorCartPage implements OnInit {
   private placeOrderWithCartId(cartId: number) {
     const orderPayload: PlaceOrderRequest = {
       cartId: cartId,
-      address: this.orderForm.value.deliveryAddress || ''
+      address: this.distributorAddress || ''
     };
 
     console.log('=== PLACE ORDER DEBUG ===');

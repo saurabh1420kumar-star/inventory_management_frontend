@@ -89,7 +89,25 @@ export class LoginPage {
           'success'
         );
 
-        this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+        // Route salespersons/sales managers to Sales Dashboard
+        // Check for various sales-related roles
+        const salesRoles = [
+          'SALES',
+          'SALESPERSON',
+          'SALES_MANAGER',
+          'SALES_OFFICER',
+          'STATE_SALES_MGR',
+          'AREA_SALES_MGR',
+          'REGIONAL_SALES_MGR',
+          'SALES_EXECUTIVE',
+          'SALES_REP'
+        ];
+        
+        if (salesRoles.some(salesRole => role.includes(salesRole))) {
+          this.router.navigateByUrl('/sales/sales-dashboard', { replaceUrl: true });
+        } else {
+          this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+        }
       },
 
       error: async (err) => {
