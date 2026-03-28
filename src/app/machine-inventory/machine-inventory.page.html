@@ -214,7 +214,7 @@
   </ion-fab>
 
   <!-- ADD MODAL -->
-  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()">
+  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" [backdropDismiss]="false">
     <ng-template>
       <div class="h-full bg-slate-50 overflow-y-auto">
 
@@ -339,7 +339,7 @@
   </ion-modal>
 
   <!-- EDIT MODAL -->
-  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()">
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" [backdropDismiss]="false">
     <ng-template>
       <div class="h-full bg-slate-50 overflow-y-auto">
 

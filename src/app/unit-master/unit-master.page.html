@@ -290,7 +290,7 @@
   </ion-fab>
 
   <!-- ADD UNIT MODAL -->
-  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" class="custom-modal">
+  <ion-modal [isOpen]="isAddModalOpen" (didDismiss)="closeAddModal()" class="custom-modal" [backdropDismiss]="false">
     <ng-template>
       <div class="h-screen flex flex-col bg-slate-50">
         
@@ -486,7 +486,7 @@
   </ion-modal>
 
   <!-- EDIT UNIT MODAL -->
-  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" class="custom-modal">
+  <ion-modal [isOpen]="isEditModalOpen" (didDismiss)="closeEditModal()" class="custom-modal" [backdropDismiss]="false">
     <ng-template>
       <div class="h-screen flex flex-col bg-slate-50">
         

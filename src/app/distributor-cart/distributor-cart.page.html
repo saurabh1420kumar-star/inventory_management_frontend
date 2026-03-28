@@ -92,7 +92,7 @@
 </ion-content>
 
 <!-- ===== CART MODAL (Glass) ===== -->
-<ion-modal [isOpen]="showCartModal" (didDismiss)="showCartModal = false">
+<ion-modal [isOpen]="showCartModal" (didDismiss)="showCartModal = false" [backdropDismiss]="false">
   <ng-template>
     <ion-header class="ion-no-border">
       <ion-toolbar style="--background: #0d1117;">
@@ -215,7 +215,7 @@
 </ion-modal>
 
 <!-- ===== ADD TO CART MODAL (Glass) ===== -->
-<ion-modal [isOpen]="showProductModal" (didDismiss)="closeProductModal()">
+<ion-modal [isOpen]="showProductModal" (didDismiss)="closeProductModal()" [backdropDismiss]="false">
   <ng-template>
     <ion-header class="ion-no-border">
       <ion-toolbar style="--background: #0d1117;">
@@ -254,14 +254,15 @@
               <button (click)="quantityToAdd = Math.max(1, quantityToAdd - 1)"
                       class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
                       style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">&#8722;</button>
-              <input [(ngModel)]="quantityToAdd" type="number" min="1" [max]="selectedProduct.quantity"
+              <input [(ngModel)]="quantityToAdd" type="number" min="1"
+                     (ngModelChange)="quantityToAdd = Math.max(1, quantityToAdd)"
                      style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);"
                      class="flex-1 px-4 py-3 rounded-xl text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
-              <button (click)="quantityToAdd = Math.min(selectedProduct.quantity, quantityToAdd + 1)"
+              <button (click)="quantityToAdd = quantityToAdd + 1"
                       class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
                       style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">+</button>
             </div>
-            <p class="text-xs text-slate-600 mt-2 text-center">Max: {{ selectedProduct.quantity }}</p>
+            <p class="text-xs text-slate-600 mt-2 text-center">Available Stock: {{ selectedProduct.quantity }}</p>
           </div>
 
           <!-- Subtotal -->
@@ -313,7 +314,7 @@
 </ion-footer>
 
 <!-- ===== CHECKOUT MODAL (Glass) ===== -->
-<ion-modal [isOpen]="showCheckoutModal" (didDismiss)="closeCheckoutModal()">
+<ion-modal [isOpen]="showCheckoutModal" (didDismiss)="closeCheckoutModal()" [backdropDismiss]="false">
   <ng-template>
     <ion-header class="ion-no-border">
       <ion-toolbar style="--background: #0d1117;">

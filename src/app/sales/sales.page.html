@@ -330,7 +330,7 @@
                   Approve
                 </button>
                 <button
-                  (click)="dismissOrder(order)"
+                  (click)="openRejectModal(order)"
                   class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3 transition-all duration-200 active:scale-95"
                   style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
                   <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
@@ -393,5 +393,79 @@
 
     </div>
   </div>
+
+  <!-- ═══ REJECT ORDER MODAL ═══ -->
+  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [backdropDismiss]="false">
+    <ng-template>
+      <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 85vh;">
+
+        <!-- Header -->
+        <div class="flex items-center justify-between px-6 py-5 flex-shrink-0"
+          style="background: linear-gradient(135deg, #f43f5e, #ec4899);">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 rounded-xl flex items-center justify-center border border-white/30"
+              style="background: rgba(255,255,255,0.2);">
+              <ion-icon name="close-circle-outline" class="text-xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-base font-bold text-white">Reject Order</h2>
+              <p *ngIf="orderBeingRejected" class="text-xs" style="color: rgba(255,255,255,0.75);">
+                ORDER #{{ orderBeingRejected.id }} &middot; {{ orderBeingRejected.distributorName || orderBeingRejected.salespersonName }}
+              </p>
+            </div>
+          </div>
+          <button (click)="cancelReject()"
+            class="p-2 rounded-xl border border-white/30 transition-colors"
+            style="background: rgba(255,255,255,0.2);">
+            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="p-6 space-y-4 overflow-y-auto flex-1">
+
+          <!-- Warning banner -->
+          <div class="flex items-start gap-3 rounded-xl p-4 border border-red-200 bg-red-50">
+            <ion-icon name="warning-outline" class="text-red-500 text-xl flex-shrink-0 mt-0.5"></ion-icon>
+            <div>
+              <p class="text-sm font-bold text-red-700">Confirm Rejection</p>
+              <p class="text-xs text-red-600 mt-0.5">The distributor will be notified that their order has been rejected.</p>
+            </div>
+          </div>
+
+          <!-- Reason field -->
+          <div>
+            <label class="block text-xs font-bold uppercase tracking-wider text-slate-600 mb-2">
+              Reason for Rejection <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              [(ngModel)]="rejectRemarks"
+              placeholder="e.g. Insufficient stock, incorrect pricing, incomplete details..."
+              rows="4"
+              class="w-full rounded-xl border border-slate-200 bg-slate-50 hover:bg-white focus:bg-white focus:border-rose-400 focus:ring-4 focus:ring-rose-50 text-slate-700 placeholder-slate-400 py-3 px-4 text-sm outline-none resize-none transition-all">
+            </textarea>
+            <p *ngIf="rejectRemarks.trim().length === 0"
+              class="text-xs text-red-400 mt-1">A reason is required before rejecting.</p>
+          </div>
+
+          <!-- Actions -->
+          <div class="flex gap-3 pt-2 pb-2">
+            <button (click)="cancelReject()"
+              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl py-3.5 transition-all active:scale-95">
+              Cancel
+            </button>
+            <button (click)="confirmReject()"
+              [disabled]="!rejectRemarks.trim()"
+              class="flex-1 flex items-center justify-center gap-2 text-white font-bold text-sm rounded-xl py-3.5 transition-all active:scale-95 disabled:opacity-50 disabled:cursor-not-allowed"
+              style="background: linear-gradient(135deg, #f43f5e, #ec4899); box-shadow: 0 4px 15px rgba(244,63,94,0.25);">
+              <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+              Confirm Reject
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 
 </ion-content>

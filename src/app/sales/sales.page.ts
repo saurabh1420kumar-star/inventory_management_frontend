@@ -31,6 +31,11 @@ export class SalesPage implements OnInit {
   orderFilterTab: 'all' | 'pending' | 'approved' | 'pi_ready' | 'rejected' = 'pending';
   approvingPaymentId: number | null = null;
   downloadingPIId: number | null = null;
+
+  // ── Reject Modal ─────────────────────────────────
+  isRejectModalOpen = false;
+  rejectRemarks = '';
+  orderBeingRejected: PendingOrder | null = null;
   orderSearchTerm = '';
   expandedOrderIds = new Set<number>();
 
@@ -383,19 +388,34 @@ export class SalesPage implements OnInit {
     });
   }
 
-  dismissOrder(order: PendingOrder) {
-    this.salesService.dismissOrder(order.id).subscribe({
+  openRejectModal(order: PendingOrder) {
+    this.orderBeingRejected = order;
+    this.rejectRemarks = '';
+    this.isRejectModalOpen = true;
+  }
+
+  cancelReject() {
+    this.isRejectModalOpen = false;
+    this.orderBeingRejected = null;
+    this.rejectRemarks = '';
+  }
+
+  confirmReject() {
+    if (!this.orderBeingRejected) return;
+    const order = this.orderBeingRejected;
+    this.salesService.dismissOrder(order.id, this.rejectRemarks.trim()).subscribe({
       next: () => {
         const idx = this.pendingOrders.findIndex(o => o.id === order.id);
         if (idx !== -1) {
           this.pendingOrders[idx] = { ...this.pendingOrders[idx], status: 'DISMISSED' };
           this.pendingOrders = [...this.pendingOrders];
         }
+        this.cancelReject();
         this.orderFilterTab = 'rejected';
       },
       error: (error) => {
         console.error('Error dismissing order:', error);
-        this.errorMessage = 'Failed to dismiss order. Please try again.';
+        this.errorMessage = 'Failed to reject order. Please try again.';
       },
     });
   }

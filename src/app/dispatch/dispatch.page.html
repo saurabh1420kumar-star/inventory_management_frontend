@@ -340,8 +340,14 @@
                 Generate GDN
               </button>
               <button
+                (click)="openGdnRejectModal(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                Reject
+              </button>
+              <button
                 (click)="openDetail(order)"
-                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-4 py-3 active:scale-95 transition-all duration-200">
                 <ion-icon name="eye-outline" class="text-lg"></ion-icon>
               </button>
             </div>
@@ -350,7 +356,8 @@
             <div *ngIf="order.gdnStatus === 'generated'" class="flex gap-3">
               <button
                 (click)="markDispatched(order)"
-                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-cyan-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                [disabled]="isLoading"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-cyan-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-50">
                 <ion-icon name="car-outline" class="text-lg"></ion-icon>
                 Mark as Dispatched
               </button>
@@ -359,6 +366,11 @@
                 class="flex items-center justify-center gap-2 bg-teal-50 hover:bg-teal-100 text-teal-600 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200 border border-teal-200">
                 <ion-icon name="download-outline" class="text-lg"></ion-icon>
                 GDN
+              </button>
+              <button
+                (click)="openDetail(order)"
+                class="flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl px-5 py-3 active:scale-95 transition-all duration-200">
+                <ion-icon name="eye-outline" class="text-lg"></ion-icon>
               </button>
             </div>
 
@@ -492,7 +504,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- REJECT MODAL                                              -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="cancelReject()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [backdropDismiss]="false">
     <ng-template>
       <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 90vh;">
         <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
@@ -548,7 +560,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- ORDER DETAIL MODAL                                        -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <ion-modal [isOpen]="isDetailModalOpen" (didDismiss)="closeDetail()" class="custom-modal">
+  <ion-modal [isOpen]="isDetailModalOpen" (didDismiss)="onDetailModalDismissed()" class="custom-modal" [backdropDismiss]="false">
     <ng-template>
       <div *ngIf="selectedOrder" class="h-screen flex flex-col bg-slate-50">
         <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-5 flex items-center justify-between shadow-lg flex-shrink-0">
@@ -722,7 +734,7 @@
   <!-- ═══════════════════════════════════════════════════════════ -->
   <!-- GDN GENERATION MODAL                                       -->
   <!-- ═══════════════════════════════════════════════════════════ -->
-  <ion-modal [isOpen]="isGdnModalOpen" (didDismiss)="closeGdnModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+  <ion-modal [isOpen]="isGdnModalOpen" (didDismiss)="closeGdnModal()" [breakpoints]="[0, 1]" [initialBreakpoint]="1" [backdropDismiss]="false">
     <ng-template>
       <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 95vh;">
         <!-- Header -->
@@ -914,6 +926,67 @@
               <ion-icon *ngIf="!isLoading" name="document-text-outline" class="text-base"></ion-icon>
               <ion-spinner *ngIf="isLoading" name="crescent" class="w-4 h-4"></ion-spinner>
               {{ isLoading ? 'Generating...' : 'Generate GDN' }}
+            </button>
+          </div>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <!-- GDN REJECT MODAL                                          -->
+  <!-- ═══════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isGdnRejectModalOpen" (didDismiss)="cancelGdnReject()" [backdropDismiss]="false"
+    style="--height: auto; --border-radius: 20px; --width: 92%; --max-width: 480px;">
+    <ng-template>
+      <div class="bg-white rounded-[20px] overflow-hidden" style="max-height: 90vh; overflow-y: auto;">
+        <div class="bg-gradient-to-r from-rose-500 to-pink-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
+          <div class="flex items-center gap-3">
+            <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+              <ion-icon name="close-circle-outline" class="text-xl text-white"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-lg font-bold text-white">Reject GDN</h2>
+              <p *ngIf="orderForGdnReject" class="text-xs text-rose-100">{{ orderForGdnReject.orderNumber }} · {{ orderForGdnReject.distributorName }}</p>
+            </div>
+          </div>
+          <button (click)="cancelGdnReject()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
+            <ion-icon name="close-outline" class="text-lg text-white"></ion-icon>
+          </button>
+        </div>
+
+        <div class="p-6 space-y-5 overflow-y-auto flex-1">
+          <div class="flex items-start gap-3 bg-rose-50 border border-rose-200 rounded-xl p-4">
+            <ion-icon name="warning-outline" class="text-rose-500 text-xl flex-shrink-0 mt-0.5"></ion-icon>
+            <div>
+              <p class="text-sm font-bold text-rose-700">Confirm GDN Rejection</p>
+              <p class="text-xs text-rose-600 mt-0.5">This order will be dismissed and the distributor will need to place a new order.</p>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2">
+              Rejection Reason <span class="text-rose-500">*</span>
+            </label>
+            <textarea
+              [(ngModel)]="gdnRejectReason"
+              placeholder="e.g. Inventory unavailable, incorrect order details, logistics issue..."
+              rows="4"
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-rose-400 focus:ring-4 focus:ring-rose-50 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm">
+            </textarea>
+            <p *ngIf="gdnRejectReason.trim().length === 0" class="text-xs text-rose-400 mt-1">Rejection reason is required before confirming.</p>
+          </div>
+
+          <div class="flex gap-3">
+            <button (click)="cancelGdnReject()"
+              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold text-sm rounded-xl py-3.5 active:scale-95 transition-all">
+              Cancel
+            </button>
+            <button (click)="confirmGdnReject()"
+              [disabled]="!gdnRejectReason.trim() || isLoading"
+              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3.5 shadow-md shadow-rose-200 active:scale-95 transition-all disabled:opacity-50 disabled:cursor-not-allowed">
+              <ion-spinner *ngIf="isLoading" name="crescent" class="w-4 h-4"></ion-spinner>
+              <ion-icon *ngIf="!isLoading" name="close-circle-outline" class="text-base"></ion-icon>
+              {{ isLoading ? 'Rejecting...' : 'Confirm Reject' }}
             </button>
           </div>
         </div>

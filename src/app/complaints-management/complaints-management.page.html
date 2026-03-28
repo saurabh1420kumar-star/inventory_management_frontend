@@ -233,7 +233,7 @@
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- DETAIL BOTTOM SHEET -->
 <!-- ═══════════════════════════════════════════════════════ -->
-<div *ngIf="isDetailModalOpen && selectedComplaint" class="sheet-overlay" (click)="closeDetailModal()">
+<div *ngIf="isDetailModalOpen && selectedComplaint" class="sheet-overlay">
   <div class="sheet-panel sheet-detail" (click)="$event.stopPropagation()">
 
     <div class="sheet-handle-wrap">
@@ -317,7 +317,7 @@
 <!-- ═══════════════════════════════════════════════════════ -->
 <!-- STATUS UPDATE BOTTOM SHEET -->
 <!-- ═══════════════════════════════════════════════════════ -->
-<div *ngIf="isStatusModalOpen && selectedComplaint" class="sheet-overlay" (click)="closeStatusModal()">
+<div *ngIf="isStatusModalOpen && selectedComplaint" class="sheet-overlay">
   <div class="sheet-panel sheet-status" (click)="$event.stopPropagation()">
 
     <div class="sheet-handle-wrap">

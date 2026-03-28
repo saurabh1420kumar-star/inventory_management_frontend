@@ -57,6 +57,23 @@
         </div>
       </a>
 
+      <!-- Payment Requests Navigation Button -->
+      <a routerLink="/payment-request"
+        class="group relative flex items-center gap-4 px-6 py-5 rounded-2xl transition-all duration-300 overflow-hidden mb-6"
+        style="background: rgba(99,102,241,0.08); border: 1px solid rgba(99,102,241,0.2);">
+        <div class="absolute inset-0 transition-all duration-300" style="background: rgba(99,102,241,0.02);"></div>
+        <div class="relative flex items-center gap-4 w-full">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-all" style="background: rgba(99,102,241,0.15);">
+            <ion-icon name="wallet-outline" class="text-2xl" style="color: #6366f1;"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <h3 class="text-base font-bold text-slate-800">Payment Requests</h3>
+            <p class="text-xs text-slate-500">Review & approve all distributor payments</p>
+          </div>
+          <ion-icon name="arrow-forward-outline" class="text-2xl transition-all duration-300 group-hover:translate-x-1" style="color: #64748b;"></ion-icon>
+        </div>
+      </a>
+
       <!-- Account Selector Card -->
       <div class="account-selector-wrap bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
         <label class="block text-sm font-bold text-slate-500 uppercase tracking-wide mb-3">Select Ledger Account</label>
@@ -505,7 +522,7 @@
 
     </div>
   </div> <!-- Update Balance Modal -->
-  <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-xl">
+  <ion-modal [isOpen]="isFormModalOpen" (didDismiss)="isFormModalOpen = false" class="modal-xl" [backdropDismiss]="false">
     <ng-template>
       <div class="txn-modal-wrap bg-white h-full flex flex-col">
         <!-- Modal Header -->
@@ -776,7 +793,7 @@
   </ion-modal>
 
   <!-- Journal Voucher Modal -->
-  <ion-modal [isOpen]="isJVModalOpen" (didDismiss)="closeJVModal()" class="modal-xl">
+  <ion-modal [isOpen]="isJVModalOpen" (didDismiss)="closeJVModal()" class="modal-xl" [backdropDismiss]="false">
     <ng-template>
       <div class="txn-modal-wrap bg-white h-full flex flex-col">
         <!-- Modal Header -->
@@ -903,7 +920,7 @@
   </ion-modal>
 
   <!-- Journal Voucher List Modal -->
-  <ion-modal [isOpen]="isJVListModalOpen" (didDismiss)="closeJVListModal()" class="modal-full">
+  <ion-modal [isOpen]="isJVListModalOpen" (didDismiss)="closeJVListModal()" class="modal-full" [backdropDismiss]="false">
     <ng-template>
       <div class="txn-modal-wrap bg-white h-full flex flex-col">
         <!-- Modal Header -->
@@ -1027,7 +1044,7 @@
   </ion-modal>
 
   <!-- Transaction Details Modal -->
-  <ion-modal [isOpen]="isDetailsModalOpen" (didDismiss)="isDetailsModalOpen = false" class="modal-sm items-center">
+  <ion-modal [isOpen]="isDetailsModalOpen" (didDismiss)="isDetailsModalOpen = false" class="modal-sm items-center" [backdropDismiss]="false">
     <ng-template>
       <div class="detail-modal-wrap bg-white rounded-2xl shadow-2xl overflow-hidden max-w-md w-full m-auto">
         <!-- Modal Header -->
@@ -1162,7 +1179,7 @@
   </ion-modal>
 
   <!-- Delete Confirmation Modal -->
-  <ion-modal [isOpen]="isConfirmDeleteOpen" (didDismiss)="cancelDelete()" class="modal-sm items-center">
+  <ion-modal [isOpen]="isConfirmDeleteOpen" (didDismiss)="cancelDelete()" class="modal-sm items-center" [backdropDismiss]="false">
     <ng-template>
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full m-auto">
         <div class="p-8 text-center">
@@ -1193,7 +1210,7 @@
   </ion-modal>
 
   <!-- Ready to Dispatch Confirmation Modal -->
-  <ion-modal [isOpen]="isDispatchModalOpen" (didDismiss)="isDispatchModalOpen = false" class="modal-sm items-center">
+  <ion-modal [isOpen]="isDispatchModalOpen" (didDismiss)="isDispatchModalOpen = false" class="modal-sm items-center" [backdropDismiss]="false">
     <ng-template>
       <div class="bg-white rounded-2xl shadow-2xl overflow-hidden max-w-sm w-full m-auto">
         <div class="p-8 text-center">
@@ -1224,7 +1241,7 @@
   </ion-modal>
 
   <!-- Pending Payments Modal -->
-  <ion-modal [isOpen]="isPendingPaymentsModalOpen" (didDismiss)="isPendingPaymentsModalOpen = false" class="modal-xl">
+  <ion-modal [isOpen]="isPendingPaymentsModalOpen" (didDismiss)="isPendingPaymentsModalOpen = false" class="modal-xl" [backdropDismiss]="false">
     <ng-template>
       <div class="txn-modal-wrap bg-white h-full flex flex-col">
         <!-- Modal Header -->

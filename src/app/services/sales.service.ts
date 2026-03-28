@@ -117,7 +117,10 @@ export class SalesService {
     );
   }
 
-  dismissOrder(cartId: number): Observable<any> {
-    return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`, { headers: this.getAuthHeaders() });
+  dismissOrder(cartId: number, reason?: string): Observable<any> {
+    return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`, {
+      headers: this.getAuthHeaders(),
+      body: reason ? { reason } : undefined,
+    });
   }
 }

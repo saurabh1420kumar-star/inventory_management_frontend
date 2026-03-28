@@ -51,6 +51,10 @@
                   <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
                   <ion-label>Transaction</ion-label>
                 </ion-item>
+                <ion-item *appAcl="'ACCOUNTS'" routerLink="/payment-request" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-icon name="wallet-outline" slot="start"></ion-icon>
+                  <ion-label>Payment Requests</ion-label>
+                </ion-item>
               </div>
             </ion-accordion>
           </ion-accordion-group>
@@ -203,13 +207,13 @@
           <ion-label>Manage Complaints</ion-label>
         </ion-item>
 
-        <!-- ===== USER RIGHTS (hidden) ===== -->
-        <!-- <ng-container *ngIf="isDesktop || isAdmin">
-          <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-rights" routerLinkActive="active" (click)="onMenuItemClick()">
+        <!-- ===== USER RIGHTS ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
+          <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-right" routerLinkActive="active" (click)="onMenuItemClick()">
             <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
             <ion-label>User Rights</ion-label>
           </ion-item>
-        </ng-container> -->
+        </ng-container>
 
         <ion-item *appAcl="'OPERATIONS'" routerLink="/operations" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="document-text-outline" slot="start"></ion-icon>

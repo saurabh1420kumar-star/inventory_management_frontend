@@ -218,6 +218,42 @@ export class LedgerService {
         );
     }
 
+    /**
+     * Fetch ALL payment requests across every distributor, with optional status filter.
+     * Used by the centralised Payment Requests page.
+     */
+    getAllPaymentRequests(status?: string, page: number = 0, size: number = 50): Observable<any> {
+        let url = `${this.apiUrl}/accounts/payment-requests?page=${page}&size=${size}`;
+        if (status && status !== 'ALL') {
+            url += `&status=${status}`;
+        }
+        console.log('🔄 API Request - GET /api/accounts/payment-requests', { status, page, size });
+        return this.http.get<any>(url).pipe(
+            catchError(error => {
+                console.error('❌ Error fetching all payment requests:', error);
+                return of({ content: [], totalElements: 0, totalPages: 0 });
+            })
+        );
+    }
+
+    rejectPayment(paymentId: number, rejectedBy: number, reason: string): Observable<any> {
+        console.log('🔄 API Request - POST /api/accounts/payment-rejection/' + paymentId);
+        return this.http.post(
+            `${this.apiUrl}/accounts/payment-rejection/${paymentId}?rejectedBy=${rejectedBy}`,
+            { reason },
+            { responseType: 'text' }
+        ).pipe(
+            map((response: any) => ({
+                success: true,
+                message: response || 'Payment rejected successfully',
+            })),
+            catchError(error => {
+                console.error('❌ Error rejecting payment:', error);
+                return of({ success: false, message: error?.error?.message || 'Failed to reject payment' });
+            })
+        );
+    }
+
     approvePayment(paymentId: number, approvedBy: number): Observable<any> {
         console.log('🔄 API Request - POST /api/accounts/payment-approval/' + paymentId);
         console.log('📤 PaymentId:', paymentId);
