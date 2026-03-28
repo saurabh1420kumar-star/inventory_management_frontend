@@ -26,21 +26,37 @@ export interface PaymentResponse {
   data?: any;
 }
 
+export interface PendingPayment {
+  id: number;
+  distributorId: number;
+  distributorName: string;
+  amount: number;
+  createdAt: string;
+  description: string;
+  status: string;
+  transactionType: string;
+  salespersonId: number;
+  approvedAt: string | null;
+  approvedBy: string | null;
+  rejectionReason: string | null;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'https://api.imsnectarorigin.com/api/accounts/update-balance';
+  private apiUrl = 'https://api.imsnectarorigin.com/api/accounts/update-balance-with-salesperson';
 
   constructor(private http: HttpClient) {}
 
-  submitPayment(paymentData: PaymentRequest): Observable<PaymentResponse> {
+  submitPayment(paymentData: PaymentRequest, salespersonId: number): Observable<PaymentResponse> {
     const distributorId = parseInt(paymentData.distributorId);
     const transactionType = paymentData.balanceType === 'credit' ? 'CREDIT' : 'DEBIT';
     const description = paymentData.description || 'Payment';
 
     const params = {
       distributorId: distributorId.toString(),
+      salespersonId: salespersonId.toString(),
       amount: paymentData.amount.toString(),
       transactionType: transactionType,
       description: description
@@ -55,5 +71,13 @@ export class PaymentService {
 
   getPaymentHistory(distributorId: string): Observable<PaymentResponse> {
     return this.http.get<PaymentResponse>(`${this.apiUrl}/distributor/${distributorId}`);
+  }
+
+  getPendingPayments(salespersonId: number): Observable<any> {
+    const pendingPaymentsUrl = 'https://api.imsnectarorigin.com/api/accounts/pending-payments';
+    const params = {
+      salespersonId: salespersonId.toString()
+    };
+    return this.http.get<any>(pendingPaymentsUrl, { params });
   }
 }

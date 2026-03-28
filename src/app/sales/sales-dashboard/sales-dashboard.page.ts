@@ -2,14 +2,15 @@ import { Component, OnInit, OnDestroy } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
+import { RouterModule } from '@angular/router';
 import { SalesAnalyticsService, SalesAnalyticsData } from './sales-analytics.service';
 import { PaymentService, PaymentRequest, PaymentResponse } from './payment.service';
 import { DistributorService, Distributor } from './distributor.service';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
-import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline } from 'ionicons/icons';
+import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline } from 'ionicons/icons';
 
 interface PaymentForm {
   balanceType: 'credit' | 'debit' | '';
@@ -39,7 +40,8 @@ interface PaymentMethod {
     CommonModule,
     FormsModule,
     HttpClientModule,
-    IonicModule
+    IonicModule,
+    RouterModule
   ],
   templateUrl: './sales-dashboard.page.html',
   styleUrls: ['./sales-dashboard.page.scss']
@@ -55,9 +57,12 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isLoadingAnalytics = false;
   isSubmittingPayment = false;
   isLoadingDistributors = false;
+  isLoadingPendingPayments = false;
+  showMyPayments = false;
   receiptFileName = '';
   
   distributors: Distributor[] = [];
+  pendingPayments: any[] = [];
   salespersonId = 1; // Get this from auth/session
   
   paymentForm: PaymentForm = {
@@ -88,14 +93,16 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   constructor(
     private salesAnalyticsService: SalesAnalyticsService,
     private paymentService: PaymentService,
-    private distributorService: DistributorService
+    private distributorService: DistributorService,
+    private toastController: ToastController
   ) {
-    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline });
+    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline });
   }
 
   ngOnInit(): void {
     this.loadAnalytics();
     this.loadDistributors();
+    this.loadPendingPayments();
   }
 
   ngOnDestroy(): void {
@@ -154,6 +161,25 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       });
   }
 
+  loadPendingPayments(): void {
+    this.isLoadingPendingPayments = true;
+    
+    this.paymentService
+      .getPendingPayments(this.salespersonId)
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          this.pendingPayments = Array.isArray(response) ? response : response.data || [];
+          this.isLoadingPendingPayments = false;
+        },
+        error: (error) => {
+          console.error('Error loading pending payments:', error);
+          this.isLoadingPendingPayments = false;
+          this.pendingPayments = [];
+        }
+      });
+  }
+
   openPaymentModal(): void {
     this.isPaymentModalOpen = true;
   }
@@ -180,9 +206,20 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.receiptFileName = '';
   }
 
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color,
+      buttons: [{ icon: 'close', role: 'cancel' }]
+    });
+    await toast.present();
+  }
+
   submitPayment(): void {
     if (!this.validatePaymentForm()) {
-      alert('Please fill all required fields');
+      this.showToast('Please fill all required fields', 'warning');
       return;
     }
 
@@ -205,25 +242,24 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     };
 
     this.paymentService
-      .submitPayment(paymentRequest)
+      .submitPayment(paymentRequest, this.salespersonId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response: PaymentResponse) => {
           this.isSubmittingPayment = false;
           // Check if payment was added successfully by looking for paymentId
           if (response.paymentId) {
-            const successMessage = `${response.message}\n\nPayment ID: ${response.paymentId}\nStatus: ${response.status || 'PAYMENT_ADDED'}`;
-            alert(successMessage);
+            this.showToast(`${response.message} (ID: ${response.paymentId})`, 'success');
             this.closePaymentModal();
             this.loadAnalytics();
           } else {
-            alert(`Error: ${response.message}`);
+            this.showToast(`Error: ${response.message}`, 'danger');
           }
         },
         error: (error) => {
           console.error('Error submitting payment:', error);
           this.isSubmittingPayment = false;
-          alert('Failed to submit payment. Please try again.');
+          this.showToast('Failed to submit payment. Please try again.', 'danger');
         }
       });
   }

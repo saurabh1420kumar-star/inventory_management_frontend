@@ -27,6 +27,13 @@ const routes: Routes = [
       import('./sales-dashboard/sales-dashboard.page').then(
         m => m.SalesDashboardPage
       )
+  },
+  {
+    path: 'my-payments',
+    loadComponent: () =>
+      import('./my-payments/my-payments.page').then(
+        m => m.MyPaymentsPage
+      )
   }
 ];
 

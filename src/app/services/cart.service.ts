@@ -22,6 +22,7 @@ export interface Product {
 export interface CartItem extends Product {
   cartQuantity: number;
   subtotal: number;
+  cartItemId?: number; // backend cart item row ID (from cartItems[].id)
 }
 
 export interface CartItemPayload {
@@ -118,6 +119,17 @@ export class CartService {
       ...(token ? { 'Authorization': `Bearer ${token}` } : {})
     });
     return this.http.post<any>(url, items, { headers });
+  }
+
+  // Delete a single cart item via API
+  // DELETE /api/cart/items/{id}
+  deleteCartItem(itemId: number): Observable<any> {
+    const url = `${this.cartApiUrl}/items/${itemId}`;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    return this.http.delete<any>(url, { headers });
   }
 
   // Edit cart items via API

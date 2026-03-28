@@ -19,7 +19,8 @@ import {
   IonLabel,
   IonSelect,
   IonSelectOption,
-  IonSpinner
+  IonSpinner,
+  ToastController
 } from '@ionic/angular/standalone';
 
 import { InventoryService, InventoryItem } from '../services/inventory';
@@ -62,7 +63,18 @@ export class MachineInventoryPage implements OnInit {
   machineParts: InventoryItem[] = [];
   filteredMachines: InventoryItem[] = [];
 
-  constructor(private inventoryService: InventoryService, private fb: FormBuilder) {}
+  constructor(private inventoryService: InventoryService, private fb: FormBuilder, private toastController: ToastController) {}
+
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color,
+      buttons: [{ icon: 'close', role: 'cancel' }]
+    });
+    await toast.present();
+  }
 
   ngOnInit() {
     this.loadMachines();
@@ -76,7 +88,7 @@ export class MachineInventoryPage implements OnInit {
         this.machineParts = parts;
         this.applyFilters();
       },
-      error: () => alert('Unable to fetch machine parts.')
+      error: () => this.showToast('Unable to fetch machine parts.', 'danger')
     });
   }
 
@@ -187,11 +199,11 @@ export class MachineInventoryPage implements OnInit {
           condition: 'NEW',
           quantity: 0
         });
-        alert('Machine part added successfully!');
+        this.showToast('Machine part added successfully!', 'success');
       },
       error: (err) => {
         console.error(err);
-        alert('Unable to add part');
+        this.showToast('Unable to add part', 'danger');
       }
     });
   }
@@ -240,11 +252,11 @@ export class MachineInventoryPage implements OnInit {
       next: () => {
         this.closeEditModal();
         this.loadMachines();
-        alert('Machine part updated successfully!');
+        this.showToast('Machine part updated successfully!', 'success');
       },
       error: (err) => {
         console.error(err);
-        alert('Unable to update part');
+        this.showToast('Unable to update part', 'danger');
       }
     });
   }
@@ -257,11 +269,11 @@ export class MachineInventoryPage implements OnInit {
     this.inventoryService.deleteItem(part.id, part.category).subscribe({
       next: () => {
         this.loadMachines();
-        alert('Machine part deleted successfully!');
+        this.showToast('Machine part deleted successfully!', 'success');
       },
       error: (err) => {
         console.error(err);
-        alert('Unable to delete part');
+        this.showToast('Unable to delete part', 'danger');
       }
     });
   }

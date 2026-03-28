@@ -1,0 +1,104 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #0d1117;">
+    <ion-buttons slot="start">
+      <button (click)="goBack()" class="flex items-center gap-2 pl-2 pr-3 py-1.5 rounded-xl"
+        style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: white;">
+        <ion-icon name="arrow-back-outline" style="font-size: 18px;"></ion-icon>
+        <span style="font-size: 13px; font-weight: 600;">Back</span>
+      </button>
+    </ion-buttons>
+    <ion-title style="color: white; font-weight: 700; font-size: 18px;">My Payments</ion-title>
+    <ion-buttons slot="end">
+      <button (click)="loadPayments()" class="flex items-center justify-center w-9 h-9 rounded-xl mr-2"
+        style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); color: white;">
+        <ion-icon name="refresh-outline" style="font-size: 18px;"></ion-icon>
+      </button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="--background: #0d1117;">
+  <div class="px-4 pt-4 pb-8">
+
+    <!-- Summary Strip -->
+    <div class="flex items-center justify-between px-4 py-3 rounded-2xl mb-5"
+      style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+          style="background: rgba(16,185,129,0.2);">
+          <ion-icon name="wallet-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
+        </div>
+        <div>
+          <p style="font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Records</p>
+          <p style="font-size: 22px; font-weight: 800; color: white;">{{ payments.length }}</p>
+        </div>
+      </div>
+      <div class="text-right">
+        <p style="font-size: 11px; color: #475569; font-weight: 600; text-transform: uppercase; letter-spacing: 0.05em;">Total Amount</p>
+        <p style="font-size: 18px; font-weight: 800; color: #34d399;">
+          ₹{{ totalAmount | number:'1.2-2' }}
+        </p>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+      <ion-spinner name="crescent" style="color: #10b981; width: 36px; height: 36px;"></ion-spinner>
+      <p style="color: #475569; margin-top: 12px; font-size: 14px;">Loading payments...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoading && payments.length === 0" class="flex flex-col items-center justify-center py-20">
+      <ion-icon name="receipt-outline" style="font-size: 56px; color: #1e293b;"></ion-icon>
+      <p style="color: #475569; margin-top: 12px; font-size: 15px; font-weight: 600;">No payments found</p>
+      <p style="color: #334155; font-size: 13px; margin-top: 4px;">Your payment records will appear here</p>
+    </div>
+
+    <!-- Payments List -->
+    <div *ngIf="!isLoading && payments.length > 0" class="space-y-3">
+      <div *ngFor="let payment of payments"
+        class="rounded-2xl overflow-hidden"
+        style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+
+        <!-- Card Header -->
+        <div class="flex items-center justify-between px-4 pt-4 pb-3"
+          style="border-bottom: 1px solid rgba(255,255,255,0.05);">
+          <div class="flex-1">
+            <p style="font-size: 15px; font-weight: 700; color: white;">{{ payment.distributorName || 'N/A' }}</p>
+            <p style="font-size: 12px; color: #64748b; margin-top: 2px;">{{ payment.description }}</p>
+          </div>
+          <div class="text-right ml-4">
+            <p style="font-size: 18px; font-weight: 800;"
+              [style.color]="payment.transactionType === 'CREDIT' ? '#34d399' : '#f87171'">
+              {{ payment.transactionType === 'CREDIT' ? '+' : '-' }}₹{{ payment.amount | number:'1.2-2' }}
+            </p>
+            <p style="font-size: 10px; font-weight: 700; letter-spacing: 0.05em; margin-top: 2px;"
+              [style.color]="payment.transactionType === 'CREDIT' ? '#10b981' : '#ef4444'">
+              {{ payment.transactionType }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Card Footer -->
+        <div class="flex items-center justify-between px-4 py-2.5">
+          <p style="font-size: 11px; color: #475569;">
+            {{ payment.createdAt | date:'dd MMM yyyy, h:mm a' }}
+          </p>
+          <span class="px-2.5 py-1 rounded-full" style="font-size: 10px; font-weight: 700; letter-spacing: 0.04em;"
+            [ngStyle]="{
+              'background': payment.status === 'PAYMENT_ADDED' ? 'rgba(16,185,129,0.15)' :
+                            payment.status === 'APPROVED'      ? 'rgba(6,182,212,0.15)'   :
+                            payment.status === 'REJECTED'      ? 'rgba(239,68,68,0.15)'   : 'rgba(100,116,139,0.15)',
+              'color':      payment.status === 'PAYMENT_ADDED' ? '#34d399' :
+                            payment.status === 'APPROVED'      ? '#22d3ee' :
+                            payment.status === 'REJECTED'      ? '#f87171' : '#94a3b8'
+            }">
+            {{ payment.status }}
+          </span>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+</ion-content>

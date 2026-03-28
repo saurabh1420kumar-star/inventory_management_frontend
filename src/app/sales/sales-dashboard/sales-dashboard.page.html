@@ -114,80 +114,65 @@
     </div>
 
     <!-- ===== OPERATIONS TAB ===== -->
-    <div *ngIf="selectedTab === 'operations'" class="flex flex-col gap-5">
-      
-      <!-- Search -->
-      <div class="relative" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); border-radius: 12px; padding: 0 12px;">
-        <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-lg"></ion-icon>
-        <input type="text" 
-               placeholder="Search operations" 
-               class="w-full py-3 pl-10 bg-transparent text-white placeholder-slate-500 outline-none" >
+    <div *ngIf="selectedTab === 'operations'" class="flex flex-col gap-4">
+
+      <!-- Section Header -->
+      <div class="flex items-center gap-3 mb-1">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+          <ion-icon name="cash-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
+        </div>
+        <div>
+          <h2 class="text-white font-bold text-base">Payment &amp; Collections</h2>
+          <p class="text-xs text-slate-500">Manage payments and track collections</p>
+        </div>
       </div>
 
-      <!-- Payment & Collections Section -->
-      <div class="rounded-2xl p-5 overflow-hidden"
-           style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.25); backdrop-filter: blur(16px);">
-        
-        <!-- Header -->
-        <button class="w-full flex items-center justify-between">
-          <div class="flex items-center gap-3">
-            <div class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(16, 185, 129, 0.2);">
-              <ion-icon name="checkmark-circle-outline" class="text-emerald-400 text-xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <p class="text-white font-semibold">Payment & Collections</p>
-              <p class="text-xs text-slate-400">Manage payments and track collections</p>
-            </div>
+      <!-- Operation Cards -->
+      <div class="flex flex-col gap-3">
+
+        <!-- My Payments -->
+        <button [routerLink]="['/sales/my-payments']"
+                class="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
+                style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px);">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+            <ion-icon name="wallet-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
           </div>
-          <ion-icon name="chevron-down-outline" class="text-slate-500 text-lg"></ion-icon>
+          <div class="flex-1">
+            <p class="font-bold text-white text-sm">My Payments</p>
+            <p class="text-xs text-slate-500">View cleared &amp; pending payments</p>
+          </div>
+          <div *ngIf="pendingPayments.length > 0" class="px-2 py-0.5 rounded-full text-[10px] font-bold mr-1" style="background: rgba(16,185,129,0.2); color: #4ade80; border: 1px solid rgba(16,185,129,0.3);">
+            {{ pendingPayments.length }}
+          </div>
+          <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
         </button>
 
-        <!-- Expanded Content -->
-        <div class="mt-4 space-y-3 pt-4" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          
-          <!-- My Payments -->
-          <button class="w-full flex items-center justify-between p-3 rounded-xl transition-all"
-                  style="background: rgba(16, 185, 129, 0.04); border: 1px solid rgba(16, 185, 129, 0.15);">
-            <div class="flex items-center gap-3 flex-1">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(16, 185, 129, 0.15);">
-                <ion-icon name="wallet-outline" class="text-emerald-400 text-lg"></ion-icon>
-              </div>
-              <div class="text-left">
-                <p class="text-white font-semibold text-sm">My Payments</p>
-                <p class="text-xs text-slate-500">View cleared & settled payments</p>
-              </div>
-            </div>
-            <ion-icon name="arrow-forward-outline" class="text-slate-500"></ion-icon>
-          </button>
+        <!-- Collect Payment -->
+        <button (click)="openPaymentModal()"
+                class="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
+                style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px);">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+            <ion-icon name="add-circle-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-white text-sm">Collect Payment</p>
+            <p class="text-xs text-slate-500">Record a credit or debit entry</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
+        </button>
 
-          <!-- Add Payment -->
-          <button (click)="selectedTab = 'dashboard'; openPaymentModal()" 
-                  class="w-full flex items-center justify-between p-3 rounded-xl transition-all"
-                  style="background: rgba(16, 185, 129, 0.12); border: 1px solid rgba(16, 185, 129, 0.25);">
-            <div class="flex items-center gap-3 flex-1">
-              <div class="w-10 h-10 rounded-lg flex items-center justify-center" style="background: rgba(16, 185, 129, 0.25);">
-                <ion-icon name="add-outline" class="text-emerald-400 text-xl font-bold"></ion-icon>
-              </div>
-              <div class="text-left">
-                <p class="text-emerald-400 font-semibold text-sm">Add Payment</p>
-                <p class="text-xs text-slate-500">Record a credit or debit entry</p>
-              </div>
-            </div>
-            <ion-icon name="arrow-forward-outline" class="text-slate-500"></ion-icon>
-          </button>
-        </div>
       </div>
     </div>
   </div>
 </ion-content>
 
 <!-- ==================== ADD PAYMENT MODAL ==================== -->
-<ion-modal [isOpen]="isPaymentModalOpen" (didDismiss)="closePaymentModal()">
+<ion-modal [isOpen]="isPaymentModalOpen" (didDismiss)="closePaymentModal()" [backdropDismiss]="true">
   <ng-template>
-    <div class="h-full flex flex-col" style="background: #0d1117;">
+    <div class="h-screen flex flex-col overflow-hidden" style="background: #0d1117;">
 
       <!-- Header -->
-      <div class="relative overflow-hidden" style="background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 55%, #10b981 100%);">
+      <div class="flex-shrink-0 relative overflow-hidden" style="background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 55%, #10b981 100%);">
         <div class="absolute inset-0" style="background: radial-gradient(ellipse at top right, rgba(255,255,255,0.18), transparent 60%);"></div>
         <!-- Close row -->
         <div class="relative flex justify-end pt-3 pr-4">
@@ -212,8 +197,8 @@
       </div>
 
       <!-- Scrollable Body -->
-      <div class="flex-1 overflow-y-auto">
-        <div class="px-5 pt-5 pb-4 space-y-4">
+      <div class="flex-1 overflow-y-auto" style="padding-bottom: 20px;">
+        <div class="px-4 pt-4 pb-4 space-y-4">
 
           <!-- Distributor Selection -->
           <div>
@@ -223,8 +208,8 @@
               <p style="font-size: 12px; color: #475569; margin-top: 8px;">Loading distributors...</p>
             </div>
             <select [(ngModel)]="paymentForm.selectedDistributorId" name="selectedDistributor"
-              class="w-full px-4 rounded-2xl focus:outline-none"
-              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px; font-size: 14px;"
+              class="w-full px-4 rounded-xl focus:outline-none"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px; font-size: 14px;"
               *ngIf="!isLoadingDistributors"
               [style.color]="paymentForm.selectedDistributorId ? 'white' : '#475569'">
               <option value="" style="background: #0d1117; color: #475569;">-- Select Distributor --</option>
@@ -237,10 +222,10 @@
           <!-- Balance Type -->
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">BALANCE TYPE</p>
-            <div class="grid grid-cols-2 gap-3">
+            <div class="grid grid-cols-2 gap-2">
               <!-- Credit -->
               <button type="button" (click)="paymentForm.balanceType = 'credit'; generatePaymentReference()"
-                class="rounded-2xl py-3.5 flex items-center justify-center gap-2.5 font-bold text-sm transition-all"
+                class="rounded-xl py-2.5 flex items-center justify-center gap-2 font-bold text-sm transition-all"
                 [style.background]="paymentForm.balanceType === 'credit' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)'"
                 [style.border]="paymentForm.balanceType === 'credit' ? '1.5px solid rgba(74,222,128,0.55)' : '1.5px solid rgba(255,255,255,0.08)'"
                 [style.color]="paymentForm.balanceType === 'credit' ? '#4ade80' : '#475569'">
@@ -249,11 +234,10 @@
               </button>
               <!-- Debit -->
               <button type="button" (click)="paymentForm.balanceType = 'debit'; generatePaymentReference()"
-                class="rounded-2xl py-3.5 flex items-center justify-center gap-2.5 font-bold text-sm transition-all"
+                class="rounded-xl py-2.5 flex items-center justify-center gap-2 font-bold text-sm transition-all"
                 [style.background]="paymentForm.balanceType === 'debit' ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.05)'"
                 [style.border]="paymentForm.balanceType === 'debit' ? '1.5px solid rgba(248,113,113,0.6)' : '1.5px solid rgba(255,255,255,0.08)'"
-                [style.color]="paymentForm.balanceType === 'debit' ? '#f87171' : '#475569'"
-                [style.boxShadow]="paymentForm.balanceType === 'debit' ? '0 0 16px rgba(239,68,68,0.18)' : 'none'">
+                [style.color]="paymentForm.balanceType === 'debit' ? '#f87171' : '#475569'">
                 <ion-icon name="arrow-down-outline" style="font-size: 16px;"></ion-icon>
                 Debit
               </button>
@@ -264,53 +248,58 @@
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">DATE *</p>
             <button id="payment-date-trigger" type="button"
-              class="w-full flex items-center justify-between px-4 rounded-2xl font-medium text-left"
-              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;">
+              class="w-full flex items-center justify-between px-4 rounded-xl font-medium text-left transition-all hover:bg-opacity-20"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;">
               <span [style.color]="paymentForm.date ? 'white' : '#475569'">
-                {{ paymentForm.date ? (paymentForm.date | date:'dd-MM-yyyy') : 'Select date' }}
+                {{ paymentForm.date ? (paymentForm.date | date:'dd-MMM-yyyy') : 'Select date' }}
               </span>
-              <ion-icon name="calendar-outline" style="font-size: 18px; color: #475569; flex-shrink:0;"></ion-icon>
+              <ion-icon name="calendar-outline" style="font-size: 18px; color: #10b981; flex-shrink:0;"></ion-icon>
             </button>
-            <ion-popover trigger="payment-date-trigger" [keepContentsMounted]="true" [showBackdrop]="true">
+            <ion-popover trigger="payment-date-trigger" [keepContentsMounted]="true" [showBackdrop]="true" side="bottom">
               <ng-template>
-                <ion-datetime
-                  presentation="date"
-                  [(ngModel)]="paymentForm.date"
-                  name="paymentDate"
-                  [preferWheel]="false"
-                  style="--background: #161b22; --background-rgb: 22,27,34; --ion-color-primary: #10b981; --ion-color-primary-contrast: #fff;">
-                </ion-datetime>
+                <div style="padding: 0; background: #1a1f26; border-radius: 8px; overflow: hidden;">
+                  <ion-datetime
+                    presentation="date"
+                    [(ngModel)]="paymentForm.date"
+                    name="paymentDate"
+                    [preferWheel]="false"
+                    style="--background: #0d1117; --ion-background-color: #0d1117; --ion-color-primary: #10b981; --ion-color-primary-contrast: #fff; --ion-text-color: #f1f5f9; width: 100%; height: auto;">
+                  </ion-datetime>
+                </div>
               </ng-template>
             </ion-popover>
           </div>
 
-          <!-- Amount -->
-          <div>
-            <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">AMOUNT (₹) *</p>
-            <div class="relative">
-              <input [(ngModel)]="paymentForm.amount" name="paymentAmount" type="number" min="0.01" step="0.01"
-                class="w-full px-4 rounded-2xl font-mono focus:outline-none"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px; padding-right: 48px;"
-                placeholder="0.00">
-              <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style="font-size: 16px; color: #475569; font-weight: 700;">
-                ₹
+          <!-- Amount and Reference Grid -->
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Amount -->
+            <div>
+              <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">AMOUNT (₹) *</p>
+              <div class="relative">
+                <input [(ngModel)]="paymentForm.amount" name="paymentAmount" type="number" min="0.01" step="0.01"
+                  class="w-full px-4 rounded-xl font-mono focus:outline-none"
+                  style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px; padding-right: 36px;"
+                  placeholder="0.00">
+                <div class="absolute right-4 top-1/2 -translate-y-1/2 pointer-events-none" style="font-size: 14px; color: #475569; font-weight: 700;">
+                  ₹
+                </div>
               </div>
             </div>
-          </div>
 
-          <!-- Reference -->
-          <div>
-            <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">REFERENCE *</p>
-            <div class="relative">
-              <input [(ngModel)]="paymentForm.reference" name="paymentReference" type="text"
-                class="w-full px-4 rounded-2xl font-mono focus:outline-none"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px; padding-right: 48px;"
-                placeholder="e.g. CR-1005">
-              <button type="button" (click)="generatePaymentReference()"
-                class="absolute right-3 top-1/2 -translate-y-1/2 w-8 h-8 rounded-xl flex items-center justify-center"
-                style="background: rgba(255,255,255,0.08);">
-                <ion-icon name="document-text-outline" style="font-size: 16px; color: #475569;"></ion-icon>
-              </button>
+            <!-- Reference -->
+            <div>
+              <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">REFERENCE *</p>
+              <div class="relative">
+                <input [(ngModel)]="paymentForm.reference" name="paymentReference" type="text"
+                  class="w-full px-4 rounded-xl font-mono focus:outline-none"
+                  style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px; padding-right: 40px;"
+                  placeholder="e.g. CR-1005">
+                <button type="button" (click)="generatePaymentReference()"
+                  class="absolute right-3 top-1/2 -translate-y-1/2 w-7 h-7 rounded-lg flex items-center justify-center"
+                  style="background: rgba(255,255,255,0.08);">
+                  <ion-icon name="document-text-outline" style="font-size: 14px; color: #475569;"></ion-icon>
+                </button>
+              </div>
             </div>
           </div>
 
@@ -318,8 +307,8 @@
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">DESCRIPTION *</p>
             <input [(ngModel)]="paymentForm.description" name="paymentDescription" type="text"
-              class="w-full px-4 rounded-2xl focus:outline-none"
-              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;"
+              class="w-full px-4 rounded-xl focus:outline-none"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;"
               placeholder="Payment description">
           </div>
 
@@ -329,12 +318,12 @@
             <div class="grid grid-cols-5 gap-2">
               <button type="button" *ngFor="let pm of paymentMethods"
                 (click)="paymentForm.paymentMethod === pm.value ? paymentForm.paymentMethod = '' : paymentForm.paymentMethod = $any(pm.value)"
-                class="rounded-2xl px-1 py-3 flex flex-col items-center justify-center gap-1.5 font-semibold text-[10px] transition-all"
+                class="rounded-xl px-1 py-2.5 flex flex-col items-center justify-center gap-1 font-semibold text-[9px] transition-all"
                 [style.background]="paymentForm.paymentMethod === pm.value ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.04)'"
                 [style.border]="paymentForm.paymentMethod === pm.value ? '1.5px solid rgba(74,222,128,0.45)' : '1.5px solid rgba(255,255,255,0.08)'"
                 [style.color]="paymentForm.paymentMethod === pm.value ? '#4ade80' : '#475569'">
-                <ion-icon [name]="pm.icon" style="font-size: 18px;"></ion-icon>
-                <span>{{ pm.label }}</span>
+                <ion-icon [name]="pm.icon" style="font-size: 16px;"></ion-icon>
+                <span class="line-clamp-1">{{ pm.label }}</span>
               </button>
             </div>
           </div>
@@ -343,8 +332,8 @@
           <div *ngIf="paymentForm.paymentMethod === 'rtgs' || paymentForm.paymentMethod === 'neft'">
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">UTR NUMBER *</p>
             <input [(ngModel)]="paymentForm.utrNumber" name="paymentUtrNumber" type="text"
-              class="w-full px-4 rounded-2xl font-mono focus:outline-none"
-              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;"
+              class="w-full px-4 rounded-xl font-mono focus:outline-none"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;"
               placeholder="Enter UTR number">
           </div>
 
@@ -353,15 +342,15 @@
             <div>
               <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">BANK NAME *</p>
               <input [(ngModel)]="paymentForm.bankName" name="paymentBankName" type="text"
-                class="w-full px-4 rounded-2xl focus:outline-none"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;"
+                class="w-full px-4 rounded-xl focus:outline-none"
+                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;"
                 placeholder="Bank name">
             </div>
             <div>
               <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">CHEQUE NO. *</p>
               <input [(ngModel)]="paymentForm.chequeNumber" name="paymentChequeNumber" type="text"
-                class="w-full px-4 rounded-2xl font-mono focus:outline-none"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;"
+                class="w-full px-4 rounded-xl font-mono focus:outline-none"
+                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;"
                 placeholder="Cheque number">
             </div>
           </div>
@@ -370,30 +359,30 @@
           <div *ngIf="paymentForm.paymentMethod === 'imps' || paymentForm.paymentMethod === 'upi'">
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">TRANSACTION NUMBER *</p>
             <input [(ngModel)]="paymentForm.transactionNumber" name="paymentTransactionNumber" type="text"
-              class="w-full px-4 rounded-2xl font-mono focus:outline-none"
-              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;"
+              class="w-full px-4 rounded-xl font-mono focus:outline-none"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px;"
               placeholder="Enter transaction number">
           </div>
 
           <!-- Receipt Upload -->
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">UPLOAD RECEIPT <span style="color: #334155; font-weight: 500;">(optional)</span></p>
-            <div *ngIf="!receiptFileName" class="relative rounded-2xl py-4 text-center"
+            <div *ngIf="!receiptFileName" class="relative rounded-xl py-3 text-center"
               style="border: 1.5px dashed rgba(255,255,255,0.12); background: rgba(255,255,255,0.03);">
               <input type="file" (change)="onPaymentReceiptSelected($event)" accept="image/*,.pdf" class="absolute inset-0 opacity-0 w-full h-full cursor-pointer">
-              <div class="flex items-center justify-center gap-3">
-                <ion-icon name="cloud-upload-outline" style="font-size: 20px; color: #475569;"></ion-icon>
+              <div class="flex items-center justify-center gap-2">
+                <ion-icon name="cloud-upload-outline" style="font-size: 18px; color: #475569;"></ion-icon>
                 <div class="text-left">
                   <p style="font-size: 12px; font-weight: 600; color: #64748b;">Tap to upload</p>
                   <p style="font-size: 10px; color: #334155;">PDF, JPG, PNG</p>
                 </div>
               </div>
             </div>
-            <div *ngIf="receiptFileName" class="flex items-center gap-3 px-4 py-3 rounded-2xl"
+            <div *ngIf="receiptFileName" class="flex items-center gap-2 px-3 py-2 rounded-xl"
               style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.25);">
-              <ion-icon name="image-outline" style="font-size: 20px; color: #4ade80;"></ion-icon>
+              <ion-icon name="image-outline" style="font-size: 18px; color: #4ade80; flex-shrink: 0;"></ion-icon>
               <p class="flex-1 text-sm font-semibold text-white truncate">{{ receiptFileName }}</p>
-              <button type="button" (click)="removePaymentReceipt()" class="w-7 h-7 rounded-lg flex items-center justify-center"
+              <button type="button" (click)="removePaymentReceipt()" class="w-6 h-6 rounded-lg flex items-center justify-center flex-shrink-0"
                 style="background: rgba(255,255,255,0.08); color: #f87171;">
                 <ion-icon name="close-outline" style="font-size: 14px;"></ion-icon>
               </button>
@@ -403,8 +392,8 @@
           <!-- Notes -->
           <div class="pb-2">
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">NOTES <span style="color: #334155; font-weight: 500;">(optional)</span></p>
-            <textarea [(ngModel)]="paymentForm.notes" name="paymentNotes" rows="3"
-              class="w-full px-4 py-3 rounded-2xl resize-none focus:outline-none"
+            <textarea [(ngModel)]="paymentForm.notes" name="paymentNotes" rows="2"
+              class="w-full px-4 py-3 rounded-xl resize-none focus:outline-none"
               style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;"
               placeholder="Additional notes..."></textarea>
           </div>
@@ -413,9 +402,9 @@
       </div>
 
       <!-- Save Button -->
-      <div class="px-5 pb-6 pt-3" style="background: #0d1117;">
+      <div class="flex-shrink-0 px-4 pb-4 pt-2" style="background: #0d1117; border-top: 1px solid rgba(255,255,255,0.05);">
         <button type="button" (click)="submitPayment()" [disabled]="isSubmittingPayment"
-          class="w-full py-4 rounded-2xl text-white font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60"
+          class="w-full py-3 rounded-xl text-white font-bold text-base flex items-center justify-center gap-2 disabled:opacity-60 transition-all"
           style="background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 55%, #10b981 100%); letter-spacing: 0.02em;">
           <ion-spinner *ngIf="isSubmittingPayment" name="crescent"></ion-spinner>
           {{ isSubmittingPayment ? 'Saving...' : 'Save Payment' }}

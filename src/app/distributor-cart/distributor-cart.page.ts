@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule, ModalController } from '@ionic/angular';
+import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
 import {
@@ -71,7 +71,8 @@ export class DistributorCartPage implements OnInit {
     private modalCtrl: ModalController,
     private auth: Auth,
     private router: Router,
-    private distributorService: DistributorService
+    private distributorService: DistributorService,
+    private toastController: ToastController
   ) {
     addIcons({
       'cart-outline': cartOutline,
@@ -86,6 +87,17 @@ export class DistributorCartPage implements OnInit {
       'person-outline': personOutline,
       'apps-outline': appsOutline
     });
+  }
+
+  private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
+    const toast = await this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color,
+      buttons: [{ icon: 'close', role: 'cancel' }]
+    });
+    await toast.present();
   }
 
   ngOnInit() {
@@ -208,7 +220,7 @@ export class DistributorCartPage implements OnInit {
         error: (err) => {
           console.error('Failed to add item to cart', err);
           const msg = err?.error?.message || err?.error?.error || JSON.stringify(err?.error) || 'Please try again.';
-          alert('Failed to add item to cart: ' + msg);
+          this.showToast('Failed to add item to cart: ' + msg, 'danger');
           this.isLoading = false;
         }
       });
@@ -226,9 +238,19 @@ export class DistributorCartPage implements OnInit {
     }
   }
 
-  removeFromCart(productId: number) {
+  removeFromCart(productId: number, cartItemId?: number) {
+    const idToDelete = cartItemId ?? productId;
+    // Call DELETE /api/cart/items/{cartItemId} API
+    this.cartService.deleteCartItem(idToDelete).subscribe({
+      next: () => {
+        console.log(`✓ Cart item ${idToDelete} deleted from backend`);
+      },
+      error: (err) => {
+        console.error(`✗ Failed to delete cart item ${idToDelete} from backend:`, err);
+      }
+    });
+    // Remove locally so UI stays responsive
     this.cartService.removeFromCart(productId);
-    this.syncCartWithBackend();
   }
 
   updateCartQuantity(productId: number, quantity: number) {
@@ -277,7 +299,7 @@ export class DistributorCartPage implements OnInit {
 
   openCheckoutModal() {
     if (this.cartItems.length === 0) {
-      alert('Your cart is empty');
+      this.showToast('Your cart is empty', 'warning');
       return;
     }
     this.showCheckoutModal = true;
@@ -286,7 +308,7 @@ export class DistributorCartPage implements OnInit {
   // Open cart modal and fetch active cart from backend API
   openCartModal() {
     if (!this.distributorId) {
-      alert('Distributor ID not found. Please log in again.');
+      this.showToast('Distributor ID not found. Please log in again.', 'danger');
       return;
     }
 
@@ -298,6 +320,18 @@ export class DistributorCartPage implements OnInit {
         const cartData = response?.data || response;
         this.currentCartId = cartData?.id || cartData?.cartId || null;
         console.log('Active cart ID:', this.currentCartId);
+        // Sync backend cart item IDs onto local cart items
+        const apiItems: any[] = cartData?.cartItems || [];
+        if (apiItems.length > 0) {
+          const updated = this.cartItems.map(localItem => {
+            const match = apiItems.find(
+              (a: any) => a.itemSku === (localItem.sku || localItem.id?.toString()) ||
+                          a.itemId  === (localItem.sku || localItem.id?.toString())
+            );
+            return match ? { ...localItem, cartItemId: match.id } : localItem;
+          });
+          this.cartItems = updated;
+        }
         this.isLoading = false;
         this.showCartModal = true;
       },
@@ -323,7 +357,7 @@ export class DistributorCartPage implements OnInit {
     }
 
     if (!this.distributorId) {
-      alert('Distributor ID not found. Please log in again.');
+      this.showToast('Distributor ID not found. Please log in again.', 'danger');
       return;
     }
 
@@ -347,7 +381,7 @@ export class DistributorCartPage implements OnInit {
           
           if (!cartId) {
             console.error('No cartId found in response:', cartResponse);
-            alert('Cart not found. Please add items to cart first.');
+            this.showToast('Cart not found. Please add items to cart first.', 'danger');
             this.isLoading = false;
             return;
           }
@@ -356,7 +390,7 @@ export class DistributorCartPage implements OnInit {
         },
         error: (err) => {
           console.error('Failed to fetch cart', err);
-          alert('Failed to fetch cart. Please try again.');
+          this.showToast('Failed to fetch cart. Please try again.', 'danger');
           this.isLoading = false;
         }
       });
@@ -378,7 +412,7 @@ export class DistributorCartPage implements OnInit {
       next: (response) => {
         console.log('=== ORDER PLACED SUCCESSFULLY ===');
         console.log('Response:', response);
-        alert('Order placed successfully!');
+        this.showToast('Order placed successfully!', 'success');
         this.cartService.clearCart();
         this.currentCartId = null; // Reset cart ID after successful order
         this.closeCheckoutModal();
@@ -390,7 +424,7 @@ export class DistributorCartPage implements OnInit {
         console.error('Error status:', err?.status);
         console.error('Error body:', JSON.stringify(err?.error));
         const msg = err?.error?.message || err?.error?.error || 'Please try again.';
-        alert('Failed to place order: ' + msg);
+        this.showToast('Failed to place order: ' + msg, 'danger');
         this.isLoading = false;
       }
     });

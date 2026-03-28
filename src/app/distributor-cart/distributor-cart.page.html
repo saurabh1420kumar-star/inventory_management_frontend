@@ -135,7 +135,7 @@
                 </div>
                 <h3 class="text-white font-bold text-sm truncate max-w-[180px]">{{ item.name }}</h3>
               </div>
-              <button (click)="removeFromCart(item.id)" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
+              <button (click)="removeFromCart(item.id, item.cartItemId)" class="w-8 h-8 rounded-lg flex items-center justify-center transition-all"
                       style="background: rgba(239,68,68,0.1); border: 1px solid rgba(239,68,68,0.15);">
                 <ion-icon name="trash-outline" class="text-red-400 text-sm"></ion-icon>
               </button>
@@ -204,7 +204,8 @@
             Checkout &middot; &#8377;{{ cartTotal | number:'1.2-2' }}
           </button>
           <button (click)="clearCart()"
-                  class="w-full py-2.5 text-slate-500 hover:text-red-400 font-medium text-sm transition-all flex items-center justify-center gap-2">
+                  class="w-full py-2.5 rounded-xl font-semibold text-sm transition-all flex items-center justify-center gap-2"
+                  style="background: #ffffff; color: #ef4444; border: 1.5px solid rgba(239,68,68,0.3);">
             <ion-icon name="trash-outline"></ion-icon>
             Clear Cart
           </button>
