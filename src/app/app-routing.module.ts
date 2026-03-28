@@ -40,6 +40,11 @@ const routes: Routes = [
     loadChildren: () => import('./accounts/accounts-master/accounts-master.module').then(m => m.AccountsMasterPageModule),
     canActivate: [AuthGuard] // Protected route
   },
+  {
+    path: 'payment-request',
+    loadComponent: () => import('./accounts/payment-request/payment-request.page').then(m => m.PaymentRequestPage),
+    canActivate: [AuthGuard]
+  },
   
   {
     path: 'feedback',

@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, ViewEncapsulation } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule, ToastController, NavController } from '@ionic/angular';
 import { Router, RouterModule } from '@angular/router';
 import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../services/accountsLedger.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
@@ -232,7 +232,8 @@ export class AccountsMasterPage implements OnInit {
     private elementRef: ElementRef,
     private toastSvc: ToastService,
     private auth: Auth,
-    private router: Router
+    private router: Router,
+    private navCtrl: NavController
   ) {
     // Add specific icons shown in the images
     addIcons({
@@ -871,7 +872,11 @@ export class AccountsMasterPage implements OnInit {
   confirmReadyToDispatch() {
     this.isDispatchModalOpen = false;
     this.showToast('Order marked as Ready to Dispatch!', 'success');
-    this.router.navigate(['/dispatch']);
+    // Wait for the modal dismiss animation to finish before navigating
+    // to prevent Ionic page transition conflicts that cause the UI to get stuck
+    setTimeout(() => {
+      this.navCtrl.navigateForward('/dispatch');
+    }, 350);
   }
 
   // Fetch Pending Payments

@@ -106,6 +106,11 @@ export class DispatchPage implements OnInit {
   gdnForm: FormGroup;
   useCustomShippingAddress = false;
 
+  // ── GDN Reject Modal ──────────────────────────────
+  isGdnRejectModalOpen = false;
+  gdnRejectReason = '';
+  orderForGdnReject: DispatchOrderDisplay | null = null;
+
   expandedIds = new Set<number>();
 
   constructor(
@@ -591,12 +596,8 @@ export class DispatchPage implements OnInit {
     this.dispatchService.markDispatchedOrder(order.id).subscribe({
       next: (response) => {
         console.log('Order marked as dispatched:', order.id);
-        
-        // Update the local order object
-        order.gdnStatus = 'dispatched';
-        order.dispatchDate = new Date().toISOString().split('T')[0];
-        
         this.isLoading = false;
+        this.loadPaymentApprovedCarts();
         console.log('Tab Counts:', this.tabCounts);
       },
       error: (err) => {
@@ -615,7 +616,43 @@ export class DispatchPage implements OnInit {
 
   closeDetail() {
     this.isDetailModalOpen = false;
+  }
+
+  onDetailModalDismissed() {
+    this.isDetailModalOpen = false;
     this.selectedOrder = null;
+  }
+
+  // ── GDN Reject Modal ──────────────────────────────
+  openGdnRejectModal(order: DispatchOrderDisplay) {
+    this.orderForGdnReject = order;
+    this.gdnRejectReason = '';
+    this.isGdnRejectModalOpen = true;
+  }
+
+  cancelGdnReject() {
+    this.isGdnRejectModalOpen = false;
+    this.orderForGdnReject = null;
+    this.gdnRejectReason = '';
+  }
+
+  confirmGdnReject() {
+    if (!this.orderForGdnReject || !this.gdnRejectReason.trim()) return;
+    this.isLoading = true;
+    this.dispatchService.rejectGdn(this.orderForGdnReject.id, this.gdnRejectReason.trim()).subscribe({
+      next: async () => {
+        this.isLoading = false;
+        this.cancelGdnReject();
+        this.loadPaymentApprovedCarts();
+        await this.toast.present('GDN rejected successfully', 'success');
+      },
+      error: async (err) => {
+        this.isLoading = false;
+        const msg = err?.error?.message || 'Failed to reject GDN. Please try again.';
+        this.errorMessage = msg;
+        await this.toast.present(msg, 'danger');
+      },
+    });
   }
 
   // ── Expand/Collapse ───────────────────────────────

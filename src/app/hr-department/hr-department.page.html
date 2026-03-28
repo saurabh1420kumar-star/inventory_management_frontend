@@ -312,7 +312,7 @@
 </ion-content>
 
 <!-- Modal Backdrop -->
-<div (click)="closeModal()" *ngIf="activeModal"
+<div *ngIf="activeModal"
   class="fixed inset-0 bg-black/60 backdrop-blur-sm z-[9999] flex items-center justify-center p-4 animate-fadeIn">
   <!-- ✨ Add Employee Modal -->
   <div (click)="$event.stopPropagation()" *ngIf="activeModal === 'add'"

@@ -1,0 +1,692 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-tight text-xl">
+      <span class="text-emerald-400">Payment</span> Requests
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="handleRefresh()" style="--color: #ffffff;" class="rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 pb-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
+
+      <!-- ── Hero Banner ─────────────────────────────────────────────────── -->
+      <div class="relative bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-500 rounded-3xl shadow-xl overflow-hidden mb-6">
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-56 h-56 rounded-full bg-indigo-400/20 blur-3xl"></div>
+        <div class="relative px-7 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div class="flex items-center gap-4">
+            <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
+              <ion-icon name="wallet-outline" class="text-white text-3xl"></ion-icon>
+            </div>
+            <div>
+              <h1 class="text-2xl font-bold text-white tracking-tight">Payment Requests</h1>
+              <p class="text-blue-100 text-sm mt-0.5">All distributor payment submissions in one place</p>
+            </div>
+          </div>
+          <a routerLink="/accounts-master"
+            class="inline-flex items-center gap-2 px-4 py-2.5 bg-white/20 hover:bg-white/30 border border-white/30 rounded-xl text-white text-sm font-semibold backdrop-blur-sm transition-all">
+            <ion-icon name="arrow-back-outline" class="text-base"></ion-icon>
+            Back to Accounts
+          </a>
+        </div>
+      </div>
+
+      <!-- ── Stats Cards ─────────────────────────────────────────────────── -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-4 mb-6">
+        <!-- Total -->
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-slate-100 flex items-center justify-center shrink-0">
+            <ion-icon name="receipt-outline" class="text-slate-600 text-xl"></ion-icon>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-slate-500 uppercase tracking-wide">Total</p>
+            <p class="text-2xl font-bold text-slate-800">{{ stats.total }}</p>
+          </div>
+        </div>
+        <!-- Pending -->
+        <div class="bg-amber-50 rounded-2xl p-4 shadow-sm border border-amber-100 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-amber-100 flex items-center justify-center shrink-0">
+            <ion-icon name="time-outline" class="text-amber-600 text-xl"></ion-icon>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-amber-600 uppercase tracking-wide">Payment Added</p>
+            <p class="text-2xl font-bold text-amber-700">{{ stats.pendingCount }}</p>
+            <p class="text-xs text-amber-500 font-medium">{{ formatCurrency(stats.pendingAmount) }}</p>
+          </div>
+        </div>
+        <!-- Approved -->
+        <div class="bg-emerald-50 rounded-2xl p-4 shadow-sm border border-emerald-100 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-emerald-100 flex items-center justify-center shrink-0">
+            <ion-icon name="checkmark-circle-outline" class="text-emerald-600 text-xl"></ion-icon>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-emerald-600 uppercase tracking-wide">Payment Approved</p>
+            <p class="text-2xl font-bold text-emerald-700">{{ stats.approvedCount }}</p>
+            <p class="text-xs text-emerald-500 font-medium">{{ formatCurrency(stats.approvedAmount) }}</p>
+          </div>
+        </div>
+        <!-- Rejected -->
+        <div class="bg-red-50 rounded-2xl p-4 shadow-sm border border-red-100 flex items-center gap-3">
+          <div class="w-11 h-11 rounded-xl bg-red-100 flex items-center justify-center shrink-0">
+            <ion-icon name="close-circle-outline" class="text-red-500 text-xl"></ion-icon>
+          </div>
+          <div>
+            <p class="text-xs font-semibold text-red-500 uppercase tracking-wide">Payment Rejected</p>
+            <p class="text-2xl font-bold text-red-600">{{ stats.rejectedCount }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Search & Filter Bar ─────────────────────────────────────────── -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 mb-5">
+        <div class="flex flex-col sm:flex-row gap-3">
+          <!-- Search -->
+          <div class="relative flex-1">
+            <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-lg pointer-events-none"></ion-icon>
+            <input
+              type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
+              placeholder="Search by distributor, order, UTR no..."
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-all">
+          </div>
+          <!-- Method Filter -->
+          <div class="relative min-w-[160px]">
+            <ion-icon name="funnel-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none"></ion-icon>
+            <select [(ngModel)]="methodFilter" (ngModelChange)="applyFilters()"
+              class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-blue-400 appearance-none cursor-pointer">
+              <option value="ALL">All Methods</option>
+              <option value="RTGS">RTGS</option>
+              <option value="NEFT">NEFT</option>
+              <option value="IMPS">IMPS</option>
+              <option value="UPI">UPI</option>
+              <option value="CHEQUE">Cheque</option>
+            </select>
+          </div>
+          <!-- Clear button -->
+          <button *ngIf="searchQuery || methodFilter !== 'ALL'"
+            (click)="clearFilters()"
+            class="inline-flex items-center gap-1.5 px-4 py-2.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-medium transition-all">
+            <ion-icon name="close-outline" class="text-sm"></ion-icon>
+            Clear
+          </button>
+        </div>
+      </div>
+
+      <!-- ── Tabs ────────────────────────────────────────────────────────── -->
+      <div class="flex items-center gap-1 bg-white border border-slate-100 rounded-2xl shadow-sm p-1.5 mb-5 overflow-x-auto">
+        <button *ngFor="let tab of ['ALL','PENDING','APPROVED','REJECTED']"
+          (click)="selectTab(tab)"
+          [class.pr-tab-active]="activeTab === tab"
+          [ngClass]="{
+            'bg-blue-600 text-white shadow-md': activeTab === tab,
+            'text-slate-500 hover:bg-slate-100 hover:text-slate-700': activeTab !== tab
+          }"
+          class="pr-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap">
+          <!-- dot for colored tabs -->
+          <span *ngIf="tab !== 'ALL'" class="w-2 h-2 rounded-full"
+            [ngClass]="{
+              'bg-amber-400': tab === 'PENDING' && activeTab !== tab,
+              'bg-emerald-400': tab === 'APPROVED' && activeTab !== tab,
+              'bg-red-400': tab === 'REJECTED' && activeTab !== tab,
+              'bg-white': activeTab === tab
+            }">
+          </span>
+          {{ getTabLabel(tab) }}
+          <span class="px-2 py-0.5 rounded-full text-xs font-bold"
+            [ngClass]="{
+              'bg-white/25 text-white': activeTab === tab,
+              'bg-slate-100 text-slate-600': activeTab !== tab
+            }">
+            {{ getTabCount(tab) }}
+          </span>
+        </button>
+      </div>
+
+      <!-- ── Loading State ───────────────────────────────────────────────── -->
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16">
+        <ion-spinner name="crescent" class="text-blue-600 w-10 h-10"></ion-spinner>
+        <p class="text-slate-500 text-sm mt-3 font-medium">Loading payment requests...</p>
+      </div>
+
+      <!-- ── Empty State ─────────────────────────────────────────────────── -->
+      <div *ngIf="!isLoading && filteredPayments.length === 0"
+        class="bg-white rounded-2xl shadow-sm border border-slate-100 p-12 text-center">
+        <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center mx-auto mb-5">
+          <ion-icon name="wallet-outline" class="text-4xl text-slate-400"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700 mb-2">No Payment Requests Found</h3>
+        <p class="text-slate-400 text-sm max-w-xs mx-auto">
+          {{ searchQuery || methodFilter !== 'ALL' ? 'Try adjusting your search or filters.' : 'No payment requests have been submitted yet.' }}
+        </p>
+      </div>
+
+      <!-- ── Payment Request Cards ───────────────────────────────────────── -->
+      <div *ngIf="!isLoading && filteredPayments.length > 0" class="space-y-4">
+        <div *ngFor="let payment of paginatedPayments"
+          class="pr-card group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer border border-slate-100"
+          (click)="openDetail(payment)">
+
+          <!-- Left accent stripe (status color) -->
+          <div class="absolute left-0 top-0 bottom-0 w-1.5"
+            [ngClass]="{
+              'bg-gradient-to-b from-amber-400 to-orange-400':  payment.status === 'PENDING',
+              'bg-gradient-to-b from-emerald-400 to-teal-400':  payment.status === 'APPROVED',
+              'bg-gradient-to-b from-red-400    to-rose-500':   payment.status === 'REJECTED'
+            }">
+          </div>
+
+          <div class="pl-6 pr-5 pt-4 pb-4">
+
+            <!-- Row 1: Avatar + Name/code/date + Status badge -->
+            <div class="flex items-center justify-between gap-3 mb-3">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-black text-base group-hover:scale-105 transition-transform"
+                  [ngClass]="{
+                    'bg-amber-100 text-amber-700':    payment.status === 'PENDING',
+                    'bg-emerald-100 text-emerald-700': payment.status === 'APPROVED',
+                    'bg-red-100 text-red-600':         payment.status === 'REJECTED'
+                  }">
+                  {{ payment.distributorName.charAt(0) }}
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-800 text-sm truncate leading-tight">{{ payment.distributorName }}</p>
+                  <div class="flex items-center gap-2 mt-0.5">
+                    <span class="text-xs text-slate-400 font-mono">{{ payment.distributorCode }}</span>
+                    <span class="text-slate-200">·</span>
+                    <span class="text-xs text-slate-400">{{ formatDate(payment.createdAt) }}</span>
+                  </div>
+                </div>
+              </div>
+              <span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border"
+                [ngClass]="{
+                  'bg-amber-50  text-amber-700  border-amber-200':    payment.status === 'PENDING',
+                  'bg-emerald-50 text-emerald-700 border-emerald-200': payment.status === 'APPROVED',
+                  'bg-red-50    text-red-600    border-red-200':       payment.status === 'REJECTED'
+                }">
+                <ion-icon [name]="getStatusConfig(payment.status).icon" class="text-xs"></ion-icon>
+                {{ getStatusConfig(payment.status).label }}
+              </span>
+            </div>
+
+            <!-- Row 2: Amount hero + Order/Request refs -->
+            <div class="flex items-end justify-between gap-3 mb-3">
+              <div>
+                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-0.5">Amount</p>
+                <p class="text-2xl font-black text-slate-900 leading-none">{{ formatCurrency(payment.amount) }}</p>
+              </div>
+              <div class="text-right">
+                <p class="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-lg mb-1">{{ payment.orderNo }}</p>
+                <p class="text-xs font-mono text-slate-400">{{ payment.paymentRequestNo }}</p>
+              </div>
+            </div>
+
+            <!-- Row 3: Method pill + UTR/cheque + bank -->
+            <div class="flex items-center gap-2 mb-3 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold"
+                [ngStyle]="{ 'background': getMethodConfig(payment.paymentMethod).bg, 'color': getMethodConfig(payment.paymentMethod).color }">
+                <ion-icon [name]="getMethodConfig(payment.paymentMethod).icon" class="text-sm"></ion-icon>
+                {{ payment.paymentMethod }}
+              </span>
+              <span *ngIf="payment.utrNumber" class="text-xs text-slate-400 font-mono truncate max-w-[160px]">{{ payment.utrNumber }}</span>
+              <span *ngIf="payment.chequeNumber" class="text-xs text-slate-400 font-mono">CHQ: {{ payment.chequeNumber }}</span>
+              <span *ngIf="payment.bankName" class="text-xs text-slate-500 ml-auto">{{ payment.bankName }}</span>
+            </div>
+
+            <!-- Footer: actions for PENDING | info strip for others -->
+            <div class="pt-3 border-t border-slate-100">
+              <!-- PENDING: action buttons -->
+              <div *ngIf="payment.status === 'PENDING'" class="flex items-center gap-2" (click)="$event.stopPropagation()">
+                <span class="flex-1 text-xs text-slate-400 flex items-center gap-1">
+                  <ion-icon name="time-outline" class="text-amber-400"></ion-icon>
+                  Payment Added — Awaiting review
+                </span>
+                <button (click)="openRejectModal(payment)"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all border border-red-100">
+                  <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
+                  Reject
+                </button>
+                <button (click)="openApproveModal(payment)"
+                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
+                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
+                  Approve
+                </button>
+              </div>
+              <!-- APPROVED strip -->
+              <div *ngIf="payment.status === 'APPROVED'" class="flex items-center gap-2 text-xs text-emerald-600">
+                <ion-icon name="checkmark-circle-outline" class="text-base text-emerald-500 shrink-0"></ion-icon>
+                  <span class="font-semibold">Payment Approved</span>
+                <span class="text-emerald-400">by {{ payment.approvedBy }}</span>
+                <span class="ml-auto text-emerald-400">{{ formatDate(payment.approvedAt || '') }}</span>
+              </div>
+              <!-- REJECTED strip -->
+              <div *ngIf="payment.status === 'REJECTED'" class="space-y-1">
+                <div class="flex items-center gap-2 text-xs text-red-500">
+                  <ion-icon name="close-circle-outline" class="text-base shrink-0"></ion-icon>
+                  <span class="font-semibold">Payment Rejected</span>
+                  <span class="text-red-400">by {{ payment.rejectedBy }}</span>
+                  <span class="ml-auto text-red-400">{{ formatDate(payment.rejectedAt || '') }}</span>
+                </div>
+                <p *ngIf="payment.rejectionReason" class="text-xs text-red-400 bg-red-50 rounded-lg px-3 py-1.5 border border-red-100 line-clamp-1">
+                  {{ payment.rejectionReason }}
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </div>
+      </div>
+
+      <!-- ── Pagination ──────────────────────────────────────────────────── -->
+      <div *ngIf="!isLoading && totalPages > 1"
+        class="flex items-center justify-between mt-6 bg-white rounded-2xl shadow-sm border border-slate-100 px-5 py-3">
+        <span class="text-sm text-slate-500 font-medium">
+          Page {{ currentPage }} of {{ totalPages }}
+          &nbsp;·&nbsp; {{ filteredPayments.length }} records
+        </span>
+        <div class="flex items-center gap-2">
+          <button (click)="prevPage()" [disabled]="currentPage === 1"
+            class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+            <ion-icon name="arrow-back-outline" class="text-slate-600"></ion-icon>
+          </button>
+          <button (click)="nextPage()" [disabled]="currentPage === totalPages"
+            class="w-9 h-9 flex items-center justify-center rounded-xl bg-slate-100 hover:bg-slate-200 disabled:opacity-40 disabled:cursor-not-allowed transition-all">
+            <ion-icon name="arrow-forward-outline" class="text-slate-600"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       DETAIL MODAL
+       ════════════════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isDetailModalOpen" (didDismiss)="isDetailModalOpen = false" [backdropDismiss]="true">
+    <ng-template>
+      <div class="pr-modal-wrap bg-white h-full flex flex-col" *ngIf="selectedPayment">
+
+        <!-- Modal Header -->
+        <div class="relative overflow-hidden">
+          <div class="absolute inset-0"
+            [ngStyle]="{ 'background': 'linear-gradient(135deg, ' + getStatusConfig(selectedPayment.status).color + '22, ' + getStatusConfig(selectedPayment.status).color + '44)' }">
+          </div>
+          <div class="absolute inset-0 bg-gradient-to-r from-slate-800 to-slate-700"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-40 h-40 rounded-full bg-white/5 blur-2xl"></div>
+          <div class="relative p-5 pb-4 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/15 flex items-center justify-center">
+                <ion-icon name="receipt-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <div>
+                <h2 class="text-base font-bold text-white tracking-tight">Payment Request Detail</h2>
+                <p class="text-slate-300 text-xs font-mono">{{ selectedPayment.paymentRequestNo }}</p>
+              </div>
+            </div>
+            <button (click)="isDetailModalOpen = false"
+              class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+              <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <ion-content class="bg-slate-50">
+          <div class="p-5 space-y-5">
+
+            <!-- Status + Amount Hero -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-5 flex items-center justify-between">
+              <div>
+                <p class="text-xs text-slate-400 font-semibold uppercase tracking-wide mb-1">Total Amount</p>
+                <p class="text-3xl font-bold text-slate-800">{{ formatCurrency(selectedPayment.amount) }}</p>
+              </div>
+              <span class="inline-flex items-center gap-2 px-4 py-2 rounded-xl font-bold text-sm"
+                [ngStyle]="{ 'background': getStatusConfig(selectedPayment.status).bg, 'color': getStatusConfig(selectedPayment.status).color, 'border': '1.5px solid ' + getStatusConfig(selectedPayment.status).border }">
+                <ion-icon [name]="getStatusConfig(selectedPayment.status).icon" class="text-base"></ion-icon>
+                {{ getStatusConfig(selectedPayment.status).label }}
+              </span>
+            </div>
+
+            <!-- Distributor Info -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-5">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Distributor</p>
+              <div class="flex items-center gap-3">
+                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center font-bold text-blue-700 text-lg">
+                  {{ selectedPayment.distributorName.charAt(0) }}
+                </div>
+                <div>
+                  <p class="font-bold text-slate-800">{{ selectedPayment.distributorName }}</p>
+                  <p class="text-xs text-slate-400 font-mono">{{ selectedPayment.distributorCode }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Order & Request Info -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-5">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Request & Order Details</p>
+              <div class="grid grid-cols-2 gap-4">
+                <div>
+                  <p class="text-xs text-slate-400 mb-0.5">Request No.</p>
+                  <p class="text-sm font-bold text-slate-800 font-mono">{{ selectedPayment.paymentRequestNo }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 mb-0.5">Order No.</p>
+                  <p class="text-sm font-bold text-blue-600 font-mono">{{ selectedPayment.orderNo }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 mb-0.5">Date Submitted</p>
+                  <p class="text-sm font-semibold text-slate-700">{{ formatDateTime(selectedPayment.createdAt) }}</p>
+                </div>
+                <div>
+                  <p class="text-xs text-slate-400 mb-0.5">Transaction Type</p>
+                  <p class="text-sm font-semibold text-slate-700">{{ selectedPayment.transactionType }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- Payment Method Details -->
+            <div class="bg-white rounded-2xl border border-slate-100 p-5">
+              <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Payment Method</p>
+              <div class="flex items-center gap-3 mb-4">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                  [ngStyle]="{ 'background': getMethodConfig(selectedPayment.paymentMethod).bg }">
+                  <ion-icon [name]="getMethodConfig(selectedPayment.paymentMethod).icon" class="text-lg"
+                    [ngStyle]="{ 'color': getMethodConfig(selectedPayment.paymentMethod).color }">
+                  </ion-icon>
+                </div>
+                <p class="font-bold text-slate-800 text-base">{{ selectedPayment.paymentMethod }}</p>
+              </div>
+              <div class="space-y-2 text-sm">
+                <div *ngIf="selectedPayment.utrNumber" class="flex justify-between">
+                  <span class="text-slate-400">UTR / Ref No.</span>
+                  <span class="font-semibold text-slate-800 font-mono">{{ selectedPayment.utrNumber }}</span>
+                </div>
+                <div *ngIf="selectedPayment.chequeNumber" class="flex justify-between">
+                  <span class="text-slate-400">Cheque No.</span>
+                  <span class="font-semibold text-slate-800 font-mono">{{ selectedPayment.chequeNumber }}</span>
+                </div>
+                <div *ngIf="selectedPayment.bankName" class="flex justify-between">
+                  <span class="text-slate-400">Bank</span>
+                  <span class="font-semibold text-slate-800">{{ selectedPayment.bankName }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Description -->
+            <div *ngIf="selectedPayment.description" class="bg-blue-50 border border-blue-100 rounded-2xl p-4">
+              <p class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1.5">Note / Description</p>
+              <p class="text-sm text-slate-700 leading-relaxed">{{ selectedPayment.description }}</p>
+            </div>
+
+            <!-- Approval Info -->
+            <div *ngIf="selectedPayment.status === 'APPROVED'" class="bg-emerald-50 border border-emerald-100 rounded-2xl p-4">
+              <p class="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-2">Payment Approval Info</p>
+              <div class="space-y-1 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-emerald-700">Approved By</span>
+                  <span class="font-semibold text-emerald-800">{{ selectedPayment.approvedBy }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-emerald-700">Approved At</span>
+                  <span class="font-semibold text-emerald-800">{{ formatDateTime(selectedPayment.approvedAt || '') }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Rejection Info -->
+            <div *ngIf="selectedPayment.status === 'REJECTED'" class="bg-red-50 border border-red-100 rounded-2xl p-4">
+              <p class="text-xs font-bold text-red-500 uppercase tracking-wide mb-2">Payment Rejection Info</p>
+              <div class="space-y-2 text-sm">
+                <div class="flex justify-between">
+                  <span class="text-red-600">Rejected By</span>
+                  <span class="font-semibold text-red-700">{{ selectedPayment.rejectedBy }}</span>
+                </div>
+                <div class="flex justify-between">
+                  <span class="text-red-600">Rejected At</span>
+                  <span class="font-semibold text-red-700">{{ formatDateTime(selectedPayment.rejectedAt || '') }}</span>
+                </div>
+                <div *ngIf="selectedPayment.rejectionReason" class="pt-2 border-t border-red-100">
+                  <p class="text-xs text-red-500 font-semibold mb-1">Reason</p>
+                  <p class="text-red-700">{{ selectedPayment.rejectionReason }}</p>
+                </div>
+              </div>
+            </div>
+
+          </div>
+        </ion-content>
+
+        <!-- Footer Actions (only for PENDING) -->
+        <div *ngIf="selectedPayment.status === 'PENDING'" class="p-4 border-t border-slate-100 bg-white flex gap-3">
+          <button (click)="openRejectModal(selectedPayment)"
+            class="flex-1 flex items-center justify-center gap-2 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm transition-all border border-red-200">
+            <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+            Reject
+          </button>
+          <button (click)="openApproveModal(selectedPayment)"
+            class="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-sm transition-all shadow-md">
+            <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+            Approve
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       APPROVE CONFIRMATION MODAL
+       ════════════════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isApproveModalOpen" (didDismiss)="isApproveModalOpen = false" [backdropDismiss]="false"
+    style="--height: auto; --border-radius: 20px; --width: 92%; --max-width: 480px;">
+    <ng-template>
+      <div class="bg-white rounded-[28px] overflow-hidden" *ngIf="selectedPayment">
+
+        <!-- Green gradient header -->
+        <div class="relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-500"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-36 h-36 rounded-full bg-white/15 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-28 h-28 rounded-full bg-teal-300/20 blur-2xl"></div>
+          <div class="relative p-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-sm">
+                <ion-icon name="shield-checkmark-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white">Approve Payment</h3>
+                <p class="text-emerald-100 text-xs font-mono">{{ selectedPayment.paymentRequestNo }}</p>
+              </div>
+            </div>
+            <button (click)="isApproveModalOpen = false"
+              class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+              <ion-icon name="close-outline" class="text-white"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+
+          <!-- Payment summary -->
+          <div class="bg-gradient-to-r from-emerald-50 to-teal-50 border border-emerald-100 rounded-2xl p-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-emerald-600 uppercase tracking-wide mb-0.5">Approving Amount</p>
+              <p class="text-2xl font-black text-emerald-800">{{ formatCurrency(selectedPayment.amount) }}</p>
+              <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <ion-icon name="business-outline" class="text-sm text-slate-400"></ion-icon>
+                {{ selectedPayment.distributorName }}
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-emerald-100 flex items-center justify-center shrink-0">
+              <ion-icon name="checkmark-circle-outline" class="text-emerald-600 text-2xl"></ion-icon>
+            </div>
+          </div>
+
+          <!-- Payment ref row -->
+          <div class="flex items-center gap-3 bg-slate-50 rounded-xl px-4 py-3 border border-slate-100">
+            <div class="w-8 h-8 rounded-lg flex items-center justify-center shrink-0"
+              [ngStyle]="{ 'background': getMethodConfig(selectedPayment.paymentMethod).bg }">
+              <ion-icon [name]="getMethodConfig(selectedPayment.paymentMethod).icon" class="text-sm"
+                [ngStyle]="{ 'color': getMethodConfig(selectedPayment.paymentMethod).color }"></ion-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs text-slate-400">{{ selectedPayment.paymentMethod }}<span *ngIf="selectedPayment.bankName"> · {{ selectedPayment.bankName }}</span></p>
+              <p *ngIf="selectedPayment.utrNumber" class="text-xs font-bold text-slate-700 font-mono truncate">{{ selectedPayment.utrNumber }}</p>
+              <p *ngIf="selectedPayment.chequeNumber" class="text-xs font-bold text-slate-700 font-mono">CHQ: {{ selectedPayment.chequeNumber }}</p>
+            </div>
+            <span class="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg shrink-0">{{ selectedPayment.orderNo }}</span>
+          </div>
+
+          <!-- Approval note (optional) -->
+          <div>
+            <label class="flex items-center gap-1.5 text-sm font-bold text-slate-700 mb-2">
+              <ion-icon name="chatbox-ellipses-outline" class="text-slate-400"></ion-icon>
+              Approval Note
+              <span class="text-xs font-normal text-slate-400 ml-1">(optional)</span>
+            </label>
+            <textarea [(ngModel)]="approvalNote" rows="3"
+              placeholder="Add any remarks or internal notes about this approval..."
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all resize-none">
+            </textarea>
+          </div>
+
+          <!-- Warning -->
+          <div class="flex items-start gap-3 bg-amber-50 border border-amber-100 rounded-xl p-3">
+            <ion-icon name="information-circle-outline" class="text-amber-500 text-lg shrink-0 mt-0.5"></ion-icon>
+            <p class="text-xs text-amber-700 leading-relaxed">
+              Approving will update the distributor's ledger balance. This action <span class="font-bold">cannot be undone</span>.
+            </p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex gap-3 pt-1">
+            <button (click)="isApproveModalOpen = false"
+              class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all">
+              Cancel
+            </button>
+            <button (click)="submitApproval()" [disabled]="isSubmitting"
+              class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white rounded-xl text-sm font-bold transition-all shadow-md">
+              <ion-spinner *ngIf="isSubmitting" name="crescent" class="w-4 h-4"></ion-spinner>
+              <ion-icon *ngIf="!isSubmitting" name="shield-checkmark-outline" class="text-base"></ion-icon>
+              {{ isSubmitting ? 'Approving...' : 'Confirm Approval' }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+
+  <!-- ════════════════════════════════════════════════════════════════════════
+       REJECT CONFIRMATION MODAL
+       ════════════════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="isRejectModalOpen = false" [backdropDismiss]="false"
+    style="--height: auto; --border-radius: 20px; --width: 92%; --max-width: 480px;">
+    <ng-template>
+      <div class="bg-white rounded-[28px] overflow-hidden" *ngIf="selectedPayment">
+
+        <!-- Red gradient header -->
+        <div class="relative overflow-hidden">
+          <div class="absolute inset-0 bg-gradient-to-br from-red-500 via-rose-500 to-pink-500"></div>
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-36 h-36 rounded-full bg-white/15 blur-2xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-8 -mb-8 w-28 h-28 rounded-full bg-rose-300/20 blur-2xl"></div>
+          <div class="relative p-5 flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center shadow-sm">
+                <ion-icon name="ban-outline" class="text-white text-xl"></ion-icon>
+              </div>
+              <div>
+                <h3 class="text-base font-bold text-white">Reject Payment</h3>
+                <p class="text-red-100 text-xs font-mono">{{ selectedPayment.paymentRequestNo }}</p>
+              </div>
+            </div>
+            <button (click)="isRejectModalOpen = false"
+              class="w-8 h-8 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+              <ion-icon name="close-outline" class="text-white"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="p-5 space-y-4">
+
+          <!-- Payment summary -->
+          <div class="bg-gradient-to-r from-red-50 to-rose-50 border border-red-100 rounded-2xl p-4 flex items-center justify-between">
+            <div>
+              <p class="text-xs font-bold text-red-500 uppercase tracking-wide mb-0.5">Rejecting Amount</p>
+              <p class="text-2xl font-black text-red-700">{{ formatCurrency(selectedPayment.amount) }}</p>
+              <p class="text-xs text-slate-500 mt-1 flex items-center gap-1">
+                <ion-icon name="business-outline" class="text-sm text-slate-400"></ion-icon>
+                {{ selectedPayment.distributorName }}
+              </p>
+            </div>
+            <div class="w-12 h-12 rounded-2xl bg-red-100 flex items-center justify-center shrink-0">
+              <ion-icon name="close-circle-outline" class="text-red-500 text-2xl"></ion-icon>
+            </div>
+          </div>
+
+          <!-- Quick reason chips -->
+          <div>
+            <p class="text-xs font-bold text-slate-500 uppercase tracking-wide mb-2">Quick Reasons</p>
+            <div class="flex flex-wrap gap-2">
+              <button *ngFor="let chip of rejectionChips"
+                (click)="rejectionReason = chip"
+                [ngClass]="rejectionReason === chip
+                  ? 'bg-red-100 text-red-700 border-red-300'
+                  : 'bg-slate-50 text-slate-600 border-slate-200 hover:bg-red-50 hover:text-red-600 hover:border-red-200'"
+                class="px-3 py-1.5 rounded-xl text-xs font-semibold border transition-all">
+                {{ chip }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Rejection reason textarea -->
+          <div>
+            <label class="flex items-center justify-between text-sm font-bold text-slate-700 mb-2">
+              <span class="flex items-center gap-1.5">
+                <ion-icon name="chatbox-ellipses-outline" class="text-slate-400"></ion-icon>
+                Rejection Reason <span class="text-red-500">*</span>
+              </span>
+              <span class="text-xs font-normal" [ngClass]="rejectionReason.length > 200 ? 'text-red-400' : 'text-slate-400'">
+                {{ rejectionReason.length }}/250
+              </span>
+            </label>
+            <textarea [(ngModel)]="rejectionReason" rows="4" maxlength="250"
+              placeholder="Clearly explain why this payment request is being rejected..."
+              class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-red-400 focus:bg-white transition-all resize-none">
+            </textarea>
+          </div>
+
+          <!-- Warning -->
+          <div class="flex items-start gap-3 bg-red-50 border border-red-100 rounded-xl p-3">
+            <ion-icon name="alert-circle-outline" class="text-red-400 text-lg shrink-0 mt-0.5"></ion-icon>
+            <p class="text-xs text-red-600 leading-relaxed">
+              The distributor will be notified of this rejection. Ledger balance will <span class="font-bold">not</span> be affected.
+            </p>
+          </div>
+
+          <!-- Buttons -->
+          <div class="flex gap-3 pt-1">
+            <button (click)="isRejectModalOpen = false"
+              class="flex-1 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all">
+              Cancel
+            </button>
+            <button (click)="submitRejection()" [disabled]="isSubmitting || !rejectionReason.trim()"
+              class="flex-1 flex items-center justify-center gap-2 py-3.5 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 disabled:opacity-60 text-white rounded-xl text-sm font-bold transition-all shadow-md">
+              <ion-spinner *ngIf="isSubmitting" name="crescent" class="w-4 h-4"></ion-spinner>
+              <ion-icon *ngIf="!isSubmitting" name="ban-outline" class="text-base"></ion-icon>
+              {{ isSubmitting ? 'Rejecting...' : 'Confirm Rejection' }}
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>
