@@ -149,12 +149,12 @@ export class CartService {
 
     if (existingItem) {
       existingItem.cartQuantity += quantity;
-      existingItem.subtotal = existingItem.cartQuantity * itemPrice;
+      existingItem.subtotal = Math.round(existingItem.cartQuantity * itemPrice * 100) / 100;
     } else {
       const cartItem: CartItem = {
         ...product,
         cartQuantity: quantity,
-        subtotal: quantity * itemPrice
+        subtotal: Math.round(quantity * itemPrice * 100) / 100
       };
       console.log('✅ CartItem created:', cartItem);
       currentCart.push(cartItem);
@@ -179,7 +179,7 @@ export class CartService {
     if (item) {
       item.cartQuantity = quantity;
       const itemPrice = (item as any).perPieceRate || (item as any).perItemPrice || item.price || 0;
-      item.subtotal = quantity * itemPrice;
+      item.subtotal = Math.round(quantity * itemPrice * 100) / 100;
       this.cartItems.next([...currentCart]);
       this.saveCartToLocalStorage();
     }
@@ -195,7 +195,8 @@ export class CartService {
 
   // Get cart total
   getCartTotal(): number {
-    return this.cartItems.value.reduce((total, item) => total + item.subtotal, 0);
+    const total = this.cartItems.value.reduce((total, item) => total + item.subtotal, 0);
+    return Math.round(total * 100) / 100;
   }
 
   // Get cart count

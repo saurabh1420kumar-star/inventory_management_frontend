@@ -4,7 +4,7 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { IonicModule, ToastController, ModalController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES, RoleOption } from '../../services/sales-hierarchy.service';
-import { RoleCountPipe, RoleFilterPipe } from './hierarchy.pipes';
+import { RoleFilterPipe } from './hierarchy.pipes';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
 
 @Component({
@@ -12,7 +12,7 @@ import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component'
   templateUrl: './salesperson-onboarding.page.html',
   styleUrls: ['./salesperson-onboarding.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule, RoleCountPipe, RoleFilterPipe, HierarchyMapComponent]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule, RoleFilterPipe, HierarchyMapComponent]
 })
 export class SalespersonOnboardingPage implements OnInit {
   onboardingForm!: FormGroup;
