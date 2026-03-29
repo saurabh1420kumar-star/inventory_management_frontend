@@ -340,78 +340,102 @@
       <!-- Data Table -->
       <div *ngIf="selectedAccount && paginatedTransactions.length > 0"
         class="hidden lg:block bg-white rounded-2xl shadow-md border border-slate-200 overflow-hidden mb-6">
-        <div
-          class="grid grid-cols-8 gap-4 px-6 py-4 bg-gradient-to-r from-slate-700 via-slate-800 to-slate-700 font-semibold text-xs text-white uppercase tracking-wider">
-          <div class="cursor-pointer hover:text-emerald-300 transition-colors" (click)="handleSort('date')">
-            <div class="flex items-center gap-1">Date
-              <ion-icon *ngIf="sortField === 'date'"
-                [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-            </div>
-          </div>
-          <div>Reference</div>
-          <div class="col-span-2 cursor-pointer hover:text-emerald-300 transition-colors"
-            (click)="handleSort('description')">
-            <div class="flex items-center gap-1">Description
-              <ion-icon *ngIf="sortField === 'description'"
-                [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-            </div>
-          </div>
-          <div class="text-center">Type</div>
-          <div class="text-right cursor-pointer hover:text-emerald-300 transition-colors" (click)="handleSort('debit')">
-            <div class="flex items-center justify-end gap-1">Debit
-              <ion-icon *ngIf="sortField === 'debit'"
-                [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-            </div>
-          </div>
-          <div class="text-right cursor-pointer hover:text-emerald-300 transition-colors"
-            (click)="handleSort('credit')">
-            <div class="flex items-center justify-end gap-1">Credit
-              <ion-icon *ngIf="sortField === 'credit'"
-                [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-            </div>
-          </div>
-          <div class="text-right cursor-pointer hover:text-emerald-300 transition-colors"
-            (click)="handleSort('balance')">
-            <div class="flex items-center justify-end gap-1">Balance
-              <ion-icon *ngIf="sortField === 'balance'"
-                [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
-            </div>
-          </div>
-        </div>
-
-        <div *ngFor="let transaction of paginatedTransactions; let odd = odd"
-          class="table-row-acc grid grid-cols-8 gap-4 px-6 py-4 items-center transition-all border-b border-slate-100"
-          [class.bg-slate-50]="odd">
-          <div class="text-sm text-slate-600 font-medium">{{ formatDate(transaction.date) }}</div>
-          <div class="font-mono text-sm bg-slate-100 px-3 py-1.5 rounded-lg border border-slate-200 truncate text-slate-700">{{
-            transaction.reference }}</div>
-          <div class="col-span-2">
-            <div class="font-semibold text-slate-800 text-sm">{{ transaction.description }}</div>
-            <div class="text-xs text-slate-400 mt-0.5">{{ transaction.category }}</div>
-          </div>
-          <div class="text-center">
-            <span [class]="getTransactionTypeConfig(transaction.type).className"
-              class="px-2.5 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
-              <ion-icon [name]="getTransactionTypeConfig(transaction.type).icon" class="text-xs"></ion-icon>
-              {{ getTransactionTypeConfig(transaction.type).label }}
-            </span>
-          </div>
-          <div class="text-right font-semibold text-sm" [class.text-red-600]="transaction.debit > 0"
-            [class.text-slate-300]="transaction.debit === 0">
-            {{ transaction.debit > 0 ? formatCurrency(transaction.debit) : '—' }}
-          </div>
-          <div class="text-right font-semibold text-sm" [class.text-emerald-600]="transaction.credit > 0"
-            [class.text-slate-300]="transaction.credit === 0">
-            {{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}
-          </div>
-          <div class="text-right flex items-center justify-end gap-2">
-            <span class="font-bold text-slate-800 text-sm">{{ formatCurrency(transaction.balance) }}</span>
-            <button (click)="handleViewDetails(transaction)"
-              class="text-slate-400 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-all">
-              <ion-icon name="ellipsis-vertical-outline" class="text-lg"></ion-icon>
-            </button>
-          </div>
-        </div>
+        <table class="w-full table-fixed border-collapse">
+          <colgroup>
+            <col style="width: 130px">
+            <col style="width: 150px">
+            <col>
+            <col style="width: 115px">
+            <col style="width: 130px">
+            <col style="width: 130px">
+            <col style="width: 160px">
+          </colgroup>
+          <thead>
+            <tr class="bg-gradient-to-r from-slate-700 via-slate-800 to-slate-700 text-white text-xs uppercase tracking-wider font-semibold">
+              <th class="px-4 py-4 text-left cursor-pointer hover:text-emerald-300 transition-colors"
+                (click)="handleSort('date')">
+                <div class="flex items-center gap-1">Date
+                  <ion-icon *ngIf="sortField === 'date'"
+                    [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                </div>
+              </th>
+              <th class="px-4 py-4 text-left">Reference</th>
+              <th class="px-4 py-4 text-left cursor-pointer hover:text-emerald-300 transition-colors"
+                (click)="handleSort('description')">
+                <div class="flex items-center gap-1">Description
+                  <ion-icon *ngIf="sortField === 'description'"
+                    [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                </div>
+              </th>
+              <th class="px-4 py-4 text-center">Type</th>
+              <th class="px-4 py-4 text-right cursor-pointer hover:text-emerald-300 transition-colors"
+                (click)="handleSort('debit')">
+                <div class="flex items-center justify-end gap-1">Debit
+                  <ion-icon *ngIf="sortField === 'debit'"
+                    [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                </div>
+              </th>
+              <th class="px-4 py-4 text-right cursor-pointer hover:text-emerald-300 transition-colors"
+                (click)="handleSort('credit')">
+                <div class="flex items-center justify-end gap-1">Credit
+                  <ion-icon *ngIf="sortField === 'credit'"
+                    [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                </div>
+              </th>
+              <th class="px-4 py-4 text-right cursor-pointer hover:text-emerald-300 transition-colors"
+                (click)="handleSort('balance')">
+                <div class="flex items-center justify-end gap-1">Balance
+                  <ion-icon *ngIf="sortField === 'balance'"
+                    [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
+                </div>
+              </th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let transaction of paginatedTransactions; let odd = odd"
+              class="table-row-acc border-b border-slate-100 hover:bg-emerald-50/30 transition-colors"
+              [class.bg-slate-50]="odd">
+              <td class="px-4 py-4 text-sm text-slate-600 font-medium whitespace-nowrap">
+                {{ formatDate(transaction.date) }}
+              </td>
+              <td class="px-4 py-4">
+                <span class="font-mono text-xs bg-slate-100 px-2.5 py-1 rounded-lg border border-slate-200 text-slate-700 block truncate">
+                  {{ transaction.reference }}
+                </span>
+              </td>
+              <td class="px-4 py-4">
+                <div class="font-semibold text-slate-800 text-sm truncate">{{ transaction.description }}</div>
+                <div class="text-xs text-slate-400 mt-0.5">{{ transaction.category }}</div>
+              </td>
+              <td class="px-4 py-4 text-center">
+                <span [class]="getTransactionTypeConfig(transaction.type).className"
+                  class="px-2 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
+                  <ion-icon [name]="getTransactionTypeConfig(transaction.type).icon" class="text-xs"></ion-icon>
+                  {{ getTransactionTypeConfig(transaction.type).label }}
+                </span>
+              </td>
+              <td class="px-4 py-4 text-right font-semibold text-sm tabular-nums"
+                [class.text-red-600]="transaction.debit > 0"
+                [class.text-slate-300]="transaction.debit === 0">
+                {{ transaction.debit > 0 ? formatCurrency(transaction.debit) : '—' }}
+              </td>
+              <td class="px-4 py-4 text-right font-semibold text-sm tabular-nums"
+                [class.text-emerald-600]="transaction.credit > 0"
+                [class.text-slate-300]="transaction.credit === 0">
+                {{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}
+              </td>
+              <td class="px-4 py-4 text-right">
+                <div class="flex items-center justify-end gap-2">
+                  <span class="font-bold text-slate-800 text-sm tabular-nums">{{ formatCurrency(transaction.balance) }}</span>
+                  <button (click)="handleViewDetails(transaction)"
+                    class="text-slate-400 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-all flex-shrink-0">
+                    <ion-icon name="ellipsis-vertical-outline" class="text-lg"></ion-icon>
+                  </button>
+                </div>
+              </td>
+            </tr>
+          </tbody>
+        </table>
       </div>
 
       <!-- Mobile Cards View -->
@@ -503,16 +527,6 @@
 
       <!-- Approve PI & Ready to Dispatch Buttons -->
       <div *ngIf="selectedAccount" class="mt-6 flex items-center justify-end gap-3">
-        <button (click)="handleApprovePI()"
-          class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
-          <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
-          Approve PI
-        </button>
-        <button (click)="fetchPendingPayments()"
-          class="flex items-center gap-2 px-6 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
-          <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
-          Approve Payment
-        </button>
         <button (click)="isDispatchModalOpen = true"
           class="flex items-center gap-2 px-6 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-bold text-sm transition-all shadow-lg hover:shadow-xl">
           <ion-icon name="send-outline" class="text-lg"></ion-icon>

@@ -302,6 +302,11 @@ export class DistributorCartPage implements OnInit {
       this.showToast('Your cart is empty', 'warning');
       return;
     }
+    // Re-apply address each time in case form was reset
+    if (this.distributorAddress) {
+      this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
+      this.orderForm.get('deliveryAddress')?.disable();
+    }
     this.showCheckoutModal = true;
   }
 

@@ -241,9 +241,10 @@ export class PaymentRequestPage implements OnInit {
   submitApproval() {
     if (!this.selectedPayment) return;
     const payment = this.selectedPayment;
+    const userId = this.auth.getUserId() ?? 0;
     this.isSubmitting = true;
 
-    this.accountsService.approvePayment(payment.id, payment.distributorId).subscribe({
+    this.accountsService.approvePayment(payment.id, userId).subscribe({
       next: () => {
         this.loadPayments();
         this.isApproveModalOpen = false;
@@ -285,7 +286,7 @@ export class PaymentRequestPage implements OnInit {
         this.isSubmitting = false;
         this.rejectionReason = '';
         this.selectedPayment = null;
-        this.showToast('Payment request rejected', 'danger');
+        this.showToast('Payment request rejected successfully', 'success');
       },
       error: (err) => {
         this.isSubmitting = false;

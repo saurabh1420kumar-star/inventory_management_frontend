@@ -40,11 +40,11 @@ export class AccountsService {
   }
 
   /**
-   * POST /api/accounts/approve-payment/{paymentId}?distributorId={distributorId}
+   * POST /api/accounts/payment-approval/{paymentId}?approvedBy={userId}
    */
-  approvePayment(paymentId: number, distributorId: number): Observable<any> {
+  approvePayment(paymentId: number, approvedBy: number): Observable<any> {
     return this.http.post<any>(
-      `${this.apiUrl}/approve-payment/${paymentId}?distributorId=${distributorId}`,
+      `${this.apiUrl}/payment-approval/${paymentId}?approvedBy=${approvedBy}`,
       {},
       { headers: this.getAuthHeaders() }
     );

@@ -149,6 +149,12 @@ ion-modal {
   ion-toolbar {
     --background: transparent;
   }
+
+  ion-content::part(scroll) {
+    scrollbar-width: thin;
+    scrollbar-color: #94a3b8 transparent;
+    overflow-y: scroll;
+  }
 }
 
 // ====== GRID UTILITIES ======

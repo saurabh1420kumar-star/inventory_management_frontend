@@ -355,6 +355,21 @@ app-accounts-master {
 // Modal Sizing
 // ============================================================
 
+ion-modal.modal-sm {
+  --width: min(480px, 92vw);
+  --height: auto;
+  --min-height: unset;
+  --max-height: 90vh;
+  --border-radius: 20px;
+  --box-shadow: 0 32px 80px -12px rgba(0, 0, 0, 0.35);
+
+  > .ion-page {
+    position: relative;
+    contain: layout style;
+    height: auto;
+  }
+}
+
 ion-modal.modal-xl {
   --width: min(860px, 96vw);
   --height: min(92vh, 900px);

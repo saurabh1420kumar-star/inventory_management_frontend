@@ -56,6 +56,7 @@ export class DispatchPage implements OnInit {
   searchTerm = '';
   activeTab: 'payment_approved' | 'download_gdn' = 'payment_approved';
   isLoading = false;
+  isLoadingOrders = true;
   errorMessage = '';
 
   // ── Proforma Invoices ─────────────────────────────
@@ -160,14 +161,17 @@ export class DispatchPage implements OnInit {
   }
 
   loadPaymentApprovedCarts() {
+    this.isLoadingOrders = true;
     this.dispatchService.getPaymentApprovedCarts().subscribe({
       next: (data) => {
         this.paymentApprovedCarts = data
           .map((order) => this.mapApiOrderToDisplay(order))
           .sort((a, b) => b.id - a.id);
+        this.isLoadingOrders = false;
       },
       error: (err) => {
         console.error('Error loading payment-approved carts:', err);
+        this.isLoadingOrders = false;
       },
     });
   }

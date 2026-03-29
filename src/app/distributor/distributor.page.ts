@@ -216,7 +216,7 @@ export class DistributorPage implements OnInit {
   private mapDtoToDistributor(dto: DistributorDto): Distributor {
     return {
       id: dto.id.toString(),
-      name: dto.name,
+      name: (((dto as any).firstName || '') + ' ' + ((dto as any).lastName || '')).trim() || dto.name,
       assignedPerson: dto.assignedPerson || '',
       salespersonId: (dto as any).salespersonId,
       distributorType: dto.distributorType,

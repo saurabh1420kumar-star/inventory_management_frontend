@@ -368,8 +368,15 @@ export class AccountsMasterPage implements OnInit {
 
   mapPaymentHistoryToTransactions(payments: any[]): Transaction[] {
     let runningBalance = this.selectedAccount?.openingBalance || 0;
-    
-    return (payments || []).map((payment: any, index: number) => {
+
+    // Sort descending by createdAt (newest first)
+    const sorted = [...(payments || [])].sort((a, b) => {
+      const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
+      const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
+      return tb - ta;
+    });
+
+    return sorted.map((payment: any, index: number) => {
       // Extract date from createdAt timestamp (format: YYYY-MM-DD)
       const dateStr = payment.createdAt ? payment.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
       

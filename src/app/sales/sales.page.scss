@@ -19,6 +19,21 @@ ion-content {
   --border-radius: 0;
 }
 
+ion-modal.reject-modal-centered {
+  --width: min(480px, 94vw);
+  --height: auto;
+  --min-height: unset;
+  --max-height: 90vh;
+  --border-radius: 20px;
+  --box-shadow: 0 24px 64px rgba(0,0,0,0.35);
+
+  > .ion-page {
+    position: relative;
+    contain: layout style;
+    height: auto;
+  }
+}
+
 /* Accordion styles */
 [data-distributor] {
   &:hover {

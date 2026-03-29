@@ -36,6 +36,8 @@ export class SalesPage implements OnInit {
   isRejectModalOpen = false;
   rejectRemarks = '';
   orderBeingRejected: PendingOrder | null = null;
+  isRejectSubmitting = false;
+  isApprovingOrderId: number | null = null;
   orderSearchTerm = '';
   expandedOrderIds = new Set<number>();
 
@@ -327,14 +329,17 @@ export class SalesPage implements OnInit {
   }
 
   approveOrder(order: PendingOrder) {
+    this.isApprovingOrderId = order.id;
     this.salesService.approveOrder(order.id).subscribe({
       next: () => {
+        this.isApprovingOrderId = null;
         // Reload both lists fresh from API so Approved tab shows newest-first
         this.loadPendingOrders();
         this.loadApproveCarts();
         this.orderFilterTab = 'approved';
       },
       error: (error) => {
+        this.isApprovingOrderId = null;
         console.error('Error approving order:', error);
         this.errorMessage = 'Failed to approve order. Please try again.';
       },
@@ -403,6 +408,7 @@ export class SalesPage implements OnInit {
   confirmReject() {
     if (!this.orderBeingRejected) return;
     const order = this.orderBeingRejected;
+    this.isRejectSubmitting = true;
     this.salesService.dismissOrder(order.id, this.rejectRemarks.trim()).subscribe({
       next: () => {
         const idx = this.pendingOrders.findIndex(o => o.id === order.id);
@@ -410,10 +416,12 @@ export class SalesPage implements OnInit {
           this.pendingOrders[idx] = { ...this.pendingOrders[idx], status: 'DISMISSED' };
           this.pendingOrders = [...this.pendingOrders];
         }
+        this.isRejectSubmitting = false;
         this.cancelReject();
         this.orderFilterTab = 'rejected';
       },
       error: (error) => {
+        this.isRejectSubmitting = false;
         console.error('Error dismissing order:', error);
         this.errorMessage = 'Failed to reject order. Please try again.';
       },

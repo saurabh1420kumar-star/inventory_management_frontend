@@ -184,7 +184,7 @@
         </ion-item>
 
         <!-- ===== DISPATCH (Both mobile & desktop) ===== -->
-        <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/dispatch" routerLinkActive="active" (click)="onMenuItemClick()">
+        <ion-item *appAcl="'DISPATCH'" routerLink="/dispatch" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="cube-outline" slot="start"></ion-icon>
           <ion-label>Dispatch & GDN</ion-label>
         </ion-item>

@@ -253,15 +253,15 @@
             <label class="block text-sm font-semibold text-slate-300 mb-3 text-center">Quantity</label>
             <div class="flex items-center gap-3">
               <button (click)="quantityToAdd = Math.max(1, quantityToAdd - 1)"
-                      class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
-                      style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">&#8722;</button>
+                      class="rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
+                      style="width: 64px; min-width: 64px; height: 48px; flex-shrink: 0; background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">&#8722;</button>
               <input [(ngModel)]="quantityToAdd" type="number" min="1"
                      (ngModelChange)="quantityToAdd = Math.max(1, quantityToAdd)"
-                     style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1);"
+                     style="background: rgba(255,255,255,0.05); color: #fff; border: 1px solid rgba(255,255,255,0.1); min-width: 0;"
                      class="flex-1 px-4 py-3 rounded-xl text-center text-xl font-bold focus:outline-none focus:ring-2 focus:ring-emerald-500/30" />
               <button (click)="quantityToAdd = quantityToAdd + 1"
-                      class="w-12 h-12 rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
-                      style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">+</button>
+                      class="rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
+                      style="width: 64px; min-width: 64px; height: 48px; flex-shrink: 0; background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">+</button>
             </div>
             <p class="text-xs text-slate-600 mt-2 text-center">Available Stock: {{ selectedProduct.quantity }}</p>
           </div>
@@ -349,7 +349,7 @@
           <h3 class="text-base font-bold text-white mb-4">Delivery Details</h3>
           <div>
             <label class="block text-sm font-medium text-slate-500 mb-2">Delivery Address</label>
-            <textarea formControlName="deliveryAddress" readonly
+            <textarea formControlName="deliveryAddress" [value]="distributorAddress" readonly
                       style="background: rgba(255,255,255,0.03); color: #94a3b8; border: 1px solid rgba(255,255,255,0.1); cursor: not-allowed;"
                       class="w-full px-4 py-3 rounded-xl text-sm focus:outline-none placeholder:text-slate-600 resize-none" rows="3"></textarea>
             <p class="text-xs text-slate-500 mt-2">This address is automatically set from your distributor profile and cannot be changed.</p>

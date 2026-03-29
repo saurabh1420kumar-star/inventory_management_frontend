@@ -15,13 +15,13 @@
 </ion-header>
 
 <ion-content class="bg-slate-50">
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/40 to-indigo-50/30 pb-24">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 
       <!-- ── Hero Banner ─────────────────────────────────────────────────── -->
-      <div class="relative bg-gradient-to-r from-indigo-600 via-blue-600 to-blue-500 rounded-3xl shadow-xl overflow-hidden mb-6">
+      <div class="relative bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-3xl shadow-xl overflow-hidden mb-6">
         <div class="absolute top-0 right-0 -mr-20 -mt-20 w-72 h-72 rounded-full bg-white/10 blur-3xl"></div>
-        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-56 h-56 rounded-full bg-indigo-400/20 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-56 h-56 rounded-full bg-teal-500/20 blur-3xl"></div>
         <div class="relative px-7 py-7 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
           <div class="flex items-center gap-4">
             <div class="w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-lg border border-white/30">
@@ -95,13 +95,13 @@
             <input
               type="text" [(ngModel)]="searchQuery" (ngModelChange)="applyFilters()"
               placeholder="Search by distributor, order, UTR no..."
-              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-blue-400 focus:bg-white transition-all">
+              class="w-full pl-10 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 placeholder-slate-400 focus:outline-none focus:border-emerald-400 focus:bg-white transition-all">
           </div>
           <!-- Method Filter -->
           <div class="relative min-w-[160px]">
             <ion-icon name="funnel-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-400 text-base pointer-events-none"></ion-icon>
             <select [(ngModel)]="methodFilter" (ngModelChange)="applyFilters()"
-              class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-blue-400 appearance-none cursor-pointer">
+              class="w-full pl-9 pr-4 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-700 focus:outline-none focus:border-emerald-400 appearance-none cursor-pointer">
               <option value="ALL">All Methods</option>
               <option value="RTGS">RTGS</option>
               <option value="NEFT">NEFT</option>
@@ -126,7 +126,7 @@
           (click)="selectTab(tab)"
           [class.pr-tab-active]="activeTab === tab"
           [ngClass]="{
-            'bg-blue-600 text-white shadow-md': activeTab === tab,
+            'bg-emerald-500 text-white shadow-md': activeTab === tab,
             'text-slate-500 hover:bg-slate-100 hover:text-slate-700': activeTab !== tab
           }"
           class="pr-tab flex items-center gap-2 px-4 py-2 rounded-xl text-sm font-semibold transition-all whitespace-nowrap">
@@ -152,7 +152,7 @@
 
       <!-- ── Loading State ───────────────────────────────────────────────── -->
       <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16">
-        <ion-spinner name="crescent" class="text-blue-600 w-10 h-10"></ion-spinner>
+        <ion-spinner name="crescent" class="text-emerald-500 w-10 h-10"></ion-spinner>
         <p class="text-slate-500 text-sm mt-3 font-medium">Loading payment requests...</p>
       </div>
 
@@ -169,115 +169,178 @@
       </div>
 
       <!-- ── Payment Request Cards ───────────────────────────────────────── -->
-      <div *ngIf="!isLoading && filteredPayments.length > 0" class="space-y-4">
+      <div *ngIf="!isLoading && filteredPayments.length > 0" class="space-y-5">
         <div *ngFor="let payment of paginatedPayments"
-          class="pr-card group relative bg-white rounded-2xl overflow-hidden shadow-sm hover:shadow-lg transition-all duration-200 cursor-pointer border border-slate-100"
+          class="pr-card group relative bg-white rounded-2xl overflow-hidden cursor-pointer transition-all duration-200"
+          [ngClass]="{
+            'border-2 border-amber-200 shadow-amber-100/60':   payment.status === 'PENDING',
+            'border-2 border-emerald-200 shadow-emerald-100/60': payment.status === 'APPROVED',
+            'border-2 border-red-200 shadow-red-100/60':        payment.status === 'REJECTED'
+          }"
+          style="box-shadow: 0 4px 24px -4px rgba(0,0,0,0.12);"
           (click)="openDetail(payment)">
 
-          <!-- Left accent stripe (status color) -->
-          <div class="absolute left-0 top-0 bottom-0 w-1.5"
+          <!-- Top accent bar -->
+          <div class="h-1.5 w-full"
             [ngClass]="{
-              'bg-gradient-to-b from-amber-400 to-orange-400':  payment.status === 'PENDING',
-              'bg-gradient-to-b from-emerald-400 to-teal-400':  payment.status === 'APPROVED',
-              'bg-gradient-to-b from-red-400    to-rose-500':   payment.status === 'REJECTED'
+              'bg-gradient-to-r from-amber-400 to-orange-400':   payment.status === 'PENDING',
+              'bg-gradient-to-r from-emerald-400 to-teal-500':   payment.status === 'APPROVED',
+              'bg-gradient-to-r from-red-400 to-rose-500':       payment.status === 'REJECTED'
             }">
           </div>
 
-          <div class="pl-6 pr-5 pt-4 pb-4">
+          <div class="p-5">
 
-            <!-- Row 1: Avatar + Name/code/date + Status badge -->
-            <div class="flex items-center justify-between gap-3 mb-3">
+            <!-- ── Row 1: Avatar + Name + Status badge ── -->
+            <div class="flex items-center justify-between gap-3 mb-4">
               <div class="flex items-center gap-3 min-w-0">
-                <div class="w-10 h-10 rounded-xl shrink-0 flex items-center justify-center font-black text-base group-hover:scale-105 transition-transform"
+                <!-- Avatar -->
+                <div class="w-12 h-12 rounded-2xl shrink-0 flex items-center justify-center font-black text-lg shadow-sm group-hover:scale-105 transition-transform"
+                  [ngClass]="{
+                    'bg-gradient-to-br from-amber-400 to-orange-400 text-white':    payment.status === 'PENDING',
+                    'bg-gradient-to-br from-emerald-400 to-teal-500 text-white':    payment.status === 'APPROVED',
+                    'bg-gradient-to-br from-red-400 to-rose-500 text-white':        payment.status === 'REJECTED'
+                  }">
+                  {{ payment.distributorName.charAt(0).toUpperCase() }}
+                </div>
+                <!-- Name + code + date -->
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-800 text-base truncate leading-tight">{{ payment.distributorName }}</p>
+                  <div class="flex items-center gap-2 mt-0.5 flex-wrap">
+                    <span class="text-xs text-slate-400 font-mono bg-slate-50 px-1.5 py-0.5 rounded">{{ payment.distributorCode }}</span>
+                    <span class="text-slate-300 text-xs">·</span>
+                    <span class="text-xs text-slate-400 flex items-center gap-1">
+                      <ion-icon name="calendar-outline" class="text-[11px]"></ion-icon>
+                      {{ formatDate(payment.createdAt) }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+              <!-- Status badge -->
+              <span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border"
+                [ngClass]="{
+                  'bg-amber-50  text-amber-700  border-amber-300':    payment.status === 'PENDING',
+                  'bg-emerald-50 text-emerald-700 border-emerald-300': payment.status === 'APPROVED',
+                  'bg-red-50    text-red-600    border-red-300':       payment.status === 'REJECTED'
+                }">
+                <ion-icon [name]="getStatusConfig(payment.status).icon" class="text-sm"></ion-icon>
+                {{ getStatusConfig(payment.status).label }}
+              </span>
+            </div>
+
+            <!-- ── Row 2: Amount + Refs ── -->
+            <div class="flex items-center justify-between gap-4 mb-4 p-4 rounded-2xl"
+              [ngClass]="{
+                'bg-amber-50/60':   payment.status === 'PENDING',
+                'bg-emerald-50/60': payment.status === 'APPROVED',
+                'bg-red-50/60':     payment.status === 'REJECTED'
+              }">
+              <div>
+                <p class="text-[11px] font-bold uppercase tracking-wider mb-1"
+                  [ngClass]="{
+                    'text-amber-500':   payment.status === 'PENDING',
+                    'text-emerald-500': payment.status === 'APPROVED',
+                    'text-red-400':     payment.status === 'REJECTED'
+                  }">Amount</p>
+                <p class="text-3xl font-black text-slate-900 leading-none">{{ formatCurrency(payment.amount) }}</p>
+              </div>
+              <div class="text-right space-y-1.5">
+                <div class="inline-flex items-center gap-1.5 px-3 py-1 rounded-lg text-xs font-bold"
                   [ngClass]="{
                     'bg-amber-100 text-amber-700':    payment.status === 'PENDING',
                     'bg-emerald-100 text-emerald-700': payment.status === 'APPROVED',
                     'bg-red-100 text-red-600':         payment.status === 'REJECTED'
                   }">
-                  {{ payment.distributorName.charAt(0) }}
+                  <ion-icon name="cart-outline" class="text-sm"></ion-icon>
+                  {{ payment.orderNo }}
                 </div>
-                <div class="min-w-0">
-                  <p class="font-bold text-slate-800 text-sm truncate leading-tight">{{ payment.distributorName }}</p>
-                  <div class="flex items-center gap-2 mt-0.5">
-                    <span class="text-xs text-slate-400 font-mono">{{ payment.distributorCode }}</span>
-                    <span class="text-slate-200">·</span>
-                    <span class="text-xs text-slate-400">{{ formatDate(payment.createdAt) }}</span>
-                  </div>
-                </div>
-              </div>
-              <span class="shrink-0 inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-black border"
-                [ngClass]="{
-                  'bg-amber-50  text-amber-700  border-amber-200':    payment.status === 'PENDING',
-                  'bg-emerald-50 text-emerald-700 border-emerald-200': payment.status === 'APPROVED',
-                  'bg-red-50    text-red-600    border-red-200':       payment.status === 'REJECTED'
-                }">
-                <ion-icon [name]="getStatusConfig(payment.status).icon" class="text-xs"></ion-icon>
-                {{ getStatusConfig(payment.status).label }}
-              </span>
-            </div>
-
-            <!-- Row 2: Amount hero + Order/Request refs -->
-            <div class="flex items-end justify-between gap-3 mb-3">
-              <div>
-                <p class="text-xs font-semibold text-slate-400 uppercase tracking-wide mb-0.5">Amount</p>
-                <p class="text-2xl font-black text-slate-900 leading-none">{{ formatCurrency(payment.amount) }}</p>
-              </div>
-              <div class="text-right">
-                <p class="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-0.5 rounded-lg mb-1">{{ payment.orderNo }}</p>
-                <p class="text-xs font-mono text-slate-400">{{ payment.paymentRequestNo }}</p>
+                <p class="text-xs font-mono text-slate-400 text-right">{{ payment.paymentRequestNo }}</p>
               </div>
             </div>
 
-            <!-- Row 3: Method pill + UTR/cheque + bank -->
-            <div class="flex items-center gap-2 mb-3 flex-wrap">
-              <span class="inline-flex items-center gap-1.5 px-2.5 py-1.5 rounded-lg text-xs font-bold"
-                [ngStyle]="{ 'background': getMethodConfig(payment.paymentMethod).bg, 'color': getMethodConfig(payment.paymentMethod).color }">
+            <!-- ── Row 3: Payment Method + UTR + Bank ── -->
+            <div class="flex items-center gap-2 mb-4 flex-wrap">
+              <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border"
+                [ngStyle]="{ 'background': getMethodConfig(payment.paymentMethod).bg, 'color': getMethodConfig(payment.paymentMethod).color, 'border-color': getMethodConfig(payment.paymentMethod).color + '40' }">
                 <ion-icon [name]="getMethodConfig(payment.paymentMethod).icon" class="text-sm"></ion-icon>
                 {{ payment.paymentMethod }}
               </span>
-              <span *ngIf="payment.utrNumber" class="text-xs text-slate-400 font-mono truncate max-w-[160px]">{{ payment.utrNumber }}</span>
-              <span *ngIf="payment.chequeNumber" class="text-xs text-slate-400 font-mono">CHQ: {{ payment.chequeNumber }}</span>
-              <span *ngIf="payment.bankName" class="text-xs text-slate-500 ml-auto">{{ payment.bankName }}</span>
+              <span *ngIf="payment.utrNumber" class="inline-flex items-center gap-1 text-xs text-slate-500 font-mono bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg truncate max-w-[180px]">
+                <ion-icon name="key-outline" class="text-[10px] shrink-0"></ion-icon>{{ payment.utrNumber }}
+              </span>
+              <span *ngIf="payment.chequeNumber" class="text-xs text-slate-500 font-mono bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+                CHQ: {{ payment.chequeNumber }}
+              </span>
+              <span *ngIf="payment.bankName" class="ml-auto inline-flex items-center gap-1 text-xs text-slate-500 bg-slate-50 border border-slate-200 px-2.5 py-1 rounded-lg">
+                <ion-icon name="business-outline" class="text-[11px]"></ion-icon>{{ payment.bankName }}
+              </span>
             </div>
 
-            <!-- Footer: actions for PENDING | info strip for others -->
-            <div class="pt-3 border-t border-slate-100">
+            <!-- ── Description / Note (if present) ── -->
+            <div *ngIf="payment.description" class="flex items-start gap-2.5 mb-4 px-4 py-3 rounded-xl border"
+              [ngClass]="{
+                'bg-amber-50/80 border-amber-200':   payment.status === 'PENDING',
+                'bg-emerald-50/80 border-emerald-200': payment.status === 'APPROVED',
+                'bg-red-50/80 border-red-200':         payment.status === 'REJECTED'
+              }">
+              <ion-icon name="chatbox-ellipses-outline" class="text-base shrink-0 mt-0.5"
+                [ngClass]="{
+                  'text-amber-400':   payment.status === 'PENDING',
+                  'text-emerald-400': payment.status === 'APPROVED',
+                  'text-red-400':     payment.status === 'REJECTED'
+                }"></ion-icon>
+              <p class="text-xs text-slate-600 leading-relaxed line-clamp-2">{{ payment.description }}</p>
+            </div>
+
+            <!-- ── Footer ── -->
+            <div class="pt-4 border-t border-slate-100">
+
               <!-- PENDING: action buttons -->
-              <div *ngIf="payment.status === 'PENDING'" class="flex items-center gap-2" (click)="$event.stopPropagation()">
-                <span class="flex-1 text-xs text-slate-400 flex items-center gap-1">
-                  <ion-icon name="time-outline" class="text-amber-400"></ion-icon>
-                  Payment Added — Awaiting review
+              <div *ngIf="payment.status === 'PENDING'" class="flex items-center gap-3" (click)="$event.stopPropagation()">
+                <span class="flex-1 text-xs text-slate-400 flex items-center gap-1.5 min-w-0">
+                  <ion-icon name="time-outline" class="text-amber-400 shrink-0 text-sm"></ion-icon>
+                  <span class="truncate">Awaiting review</span>
                 </span>
                 <button (click)="openRejectModal(payment)"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-xs font-bold transition-all border border-red-100">
-                  <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
-                  Reject
+                  class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 rounded-xl text-sm font-bold transition-all border border-red-200 shadow-sm">
+                  <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                  Reject Payment
                 </button>
                 <button (click)="openApproveModal(payment)"
-                  class="inline-flex items-center gap-1.5 px-4 py-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl text-xs font-bold transition-all shadow-sm">
-                  <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon>
-                  Approve
+                  class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-emerald-200">
+                  <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
+                  Approve Payment
                 </button>
               </div>
+
               <!-- APPROVED strip -->
-              <div *ngIf="payment.status === 'APPROVED'" class="flex items-center gap-2 text-xs text-emerald-600">
-                <ion-icon name="checkmark-circle-outline" class="text-base text-emerald-500 shrink-0"></ion-icon>
-                  <span class="font-semibold">Payment Approved</span>
-                <span class="text-emerald-400">by {{ payment.approvedBy }}</span>
-                <span class="ml-auto text-emerald-400">{{ formatDate(payment.approvedAt || '') }}</span>
+              <div *ngIf="payment.status === 'APPROVED'" class="flex items-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl px-4 py-2.5">
+                <ion-icon name="checkmark-circle-outline" class="text-lg text-emerald-500 shrink-0"></ion-icon>
+                <span class="font-bold text-emerald-700 text-sm">Payment Approved</span>
+                <span class="text-emerald-500 text-xs">by {{ payment.approvedBy }}</span>
+                <span class="ml-auto text-xs text-emerald-400 flex items-center gap-1">
+                  <ion-icon name="calendar-outline" class="text-[11px]"></ion-icon>
+                  {{ formatDate(payment.approvedAt || '') }}
+                </span>
               </div>
+
               <!-- REJECTED strip -->
-              <div *ngIf="payment.status === 'REJECTED'" class="space-y-1">
-                <div class="flex items-center gap-2 text-xs text-red-500">
-                  <ion-icon name="close-circle-outline" class="text-base shrink-0"></ion-icon>
-                  <span class="font-semibold">Payment Rejected</span>
-                  <span class="text-red-400">by {{ payment.rejectedBy }}</span>
-                  <span class="ml-auto text-red-400">{{ formatDate(payment.rejectedAt || '') }}</span>
+              <div *ngIf="payment.status === 'REJECTED'" class="space-y-2">
+                <div class="flex items-center gap-2 bg-red-50 border border-red-200 rounded-xl px-4 py-2.5">
+                  <ion-icon name="close-circle-outline" class="text-lg text-red-500 shrink-0"></ion-icon>
+                  <span class="font-bold text-red-700 text-sm">Payment Rejected</span>
+                  <span class="text-red-400 text-xs">by {{ payment.rejectedBy }}</span>
+                  <span class="ml-auto text-xs text-red-400 flex items-center gap-1">
+                    <ion-icon name="calendar-outline" class="text-[11px]"></ion-icon>
+                    {{ formatDate(payment.rejectedAt || '') }}
+                  </span>
                 </div>
-                <p *ngIf="payment.rejectionReason" class="text-xs text-red-400 bg-red-50 rounded-lg px-3 py-1.5 border border-red-100 line-clamp-1">
-                  {{ payment.rejectionReason }}
+                <p *ngIf="payment.rejectionReason" class="text-xs text-red-500 bg-red-50 rounded-xl px-3 py-2 border border-red-200 flex items-start gap-2">
+                  <ion-icon name="alert-circle-outline" class="text-sm shrink-0 mt-0.5"></ion-icon>
+                  <span class="line-clamp-2">{{ payment.rejectionReason }}</span>
                 </p>
               </div>
+
             </div>
 
           </div>
@@ -358,7 +421,7 @@
             <div class="bg-white rounded-2xl border border-slate-100 p-5">
               <p class="text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Distributor</p>
               <div class="flex items-center gap-3">
-                <div class="w-12 h-12 rounded-xl bg-blue-50 flex items-center justify-center font-bold text-blue-700 text-lg">
+                <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center font-bold text-emerald-700 text-lg">
                   {{ selectedPayment.distributorName.charAt(0) }}
                 </div>
                 <div>
@@ -378,7 +441,7 @@
                 </div>
                 <div>
                   <p class="text-xs text-slate-400 mb-0.5">Order No.</p>
-                  <p class="text-sm font-bold text-blue-600 font-mono">{{ selectedPayment.orderNo }}</p>
+                  <p class="text-sm font-bold text-teal-600 font-mono">{{ selectedPayment.orderNo }}</p>
                 </div>
                 <div>
                   <p class="text-xs text-slate-400 mb-0.5">Date Submitted</p>
@@ -420,8 +483,8 @@
             </div>
 
             <!-- Description -->
-            <div *ngIf="selectedPayment.description" class="bg-blue-50 border border-blue-100 rounded-2xl p-4">
-              <p class="text-xs font-bold text-blue-500 uppercase tracking-wide mb-1.5">Note / Description</p>
+            <div *ngIf="selectedPayment.description" class="bg-teal-50 border border-teal-100 rounded-2xl p-4">
+              <p class="text-xs font-bold text-teal-600 uppercase tracking-wide mb-1.5">Note / Description</p>
               <p class="text-sm text-slate-700 leading-relaxed">{{ selectedPayment.description }}</p>
             </div>
 
@@ -539,7 +602,7 @@
               <p *ngIf="selectedPayment.utrNumber" class="text-xs font-bold text-slate-700 font-mono truncate">{{ selectedPayment.utrNumber }}</p>
               <p *ngIf="selectedPayment.chequeNumber" class="text-xs font-bold text-slate-700 font-mono">CHQ: {{ selectedPayment.chequeNumber }}</p>
             </div>
-            <span class="text-xs font-mono font-bold text-indigo-500 bg-indigo-50 px-2 py-1 rounded-lg shrink-0">{{ selectedPayment.orderNo }}</span>
+            <span class="text-xs font-mono font-bold text-teal-600 bg-teal-50 px-2 py-1 rounded-lg shrink-0">{{ selectedPayment.orderNo }}</span>
           </div>
 
           <!-- Approval note (optional) -->

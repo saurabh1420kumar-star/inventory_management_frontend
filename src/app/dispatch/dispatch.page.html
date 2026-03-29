@@ -85,9 +85,49 @@
       </div>
 
       <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- ORDER SKELETON CARDS                                      -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div *ngIf="isLoadingOrders && activeTab !== 'download_gdn'" class="space-y-5">
+        <div *ngFor="let i of [1,2,3,4]" class="bg-white rounded-2xl border border-slate-100 overflow-hidden animate-pulse"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+          <!-- Top accent -->
+          <div class="h-1 w-full bg-gradient-to-r from-slate-200 to-slate-100"></div>
+          <div class="p-4 sm:p-6">
+            <!-- Row 1: avatar + text + badge -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-4 mb-5">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-slate-200 flex-shrink-0"></div>
+                <div class="space-y-2">
+                  <div class="h-4 w-32 rounded bg-slate-200"></div>
+                  <div class="h-3 w-24 rounded bg-slate-100"></div>
+                </div>
+              </div>
+              <div class="flex gap-2">
+                <div class="h-7 w-28 rounded-full bg-slate-200"></div>
+              </div>
+            </div>
+            <!-- Row 2: info grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-5">
+              <div *ngFor="let j of [1,2,3,4]" class="bg-slate-50 rounded-xl p-3 space-y-1.5">
+                <div class="h-2 w-14 rounded bg-slate-200"></div>
+                <div class="h-4 w-20 rounded bg-slate-200"></div>
+              </div>
+            </div>
+            <!-- Expandable button -->
+            <div class="h-10 w-full rounded-xl bg-slate-100 mb-5"></div>
+            <!-- Action buttons -->
+            <div class="border-t border-slate-100 pt-5 flex gap-3">
+              <div class="flex-1 h-11 rounded-xl bg-slate-200"></div>
+              <div class="flex-1 h-11 rounded-xl bg-slate-100"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
       <!-- ORDER CARDS                                               -->
       <!-- ═══════════════════════════════════════════════════════════ -->
-      <div *ngIf="activeTab !== 'download_gdn' && filteredOrders.length > 0" class="space-y-5">
+      <div *ngIf="!isLoadingOrders && activeTab !== 'download_gdn' && filteredOrders.length > 0" class="space-y-5">
         <div
           *ngFor="let order of filteredOrders"
           class="bg-white rounded-2xl border overflow-hidden transition-all duration-300 hover:shadow-lg"
@@ -399,8 +439,41 @@
 
 
 
+      <!-- ═══════ GDN SKELETON CARDS ═══════ -->
+      <div *ngIf="isLoadingGdns && activeTab === 'download_gdn'" class="space-y-4">
+        <div *ngFor="let i of [1,2,3]" class="bg-white rounded-2xl border border-slate-100 overflow-hidden animate-pulse"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+          <!-- Top accent -->
+          <div class="h-1 w-full bg-gradient-to-r from-slate-200 to-slate-100"></div>
+          <div class="p-4 sm:p-6">
+            <!-- Header -->
+            <div class="flex flex-col sm:flex-row sm:items-start sm:justify-between gap-3 mb-4">
+              <div class="flex items-center gap-3">
+                <div class="w-11 h-11 rounded-full bg-slate-200 flex-shrink-0"></div>
+                <div class="space-y-2">
+                  <div class="h-4 w-36 rounded bg-slate-200"></div>
+                  <div class="h-3 w-24 rounded bg-slate-100"></div>
+                </div>
+              </div>
+              <div class="h-7 w-24 rounded-full bg-slate-200 self-start"></div>
+            </div>
+            <!-- Info grid -->
+            <div class="grid grid-cols-2 sm:grid-cols-4 gap-3 mb-4">
+              <div *ngFor="let j of [1,2,3,4]" class="bg-slate-50 rounded-xl p-3 space-y-1.5">
+                <div class="h-2 w-14 rounded bg-slate-200"></div>
+                <div class="h-4 w-20 rounded bg-slate-200"></div>
+              </div>
+            </div>
+            <!-- Divider + button -->
+            <div class="border-t border-slate-100 pt-4">
+              <div class="h-11 w-full rounded-xl bg-slate-200"></div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ═══════ GDN DOWNLOAD CARDS ═══════ -->
-      <div *ngIf="activeTab === 'download_gdn' && filteredGdns.length > 0" class="space-y-4">
+      <div *ngIf="!isLoadingGdns && activeTab === 'download_gdn' && filteredGdns.length > 0" class="space-y-4">
         <div
           *ngFor="let gdn of filteredGdns"
           class="bg-white rounded-2xl border border-teal-200 overflow-hidden transition-all duration-300 hover:shadow-lg"
@@ -487,7 +560,7 @@
       </div>
 
       <!-- ═══════ EMPTY STATE ═══════ -->
-      <div *ngIf="activeTab === 'download_gdn' ? filteredGdns.length === 0 : filteredOrders.length === 0"
+      <div *ngIf="!isLoadingOrders && !isLoadingGdns && (activeTab === 'download_gdn' ? filteredGdns.length === 0 : filteredOrders.length === 0)"
         class="bg-white rounded-2xl border border-dashed border-slate-200 p-12 text-center">
         <div class="w-16 h-16 rounded-2xl bg-slate-50 flex items-center justify-center mx-auto mb-4">
           <ion-icon name="cube-outline" class="text-3xl text-slate-300"></ion-icon>

@@ -1,6 +1,7 @@
 import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard'; // Import the guard
+import { AclGuard } from './guards/acl.guard';
 
 const routes: Routes = [
   {
@@ -99,7 +100,8 @@ const routes: Routes = [
   {
     path: 'dispatch',
     loadChildren: () => import('./dispatch/dispatch.module').then(m => m.DispatchPageModule),
-    canActivate: [AuthGuard]
+    canActivate: [AclGuard],
+    data: { feature: 'DISPATCH' }
   },
   {
     path: 'complaints',
