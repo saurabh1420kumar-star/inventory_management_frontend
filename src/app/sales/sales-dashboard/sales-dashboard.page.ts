@@ -7,6 +7,7 @@ import { RouterModule } from '@angular/router';
 import { SalesAnalyticsService, SalesAnalyticsData } from './sales-analytics.service';
 import { PaymentService, PaymentRequest, PaymentResponse } from './payment.service';
 import { DistributorService, Distributor } from './distributor.service';
+import { Auth } from '../../services/auth';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { addIcons } from 'ionicons';
@@ -63,7 +64,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   
   distributors: Distributor[] = [];
   pendingPayments: any[] = [];
-  salespersonId = 1; // Get this from auth/session
+  salespersonId: number = 1;
   
   paymentForm: PaymentForm = {
     balanceType: '',
@@ -94,12 +95,14 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private salesAnalyticsService: SalesAnalyticsService,
     private paymentService: PaymentService,
     private distributorService: DistributorService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private auth: Auth
   ) {
     addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline });
   }
 
   ngOnInit(): void {
+    this.salespersonId = this.auth.getUserId() ?? 1;
     this.loadAnalytics();
     this.loadDistributors();
     this.loadPendingPayments();
