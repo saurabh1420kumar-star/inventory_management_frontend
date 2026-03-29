@@ -67,8 +67,8 @@
         </div>
         <div class="px-4 pb-3 flex items-center justify-between">
           <div>
-            <p class="text-slate-500 text-xs mb-0.5">Per Piece Rate</p>
-            <p class="font-bold text-white text-base">₹{{ $any(product).perPieceRate || product.price }}</p>
+            <p class="text-slate-500 text-xs mb-0.5">Price</p>
+            <p class="font-bold text-white text-base">₹{{ product.price }}</p>
           </div>
           <button (click)="openProductModal(product)"
                   class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-1"
@@ -144,8 +144,8 @@
             <!-- Item Body -->
             <div class="px-4 py-3">
               <div class="flex items-center justify-between mb-3">
-                <p class="text-slate-500 text-sm">Per Piece Rate:</p>
-                <p class="font-semibold text-emerald-400 text-sm">₹{{ item.perPieceRate || item.perItemPrice || item.price }}</p>
+                <p class="text-slate-500 text-sm">Price:</p>
+                <p class="font-semibold text-emerald-400 text-sm">₹{{ item.price }}</p>
               </div>
 
               <!-- Quantity Controls (Glass teal) -->
@@ -243,8 +243,8 @@
           <!-- Stats (Glass) -->
           <div class="mb-5 pb-5" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
             <div *ngIf="selectedProduct.price" class="rounded-xl p-3 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-              <p class="text-xs text-slate-500 mb-1">Per Piece Rate</p>
-              <p class="text-xl font-bold text-emerald-400">₹{{ $any(selectedProduct).perPieceRate || selectedProduct.price }}</p>
+              <p class="text-xs text-slate-500 mb-1">Price</p>
+              <p class="text-xl font-bold text-emerald-400">₹{{ selectedProduct.price }}</p>
             </div>
           </div>
 
@@ -263,13 +263,13 @@
                       class="rounded-xl font-bold text-2xl text-emerald-400 transition-all flex items-center justify-center"
                       style="width: 64px; min-width: 64px; height: 48px; flex-shrink: 0; background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25);">+</button>
             </div>
-            <p class="text-xs text-slate-600 mt-2 text-center">Available Stock: {{ selectedProduct.quantity }}</p>
+
           </div>
 
           <!-- Subtotal -->
           <div class="rounded-xl p-4 flex justify-between items-center" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.12);">
             <span class="font-medium text-slate-400">Subtotal</span>
-            <span class="text-2xl font-bold text-emerald-400">₹{{ (quantityToAdd * ($any(selectedProduct).perPieceRate || selectedProduct.price || 0)) | number:'1.2-2' }}</span>
+            <span class="text-2xl font-bold text-emerald-400">₹{{ (quantityToAdd * (selectedProduct.price || 0)) | number:'1.2-2' }}</span>
           </div>
         </div>
 
