@@ -2,7 +2,7 @@ const sharp = require('sharp');
 const path = require('path');
 const fs = require('fs');
 
-const source = path.join(__dirname, 'src', 'assets', 'images', 'nectar.jpeg');
+const source = path.join(__dirname, 'src', 'assets', 'images', 'nayla.jpeg');
 const androidRes = path.join(__dirname, 'android', 'app', 'src', 'main', 'res');
 
 const sizes = [
@@ -38,15 +38,7 @@ async function generate() {
     console.log(`  ✓ ${dir}/${file} (${size}x${size})`);
   }
 
-  // Favicon for web
-  const faviconPath = path.join(__dirname, 'src', 'assets', 'icon', 'favicon.png');
-  await sharp(source)
-    .resize(256, 256, { fit: 'contain', background: { r: 255, g: 255, b: 255, alpha: 1 } })
-    .png()
-    .toFile(faviconPath);
-  console.log(`  ✓ favicon.png (256x256)`);
-
-  console.log('\nAll icons generated successfully!');
+  console.log('\nAll Android icons generated successfully!');
 }
 
 generate().catch(err => { console.error(err); process.exit(1); });

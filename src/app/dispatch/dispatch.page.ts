@@ -230,7 +230,7 @@ export class DispatchPage implements OnInit {
       dispatchDate: order.dispatchDate,
       vehicleNumber: order.vehicleNumber,
       transporterName: order.transporterName,
-      shippingAddress: order.shippingAddress || '',
+      shippingAddress: order.shippingAddress || order.address || '',
       originalOrder: order,
     };
     
@@ -508,10 +508,12 @@ export class DispatchPage implements OnInit {
         
         // Show warning toast with option to proceed anyway
         const warningToast = await this.toastController.create({
-          message: `⚠️ ${errorMsg} Would you like to proceed anyway?`,
-          duration: 6000,
+          message: `${errorMsg} — Proceed anyway?`,
+          duration: 8000,
           position: 'top',
-          color: 'warning',
+          animated: false,
+          cssClass: 'modern-toast modern-toast-warning',
+          icon: 'alert-circle',
           buttons: [
             {
               text: 'Proceed',
@@ -521,8 +523,9 @@ export class DispatchPage implements OnInit {
               }
             },
             {
-              text: 'Cancel',
-              role: 'cancel'
+              icon: 'close-outline',
+              role: 'cancel',
+              side: 'end',
             }
           ]
         });
@@ -594,7 +597,31 @@ export class DispatchPage implements OnInit {
         console.error('Error response:', JSON.stringify(err?.error));
         this.errorMessage = err?.error?.message || err?.error?.error || 'Failed to generate GDN. Please try again.';
         this.isLoading = false;
-        await this.toast.present(this.errorMessage, 'danger');
+        // Close modal immediately regardless of error response
+        this.closeGdnModal();
+        // Reload GDNs to verify if generation actually succeeded despite the error
+        this.gdnService.getAllGdns().subscribe({
+          next: (data) => {
+            this.gdns = data.sort(
+              (a, b) => new Date(b.gdnDate).getTime() - new Date(a.gdnDate).getTime()
+            );
+            this.groupGdnsByOrder();
+            this.isLoadingGdns = false;
+            const gdnCreated = this.gdns.find(g => g.orderId === orderId);
+            if (gdnCreated) {
+              // GDN was created despite the error response from backend
+              this.loadPaymentApprovedCarts();
+              this.activeTab = 'download_gdn';
+              this.toast.present('GDN generated successfully!', 'success');
+            } else {
+              this.toast.present(this.errorMessage, 'danger');
+            }
+          },
+          error: () => {
+            this.isLoadingGdns = false;
+            this.toast.present(this.errorMessage, 'danger');
+          },
+        });
       },
     });
   }

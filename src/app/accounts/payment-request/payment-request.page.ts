@@ -253,17 +253,43 @@ export class PaymentRequestPage implements OnInit {
 
     this.accountsService.approvePayment(payment.id, userId).subscribe({
       next: () => {
-        this.loadPayments();
         this.isApproveModalOpen = false;
         this.isDetailModalOpen = false;
         this.isSubmitting = false;
         this.approvalNote = '';
         this.selectedPayment = null;
+        this.loadPayments();
         this.showToast(`${payment.paymentRequestNo} approved successfully`, 'success');
       },
       error: (err) => {
+        // Backend sometimes returns a non-2xx even when the approval was committed.
+        // Close modals immediately, then reload data to determine the actual result.
+        this.isApproveModalOpen = false;
+        this.isDetailModalOpen = false;
         this.isSubmitting = false;
-        this.showToast(err?.error?.message || 'Failed to approve payment. Please try again.', 'danger');
+        this.approvalNote = '';
+        this.selectedPayment = null;
+        this.isLoading = true;
+        this.accountsService.getAllPendingPayments().subscribe({
+          next: (data) => {
+            this.allPayments = (Array.isArray(data) ? data : (data as any)?.data ?? []).map(
+              (raw: any, i: number) => this.mapToPaymentRequest(raw, i)
+            );
+            this.applyFilters();
+            this.isLoading = false;
+            // If the payment is no longer PENDING it was successfully approved.
+            const stillPending = this.allPayments.find(p => p.id === payment.id && p.status === 'PENDING');
+            if (!stillPending) {
+              this.showToast(`${payment.paymentRequestNo} approved successfully`, 'success');
+            } else {
+              this.showToast(err?.error?.message || 'Failed to approve payment. Please try again.', 'danger');
+            }
+          },
+          error: () => {
+            this.isLoading = false;
+            this.showToast(err?.error?.message || 'Failed to approve payment. Please try again.', 'danger');
+          },
+        });
       },
     });
   }

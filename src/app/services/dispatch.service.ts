@@ -28,6 +28,7 @@ export interface DispatchOrder {
   status: string; // ACTIVE, APPROVED, DISMISSED
   totalCartAmount: number;
   updatedAt: string;
+  address?: string;           // distributor's registered address from /carts/payment-approved
   // GDN related fields (may come from API or be added locally)
   gdnNumber?: string;
   gdnDate?: string;
