@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
+import { HttpClient } from '@angular/common/http';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -23,6 +24,7 @@ import { DistributorService, DistributorOrder } from '../services/distributor.se
 import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
+import { environment } from '../../environments/environment';
 
 interface MetricCard {
   title: string;
@@ -131,6 +133,11 @@ export class DistributorDashboardPage implements OnInit {
   dispatchedCount = 23;
   deliveredCount = 45;
 
+  // Analytics
+  selectedPeriod: 'today' | 'month' | 'year' = 'month';
+  isLoadingAnalytics = false;
+  distributorAnalytics: { totalOrders: number; totalAmount: number } | null = null;
+
   // Payment Collections
   paymentCollections: any[] = [];
   isLoadingPaymentCollections = false;
@@ -143,7 +150,8 @@ export class DistributorDashboardPage implements OnInit {
     private distributorService: DistributorService,
     private auth: Auth,
     private ledgerService: LedgerService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private http: HttpClient
   ) {
     addIcons({
       'add-outline': addOutline,
@@ -200,6 +208,7 @@ export class DistributorDashboardPage implements OnInit {
     this.initializeMetrics();
     this.getDistributorId();
     this.loadOrders();
+    this.loadDistributorAnalytics();
   }
 
   getDistributorId() {
@@ -389,6 +398,23 @@ export class DistributorDashboardPage implements OnInit {
   goBackToOperations() {
     this.haptic.light();
     this.activeOperationView = null;
+  }
+
+  loadDistributorAnalytics() {
+    if (!this.distributorId) return;
+    this.isLoadingAnalytics = true;
+    const url = `${environment.apiUrl}/dashboard/distributor-orders?period=${this.selectedPeriod}&distributorId=${this.distributorId}`;
+    this.http.get<any>(url).subscribe({
+      next: (res) => {
+        this.distributorAnalytics = res?.data ?? res ?? null;
+        this.isLoadingAnalytics = false;
+      },
+      error: () => { this.isLoadingAnalytics = false; }
+    });
+  }
+
+  onAnalyticsPeriodChange() {
+    this.loadDistributorAnalytics();
   }
 
   loadPaymentCollections() {

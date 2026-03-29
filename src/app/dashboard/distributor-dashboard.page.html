@@ -1222,65 +1222,55 @@
     <!-- ===== DASHBOARD TAB ===== -->
     <div *ngIf="activeTab === 'dashboard'" class="flex flex-col gap-5">
 
-      <!-- MTD Glass Card with green glow -->
-      <div class="rounded-2xl p-5 relative overflow-hidden"
-           style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.25); backdrop-filter: blur(16px); box-shadow: 0 0 30px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);">
-
-        <!-- Sparkline decoration -->
-        <div class="absolute top-3 right-4 opacity-30">
-          <svg width="80" height="50" viewBox="0 0 80 50">
-            <polyline fill="none" stroke="#10b981" stroke-width="2" points="0,40 15,35 25,20 35,30 45,10 55,25 65,15 80,5"/>
-          </svg>
+      <!-- ── Analytics Section ── -->
+      <div>
+        <!-- Period Filter -->
+        <div class="flex items-center gap-2 mb-3">
+          <span class="text-xs font-semibold text-slate-400">Period:</span>
+          <div class="flex gap-1 rounded-lg p-0.5" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+            <button *ngFor="let p of [{v:'today',l:'Today'},{v:'month',l:'Month'},{v:'year',l:'Year'}]"
+              (click)="selectedPeriod = $any(p.v); onAnalyticsPeriodChange()"
+              class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
+              [ngClass]="selectedPeriod === p.v ? 'bg-emerald-500 text-white' : 'text-slate-400'">
+              {{ p.l }}
+            </button>
+          </div>
         </div>
 
-        <div class="flex items-center gap-2 mb-1">
-          <ion-icon name="trending-up-outline" class="text-emerald-400 text-lg"></ion-icon>
-          <p class="text-xs font-semibold text-emerald-400 uppercase tracking-widest">Vol MTD</p>
+        <!-- Loading -->
+        <div *ngIf="isLoadingAnalytics" class="flex items-center gap-2 py-4">
+          <ion-spinner name="crescent" style="font-size:18px; color:#10b981;"></ion-spinner>
+          <span class="text-sm text-slate-500">Loading analytics...</span>
         </div>
-        <p class="text-4xl font-extrabold text-white tracking-tight mb-4">{{ periodData.volMTD }}</p>
 
-        <div class="pt-4" style="border-top: 1px solid rgba(255,255,255,0.08);">
-          <p class="text-xs text-slate-500 mb-0.5">Value MTD</p>
-          <p class="text-2xl font-bold text-white">{{ periodData.valueMTD }}</p>
+        <!-- Stats Cards -->
+        <div *ngIf="!isLoadingAnalytics && distributorAnalytics" class="grid grid-cols-2 gap-3">
+          <!-- Total Orders -->
+          <div class="rounded-2xl p-4" style="background: rgba(6,182,212,0.08); border: 1.5px solid rgba(6,182,212,0.25); backdrop-filter: blur(12px);">
+            <div class="flex items-center gap-2 mb-1">
+              <ion-icon name="cart-outline" class="text-cyan-400 text-base"></ion-icon>
+              <p class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Orders</p>
+            </div>
+            <p class="text-3xl font-extrabold text-white tracking-tight">{{ distributorAnalytics.totalOrders }}</p>
+          </div>
+          <!-- Total Amount -->
+          <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25); backdrop-filter: blur(12px);">
+            <div class="flex items-center gap-2 mb-1">
+              <ion-icon name="cash-outline" class="text-emerald-400 text-base"></ion-icon>
+              <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Amount</p>
+            </div>
+            <p class="text-2xl font-extrabold text-white tracking-tight">₹{{ distributorAnalytics.totalAmount | number:'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <!-- No data -->
+        <div *ngIf="!isLoadingAnalytics && !distributorAnalytics" class="text-center py-6 rounded-2xl" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
+          <p class="text-slate-500 text-sm">No data for selected period</p>
         </div>
       </div>
 
-      <!-- YTD Glass Card -->
-      <div class="rounded-2xl p-5"
-           style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(16px); box-shadow: inset 0 1px 0 rgba(255,255,255,0.05);">
-        <div class="flex justify-between items-center mb-4">
-          <div>
-            <p class="text-xs font-semibold text-teal-400 uppercase tracking-widest mb-1">Yearly Performance</p>
-            <p class="text-xs text-slate-500">Vol YTD</p>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ periodData.volYTD }}</p>
-          </div>
-          <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(20,184,166,0.15); border: 1px solid rgba(20,184,166,0.25);">
-            <ion-icon name="stats-chart-outline" class="text-xl text-teal-400"></ion-icon>
-          </div>
-        </div>
-        <div class="pt-4" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <p class="text-xs text-slate-500 mb-0.5">Value YTD</p>
-          <p class="text-xl font-bold text-white">{{ periodData.valueYTD }}</p>
-        </div>
-      </div>
-
-      <!-- Stats Row (glass) -->
-      <div class="grid grid-cols-2 gap-4">
-        <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style="background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.2);">
-            <ion-icon name="business-outline" class="text-blue-400 text-xl"></ion-icon>
-          </div>
-          <p class="text-xs text-slate-500 mb-1">Total O/S</p>
-          <p class="text-2xl font-bold text-white">{{ periodData.totalOrders }}</p>
-        </div>
-        <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center mb-3" style="background: rgba(168,85,247,0.12); border: 1px solid rgba(168,85,247,0.2);">
-            <ion-icon name="checkmark-done-outline" class="text-purple-400 text-xl"></ion-icon>
-          </div>
-          <p class="text-xs text-slate-500 mb-1">Call MTD / YTD</p>
-          <p class="text-2xl font-bold text-white">{{ periodData.callMTD }} <span class="text-slate-600 font-light">/</span> {{ periodData.callYTD }}</p>
-        </div>
-      </div>
+      <!-- Divider -->
+      <div style="height:1px; background: rgba(255,255,255,0.06);"></div>
 
       <!-- Quick Actions FAB -->
       <div class="flex justify-start mt-2">
