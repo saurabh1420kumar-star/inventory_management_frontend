@@ -148,7 +148,7 @@ export class CartService {
   addToCart(product: Product, quantity: number): void {
     const currentCart = this.cartItems.value;
     const existingItem = currentCart.find(item => item.id === product.id);
-    const itemPrice = (product as any).perPieceRate || product.perItemPrice || product.price || 0;
+    const itemPrice = product.price || 0;
 
     console.log('🛒 Cart add item:', {
       product: product.name,
@@ -190,7 +190,7 @@ export class CartService {
     
     if (item) {
       item.cartQuantity = quantity;
-      const itemPrice = (item as any).perPieceRate || (item as any).perItemPrice || item.price || 0;
+      const itemPrice = item.price || 0;
       item.subtotal = Math.round(quantity * itemPrice * 100) / 100;
       this.cartItems.next([...currentCart]);
       this.saveCartToLocalStorage();

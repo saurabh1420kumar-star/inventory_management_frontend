@@ -205,7 +205,7 @@ export class DistributorCartPage implements OnInit {
         quantity: this.quantityToAdd,
         name: this.selectedProduct.name,
         sku: productSku,
-        price: (this.selectedProduct as any).perPieceRate || (this.selectedProduct as any).perItemPrice || this.selectedProduct.price || 0,
+        price: this.selectedProduct.price || 0,
         imageUrl: undefined,
         active: true
       };
@@ -283,7 +283,7 @@ export class DistributorCartPage implements OnInit {
       quantity: item.cartQuantity,
       name: item.name || '',
       sku: item.sku || item.id?.toString() || '',
-      price: (item as any).perPieceRate || (item as any).perItemPrice || item.price || 0,
+      price: item.price || 0,
       imageUrl: '',
       active: true
     }));
