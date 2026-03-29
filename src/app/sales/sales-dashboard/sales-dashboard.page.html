@@ -73,26 +73,16 @@
       </div>
 
       <!-- Stats Cards (Glass Morphism) -->
-      <div *ngIf="!isLoadingAnalytics && salesAnalytics" class="grid grid-cols-1 md:grid-cols-3 gap-4">
+      <div *ngIf="!isLoadingAnalytics && salesAnalytics" class="grid grid-cols-1 md:grid-cols-2 gap-4">
         
-        <!-- Sales Count Card -->
-        <div class="rounded-2xl p-5 relative overflow-hidden"
-             style="background: rgba(16, 185, 129, 0.08); border: 1.5px solid rgba(16, 185, 129, 0.25); backdrop-filter: blur(16px); box-shadow: 0 0 20px rgba(16, 185, 129, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);">
-          <div class="flex items-center gap-2 mb-1">
-            <ion-icon name="trending-up-outline" class="text-emerald-400 text-lg"></ion-icon>
-            <p class="text-xs font-semibold text-emerald-400 uppercase tracking-widest">Sales Count</p>
-          </div>
-          <p class="text-4xl font-extrabold text-white tracking-tight">{{ salesAnalytics.salesCount }}</p>
-        </div>
-
         <!-- Orders Count Card -->
         <div class="rounded-2xl p-5 relative overflow-hidden"
              style="background: rgba(6, 182, 212, 0.08); border: 1.5px solid rgba(6, 182, 212, 0.25); backdrop-filter: blur(16px); box-shadow: 0 0 20px rgba(6, 182, 212, 0.08), inset 0 1px 0 rgba(255,255,255,0.05);">
           <div class="flex items-center gap-2 mb-1">
             <ion-icon name="cart-outline" class="text-cyan-400 text-lg"></ion-icon>
-            <p class="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Orders Count</p>
+            <p class="text-xs font-semibold text-cyan-400 uppercase tracking-widest">Total Orders</p>
           </div>
-          <p class="text-4xl font-extrabold text-white tracking-tight">{{ salesAnalytics.ordersCount }}</p>
+          <p class="text-4xl font-extrabold text-white tracking-tight">{{ salesAnalytics.totalOrders }}</p>
         </div>
 
         <!-- Total Sales Amount Card -->
@@ -102,7 +92,7 @@
             <ion-icon name="cash-outline" class="text-teal-400 text-lg"></ion-icon>
             <p class="text-xs font-semibold text-teal-400 uppercase tracking-widest">Total Sales</p>
           </div>
-          <p class="text-3xl font-extrabold text-white tracking-tight">₹{{ salesAnalytics.totalSalesAmount | number: '1.0-0' }}</p>
+          <p class="text-3xl font-extrabold text-white tracking-tight">₹{{ salesAnalytics.totalAmount | number: '1.0-0' }}</p>
         </div>
       </div>
 

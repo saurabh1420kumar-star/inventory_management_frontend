@@ -10,7 +10,7 @@ export interface InventoryItem {
 
   /** Raw material only */
   materialCode?: string;
-  unit?: 'KG' | 'LITER' | 'PIECE' | 'METER';
+  unit?: 'KG' | 'LITER' | 'PIECE' | 'METER' | 'PIECES' | 'DOZEN';
   price?: number;  // Unit cost/price from API
   perItemPrice?: number;  // Per item price (used in BOM)
 

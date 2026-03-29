@@ -62,6 +62,8 @@ interface DisplayInventoryItem extends ApiInventoryItem {
   price?: number;
   description?: string;
   sku?: string;
+  weight?: number;
+  subUnit?: string;
 }
 
 /* ---------- COMPONENT ---------- */
@@ -181,10 +183,14 @@ export class MasterInventoryPage implements OnInit {
 
     this.editForm = this.fb.group({
       name: ['', Validators.required],
-      materialCode: ['', Validators.required],
+      materialCode: [''],
       unit: ['KG', Validators.required],
       subUnit: ['KG'],
       price: [0, [Validators.min(0)]],
+      // finished product fields
+      sku: [''],
+      description: [''],
+      weight: [0, [Validators.min(0)]],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -504,13 +510,14 @@ export class MasterInventoryPage implements OnInit {
         driverMobile: formVal.driverMobile || undefined
       };
     } else {
-      // finished product schema: { name, description, sku, price, quantity, minimumThreshold }
+      // finished product schema: { name, description, sku, price, unit, weight, quantity, minimumThreshold }
       payload = {
         category: 'finished_product',
         name: formVal.name,
         description: formVal.description || '',
         sku: formVal.sku,
         price: formVal.price ?? 0,
+        unit: formVal.unit || 'KG',
         weight: formVal.weight ?? 0,
         quantity: formVal.quantity,
         minimumThreshold: formVal.minimumThreshold
@@ -548,9 +555,13 @@ export class MasterInventoryPage implements OnInit {
     this.selectedItem = item;
     this.editForm.patchValue({
       name: item.name,
-      materialCode: item.materialCode,
-      unit: item.unit,
+      materialCode: item.materialCode || '',
+      unit: item.unit || 'KG',
+      subUnit: (item as any).subUnit || 'KG',
       price: item.price || 0,
+      sku: item.sku || '',
+      description: item.description || '',
+      weight: (item as any).weight || 0,
       quantity: item.quantity,
       minimumThreshold: item.minimumThreshold
     });
@@ -571,7 +582,33 @@ export class MasterInventoryPage implements OnInit {
   updateItem() {
     if (this.editForm.invalid || !this.selectedItem) return;
 
-    const payload = this.editForm.value;
+    const formVal = this.editForm.value;
+    let payload: Record<string, any>;
+
+    if (this.selectedItem.category === 'finished_product') {
+      payload = {
+        category: 'finished_product',
+        name: formVal.name,
+        description: formVal.description || '',
+        sku: formVal.sku || '',
+        price: formVal.price ?? 0,
+        unit: formVal.unit || 'KG',
+        weight: formVal.weight ?? 0,
+        quantity: formVal.quantity,
+        minimumThreshold: formVal.minimumThreshold
+      };
+    } else {
+      payload = {
+        category: 'raw_material',
+        name: formVal.name,
+        materialCode: formVal.materialCode,
+        unit: formVal.unit,
+        subUnit: formVal.subUnit || undefined,
+        price: formVal.price ?? 0,
+        quantity: formVal.quantity,
+        minimumThreshold: formVal.minimumThreshold
+      };
+    }
 
     this.inventoryService.updateItem(this.selectedItem.id, payload).subscribe({
       next: (updated) => {
@@ -628,6 +665,15 @@ export class MasterInventoryPage implements OnInit {
       form.patchValue({ subUnit: subUnits[0].value });
     } else {
       form.patchValue({ subUnit: '' });
+    }
+  }
+
+  getWeightPlaceholder(unit: string | null | undefined): string {
+    switch (unit) {
+      case 'LITER':  return 'e.g. 5.0 (liters)';
+      case 'DOZEN':  return 'e.g. 2 (dozens)';
+      case 'PIECES': return 'e.g. 100 (pieces)';
+      default:       return 'e.g. 0.00 (kg)';
     }
   }
 

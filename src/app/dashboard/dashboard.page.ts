@@ -6,6 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Auth } from '../services/auth';
+import { Router } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import {
   ApexAxisChartSeries,
@@ -63,6 +64,7 @@ export class DashboardPage implements OnInit {
   };
 
   isDistributor = false;
+  isReady = false;
 
   currentDate = new Date();
 
@@ -112,7 +114,7 @@ export class DashboardPage implements OnInit {
   public chartOptions: Partial<ChartOptions> | undefined;
   selectedChartType: 'line' | 'bar' = 'line';
 
-  constructor(private auth: Auth) {}
+  constructor(private auth: Auth, private router: Router) {}
 
   ngOnInit() {
     this.checkUserRole();
@@ -120,9 +122,14 @@ export class DashboardPage implements OnInit {
   }
 
   checkUserRole() {
-    const roleType = this.auth.getRoleType();
-    // Check for both uppercase and lowercase versions
-    this.isDistributor = roleType?.toUpperCase() === 'DISTRIBUTOR' || roleType?.toUpperCase() === 'SALES';
+    const roleType = this.auth.getRoleType()?.toUpperCase() || '';
+    const isSalesRole = roleType.includes('SALES') || roleType === 'SALESPERSON' || roleType === 'NSM' || roleType === 'RSM' || roleType === 'TSM' || roleType === 'ASM';
+    if (isSalesRole) {
+      this.router.navigate(['/sales/sales-dashboard'], { replaceUrl: true });
+      return;
+    }
+    this.isDistributor = roleType === 'DISTRIBUTOR';
+    this.isReady = true;
   }
 
   initializeChart() {

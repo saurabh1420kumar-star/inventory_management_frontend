@@ -223,7 +223,7 @@
       }
 
       .user-details {
-        flex: 0 1 auto;
+        flex: 1;
         min-width: 0;
 
         .user-greeting {
@@ -240,12 +240,16 @@
           font-size: 11px;
           color: var(--ion-color-medium);
           font-weight: 500;
+          white-space: nowrap;
+          overflow: hidden;
+          text-overflow: ellipsis;
         }
       }
 
-      .logout-btn {
+      app-logout {
+        display: block;
         flex-shrink: 0;
-        margin-left: 96px;
+        margin-left: auto;
       }
     }
   }
@@ -321,7 +325,7 @@
           display: none;
         }
 
-        .logout-btn {
+        app-logout {
           display: none;
         }
       }

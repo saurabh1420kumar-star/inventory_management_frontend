@@ -1,4 +1,5 @@
 <!-- HEADER -->
+<ng-container *ngIf="isReady">
 <ion-header class="ion-no-border">
   <!-- Distributor dark glass header -->
   <ion-toolbar *ngIf="isDistributor" style="--background: rgba(13,17,23,0.95); --border-width: 0; backdrop-filter: blur(20px);">
@@ -264,3 +265,4 @@
     </div>
   </div>
 </ion-content>
+</ng-container>

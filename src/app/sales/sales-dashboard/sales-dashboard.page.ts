@@ -125,11 +125,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.isLoadingAnalytics = true;
     
     this.salesAnalyticsService
-      .getSalesAnalytics(
-        this.selectedPeriod,
-        this.selectedPeriod === 'month' ? this.selectedMonth : undefined,
-        this.selectedPeriod === 'year' ? this.selectedYear : undefined
-      )
+      .getSalesAnalytics(this.selectedPeriod, this.salespersonId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (data: SalesAnalyticsData) => {
