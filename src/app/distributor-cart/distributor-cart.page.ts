@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
@@ -20,6 +20,7 @@ import {
 import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } from '../services/cart.service';
 import { Auth } from '../services/auth';
 import { DistributorService } from '../services/distributor.service';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-distributor-cart',
@@ -64,6 +65,8 @@ export class DistributorCartPage implements OnInit {
 
   // Make Math available in template
   Math = Math;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -179,18 +182,21 @@ export class DistributorCartPage implements OnInit {
   }
 
   openProductModal(product: Product) {
+    this.haptic.medium();
     this.selectedProduct = product;
     this.quantityToAdd = 1;
     this.showProductModal = true;
   }
 
   closeProductModal() {
+    this.haptic.light();
     this.showProductModal = false;
     this.selectedProduct = null;
     this.quantityToAdd = 1;
   }
 
   addProductToCart() {
+    this.haptic.medium();
     if (this.selectedProduct && this.quantityToAdd > 0) {
       // Prepare the item payload for API
       const productSku = this.selectedProduct.sku || this.selectedProduct.id.toString();
@@ -239,6 +245,7 @@ export class DistributorCartPage implements OnInit {
   }
 
   removeFromCart(productId: number, cartItemId?: number) {
+    this.haptic.light();
     const idToDelete = cartItemId ?? productId;
     // Call DELETE /api/cart/items/{cartItemId} API
     this.cartService.deleteCartItem(idToDelete).subscribe({
@@ -254,6 +261,7 @@ export class DistributorCartPage implements OnInit {
   }
 
   updateCartQuantity(productId: number, quantity: number) {
+    this.haptic.selectionChanged();
     if (quantity > 0) {
       this.cartService.updateQuantity(productId, quantity);
       this.syncCartWithBackend();
@@ -298,6 +306,7 @@ export class DistributorCartPage implements OnInit {
   }
 
   openCheckoutModal() {
+    this.haptic.medium();
     if (this.cartItems.length === 0) {
       this.showToast('Your cart is empty', 'warning');
       return;
@@ -312,6 +321,7 @@ export class DistributorCartPage implements OnInit {
 
   // Open cart modal and fetch active cart from backend API
   openCartModal() {
+    this.haptic.medium();
     if (!this.distributorId) {
       this.showToast('Distributor ID not found. Please log in again.', 'danger');
       return;
@@ -349,11 +359,13 @@ export class DistributorCartPage implements OnInit {
   }
 
   closeCheckoutModal() {
+    this.haptic.light();
     this.showCheckoutModal = false;
     this.orderForm.reset();
   }
 
   submitOrder() {
+    this.haptic.heavy();
     if (this.orderForm.invalid) {
       Object.keys(this.orderForm.controls).forEach(key => {
         this.orderForm.get(key)?.markAsTouched();

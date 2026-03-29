@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -26,6 +26,7 @@ import {
 import { ToastController } from '@ionic/angular';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 import { addIcons } from 'ionicons';
 import { 
   download as downloadIcon, 
@@ -80,6 +81,8 @@ export class ProformaInvoicePage implements OnInit {
     return this.invoices.filter(inv => inv.paymentStatus === 'PENDING').length;
   }
 
+  private haptic = inject(HapticService);
+
   constructor(
     private proformaInvoiceService: ProformaInvoiceService,
     private toastController: ToastController,
@@ -115,6 +118,7 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   onSegmentChange(event: any) {
+    this.haptic.selectionChanged();
     this.activeTab = event.detail.value;
     this.filterInvoices();
   }
@@ -148,6 +152,7 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   downloadPdf(invoice: ProformaInvoice) {
+    this.haptic.medium();
     if (invoice.paymentStatus !== 'PAID') {
       this.showToast('Only paid invoices can be downloaded', 'warning');
       return;
@@ -210,6 +215,7 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   viewPdfModal(pdfUrl: string | null) {
+    this.haptic.light();
     if (!pdfUrl) {
       this.showToast('PDF URL not available', 'warning');
       return;
@@ -219,6 +225,7 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   closePdfModal() {
+    this.haptic.light();
     this.viewingPdfUrl = null;
     this.rawPdfUrl = null;
   }
@@ -252,6 +259,7 @@ export class ProformaInvoicePage implements OnInit {
   }
 
   toggleInvoiceDetails(invoiceId: number) {
+    this.haptic.light();
     // If clicking the same invoice, collapse it
     if (this.expandedInvoiceId === invoiceId) {
       this.expandedInvoiceId = null;

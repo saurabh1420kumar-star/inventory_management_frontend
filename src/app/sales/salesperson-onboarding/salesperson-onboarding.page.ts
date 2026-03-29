@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ToastController, ModalController } from '@ionic/angular';
@@ -6,13 +6,14 @@ import { RouterModule } from '@angular/router';
 import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES, RoleOption } from '../../services/sales-hierarchy.service';
 import { RoleFilterPipe } from './hierarchy.pipes';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
+import { HapticService } from '../../services/haptic.service';
 
 @Component({
   selector: 'app-salesperson-onboarding',
   templateUrl: './salesperson-onboarding.page.html',
   styleUrls: ['./salesperson-onboarding.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule, RoleFilterPipe, HierarchyMapComponent]
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule, RoleFilterPipe]
 })
 export class SalespersonOnboardingPage implements OnInit {
   onboardingForm!: FormGroup;
@@ -32,6 +33,7 @@ export class SalespersonOnboardingPage implements OnInit {
   collapsedRoles = new Set<string>();
 
   toggleRoleGroup(roleValue: string) {
+    this.haptic.light();
     if (this.collapsedRoles.has(roleValue)) {
       this.collapsedRoles.delete(roleValue);
     } else {
@@ -53,6 +55,8 @@ export class SalespersonOnboardingPage implements OnInit {
   roleOptions: RoleOption[] = [];
   managersByDesignation: SalesPerson[] = [];
   isLoadingManagers = false;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -190,6 +194,7 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   openAddForm() {
+    this.haptic.medium();
     this.editingPerson = null;
     this.managersByDesignation = [];
     this.onboardingForm.reset({
@@ -204,6 +209,7 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   openEditForm(person: SalesPerson) {
+    this.haptic.medium();
     this.editingPerson = person;
     this.managersByDesignation = [];
 
@@ -252,11 +258,13 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   closeForm() {
+    this.haptic.light();
     this.showForm = false;
     this.editingPerson = null;
   }
 
   async submitForm() {
+    this.haptic.medium();
     if (this.onboardingForm.invalid) {
       this.onboardingForm.markAllAsTouched();
       return;
@@ -313,16 +321,19 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   confirmDelete(person: SalesPerson) {
+    this.haptic.heavy();
     this.deletingPerson = person;
     this.showDeleteModal = true;
   }
 
   cancelDelete() {
+    this.haptic.light();
     this.showDeleteModal = false;
     this.deletingPerson = null;
   }
 
   async deletePerson() {
+    this.haptic.heavy();
     if (!this.deletingPerson) return;
     const person = this.deletingPerson;
     this.isDeleting = true;

@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
@@ -9,6 +9,7 @@ import { DispatchService, DispatchOrder, GdnGenerateRequest } from '../services/
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { GdnService, GDN } from '../services/gdn.service';
 import { DownloadService } from '../services/download.service';
+import { HapticService } from '../services/haptic.service';
 
 // ── Local Display Interface ──────────────────────────────────────
 
@@ -113,6 +114,8 @@ export class DispatchPage implements OnInit {
   orderForGdnReject: DispatchOrderDisplay | null = null;
 
   expandedIds = new Set<number>();
+
+  private haptic = inject(HapticService);
 
   constructor(
     private dispatchService: DispatchService,
@@ -372,12 +375,14 @@ export class DispatchPage implements OnInit {
   }
 
   openRejectModal(order: DispatchOrderDisplay) {
+    this.haptic.medium();
     this.orderBeingRejected = order;
     this.rejectRemarks = '';
     this.isRejectModalOpen = true;
   }
 
   confirmReject() {
+    this.haptic.heavy();
     if (this.orderBeingRejected) {
       this.isLoading = true;
       this.dispatchService.dismissOrder(this.orderBeingRejected.id).subscribe({
@@ -420,6 +425,7 @@ export class DispatchPage implements OnInit {
   }
 
   cancelReject() {
+    this.haptic.light();
     this.isRejectModalOpen = false;
     this.orderBeingRejected = null;
     this.rejectRemarks = '';
@@ -427,6 +433,7 @@ export class DispatchPage implements OnInit {
 
   // ── GDN Generation ────────────────────────────────
   openGdnModal(order: DispatchOrderDisplay) {
+    this.haptic.medium();
     console.log('Opening GDN Modal for order:', order);
     console.log('Order ID:', order?.id);
     console.log('Order number:', order?.orderNumber);
@@ -449,12 +456,14 @@ export class DispatchPage implements OnInit {
   }
 
   closeGdnModal() {
+    this.haptic.light();
     this.isGdnModalOpen = false;
     this.orderForGdn = null;
     this.gdnForm.reset();
   }
 
   submitGdnGeneration() {
+    this.haptic.heavy();
     if (this.gdnForm.invalid || !this.orderForGdn) {
       Object.keys(this.gdnForm.controls).forEach(key => {
         this.gdnForm.get(key)?.markAsTouched();
@@ -614,11 +623,13 @@ export class DispatchPage implements OnInit {
 
   // ── Detail Modal ──────────────────────────────────
   openDetail(order: DispatchOrderDisplay) {
+    this.haptic.medium();
     this.selectedOrder = order;
     this.isDetailModalOpen = true;
   }
 
   closeDetail() {
+    this.haptic.light();
     this.isDetailModalOpen = false;
   }
 
@@ -629,18 +640,21 @@ export class DispatchPage implements OnInit {
 
   // ── GDN Reject Modal ──────────────────────────────
   openGdnRejectModal(order: DispatchOrderDisplay) {
+    this.haptic.medium();
     this.orderForGdnReject = order;
     this.gdnRejectReason = '';
     this.isGdnRejectModalOpen = true;
   }
 
   cancelGdnReject() {
+    this.haptic.light();
     this.isGdnRejectModalOpen = false;
     this.orderForGdnReject = null;
     this.gdnRejectReason = '';
   }
 
   confirmGdnReject() {
+    this.haptic.heavy();
     if (!this.orderForGdnReject || !this.gdnRejectReason.trim()) return;
     this.isLoading = true;
     this.dispatchService.rejectGdn(this.orderForGdnReject.id, this.gdnRejectReason.trim()).subscribe({
@@ -661,6 +675,7 @@ export class DispatchPage implements OnInit {
 
   // ── Expand/Collapse ───────────────────────────────
   toggleExpand(id: number) {
+    this.haptic.light();
     if (this.expandedIds.has(id)) {
       this.expandedIds.delete(id);
     } else {

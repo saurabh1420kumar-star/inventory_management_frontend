@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ComplaintsService, Complaint } from '../services/complaints.service';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-complaints-management',
@@ -46,6 +47,8 @@ export class ComplaintsManagementPage implements OnInit {
     'HIGH':     { color: '#ef4444', bg: '#fef2f2', label: 'High' },
     'CRITICAL': { color: '#7c3aed', bg: '#f5f3ff', label: 'Critical' },
   };
+
+  private haptic = inject(HapticService);
 
   constructor(
     private complaintsService: ComplaintsService,
@@ -107,28 +110,33 @@ export class ComplaintsManagementPage implements OnInit {
   }
 
   openDetailModal(complaint: Complaint) {
+    this.haptic.light();
     this.selectedComplaint = complaint;
     this.isDetailModalOpen = true;
   }
 
   closeDetailModal() {
+    this.haptic.light();
     this.isDetailModalOpen = false;
     this.selectedComplaint = null;
   }
 
   openStatusModal(complaint: Complaint) {
+    this.haptic.medium();
     this.selectedComplaint = complaint;
     this.newStatus = complaint.status;
     this.isStatusModalOpen = true;
   }
 
   closeStatusModal() {
+    this.haptic.light();
     this.isStatusModalOpen = false;
     this.selectedComplaint = null;
     this.newStatus = '';
   }
 
   updateStatus() {
+    this.haptic.medium();
     if (!this.selectedComplaint || !this.newStatus) return;
     const targetId = this.selectedComplaint.id;
     const targetStatus = this.newStatus as Complaint['status'];

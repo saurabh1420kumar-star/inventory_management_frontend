@@ -1,8 +1,9 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule, ToastController, NavController } from '@ionic/angular';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-feedback',
@@ -19,6 +20,8 @@ export class FeedbackPage {
 
   feedbackForm: FormGroup;
   isSubmitting = false;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -39,6 +42,7 @@ export class FeedbackPage {
   }
 
   async submit() {
+    this.haptic.medium();
     if (this.feedbackForm.invalid) {
       await this.toast.present('Please fill all required fields correctly', 'danger');
       return;
@@ -59,6 +63,7 @@ export class FeedbackPage {
   }
 
   goBack() {
+    this.haptic.light();
     this.navCtrl.back();
   }
 }

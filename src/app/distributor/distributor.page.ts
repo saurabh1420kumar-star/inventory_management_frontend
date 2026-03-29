@@ -1,5 +1,5 @@
 import { CommonModule } from '@angular/common';
-import { ChangeDetectorRef, Component, OnInit } from '@angular/core';
+import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -24,6 +24,7 @@ import {
 import { DistributorService, DistributorDto } from '../services/distributor.service';
 import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 interface Distributor {
   id: string;
@@ -103,6 +104,8 @@ export class DistributorPage implements OnInit {
   
   // Password visibility toggle
   showPassword: boolean = false;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -352,18 +355,21 @@ export class DistributorPage implements OnInit {
   }
 
   openAddModal() {
+    this.haptic.medium();
     this.isEditing = false;
     this.distributorForm.reset();
     this.showAddModal = true;
   }
 
   closeAddModal() {
+    this.haptic.light();
     this.showAddModal = false;
     this.distributorForm.reset();
   }
 
   // API Method 2: Get Distributor by ID (when opening details)
   openDetailsModal(distributor: Distributor) {
+    this.haptic.medium();
     const id = Number(distributor.id);
     this.isLoading = true;
 
@@ -389,12 +395,14 @@ export class DistributorPage implements OnInit {
   }
 
   closeDetailsModal() {
+    this.haptic.light();
     this.showDetailsModal = false;
     this.selectedDistributor = null;
     this.isEditing = false;
   }
 
   onEditDistributor() {
+    this.haptic.medium();
     if (this.selectedDistributor) {
       this.isEditing = true;
       // setTimeout ensures the *ngIf="isEditing" DOM (including ion-select) is fully
@@ -431,6 +439,7 @@ export class DistributorPage implements OnInit {
 
   // API Methods 3 & 4: Create or Update Distributor
   onSubmitForm() {
+    this.haptic.medium();
     if (this.distributorForm.invalid) {
       console.log('Form is invalid. Invalid controls:');
       Object.keys(this.distributorForm.controls).forEach(key => {
@@ -526,14 +535,17 @@ export class DistributorPage implements OnInit {
 
   // Delete confirmation
   openDeleteConfirmModal() {
+    this.haptic.heavy();
     this.showDeleteConfirmModal = true;
   }
 
   closeDeleteConfirmModal() {
+    this.haptic.light();
     this.showDeleteConfirmModal = false;
   }
 
   confirmDelete() {
+    this.haptic.heavy();
     this.closeDeleteConfirmModal();
     this.deleteSelectedDistributor();
   }

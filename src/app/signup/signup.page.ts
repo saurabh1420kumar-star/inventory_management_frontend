@@ -1,5 +1,5 @@
 // src/app/pages/signup/signup.component.ts
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
@@ -7,6 +7,7 @@ import { Router } from '@angular/router';
 
 import { Auth, CreateUserRequest } from '../services/auth';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-signup',
@@ -74,6 +75,8 @@ export class SignupPage implements OnInit {
 
   loading = false;
 
+  private haptic = inject(HapticService);
+
   constructor(
     private fb: FormBuilder,
     private toast: Toast,
@@ -122,6 +125,7 @@ export class SignupPage implements OnInit {
   }
 
   async onSubmit() {
+    this.haptic.medium();
     if (this.signupForm.invalid) {
       if (this.signupForm.errors?.['passwordsNotMatch']) {
         await this.toast.present('Passwords do not match', 'warning');
@@ -178,6 +182,7 @@ export class SignupPage implements OnInit {
   }
 
   goToLogin(event?: Event): void {
+    this.haptic.light();
     if (event) {
       event.preventDefault();
       event.stopPropagation();

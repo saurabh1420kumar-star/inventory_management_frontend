@@ -1,4 +1,4 @@
-import { Component, OnInit, OnDestroy } from '@angular/core';
+import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { HttpClientModule } from '@angular/common/http';
@@ -10,6 +10,7 @@ import { DistributorService, Distributor } from './distributor.service';
 import { Auth } from '../../services/auth';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
+import { HapticService } from '../../services/haptic.service';
 import { addIcons } from 'ionicons';
 import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline } from 'ionicons/icons';
 
@@ -91,6 +92,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
 
   private destroy$ = new Subject<void>();
 
+  private haptic = inject(HapticService);
+
   constructor(
     private salesAnalyticsService: SalesAnalyticsService,
     private paymentService: PaymentService,
@@ -114,6 +117,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   onPeriodChange(period: 'today' | 'month' | 'year'): void {
+    this.haptic.selectionChanged();
     this.selectedPeriod = period;
     this.loadAnalytics();
   }
@@ -180,10 +184,12 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   openPaymentModal(): void {
+    this.haptic.medium();
     this.isPaymentModalOpen = true;
   }
 
   closePaymentModal(): void {
+    this.haptic.light();
     this.isPaymentModalOpen = false;
     this.resetPaymentForm();
   }
@@ -217,6 +223,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   submitPayment(): void {
+    this.haptic.heavy();
     if (!this.validatePaymentForm()) {
       this.showToast('Please fill all required fields', 'warning');
       return;

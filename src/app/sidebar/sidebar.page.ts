@@ -1,6 +1,6 @@
 // sidebar.page.ts
 
-import { Component, OnInit, OnDestroy, HostBinding, HostListener, Input, Output, EventEmitter } from '@angular/core';
+import { Component, OnInit, OnDestroy, HostBinding, HostListener, Input, Output, EventEmitter, inject } from '@angular/core';
 import { Router, RouterModule } from '@angular/router';
 import { Auth } from '../services/auth';
 import { CommonModule } from '@angular/common';
@@ -9,6 +9,7 @@ import { IonicModule } from '@ionic/angular';
 import { AclDirective } from '../acl/acl.directive';
 import { LogoutComponent } from '../logout/logout.component';
 import { Capacitor } from '@capacitor/core';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -47,6 +48,8 @@ export class SidebarPage implements OnInit, OnDestroy {
   }
 
   private static readonly MOBILE_BREAKPOINT = 768;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private auth: Auth,
@@ -87,16 +90,19 @@ export class SidebarPage implements OnInit, OnDestroy {
   }
 
   onToggleSidebar() {
+    this.haptic.light();
     this.toggleSidebar.emit();
   }
 
   onMenuItemClick() {
+    this.haptic.light();
     if (this.isMobile) {
       this.toggleSidebar.emit();
     }
   }
 
   logout() {
+    this.haptic.heavy();
     this.auth.logout?.();
     this.router.navigateByUrl('/login');
   }

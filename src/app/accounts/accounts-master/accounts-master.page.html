@@ -382,9 +382,9 @@
                     [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
                 </div>
               </th>
-              <th class="px-4 py-4 text-right cursor-pointer hover:text-emerald-300 transition-colors"
+              <th class="px-4 py-4 text-center cursor-pointer hover:text-emerald-300 transition-colors"
                 (click)="handleSort('balance')">
-                <div class="flex items-center justify-end gap-1">Balance
+                <div class="flex items-center justify-center gap-1">Closing Balance
                   <ion-icon *ngIf="sortField === 'balance'"
                     [name]="sortDirection === 'asc' ? 'chevron-up-outline' : 'chevron-down-outline'"></ion-icon>
                 </div>
@@ -424,8 +424,8 @@
                 [class.text-slate-300]="transaction.credit === 0">
                 {{ transaction.credit > 0 ? formatCurrency(transaction.credit) : '—' }}
               </td>
-              <td class="px-4 py-4 text-right">
-                <div class="flex items-center justify-end gap-2">
+              <td class="px-4 py-4 text-center">
+                <div class="flex items-center justify-center gap-2">
                   <span class="font-bold text-slate-800 text-sm tabular-nums">{{ formatCurrency(transaction.balance) }}</span>
                   <button (click)="handleViewDetails(transaction)"
                     class="text-slate-400 hover:text-emerald-600 p-1.5 rounded-lg hover:bg-emerald-50 transition-all flex-shrink-0">
@@ -471,7 +471,7 @@
 
           <div class="flex items-center justify-between pt-3 border-t border-slate-100">
             <div class="text-sm text-slate-500">{{ formatDate(transaction.date) }}</div>
-            <div class="font-bold text-slate-800">Balance: {{ formatCurrency(transaction.balance) }}</div>
+            <div class="font-bold text-slate-800">Closing Balance: {{ formatCurrency(transaction.balance) }}</div>
           </div>
 
           <button (click)="handleViewDetails(transaction)"
@@ -1004,7 +1004,7 @@
 
                 <!-- Description -->
                 <div class="mb-3 ml-12">
-                  <p class="text-sm text-slate-600" style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical;">{{ jv.description || 'No description' }}</p>
+                  <p class="text-sm text-slate-600" style="overflow: hidden; text-overflow: ellipsis; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; line-clamp: 2;">{{ jv.description || 'No description' }}</p>
                 </div>
 
                 <!-- Amount -->

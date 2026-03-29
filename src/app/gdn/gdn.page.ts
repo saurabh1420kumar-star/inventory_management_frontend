@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
@@ -18,6 +18,7 @@ import { ToastController } from '@ionic/angular';
 import { GdnService, GDN } from '../services/gdn.service';
 import { Toast } from '../services/toast';
 import { DownloadService } from '../services/download.service';
+import { HapticService } from '../services/haptic.service';
 import { addIcons } from 'ionicons';
 import { 
   download as downloadIcon, 
@@ -62,6 +63,8 @@ export class GdnPage implements OnInit {
   get totalCount(): number {
     return this.gdns.length;
   }
+
+  private haptic = inject(HapticService);
 
   constructor(
     private gdnService: GdnService,
@@ -121,6 +124,7 @@ export class GdnPage implements OnInit {
   }
 
   downloadPdf(gdn: GDN) {
+    this.haptic.medium();
     // Check if PDF is available
     if (!gdn.hasPdf) {
       this.showToast('PDF not available for this GDN yet', 'warning');
@@ -160,6 +164,7 @@ export class GdnPage implements OnInit {
   // downloadFromBlob and downloadFromUrl replaced by DownloadService
 
   toggleGdnDetails(gdnId: number) {
+    this.haptic.light();
     if (this.expandedGdnId === gdnId) {
       this.expandedGdnId = null;
       return;
@@ -177,6 +182,7 @@ export class GdnPage implements OnInit {
   }
 
   closePdfModal() {
+    this.haptic.light();
     this.viewingPdfUrl = null;
     this.rawPdfUrl = null;
   }

@@ -1,4 +1,4 @@
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import {
   FormBuilder,
   FormGroup,
@@ -13,6 +13,7 @@ import { CommonModule } from '@angular/common';
 
 import { Auth } from '../services/auth';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-forgot-password',
@@ -37,6 +38,8 @@ export class ForgotPasswordPage {
   strengthScore = 0;
   strengthLabel = '';
   strengthColor = '';
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -109,6 +112,7 @@ export class ForgotPasswordPage {
 
   // ─── Step navigation ──────────────────────────────────
   goToStep2() {
+    this.haptic.medium();
     this.usernameForm.markAllAsTouched();
     if (this.usernameForm.invalid) return;
     this.enteredUsername = this.usernameForm.value.username.trim();
@@ -116,6 +120,7 @@ export class ForgotPasswordPage {
   }
 
   backToStep1() {
+    this.haptic.light();
     this.step = 1;
     this.passwordForm.reset();
     this.strengthScore = 0;
@@ -125,6 +130,7 @@ export class ForgotPasswordPage {
 
   // ─── Submit ────────────────────────────────────────────
   resetPassword() {
+    this.haptic.heavy();
     this.passwordForm.markAllAsTouched();
     if (this.passwordForm.invalid) return;
 
@@ -152,14 +158,17 @@ export class ForgotPasswordPage {
   }
 
   toggleNewPassword() {
+    this.haptic.light();
     this.showNewPassword = !this.showNewPassword;
   }
 
   toggleConfirmPassword() {
+    this.haptic.light();
     this.showConfirmPassword = !this.showConfirmPassword;
   }
 
   goToLogin() {
+    this.haptic.light();
     this.router.navigateByUrl('/login');
   }
 

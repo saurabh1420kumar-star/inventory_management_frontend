@@ -1,10 +1,11 @@
-import { Component, OnInit, ViewEncapsulation } from '@angular/core';
+import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { AccountsService } from '../../services/accounts.service';
 import { Auth } from '../../services/auth';
+import { HapticService } from '../../services/haptic.service';
 import { addIcons } from 'ionicons';
 import {
   walletOutline,
@@ -107,6 +108,8 @@ export class PaymentRequestPage implements OnInit {
 
   errorMessage = '';
 
+  private haptic = inject(HapticService);
+
   constructor(
     private toastCtrl: ToastController,
     private accountsService: AccountsService,
@@ -191,6 +194,7 @@ export class PaymentRequestPage implements OnInit {
   // ── Tabs & Filters ────────────────────────────────────────────────────────
 
   selectTab(tab: string) {
+    this.haptic.selectionChanged();
     this.activeTab = tab as 'ALL' | 'PENDING' | 'APPROVED' | 'REJECTED';
     this.statusFilter = this.activeTab;
     this.currentPage = 1;
@@ -228,17 +232,20 @@ export class PaymentRequestPage implements OnInit {
   // ── Detail / Actions ──────────────────────────────────────────────────────
 
   openDetail(payment: PaymentRequest) {
+    this.haptic.light();
     this.selectedPayment = payment;
     this.isDetailModalOpen = true;
   }
 
   openApproveModal(payment: PaymentRequest) {
+    this.haptic.medium();
     this.selectedPayment = payment;
     this.approvalNote = '';
     this.isApproveModalOpen = true;
   }
 
   submitApproval() {
+    this.haptic.heavy();
     if (!this.selectedPayment) return;
     const payment = this.selectedPayment;
     const userId = this.auth.getUserId() ?? 0;
@@ -262,12 +269,14 @@ export class PaymentRequestPage implements OnInit {
   }
 
   openRejectModal(payment: PaymentRequest) {
+    this.haptic.medium();
     this.selectedPayment = payment;
     this.rejectionReason = '';
     this.isRejectModalOpen = true;
   }
 
   submitRejection() {
+    this.haptic.heavy();
     if (!this.rejectionReason.trim()) {
       this.showToast('Please provide a rejection reason', 'warning');
       return;

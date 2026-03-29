@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -49,6 +49,7 @@ import {
   BOMComponent,
   AdditionalCost
 } from '../services/inventory';
+import { HapticService } from '../services/haptic.service';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -153,6 +154,8 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- DATA ---------- */
   inventory: DisplayInventoryItem[] = [];
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -433,6 +436,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- MODAL ---------- */
   openAddModal() {
+    this.haptic.medium();
     this.isAddModalOpen = true;
   }
 
@@ -457,6 +461,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeAddModal() {
+    this.haptic.light();
     this.isAddModalOpen = false;
     this.previewImage = null;
     this.selectedImageFile = null;
@@ -487,6 +492,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- ADD ITEM ---------- */
   addItem() {
+    this.haptic.medium();
     if (this.addForm.invalid || !this.selectedCategory) return;
 
     const formVal = this.addForm.value;
@@ -540,6 +546,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- ACTIONS ---------- */
   viewItem(item: DisplayInventoryItem) {
+    this.haptic.light();
     console.log('View item clicked:', item);
     this.viewItemSelectedItem = item;
     this.isViewItemModalOpen = true;
@@ -547,11 +554,13 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeViewItemModal() {
+    this.haptic.light();
     this.isViewItemModalOpen = false;
     this.viewItemSelectedItem = null;
   }
 
   editItem(item: DisplayInventoryItem) {
+    this.haptic.medium();
     this.selectedItem = item;
     this.editForm.patchValue({
       name: item.name,
@@ -569,6 +578,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeEditModal() {
+    this.haptic.light();
     this.isEditModalOpen = false;
     this.selectedItem = null;
     this.editForm.reset({
@@ -580,6 +590,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   updateItem() {
+    this.haptic.medium();
     if (this.editForm.invalid || !this.selectedItem) return;
 
     const formVal = this.editForm.value;
@@ -627,6 +638,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   deleteItem(id: number, category: ItemCategory) {
+    this.haptic.heavy();
     this.openConfirmDialog('Are you sure you want to delete this item?', () => {
       this.inventoryService.deleteItem(id, category).subscribe({
         next: () => {
@@ -709,6 +721,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   confirmAction() {
+    this.haptic.heavy();
     if (this.confirmCallback) {
       this.confirmCallback();
     }
@@ -716,12 +729,14 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeConfirmDialog() {
+    this.haptic.light();
     this.isConfirmOpen = false;
     this.confirmMessage = '';
     this.confirmCallback = null;
   }
 
   onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom') {
+    this.haptic.selectionChanged();
     this.activeTab = tab;
     this.resetPagination();
     if (tab === 'bom') {
@@ -907,6 +922,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- BOM MODAL ---------- */
   openBomModal() {
+    this.haptic.medium();
     this.isBomModalOpen = true;
     this.bomForm = {
       bomName: '',
@@ -957,6 +973,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeBomModal() {
+    this.haptic.light();
     this.isBomModalOpen = false;
     this.editingBomId = null;
     this.bomComponents = [];
@@ -1093,6 +1110,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- SAVE BOM ---------- */
   saveBOM() {
+    this.haptic.medium();
     if (!this.bomForm.finishedProductId || !this.bomForm.bomName || this.bomComponents.length === 0) {
       this.showMessage('error', 'Please fill all required fields and add at least one component.');
       return;
@@ -1177,6 +1195,7 @@ export class MasterInventoryPage implements OnInit {
   }
 
   closeBomView() {
+    this.haptic.light();
     this.isBomViewOpen = false;
     this.selectedBom = null;
     this.bomOutputQty = 1;
@@ -1184,6 +1203,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- EDIT BOM ---------- */
   editBOMCard(bom: BillOfMaterial) {
+    this.haptic.medium();
     // Populate form with existing BOM data
     this.bomForm.finishedProductId = bom.finishedProductId;
     this.bomForm.bomName = bom.bomName;
@@ -1246,6 +1266,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- DELETE BOM ---------- */
   deleteBOM(id: number) {
+    this.haptic.heavy();
     this.openConfirmDialog('Are you sure you want to delete this Bill of Materials?', () => {
       this.inventoryService.deleteBOM(id).subscribe({
         next: () => {

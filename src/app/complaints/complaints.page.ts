@@ -1,8 +1,9 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ComplaintsService } from '../services/complaints.service';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-complaints',
@@ -20,6 +21,8 @@ export class ComplaintsPage implements OnInit {
 
   categories = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
   priorityLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -40,6 +43,7 @@ export class ComplaintsPage implements OnInit {
   ngOnInit() {}
 
   submitComplaint() {
+    this.haptic.medium();
     console.log('Submit button clicked');
     console.log('Form valid:', this.complaintForm.valid);
     console.log('Form data:', this.complaintForm.value);

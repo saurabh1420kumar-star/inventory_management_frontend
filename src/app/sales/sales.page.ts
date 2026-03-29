@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
@@ -10,6 +10,7 @@ import { GdnService, GDN } from '../services/gdn.service';
 import { ToastController } from '@ionic/angular';
 import { Toast } from '../services/toast';
 import { DownloadService } from '../services/download.service';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-sales',
@@ -63,6 +64,8 @@ export class SalesPage implements OnInit {
   viewingGdnPdfUrl: SafeResourceUrl | null = null;
   rawGdnPdfUrl: string | null = null;
   expandedGdnId: number | null = null;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private salesService: SalesService,
@@ -118,11 +121,13 @@ export class SalesPage implements OnInit {
   }
 
   toggleInvoicesForOrder(orderId: number) {
+    this.haptic.light();
     const current = this.showInvoicesByOrder.get(orderId) || false;
     this.showInvoicesByOrder.set(orderId, !current);
   }
 
   downloadInvoicePdf(invoice: ProformaInvoice) {
+    this.haptic.medium();
     if (invoice.paymentStatus !== 'PAID') {
       this.showToast('Only paid invoices can be downloaded', 'warning');
       return;
@@ -192,11 +197,13 @@ export class SalesPage implements OnInit {
   }
 
   toggleGdnsForOrder(orderId: number) {
+    this.haptic.light();
     const current = this.showGdnsByOrder.get(orderId) || false;
     this.showGdnsByOrder.set(orderId, !current);
   }
 
   downloadGdnPdf(gdn: GDN) {
+    this.haptic.medium();
     if (!gdn.hasPdf || !gdn.pdfUrl) {
       this.showToast('PDF not available for this GDN', 'warning');
       return;
@@ -329,6 +336,7 @@ export class SalesPage implements OnInit {
   }
 
   approveOrder(order: PendingOrder) {
+    this.haptic.heavy();
     this.isApprovingOrderId = order.id;
     this.salesService.approveOrder(order.id).subscribe({
       next: () => {
@@ -352,6 +360,7 @@ export class SalesPage implements OnInit {
   }
 
   approvePI(order: PendingOrder) {
+    this.haptic.heavy();
     if (!order.distributorId) {
       this.showToast('Distributor ID not found for this order.', 'warning');
       return;
@@ -394,18 +403,21 @@ export class SalesPage implements OnInit {
   }
 
   openRejectModal(order: PendingOrder) {
+    this.haptic.medium();
     this.orderBeingRejected = order;
     this.rejectRemarks = '';
     this.isRejectModalOpen = true;
   }
 
   cancelReject() {
+    this.haptic.light();
     this.isRejectModalOpen = false;
     this.orderBeingRejected = null;
     this.rejectRemarks = '';
   }
 
   confirmReject() {
+    this.haptic.heavy();
     if (!this.orderBeingRejected) return;
     const order = this.orderBeingRejected;
     this.isRejectSubmitting = true;
@@ -429,6 +441,7 @@ export class SalesPage implements OnInit {
   }
 
   toggleOrderExpand(id: number) {
+    this.haptic.light();
     if (this.expandedOrderIds.has(id)) {
       this.expandedOrderIds.delete(id);
     } else {
@@ -455,6 +468,7 @@ export class SalesPage implements OnInit {
   }
 
   toggleGdnDetails(gdnId: number) {
+    this.haptic.light();
     if (this.expandedGdnId === gdnId) {
       this.expandedGdnId = null;
     } else {

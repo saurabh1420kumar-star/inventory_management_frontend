@@ -1,6 +1,6 @@
 // dashboard.page.ts
 
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -8,6 +8,7 @@ import { NgApexchartsModule } from 'ng-apexcharts';
 import { Auth } from '../services/auth';
 import { Router } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
+import { HapticService } from '../services/haptic.service';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -113,6 +114,8 @@ export class DashboardPage implements OnInit {
 
   public chartOptions: Partial<ChartOptions> | undefined;
   selectedChartType: 'line' | 'bar' = 'line';
+
+  private haptic = inject(HapticService);
 
   constructor(private auth: Auth, private router: Router) {}
 
@@ -229,6 +232,7 @@ export class DashboardPage implements OnInit {
   }
 
   onChartTypeChange(event: any) {
+    this.haptic.selectionChanged();
     this.selectedChartType = event.detail.value;
     this.initializeChart();
   }

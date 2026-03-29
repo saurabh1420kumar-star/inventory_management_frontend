@@ -1,6 +1,6 @@
 // src/app/login/login.page.ts
 
-import { Component } from '@angular/core';
+import { Component, inject } from '@angular/core';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
 import { IonicModule, Platform } from '@ionic/angular';
@@ -9,6 +9,7 @@ import { Capacitor } from '@capacitor/core';
 
 import { Auth } from '../services/auth';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-login',
@@ -26,6 +27,8 @@ export class LoginPage {
   loginForm: FormGroup;
   showPassword = false;
   loading = false;
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -51,10 +54,12 @@ export class LoginPage {
   }
 
   togglePasswordVisibility() {
+    this.haptic.light();
     this.showPassword = !this.showPassword;
   }
 
   onSubmit() {
+    this.haptic.medium();
     this.loginForm.markAllAsTouched();
 
     if (this.loginForm.invalid) {
@@ -133,10 +138,12 @@ export class LoginPage {
 
 
   goToSignup() {
+    this.haptic.light();
     this.router.navigateByUrl('/signup');
   }
 
   forgotPassword() {
+    this.haptic.light();
     this.router.navigateByUrl('/forgot-password');
   }
 }

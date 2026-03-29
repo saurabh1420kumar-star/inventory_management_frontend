@@ -1,9 +1,10 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { ToastController, AlertController } from '@ionic/angular';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-user-right',
@@ -69,6 +70,8 @@ export class UserRightPage implements OnInit {
     { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' },
   ];
 
+  private haptic = inject(HapticService);
+
   constructor(
     private formBuilder: FormBuilder,
     private toastController: ToastController,
@@ -112,6 +115,7 @@ export class UserRightPage implements OnInit {
    * Toggle edit mode
    */
   toggleEditMode() {
+    this.haptic.medium();
     this.isEditMode = true;
     // Store original values for cancel functionality
     this.originalProfile = { ...this.userProfile };
@@ -123,6 +127,7 @@ export class UserRightPage implements OnInit {
    * Save profile changes
    */
   async saveProfile() {
+    this.haptic.medium();
     if (this.profileForm.invalid) {
       await this.showToast('Please fill all required fields correctly', 'warning');
       return;
@@ -182,6 +187,7 @@ export class UserRightPage implements OnInit {
    * Cancel edit mode and restore original values
    */
   async cancelEdit() {
+    this.haptic.light();
     if (this.profileForm.dirty) {
       const alert = await this.alertController.create({
         header: 'Discard Changes?',

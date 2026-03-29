@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
@@ -22,6 +22,7 @@ import {
 import { DistributorService, DistributorOrder } from '../services/distributor.service';
 import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
+import { HapticService } from '../services/haptic.service';
 
 interface MetricCard {
   title: string;
@@ -135,6 +136,8 @@ export class DistributorDashboardPage implements OnInit {
   isLoadingPaymentCollections = false;
   totalCollectionAmount = 0;
 
+  private haptic = inject(HapticService);
+
   constructor(
     private router: Router,
     private distributorService: DistributorService,
@@ -238,6 +241,7 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   switchTab(tab: 'dashboard' | 'operations') {
+    this.haptic.selectionChanged();
     this.activeTab = tab;
     this.activeOperationView = null;
     if (tab === 'dashboard') {
@@ -246,14 +250,17 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   goToCatalog() {
+    this.haptic.medium();
     this.router.navigate(['/distributor-cart']);
   }
 
   toggleMenu(menu: string) {
+    this.haptic.light();
     this.expandedMenu = this.expandedMenu === menu ? null : menu;
   }
 
   openOperationView(view: string) {
+    this.haptic.medium();
     this.activeOperationView = view;
     if (view === 'account-services') {
       this.loadPaymentCollections();
@@ -263,11 +270,13 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   openAddPaymentModal() {
+    this.haptic.medium();
     this.generatePaymentReference();
     this.showAddPaymentModal = true;
   }
 
   closeAddPaymentModal() {
+    this.haptic.light();
     this.showAddPaymentModal = false;
     this.resetPaymentForm();
   }
@@ -292,6 +301,7 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   submitPayment() {
+    this.haptic.heavy();
     if (!this.distributorId) {
       this.showToast('Distributor account not found', 'danger');
       return;
@@ -377,6 +387,7 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   goBackToOperations() {
+    this.haptic.light();
     this.activeOperationView = null;
   }
 
@@ -424,6 +435,7 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   toggleOrderDetails(orderId: number) {
+    this.haptic.light();
     this.expandedOrderId = this.expandedOrderId === orderId ? null : orderId;
   }
 

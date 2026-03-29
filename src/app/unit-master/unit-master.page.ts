@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import {
   FormsModule,
@@ -31,6 +31,7 @@ import {
 import { ModalController, ToastController, AlertController } from '@ionic/angular';
 import { UnitService, Unit, RawMaterial, FinishedProduct } from '../services/unit.service';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
 
 /* ---------- COMPONENT ---------- */
 @Component({
@@ -91,6 +92,8 @@ export class UnitMasterPage implements OnInit {
   readonly LITER_VARIANTS = ['1 liter', '5 liter', '10 liter'];
   readonly PIECE_VARIANTS = ['1 piece', '5 piece', '10 piece'];
   readonly METER_VARIANTS = ['1 meter', '5 meter', '10 meter'];
+
+  private haptic = inject(HapticService);
 
   constructor(
     private fb: FormBuilder,
@@ -322,10 +325,12 @@ export class UnitMasterPage implements OnInit {
 
   /* ---------- MODAL ---------- */
   openAddModal() {
+    this.haptic.medium();
     this.isAddModalOpen = true;
   }
 
   closeAddModal() {
+    this.haptic.light();
     this.isAddModalOpen = false;
     this.selectedCategory = null;
     this.selectedUnitType = null;
@@ -339,6 +344,7 @@ export class UnitMasterPage implements OnInit {
   }
 
   openEditModal(unit: Unit) {
+    this.haptic.medium();
     this.selectedUnit = unit;
     this.selectedCategory = unit.category as 'Raw Material' | 'Finished Product';
     
@@ -370,6 +376,7 @@ export class UnitMasterPage implements OnInit {
   }
 
   closeEditModal() {
+    this.haptic.light();
     this.isEditModalOpen = false;
     this.selectedUnit = null;
     this.selectedCategory = null;
@@ -385,6 +392,7 @@ export class UnitMasterPage implements OnInit {
 
   /* ---------- CREATE UNIT ---------- */
   addUnit() {
+    this.haptic.medium();
     if (this.addForm.invalid) {
       this.showToast('Please fill all required fields', 'danger');
       return;
@@ -438,6 +446,7 @@ export class UnitMasterPage implements OnInit {
 
   /* ---------- UPDATE UNIT ---------- */
   updateUnit() {
+    this.haptic.medium();
     if (this.editForm.invalid || !this.selectedUnit) return;
 
     const formValue = this.editForm.value;
@@ -486,6 +495,7 @@ export class UnitMasterPage implements OnInit {
 
   /* ---------- DELETE UNIT ---------- */
   deleteUnit(id: number) {
+    this.haptic.heavy();
     if (!confirm('Are you sure you want to delete this unit?')) return;
 
     this.unitService.deleteUnit(id).subscribe({

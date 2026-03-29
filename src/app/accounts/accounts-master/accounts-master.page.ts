@@ -150,7 +150,7 @@ export class AccountsMasterPage implements OnInit {
   endDate: string = '';
 
   sortField: 'date' | 'description' | 'debit' | 'credit' | 'balance' = 'date';
-  sortDirection: 'asc' | 'desc' = 'asc';
+  sortDirection: 'asc' | 'desc' = 'desc';
   currentPage: number = 1;
   rowsPerPage: number = 10;
   rowsPerPageOptions = [5, 10, 25, 50];
@@ -369,14 +369,14 @@ export class AccountsMasterPage implements OnInit {
   mapPaymentHistoryToTransactions(payments: any[]): Transaction[] {
     let runningBalance = this.selectedAccount?.openingBalance || 0;
 
-    // Sort descending by createdAt (newest first)
+    // Sort ascending by createdAt (oldest first) so running balance is computed correctly
     const sorted = [...(payments || [])].sort((a, b) => {
       const ta = a.createdAt ? new Date(a.createdAt).getTime() : 0;
       const tb = b.createdAt ? new Date(b.createdAt).getTime() : 0;
-      return tb - ta;
+      return ta - tb;
     });
 
-    return sorted.map((payment: any, index: number) => {
+    const transactions = sorted.map((payment: any, index: number) => {
       // Extract date from createdAt timestamp (format: YYYY-MM-DD)
       const dateStr = payment.createdAt ? payment.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
       
@@ -393,7 +393,7 @@ export class AccountsMasterPage implements OnInit {
         date: dateStr,
         description: payment.description || '',
         reference: `TXN-${payment.id || index}`,
-        type: isCredit ? 'credit' : 'debit',
+        type: (isCredit ? 'credit' : 'debit') as 'credit' | 'debit' | 'jv',
         debit: debit,
         credit: credit,
         balance: runningBalance,
@@ -402,6 +402,9 @@ export class AccountsMasterPage implements OnInit {
         paymentMethod: undefined
       };
     });
+
+    // Reverse so newest entry is first (descending order by date)
+    return transactions.reverse();
   }
 
   // Map Distributor to UI LedgerAccount structure

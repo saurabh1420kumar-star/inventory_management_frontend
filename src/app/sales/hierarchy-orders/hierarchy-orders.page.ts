@@ -50,7 +50,7 @@ interface SeGroup {
   templateUrl: './hierarchy-orders.page.html',
   styleUrls: ['./hierarchy-orders.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule, HierarchyMapComponent]
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule]
 })
 export class HierarchyOrdersPage implements OnInit {
   isLoading = false;

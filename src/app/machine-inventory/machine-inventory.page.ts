@@ -1,4 +1,4 @@
-import { Component, OnInit } from '@angular/core';
+import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 
@@ -24,6 +24,7 @@ import {
 } from '@ionic/angular/standalone';
 
 import { InventoryService, InventoryItem } from '../services/inventory';
+import { HapticService } from '../services/haptic.service';
 
 @Component({
   selector: 'app-machine-inventory',
@@ -62,6 +63,8 @@ export class MachineInventoryPage implements OnInit {
 
   machineParts: InventoryItem[] = [];
   filteredMachines: InventoryItem[] = [];
+
+  private haptic = inject(HapticService);
 
   constructor(private inventoryService: InventoryService, private fb: FormBuilder, private toastController: ToastController) {}
 
@@ -178,14 +181,17 @@ export class MachineInventoryPage implements OnInit {
   }
 
   openAddModal() {
+    this.haptic.medium();
     this.isAddModalOpen = true;
   }
 
   closeAddModal() {
+    this.haptic.light();
     this.isAddModalOpen = false;
   }
 
   addMachinePart() {
+    this.haptic.medium();
     const data = this.addForm.value;
     console.log('Creating:', data);
 
@@ -223,6 +229,7 @@ export class MachineInventoryPage implements OnInit {
   }
 
   editPart(part: InventoryItem) {
+    this.haptic.medium();
     this.selectedPartId = part.id;
     this.editForm.patchValue({
       name: part.name,
@@ -238,11 +245,13 @@ export class MachineInventoryPage implements OnInit {
   }
 
   closeEditModal() {
+    this.haptic.light();
     this.isEditModalOpen = false;
     this.selectedPartId = null;
   }
 
   updateMachinePart() {
+    this.haptic.medium();
     if (!this.selectedPartId) return;
 
     const data = this.editForm.value;
@@ -263,6 +272,7 @@ export class MachineInventoryPage implements OnInit {
 
   /** ---------- DELETE PART ---------- */
   deletePart(part: InventoryItem) {
+    this.haptic.heavy();
     const confirmed = confirm(`Are you sure you want to delete "${part.name}"?`);
     if (!confirmed) return;
 

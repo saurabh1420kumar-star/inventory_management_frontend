@@ -1,10 +1,11 @@
 import { CommonModule } from '@angular/common';
-import { Component, OnInit, HostListener, ElementRef } from '@angular/core';
+import { Component, OnInit, HostListener, ElementRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { User } from '../models/user.model';
 import { UserService, UpdateUserRequest } from '../services/user.service';
 import { Auth, CreateUserRequest } from '../services/auth';
+import { HapticService } from '../services/haptic.service';
 
 interface Employee {
   id: number | string;
@@ -108,6 +109,8 @@ export class HrDepartmentPage implements OnInit {
     { value: 'REJECTED', label: 'Rejected' },
     { value: 'INACTIVE', label: 'Inactive' }
   ];
+
+  private haptic = inject(HapticService);
 
   constructor(
     private formBuilder: FormBuilder,
@@ -280,6 +283,7 @@ export class HrDepartmentPage implements OnInit {
   }
 
   openAddModal() {
+    this.haptic.medium();
     this.activeModal = 'add';
     this.employeeForm.reset({
       firstName: '',
@@ -306,6 +310,7 @@ export class HrDepartmentPage implements OnInit {
 
   // ✅ UPDATED - Now populates all fields like Add Employee modal
   openEditModal(employee: Employee) {
+    this.haptic.medium();
     this.activeModal = 'edit';
     this.selectedEmployee = employee;
     
@@ -348,21 +353,25 @@ export class HrDepartmentPage implements OnInit {
   }
 
   openViewModal(employee: Employee) {
+    this.haptic.light();
     this.activeModal = 'view';
     this.selectedEmployee = employee;
   }
 
   openDeleteModal(employee: Employee) {
+    this.haptic.heavy();
     this.activeModal = 'delete';
     this.selectedEmployee = employee;
   }
 
   openRejectModal(employee: Employee) {
+    this.haptic.heavy();
     this.activeModal = 'reject';
     this.selectedEmployee = employee;
   }
 
   closeModal() {
+    this.haptic.light();
     this.activeModal = null;
     this.selectedEmployee = null;
     this.employeeForm.reset();
@@ -371,6 +380,7 @@ export class HrDepartmentPage implements OnInit {
   }
 
   onAddEmployee() {
+    this.haptic.medium();
     if (this.employeeForm.valid) {
       this.isLoading = true;
       this.errorMessage = '';
@@ -451,6 +461,7 @@ export class HrDepartmentPage implements OnInit {
 
   // ✅ UPDATED - Now calls API to update user
   onUpdateEmployee() {
+    this.haptic.medium();
     if (this.employeeForm.valid && this.selectedEmployee) {
       this.isLoading = true;
       this.errorMessage = '';

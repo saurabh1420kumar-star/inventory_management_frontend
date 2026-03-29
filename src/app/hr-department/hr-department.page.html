@@ -344,7 +344,7 @@
       </p>
     </div>
     <!-- Form -->
-    <form (ngSubmit)="onAddEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-auto bg-white">
+    <form (ngSubmit)="onAddEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-scroll bg-white" style="-webkit-overflow-scrolling: touch;">
       <div class="p-6 space-y-4">
         <!-- First Name -->
         <div>
@@ -629,7 +629,7 @@
       </p>
     </div>
     <!-- Form -->
-    <form (ngSubmit)="onUpdateEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-auto bg-white">
+    <form (ngSubmit)="onUpdateEmployee()" [formGroup]="employeeForm" class="flex-1 overflow-y-scroll bg-white" style="-webkit-overflow-scrolling: touch;">
       <div class="p-6 space-y-4">
         <!-- First Name -->
         <div>
