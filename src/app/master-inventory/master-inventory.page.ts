@@ -50,6 +50,7 @@ import {
   AdditionalCost
 } from '../services/inventory';
 import { HapticService } from '../services/haptic.service';
+import { Toast } from '../services/toast';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -156,6 +157,7 @@ export class MasterInventoryPage implements OnInit {
   inventory: DisplayInventoryItem[] = [];
 
   private haptic = inject(HapticService);
+  private toast = inject(Toast);
 
   constructor(
     private fb: FormBuilder,
@@ -538,8 +540,10 @@ export class MasterInventoryPage implements OnInit {
         this.showMessage('success', 'Item added successfully!');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error(err);
-        this.showMessage('error', 'Failed to create item.');
+        this.showMessage('error', errorMessage);
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -631,8 +635,10 @@ export class MasterInventoryPage implements OnInit {
         this.showMessage('success', 'Item updated successfully!');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error(err);
-        this.showMessage('error', 'Failed to update item.');
+        this.showMessage('error', errorMessage);
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -692,6 +698,28 @@ export class MasterInventoryPage implements OnInit {
   onSearchChange(event: any) {
     this.searchTerm = event.target.value || '';
     this.resetPagination();
+  }
+
+  // Helper method to extract error message from API response
+  private extractErrorMessage(error: any): string {
+    if (!error) return 'An error occurred. Please try again.';
+    
+    if (error.error?.error) return error.error.error;
+    if (error.error?.message) return error.error.message;
+    
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      const errorEntries = Object.entries(error.error);
+      if (errorEntries.length > 0) {
+        const errorMessages = errorEntries
+          .map(([field, message]) => message as string)
+          .filter(msg => msg && typeof msg === 'string');
+        
+        if (errorMessages.length > 0) return errorMessages.join('\n');
+      }
+    }
+    
+    if (error.statusText) return error.statusText;
+    return 'Failed to process item. Please try again.';
   }
 
   showMessage(type: 'success' | 'error', message: string, duration: number = 3000) {
@@ -1144,8 +1172,10 @@ export class MasterInventoryPage implements OnInit {
         this.showMessage('success', 'Bill of Materials created successfully!');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error('Failed to create BOM:', err);
-        this.showMessage('error', 'Failed to create BOM. Please try again.');
+        this.showMessage('error', errorMessage);
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -1181,8 +1211,10 @@ export class MasterInventoryPage implements OnInit {
         this.showMessage('success', 'Bill of Materials updated successfully!');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error('Failed to update BOM:', err);
-        this.showMessage('error', 'Failed to update BOM. Please try again.');
+        this.showMessage('error', errorMessage);
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -1275,8 +1307,10 @@ export class MasterInventoryPage implements OnInit {
           this.showMessage('success', 'BOM deleted successfully!');
         },
         error: (err) => {
+          const errorMessage = this.extractErrorMessage(err);
           console.error('Failed to delete BOM:', err);
-          this.showMessage('error', 'Failed to delete BOM. Please try again.');
+          this.showMessage('error', errorMessage);
+          this.toast.present(errorMessage, 'danger');
         }
       });
     });

@@ -19,7 +19,7 @@ import {
 } from 'ionicons/icons';
 import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } from '../services/cart.service';
 import { Auth } from '../services/auth';
-import { DistributorService } from '../services/distributor.service';
+import { DistributorProfileService } from '../services/distributor-profile.service';
 import { HapticService } from '../services/haptic.service';
 
 @Component({
@@ -43,6 +43,7 @@ export class DistributorCartPage implements OnInit {
   
   showProductModal: boolean = false;
   showCheckoutModal: boolean = false;
+  showProfileModal: boolean = false;
   isLoading: boolean = false;
   
   quantityToAdd: number = 1;
@@ -63,6 +64,9 @@ export class DistributorCartPage implements OnInit {
   // Distributor address for delivery
   distributorAddress: string = '';
 
+  // Full distributor profile data
+  distributorProfile: any = null;
+
   // Make Math available in template
   Math = Math;
 
@@ -74,7 +78,7 @@ export class DistributorCartPage implements OnInit {
     private modalCtrl: ModalController,
     private auth: Auth,
     private router: Router,
-    private distributorService: DistributorService,
+    private distributorProfileService: DistributorProfileService,
     private toastController: ToastController
   ) {
     addIcons({
@@ -106,7 +110,7 @@ export class DistributorCartPage implements OnInit {
   ngOnInit() {
     this.initializeForm();
     this.getDistributorId();
-    this.loadDistributorAddress();
+    this.subscribeToDistributorProfile();
     this.fetchFinishedProducts();
     this.subscribeToCart();
   }
@@ -118,25 +122,47 @@ export class DistributorCartPage implements OnInit {
   }
 
   /**
-   * Load distributor address from server
+   * Subscribe to global distributor profile
    */
-  loadDistributorAddress() {
-    if (!this.distributorId) return;
-    
-    this.distributorService.getDistributorById(Number(this.distributorId)).subscribe({
-      next: (response) => {
-        if (response.data && response.data.address) {
-          this.distributorAddress = response.data.address;
-          console.log('Distributor address loaded:', this.distributorAddress);
-          // Pre-fill the form with the address
-          this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
-          this.orderForm.get('deliveryAddress')?.disable();
+  subscribeToDistributorProfile() {
+    this.distributorProfileService.getProfile$().subscribe({
+      next: (profile) => {
+        if (profile) {
+          // Store full profile
+          this.distributorProfile = profile;
+          
+          // Extract address
+          if (profile.address) {
+            this.distributorAddress = profile.address;
+            console.log('Distributor address loaded from profile service:', this.distributorAddress);
+            // Pre-fill the form with the address
+            this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
+            this.orderForm.get('deliveryAddress')?.disable();
+          }
+          
+          console.log('Distributor profile loaded from service:', this.distributorProfile);
         }
       },
       error: (error) => {
-        console.error('Failed to load distributor address:', error);
+        console.error('Failed to subscribe to distributor profile:', error);
       }
     });
+  }
+
+  /**
+   * Open distributor profile modal
+   */
+  openProfileModal() {
+    this.haptic.medium();
+    this.showProfileModal = true;
+  }
+
+  /**
+   * Close distributor profile modal
+   */
+  closeProfileModal() {
+    this.haptic.light();
+    this.showProfileModal = false;
   }
 
   initializeForm() {

@@ -7,6 +7,7 @@ import { SalesHierarchyService, SalesPerson, HierarchyRole, HIERARCHY_ROLES, Rol
 import { RoleFilterPipe } from './hierarchy.pipes';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
 import { HapticService } from '../../services/haptic.service';
+import { Toast } from '../../services/toast';
 
 @Component({
   selector: 'app-salesperson-onboarding',
@@ -57,6 +58,7 @@ export class SalespersonOnboardingPage implements OnInit {
   isLoadingManagers = false;
 
   private haptic = inject(HapticService);
+  private toast = inject(Toast);
 
   constructor(
     private fb: FormBuilder,
@@ -263,6 +265,28 @@ export class SalespersonOnboardingPage implements OnInit {
     this.editingPerson = null;
   }
 
+  // Helper method to extract error message from API response
+  private extractErrorMessage(error: any): string {
+    if (!error) return 'An error occurred. Please try again.';
+    
+    if (error.error?.error) return error.error.error;
+    if (error.error?.message) return error.error.message;
+    
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      const errorEntries = Object.entries(error.error);
+      if (errorEntries.length > 0) {
+        const errorMessages = errorEntries
+          .map(([field, message]) => message as string)
+          .filter(msg => msg && typeof msg === 'string');
+        
+        if (errorMessages.length > 0) return errorMessages.join('\n');
+      }
+    }
+    
+    if (error.statusText) return error.statusText;
+    return 'Failed to save salesperson. Please try again.';
+  }
+
   async submitForm() {
     this.haptic.medium();
     if (this.onboardingForm.invalid) {
@@ -310,12 +334,13 @@ export class SalespersonOnboardingPage implements OnInit {
         this.isSubmitting = false;
         this.showForm = false;
         this.loadSalesPersons();
-        await this.toast(this.editingPerson ? 'Salesperson updated!' : 'Salesperson onboarded!', 'success');
+        await this.toast.present(this.editingPerson ? 'Salesperson updated!' : 'Salesperson onboarded!', 'success');
         this.editingPerson = null;
       },
-      error: async (err: { error?: { message?: string } }) => {
+      error: async (err: any) => {
         this.isSubmitting = false;
-        await this.toast(err?.error?.message ?? 'Failed to save. Please try again.', 'danger');
+        const errorMessage = this.extractErrorMessage(err);
+        await this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -343,11 +368,11 @@ export class SalespersonOnboardingPage implements OnInit {
         this.showDeleteModal = false;
         this.deletingPerson = null;
         this.loadSalesPersons();
-        await this.toast(`${person.name} removed`, 'success');
+        await this.toast.present(`${person.name} removed`, 'success');
       },
       error: async () => {
         this.isDeleting = false;
-        await this.toast('Failed to delete', 'danger');
+        await this.toast.present('Failed to delete', 'danger');
       }
     });
   }
@@ -358,10 +383,7 @@ export class SalespersonOnboardingPage implements OnInit {
     return m ? `${m.name} (${this.getRoleLabel(m.role)})` : '—';
   }
 
-  private async toast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
-    const t = await this.toastController.create({ message, duration: 3000, color, position: 'bottom' });
-    await t.present();
-  }
+
 
   async openHierarchyMap() {
     const modal = await this.modalController.create({

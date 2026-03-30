@@ -29,7 +29,10 @@ import { HapticService } from '../services/haptic.service';
 interface Distributor {
   id: string;
   name: string;
+  firstName?: string;
+  lastName?: string;
   assignedPerson: string;
+  salesPersonRoleType?: string;
   salespersonId?: number;
   distributorType: string;
   companyType: string;
@@ -101,6 +104,9 @@ export class DistributorPage implements OnInit {
 
   // Loading state
   isLoading: boolean = false;
+  
+  // Editing state
+  editingSalesPersonRoleType: string = '';
   
   // Password visibility toggle
   showPassword: boolean = false;
@@ -205,7 +211,7 @@ export class DistributorPage implements OnInit {
       address: ['', [Validators.required]],
       aadhaarNumber: ['', [Validators.required, Validators.minLength(12), Validators.maxLength(12)]],
       panNumber: ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
-      gstNumber: ['', [Validators.required, Validators.minLength(15), Validators.maxLength(15)]],
+      gstNumber: ['', [Validators.minLength(15), Validators.maxLength(15)]],
       creditLimit: [false],
       username: [''],
       password: [''],
@@ -217,10 +223,14 @@ export class DistributorPage implements OnInit {
 
   // Helper method to map DTO to UI model
   private mapDtoToDistributor(dto: DistributorDto): Distributor {
+    const nameParts = ((dto.firstName || '') + ' ' + (dto.lastName || '')).trim() || dto.name;
     return {
       id: dto.id.toString(),
-      name: (((dto as any).firstName || '') + ' ' + ((dto as any).lastName || '')).trim() || dto.name,
+      name: nameParts,
+      firstName: dto.firstName || '',
+      lastName: dto.lastName || '',
       assignedPerson: dto.assignedPerson || '',
+      salesPersonRoleType: dto.salesPersonRoleType || '',
       salespersonId: (dto as any).salespersonId,
       distributorType: dto.distributorType,
       companyType: dto.companyType,
@@ -243,15 +253,32 @@ export class DistributorPage implements OnInit {
 
   // Helper method to map form data to API payload
   private mapFormToPayload(formData: any) {
-    // Find the selected key person to extract name and role
+    // When editing, use the stored salesPersonRoleType from API response
+    // When creating, extract from the selected key person
+    let salesPersonRoleType = '';
+    let assignedPersonName = '';
+    
     const selectedKeyPerson = this.keyPersonsList.find(person => person.id === formData.keyPerson);
+    
+    if (this.isEditing && this.editingSalesPersonRoleType) {
+      // Use the role that came from API during edit
+      salesPersonRoleType = this.editingSalesPersonRoleType;
+    } else {
+      // For new distributor, get role from selected key person
+      salesPersonRoleType = selectedKeyPerson?.role || formData.assignedPerson || '';
+    }
+    
+    // Get the key person's actual name
+    if (selectedKeyPerson) {
+      assignedPersonName = (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim();
+    }
     
     const payload = {
       firstName: formData.firstName || '',
       lastName: formData.lastName || '',
-      salesPersonRoleType: selectedKeyPerson?.role || formData.assignedPerson || '',
+      salesPersonRoleType: salesPersonRoleType,
       salespersonId: formData.keyPerson || 0,
-      assignedPerson: selectedKeyPerson ? (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim() : '',
+      assignedPerson: assignedPersonName || '',
       distributorType: formData.distributorType,
       companyType: formData.companyType,
       contactEmail: formData.email,
@@ -271,8 +298,15 @@ export class DistributorPage implements OnInit {
     };
 
     console.log('Final payload after mapping:', payload);
-    console.log('Selected key person:', selectedKeyPerson);
     return payload;
+  }
+
+  // Get the name of the selected key person
+  getSelectedKeyPersonName(): string {
+    const keyPersonId = this.distributorForm.get('keyPerson')?.value;
+    if (!keyPersonId) return '';
+    const keyPerson = this.keyPersonsList.find(person => person.id === keyPersonId);
+    return keyPerson ? (keyPerson.firstName + ' ' + keyPerson.lastName).trim() : '';
   }
 
   // Fetch Sales Persons for dropdown
@@ -357,6 +391,7 @@ export class DistributorPage implements OnInit {
   openAddModal() {
     this.haptic.medium();
     this.isEditing = false;
+    this.editingSalesPersonRoleType = '';
     this.distributorForm.reset();
     this.showAddModal = true;
   }
@@ -364,6 +399,7 @@ export class DistributorPage implements OnInit {
   closeAddModal() {
     this.haptic.light();
     this.showAddModal = false;
+    this.editingSalesPersonRoleType = '';
     this.distributorForm.reset();
   }
 
@@ -399,23 +435,29 @@ export class DistributorPage implements OnInit {
     this.showDetailsModal = false;
     this.selectedDistributor = null;
     this.isEditing = false;
+    this.editingSalesPersonRoleType = '';
   }
 
   onEditDistributor() {
     this.haptic.medium();
     if (this.selectedDistributor) {
       this.isEditing = true;
+      // Store the salesPersonRoleType from the API response for use during save
+      this.editingSalesPersonRoleType = this.selectedDistributor.salesPersonRoleType || '';
+      const keyPersonName = this.selectedDistributor.assignedPerson || '';
+      
       // setTimeout ensures the *ngIf="isEditing" DOM (including ion-select) is fully
       // rendered before patchValue is called, otherwise selects ignore the value.
       setTimeout(() => {
         const nameParts = (this.selectedDistributor!.name || '').split(' ');
         const firstName = nameParts[0] || '';
         const lastName = nameParts.slice(1).join(' ') || '';
+        
+        // First set the role which will trigger fetching key persons
         this.distributorForm.patchValue({
           firstName,
           lastName,
-          assignedPerson: this.selectedDistributor!.assignedPerson || '',
-          keyPerson: (this.selectedDistributor as any).keyPerson || '',
+          assignedPerson: this.selectedDistributor!.salesPersonRoleType || '',
           distributorType: this.selectedDistributor!.distributorType,
           companyType: this.selectedDistributor!.companyType,
           email: this.selectedDistributor!.email,
@@ -432,6 +474,27 @@ export class DistributorPage implements OnInit {
           username: this.selectedDistributor!.username || '',
           password: this.selectedDistributor!.password || ''
         });
+        
+        // After key persons are loaded, find and set the matching one by name
+        const checkAndSetKeyPerson = () => {
+          if (this.keyPersonsList && this.keyPersonsList.length > 0) {
+            const matchingKeyPerson = this.keyPersonsList.find(person => 
+              (person.firstName + ' ' + person.lastName).trim() === keyPersonName
+            );
+            if (matchingKeyPerson) {
+              this.distributorForm.patchValue({
+                keyPerson: matchingKeyPerson.id
+              });
+            }
+          } else {
+            // If key persons not loaded yet, wait a bit and try again
+            setTimeout(checkAndSetKeyPerson, 500);
+          }
+        };
+        
+        // Start checking after a short delay to allow key persons to load
+        setTimeout(checkAndSetKeyPerson, 1000);
+        
         this.cdr.detectChanges();
       }, 300);
     }
@@ -481,9 +544,10 @@ export class DistributorPage implements OnInit {
           this.isLoading = false;
         },
         error: (err) => {
+          const errorMessage = this.extractErrorMessage(err);
           console.error('Failed to update distributor', err);
           this.isLoading = false;
-          this.toast.present('Failed to update distributor. Please try again.', 'danger');
+          this.toast.present(errorMessage, 'danger');
         }
       });
     } else {
@@ -507,12 +571,10 @@ export class DistributorPage implements OnInit {
           this.isLoading = false;
         },
         error: (err) => {
+          const errorMessage = this.extractErrorMessage(err);
           console.error('Failed to create distributor', err);
-          console.error('Error response:', err.error);
-          console.error('Error message:', err.error?.message || err.statusText);
           this.isLoading = false;
-          const errorMsg = err.error?.message || 'Failed to create distributor. Please check the form and try again.';
-          this.toast.present(errorMsg, 'danger');
+          this.toast.present(errorMessage, 'danger');
         }
       });
     }
@@ -521,6 +583,28 @@ export class DistributorPage implements OnInit {
   cancelEdit() {
     this.isEditing = false;
     this.distributorForm.reset();
+  }
+
+  // Helper method to extract error message from API response
+  private extractErrorMessage(error: any): string {
+    if (!error) return 'An error occurred. Please try again.';
+    
+    if (error.error?.error) return error.error.error;
+    if (error.error?.message) return error.error.message;
+    
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      const errorEntries = Object.entries(error.error);
+      if (errorEntries.length > 0) {
+        const errorMessages = errorEntries
+          .map(([field, message]) => message as string)
+          .filter(msg => msg && typeof msg === 'string');
+        
+        if (errorMessages.length > 0) return errorMessages.join('\n');
+      }
+    }
+    
+    if (error.statusText) return error.statusText;
+    return 'Failed to process distributor. Please try again.';
   }
 
   // Show success alert
@@ -573,9 +657,10 @@ export class DistributorPage implements OnInit {
         this.isLoading = false;
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error('Failed to delete distributor', err);
         this.isLoading = false;
-        this.toast.present('Failed to delete distributor. Please try again.', 'danger');
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }

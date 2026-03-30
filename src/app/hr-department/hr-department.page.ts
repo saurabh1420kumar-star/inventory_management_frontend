@@ -6,6 +6,7 @@ import { User } from '../models/user.model';
 import { UserService, UpdateUserRequest } from '../services/user.service';
 import { Auth, CreateUserRequest } from '../services/auth';
 import { HapticService } from '../services/haptic.service';
+import { Toast } from '../services/toast';
 
 interface Employee {
   id: number | string;
@@ -19,6 +20,7 @@ interface Employee {
   firstName?: string;
   lastName?: string;
   username?: string;
+  employeeRollNo?: string;
   roleType?: string;
   contactNo?: string | null;
   alternateContact?: string | null;
@@ -111,6 +113,7 @@ export class HrDepartmentPage implements OnInit {
   ];
 
   private haptic = inject(HapticService);
+  private toast = inject(Toast);
 
   constructor(
     private formBuilder: FormBuilder,
@@ -179,6 +182,7 @@ export class HrDepartmentPage implements OnInit {
           firstName: user.firstName,
           lastName: user.lastName,
           username: user.username,
+          employeeRollNo: (user as any).employeeRollNo || (user as any).employeeCode || '',
           roleType: user.roleType,
           contactNo: user.contactNo,
           alternateContact: user.alternateContactNo,
@@ -194,9 +198,13 @@ export class HrDepartmentPage implements OnInit {
         this.isLoading = false;
       },
       error: (error) => {
-        this.errorMessage = error.message || 'Failed to load users';
+        const errorMessage = this.extractErrorMessage(error);
+        this.errorMessage = errorMessage;
         this.isLoading = false;
         console.error('Error loading users:', error);
+        
+        // Show error in toast
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -220,6 +228,45 @@ export class HrDepartmentPage implements OnInit {
         return 'Pending';
     }
   }
+
+  // Helper method to extract error message from API response
+  private extractErrorMessage(error: any): string {
+    if (!error) return 'An error occurred. Please try again.';
+    
+    // Check for error.error.error format
+    if (error.error?.error) {
+      return error.error.error;
+    }
+    
+    // Check for error.error.message format
+    if (error.error?.message) {
+      return error.error.message;
+    }
+    
+    // Check for validation error objects (field-level errors)
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      const errorEntries = Object.entries(error.error);
+      if (errorEntries.length > 0) {
+        // Get all error messages and join them
+        const errorMessages = errorEntries
+          .map(([field, message]) => message as string)
+          .filter(msg => msg && typeof msg === 'string');
+        
+        if (errorMessages.length > 0) {
+          return errorMessages.join('\n');
+        }
+      }
+    }
+    
+    // Check for error.statusText format
+    if (error.statusText) {
+      return error.statusText;
+    }
+    
+    // Default fallback
+    return 'Failed to create employee. Please try again.';
+  }
+
 
   getStatusOptions(): EmployeeStatus[] {
     return ['All', 'Pending', 'Active', 'Rejected'];
@@ -332,6 +379,7 @@ export class HrDepartmentPage implements OnInit {
       id: employee.id,
       firstName: employee.firstName || '',
       lastName: employee.lastName || '',
+      employeeRollNo: employee.employeeRollNo || '',
       username: employee.username || '',
       email: employee.email || '',
       contact: employee.contactNo || '',
@@ -425,6 +473,7 @@ export class HrDepartmentPage implements OnInit {
             firstName: response.firstName,
             lastName: response.lastName,
             username: response.username,
+            employeeRollNo: formValue.employeeRollNo || '',
             roleType: response.roleType,
             contactNo: formValue.contact,
             alternateContact: formValue.alternateContact,
@@ -447,9 +496,13 @@ export class HrDepartmentPage implements OnInit {
           }, 1500);
         },
         error: (error) => {
-          this.errorMessage = error.error?.message || 'Failed to create employee. Please try again.';
+          const errorMessage = this.extractErrorMessage(error);
+          this.errorMessage = errorMessage;
           this.isLoading = false;
           console.error('Error creating user:', error);
+          
+          // Show error in toast
+          this.toast.present(errorMessage, 'danger');
         }
       });
     } else {
@@ -476,6 +529,7 @@ export class HrDepartmentPage implements OnInit {
         status: formValue.status,
         firstName: formValue.firstName,
         lastName: formValue.lastName,
+        employeeRollNo: formValue.employeeRollNo || undefined,
         contactNo: formValue.contact,
         alternateContactNo: formValue.alternateContact || undefined,
         bloodGroup: formValue.bloodGroup || undefined,
@@ -494,6 +548,35 @@ export class HrDepartmentPage implements OnInit {
         next: (response) => {
           this.successMessage = 'Employee updated successfully!';
           
+          // Update the selected employee with the response data
+          if (response) {
+            this.selectedEmployee = {
+              id: response.id ?? this.selectedEmployee?.id ?? userId,
+              name: `${response.firstName} ${response.lastName}`,
+              position: response.username,
+              department: this.formatRoleType(response.roleType),
+              email: response.email,
+              phone: response.contactNo || 'N/A',
+              status: this.mapUserStatus(response.status),
+              avatar: `https://ui-avatars.com/api/?name=${response.firstName}+${response.lastName}&background=random`,
+              firstName: response.firstName,
+              lastName: response.lastName,
+              username: response.username,
+              employeeRollNo: (response as any).employeeRollNo || '',
+              roleType: response.roleType,
+              contactNo: response.contactNo,
+              alternateContact: (response as any).alternateContactNo,
+              city: response.city,
+              country: response.country,
+              zip: response.zip,
+              dateOfBirth: response.dateOfBirth,
+              gender: response.gender,
+              bloodGroup: response.bloodGroup,
+              completeAddress: response.completeAddress,
+              createdOn: (response as any).createdOn
+            };
+          }
+          
           // Reload users to get fresh data
           this.loadUsers();
           this.isLoading = false;
@@ -503,9 +586,13 @@ export class HrDepartmentPage implements OnInit {
           }, 1500);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to update employee. Please try again.';
+          const errorMessage = this.extractErrorMessage(error);
+          this.errorMessage = errorMessage;
           this.isLoading = false;
           console.error('Error updating user:', error);
+          
+          // Show error in toast
+          this.toast.present(errorMessage, 'danger');
         }
       });
     } else {
@@ -541,9 +628,13 @@ export class HrDepartmentPage implements OnInit {
           }, 1500);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to delete employee. Please try again.';
+          const errorMessage = this.extractErrorMessage(error);
+          this.errorMessage = errorMessage;
           this.isLoading = false;
           console.error('Error deleting user:', error);
+          
+          // Show error in toast
+          this.toast.present(errorMessage, 'danger');
         }
       });
     }
@@ -573,9 +664,13 @@ export class HrDepartmentPage implements OnInit {
           }, 1500);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to approve employee. Please try again.';
+          const errorMessage = this.extractErrorMessage(error);
+          this.errorMessage = errorMessage;
           this.isLoading = false;
           console.error('Error approving employee:', error);
+          
+          // Show error in toast
+          this.toast.present(errorMessage, 'danger');
         }
       });
     }
@@ -607,9 +702,13 @@ export class HrDepartmentPage implements OnInit {
           }, 1500);
         },
         error: (error) => {
-          this.errorMessage = error.message || 'Failed to reject employee. Please try again.';
+          const errorMessage = this.extractErrorMessage(error);
+          this.errorMessage = errorMessage;
           this.isLoading = false;
           console.error('Error rejecting employee:', error);
+          
+          // Show error in toast
+          this.toast.present(errorMessage, 'danger');
         }
       });
     }

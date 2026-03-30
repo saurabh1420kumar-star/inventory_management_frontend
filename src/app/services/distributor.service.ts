@@ -9,7 +9,10 @@ import { environment } from '../../environments/environment';
 export interface DistributorDto {
   id: number;
   name: string;
+  firstName?: string;
+  lastName?: string;
   assignedPerson?: string;
+  salesPersonRoleType?: string;
   distributorType: string;
   companyType: string;
   contactEmail: string;

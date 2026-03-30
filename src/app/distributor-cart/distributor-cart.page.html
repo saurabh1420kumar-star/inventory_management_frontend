@@ -302,7 +302,7 @@
       <ion-icon name="cart-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
       <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Cart</span>
     </button>
-    <button class="flex-1 flex flex-col items-center pt-2 pb-3" style="background: transparent; border: none; cursor: pointer;">
+    <button (click)="openProfileModal()" class="flex-1 flex flex-col items-center pt-2 pb-3" style="background: transparent; border: none; cursor: pointer;">
       <ion-icon name="person-outline" style="font-size: 22px; color: #64748b;"></ion-icon>
       <span style="font-size: 11px; color: #64748b; margin-top: 3px;">Profile</span>
     </button>
@@ -363,6 +363,131 @@
                   style="background: rgba(255,255,255,0.06); color: #94a3b8; border: 1px solid rgba(255,255,255,0.08);">Cancel</button>
         </div>
       </form>
+    </ion-content>
+  </ng-template>
+</ion-modal>
+
+<!-- ===== PROFILE MODAL ===== -->
+<ion-modal [isOpen]="showProfileModal" (didDismiss)="closeProfileModal()" [backdropDismiss]="false">
+  <ng-template>
+    <ion-header class="ion-no-border">
+      <ion-toolbar style="--background: #0d1117;">
+        <ion-title class="text-white font-bold">My Profile</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeProfileModal()" class="text-white">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content style="--background: #0d1117;" class="ion-padding" *ngIf="distributorProfile">
+      <!-- Profile Header (Glass) -->
+      <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <div class="flex items-center gap-3 mb-4">
+          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 12px;" class="flex items-center justify-center">
+            <ion-icon name="business-outline" style="font-size: 32px; color: white;"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-white">{{ distributorProfile.firstName }} {{ distributorProfile.lastName }}</h2>
+            <p class="text-sm text-slate-400">Distributor ID: {{ distributorId }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Information (Glass) -->
+      <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <h3 class="text-base font-bold text-white mb-4">Account Information</h3>
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Company Type</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.companyType || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Distributor Type</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.distributorType || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Status</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.status || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Sales Person Role</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.salesPersonRoleType || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information (Glass) -->
+      <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <h3 class="text-base font-bold text-white mb-4">Contact Information</h3>
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Email Address</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.contactEmail || distributorProfile.email || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Phone Number</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.phoneNumber || 'N/A' }}</p>
+          </div>
+          <div *ngIf="distributorProfile.alternateContact">
+            <p class="text-xs text-slate-500 mb-1">Alternate Contact</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.alternateContact }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address Information (Glass) -->
+      <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <h3 class="text-base font-bold text-white mb-4">Delivery Address</h3>
+        <p class="text-sm text-slate-400 leading-relaxed">{{ distributorProfile.address || 'N/A' }}</p>
+      </div>
+
+      <!-- Financial Information (Glass) -->
+      <div class="rounded-2xl p-5 mb-5" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <h3 class="text-base font-bold text-white mb-4">Financial Details</h3>
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Account Number</p>
+            <p class="text-sm text-white font-medium" style="font-family: monospace;">{{ distributorProfile.accountNumber || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">IFSC Code</p>
+            <p class="text-sm text-white font-medium" style="font-family: monospace;">{{ distributorProfile.IFSC || distributorProfile.ifsc || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Account Holder Name</p>
+            <p class="text-sm text-white font-medium">{{ distributorProfile.accountName || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Identity Information (Glass) -->
+      <div class="rounded-2xl p-5 mb-6" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <h3 class="text-base font-bold text-white mb-4">Identity Documents</h3>
+        <div class="space-y-4">
+          <div>
+            <p class="text-xs text-slate-500 mb-1">Aadhaar Number</p>
+            <p class="text-sm text-white font-medium" style="font-family: monospace;">{{ distributorProfile.aadhaarNumber || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">PAN Number</p>
+            <p class="text-sm text-white font-medium" style="font-family: monospace;">{{ distributorProfile.panNumber || 'N/A' }}</p>
+          </div>
+          <div>
+            <p class="text-xs text-slate-500 mb-1">GST Number</p>
+            <p class="text-sm text-white font-medium" style="font-family: monospace;">{{ distributorProfile.gstNumber || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <div class="pb-4">
+        <button (click)="closeProfileModal()"
+                class="w-full py-3 rounded-xl font-bold text-sm"
+                style="background: rgba(16,185,129,0.2); color: #4ade80; border: 1px solid rgba(16,185,129,0.3); box-shadow: 0 4px 20px rgba(16,185,129,0.1);">
+          Close
+        </button>
+      </div>
     </ion-content>
   </ng-template>
 </ion-modal>

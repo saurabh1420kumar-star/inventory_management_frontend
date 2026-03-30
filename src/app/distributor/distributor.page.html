@@ -296,6 +296,9 @@
               >
                 <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
               </ion-select>
+              <div *ngIf="getSelectedKeyPersonName()" class="mt-2 text-sm text-emerald-600 font-medium">
+                Selected: {{ getSelectedKeyPersonName() }}
+              </div>
             </div>
           </div>
         </div>
@@ -399,7 +402,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
+              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number</label>
               <ion-input
                 formControlName="gstNumber"
                 placeholder="22AAAAA0000A1Z5"
@@ -555,6 +558,10 @@
               </div>
               <div class="detail-header-text">
                 <h2 class="detail-name">{{ selectedDistributor.name }}</h2>
+                <div class="text-sm text-slate-200 mb-2">
+                  <span *ngIf="selectedDistributor.firstName">First Name: <strong>{{ selectedDistributor.firstName }}</strong></span>
+                  <span *ngIf="selectedDistributor.lastName" class="ml-3">Last Name: <strong>{{ selectedDistributor.lastName }}</strong></span>
+                </div>
                 <div class="detail-badges">
                   <span class="detail-badge">{{ selectedDistributor.distributorType }}</span>
                   <span class="detail-badge">{{ selectedDistributor.companyType }}</span>
@@ -585,9 +592,33 @@
             <div class="detail-field">
               <div class="detail-field-label">
                 <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
-                <span>Assigned Person</span>
+                <span>Key Person Name</span>
               </div>
-              <p class="detail-field-value">{{ selectedDistributor.assignedPerson }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.assignedPerson || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-field">
+              <div class="detail-field-label">
+                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
+                <span>First Name</span>
+              </div>
+              <p class="detail-field-value">{{ selectedDistributor.firstName || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-field">
+              <div class="detail-field-label">
+                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
+                <span>Last Name</span>
+              </div>
+              <p class="detail-field-value">{{ selectedDistributor.lastName || 'N/A' }}</p>
+            </div>
+
+            <div class="detail-field">
+              <div class="detail-field-label">
+                <ion-icon name="briefcase-outline" class="text-emerald-500"></ion-icon>
+                <span>Sales Person Role</span>
+              </div>
+              <p class="detail-field-value">{{ selectedDistributor.salesPersonRoleType || 'N/A' }}</p>
             </div>
 
             <div class="detail-field">
@@ -807,6 +838,9 @@
               >
                 <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
               </ion-select>
+              <div *ngIf="getSelectedKeyPersonName()" class="mt-2 text-sm text-emerald-600 font-medium">
+                Selected: {{ getSelectedKeyPersonName() }}
+              </div>
             </div>
           </div>
         </div>
@@ -875,7 +909,7 @@
             </div>
 
             <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number *</label>
+              <label class="block text-sm font-medium text-slate-600 mb-1">GST Number</label>
               <ion-input formControlName="gstNumber" placeholder="22AAAAA0000A1Z5" maxlength="15" class="custom-input"></ion-input>
               <div *ngIf="distributorForm.get('gstNumber')?.invalid && distributorForm.get('gstNumber')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('gstNumber') }}

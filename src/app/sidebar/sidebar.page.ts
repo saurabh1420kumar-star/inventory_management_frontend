@@ -10,6 +10,7 @@ import { AclDirective } from '../acl/acl.directive';
 import { LogoutComponent } from '../logout/logout.component';
 import { Capacitor } from '@capacitor/core';
 import { HapticService } from '../services/haptic.service';
+import { DistributorProfileService } from '../services/distributor-profile.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -30,6 +31,10 @@ export class SidebarPage implements OnInit, OnDestroy {
   userName: string | null = null;
   userRole: string | null = null;
   isMobile: boolean = false;
+  
+  // Global profile state
+  distributorProfile: any = null;
+  showProfileModal: boolean = false;
 
   // Accept collapsed state from parent
   @Input() collapsed = false;
@@ -53,16 +58,38 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   constructor(
     private auth: Auth,
-    private router: Router
+    private router: Router,
+    private distributorProfileService: DistributorProfileService
   ) {}
 
   ngOnInit() {
     this.userName = this.auth.getUsername();
     this.userRole = this.auth.getRoleType();
     this.checkMobile();
+    
+    // Subscribe to global profile
+    this.distributorProfileService.getProfile$().subscribe(profile => {
+      this.distributorProfile = profile;
+    });
   }
 
   ngOnDestroy() {}
+
+  /**
+   * Open the global profile modal
+   */
+  openProfileModal() {
+    this.haptic.medium();
+    this.showProfileModal = true;
+  }
+
+  /**
+   * Close the global profile modal
+   */
+  closeProfileModal() {
+    this.haptic.light();
+    this.showProfileModal = false;
+  }
 
   @HostListener('window:resize')
   onResize() {

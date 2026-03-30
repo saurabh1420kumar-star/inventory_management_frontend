@@ -12,6 +12,7 @@ export interface UpdateUserRequest {
   status: string;
   firstName: string;
   lastName: string;
+  employeeRollNo?: string;
   contactNo: string;
   alternateContactNo?: string;
   bloodGroup?: string;

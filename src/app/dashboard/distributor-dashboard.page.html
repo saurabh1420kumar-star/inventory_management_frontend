@@ -1,4 +1,5 @@
-<ion-content class="ion-no-padding" style="--background: #0d1117;">
+<ion-content class="ion-no-padding" style="--background: #0d1117; --overflow: hidden;">
+  <div style="height: 100%; overflow-y: auto; overflow-x: hidden;">
 
   <!-- ===== ORDERS VIEW ===== -->
   <div *ngIf="activeOperationView === 'orders'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
@@ -344,73 +345,6 @@
     </div>
   </div>
 
-  <!-- ==================== ORDER STATUS VIEW ==================== -->
-  <div *ngIf="activeOperationView === 'order-status'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
-    <div class="flex items-center gap-3 mb-5">
-      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
-      </button>
-      <div class="flex-1">
-        <h1 class="text-xl font-bold text-white">Order Status</h1>
-        <p class="text-xs text-slate-500">Track your order deliveries</p>
-      </div>
-    </div>
-
-    <!-- Status Summary -->
-    <div class="grid grid-cols-3 gap-3 mb-5">
-      <div class="rounded-2xl p-3 text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
-        <p class="text-2xl font-extrabold text-white">{{ pendingOrdersCount }}</p>
-        <p class="text-xs text-amber-400 font-semibold">Pending</p>
-      </div>
-      <div class="rounded-2xl p-3 text-center" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
-        <p class="text-2xl font-extrabold text-white">{{ dispatchedCount }}</p>
-        <p class="text-xs text-blue-400 font-semibold">Dispatched</p>
-      </div>
-      <div class="rounded-2xl p-3 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
-        <p class="text-2xl font-extrabold text-white">{{ deliveredCount }}</p>
-        <p class="text-xs text-emerald-400 font-semibold">Delivered</p>
-      </div>
-    </div>
-
-    <!-- Order Cards -->
-    <h3 class="text-sm font-bold text-white mb-3">Recent Orders</h3>
-    <div class="flex flex-col gap-3">
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-sm font-bold text-white">ORD-2024-1892</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Delivered</span>
-        </div>
-        <p class="text-xs text-slate-500 mb-1">12 items · ₹24,500</p>
-        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <ion-icon name="time-outline" class="text-slate-500 text-sm"></ion-icon>
-          <p class="text-xs text-slate-500">Oct 26, 2024 · Delivered on Oct 28</p>
-        </div>
-      </div>
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-sm font-bold text-white">ORD-2024-1885</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Dispatched</span>
-        </div>
-        <p class="text-xs text-slate-500 mb-1">8 items · ₹16,200</p>
-        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <ion-icon name="car-outline" class="text-slate-500 text-sm"></ion-icon>
-          <p class="text-xs text-slate-500">Oct 24, 2024 · In transit</p>
-        </div>
-      </div>
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex items-center justify-between mb-2">
-          <p class="text-sm font-bold text-white">ORD-2024-1878</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
-        </div>
-        <p class="text-xs text-slate-500 mb-1">5 items · ₹9,800</p>
-        <div class="flex items-center gap-2 pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <ion-icon name="time-outline" class="text-slate-500 text-sm"></ion-icon>
-          <p class="text-xs text-slate-500">Oct 22, 2024 · Awaiting confirmation</p>
-        </div>
-      </div>
-    </div>
-  </div>
-
   <!-- ==================== DISPATCH REPORT VIEW ==================== -->
   <div *ngIf="activeOperationView === 'dispatch-report'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
     <div class="flex items-center gap-3 mb-5">
@@ -419,96 +353,75 @@
       </button>
       <div class="flex-1">
         <h1 class="text-xl font-bold text-white">Dispatch Report</h1>
-        <p class="text-xs text-slate-500">View dispatch schedule & status</p>
+        <p class="text-xs text-slate-500">View orders dispatch & delivery status</p>
       </div>
     </div>
 
-    <div class="grid grid-cols-2 gap-3 mb-5">
-      <div class="rounded-2xl p-4" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
-        <p class="text-xs text-rose-400 font-semibold mb-1">Today's Dispatch</p>
-        <p class="text-2xl font-extrabold text-white">5</p>
+    <!-- Dispatch Status Summary -->
+    <div class="grid grid-cols-3 gap-3 mb-5">
+      <div class="rounded-2xl p-4 text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
+        <p class="text-2xl font-extrabold text-amber-400">{{ pendingOrdersCount }}</p>
+        <p class="text-xs text-slate-500">Pending</p>
       </div>
-      <div class="rounded-2xl p-4" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
-        <p class="text-xs text-blue-400 font-semibold mb-1">This Week</p>
-        <p class="text-2xl font-extrabold text-white">18</p>
+      <div class="rounded-2xl p-4 text-center" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+        <p class="text-2xl font-extrabold text-blue-400">{{ dispatchedCount }}</p>
+        <p class="text-xs text-slate-500">Dispatched</p>
+      </div>
+      <div class="rounded-2xl p-4 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <p class="text-2xl font-extrabold text-emerald-400">{{ deliveredCount }}</p>
+        <p class="text-xs text-slate-500">Delivered</p>
       </div>
     </div>
 
-    <h3 class="text-sm font-bold text-white mb-3">Dispatch Schedule</h3>
+    <h3 class="text-sm font-bold text-white mb-3">Orders Status</h3>
     <div class="flex flex-col gap-3">
+      <!-- Dispatched Orders -->
       <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
-          <p class="text-sm font-bold text-white">DSP-2024-0342</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Shipped</span>
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1892</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(16,185,129,0.12); color: #10b981;">Delivered</span>
         </div>
-        <p class="text-xs text-slate-500">Oct 28 · 12 items · Vehicle: MH-12-AB-1234</p>
-      </div>
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
-          <p class="text-sm font-bold text-white">DSP-2024-0339</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Loading</span>
+        <p class="text-xs text-slate-500 mb-2">12 items · ₹24,500</p>
+        <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+          <ion-icon name="checkmark-circle-outline" class="text-emerald-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Delivered on Oct 28 · 2 days</p>
         </div>
-        <p class="text-xs text-slate-500">Oct 28 · 8 items · Vehicle: MH-14-CD-5678</p>
       </div>
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
-          <p class="text-sm font-bold text-white">DSP-2024-0335</p>
-          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(59,130,246,0.12); color: #3b82f6;">Scheduled</span>
-        </div>
-        <p class="text-xs text-slate-500">Oct 29 · 15 items · Vehicle: TBD</p>
-      </div>
-    </div>
-  </div>
 
-  <!-- ==================== PENDING ORDERS VIEW ==================== -->
-  <div *ngIf="activeOperationView === 'pending-orders'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
-    <div class="flex items-center gap-3 mb-5">
-      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
-      </button>
-      <div class="flex-1">
-        <h1 class="text-xl font-bold text-white">Pending Orders</h1>
-        <p class="text-xs text-slate-500">Orders awaiting processing</p>
-      </div>
-    </div>
-
-    <div class="rounded-2xl p-4 mb-5" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
-      <div class="flex items-center gap-3">
-        <div class="w-12 h-12 rounded-xl flex items-center justify-center" style="background: rgba(245,158,11,0.15);">
-          <ion-icon name="time-outline" class="text-amber-400 text-2xl"></ion-icon>
-        </div>
-        <div>
-          <p class="text-xs text-amber-400 font-semibold">Total Pending</p>
-          <p class="text-3xl font-extrabold text-white">{{ pendingOrdersCount }}</p>
-          <p class="text-xs text-slate-500">Worth ₹78,400</p>
-        </div>
-      </div>
-    </div>
-
-    <div class="flex flex-col gap-3">
       <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">ORD-2024-1885</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(59,130,246,0.12); color: #3b82f6;">In Transit</span>
+        </div>
+        <p class="text-xs text-slate-500 mb-2">8 items · ₹16,200</p>
+        <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+          <ion-icon name="car-outline" class="text-blue-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Dispatched Oct 24 · On the way</p>
+        </div>
+      </div>
+
+      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
           <p class="text-sm font-bold text-white">ORD-2024-1878</p>
-          <p class="text-sm font-bold text-amber-400">₹9,800</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
         </div>
-        <p class="text-xs text-slate-500">5 items · Oct 22, 2024</p>
-        <p class="text-xs text-amber-400/70 mt-1">Awaiting confirmation - 6 days</p>
+        <p class="text-xs text-slate-500 mb-2">5 items · ₹9,800</p>
+        <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+          <ion-icon name="time-outline" class="text-amber-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Awaiting dispatch · Oct 22</p>
+        </div>
       </div>
+
       <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
+        <div class="flex items-center justify-between mb-2">
           <p class="text-sm font-bold text-white">ORD-2024-1871</p>
-          <p class="text-sm font-bold text-amber-400">₹15,600</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
         </div>
-        <p class="text-xs text-slate-500">10 items · Oct 20, 2024</p>
-        <p class="text-xs text-amber-400/70 mt-1">Under review - 8 days</p>
-      </div>
-      <div class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-        <div class="flex justify-between items-center mb-2">
-          <p class="text-sm font-bold text-white">ORD-2024-1865</p>
-          <p class="text-sm font-bold text-amber-400">₹22,100</p>
+        <p class="text-xs text-slate-500 mb-2">10 items · ₹15,600</p>
+        <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+          <ion-icon name="time-outline" class="text-amber-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">Under review · Oct 20</p>
         </div>
-        <p class="text-xs text-slate-500">14 items · Oct 18, 2024</p>
-        <p class="text-xs text-amber-400/70 mt-1">Credit check pending - 10 days</p>
       </div>
     </div>
   </div>
@@ -1356,33 +1269,13 @@
                     class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
         </button>
         <div *ngIf="expandedMenu === 'orders'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button (click)="openOperationView('order-status')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
-              <ion-icon name="document-text-outline" class="text-rose-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Order Status</p>
-              <p class="text-xs text-slate-500">Check order delivery status</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-          <button (click)="openOperationView('dispatch-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
+          <button (click)="openOperationView('dispatch-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
             <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
               <ion-icon name="car-outline" class="text-rose-400 text-lg"></ion-icon>
             </div>
             <div>
               <p class="font-semibold text-white text-sm">Dispatch Report</p>
-              <p class="text-xs text-slate-500">View dispatch schedule</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-          <button (click)="openOperationView('pending-orders')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
-              <ion-icon name="time-outline" class="text-rose-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Pending Orders</p>
-              <p class="text-xs text-slate-500">View pending order report</p>
+              <p class="text-xs text-slate-500">View dispatch & delivery status</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
@@ -1393,103 +1286,6 @@
             <div>
               <p class="font-semibold text-white text-sm">Orders</p>
               <p class="text-xs text-slate-500">View all your orders</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-        </div>
-      </div>
-
-      <!-- Reports -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('reports')"
-                class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(59,130,246,0.15); border: 1px solid rgba(59,130,246,0.25);">
-              <ion-icon name="bar-chart-outline" class="text-blue-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Reports</h3>
-              <p class="text-xs text-slate-500">View business reports</p>
-            </div>
-          </div>
-          <ion-icon [name]="expandedMenu === 'reports' ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-        <div *ngIf="expandedMenu === 'reports'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button (click)="openOperationView('pending-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(59,130,246,0.12);">
-              <ion-icon name="document-outline" class="text-blue-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Pending Report</p>
-              <p class="text-xs text-slate-500">Pending orders summary</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-          <button (click)="openOperationView('sales-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(59,130,246,0.06); border: 1px solid rgba(59,130,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(59,130,246,0.12);">
-              <ion-icon name="stats-chart-outline" class="text-blue-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Sales Report</p>
-              <p class="text-xs text-slate-500">Monthly sales analysis</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-        </div>
-      </div>
-
-      <!-- Account Services -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="openOperationView('account-services')"
-                class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(168,85,247,0.15); border: 1px solid rgba(168,85,247,0.25);">
-              <ion-icon name="person-circle-outline" class="text-purple-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Account Services</h3>
-              <p class="text-xs text-slate-500">Manage your account</p>
-            </div>
-          </div>
-          <ion-icon name="chevron-forward-outline" class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-      </div>
-
-      <!-- Documents -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('documents')"
-                class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(251,146,60,0.15); border: 1px solid rgba(251,146,60,0.25);">
-              <ion-icon name="folder-outline" class="text-orange-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Documents</h3>
-              <p class="text-xs text-slate-500">Download your documents</p>
-            </div>
-          </div>
-          <ion-icon [name]="expandedMenu === 'documents' ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-        <div *ngIf="expandedMenu === 'documents'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button (click)="openOperationView('copy-invoice')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
-              <ion-icon name="receipt-outline" class="text-orange-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Copy Of Invoice</p>
-              <p class="text-xs text-slate-500">Download invoice copy</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
-          </button>
-          <button (click)="openOperationView('official-documents')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(251,146,60,0.06); border: 1px solid rgba(251,146,60,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(251,146,60,0.12);">
-              <ion-icon name="document-attach-outline" class="text-orange-400 text-lg"></ion-icon>
-            </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Official Documents</p>
-              <p class="text-xs text-slate-500">Access official documents</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
@@ -1729,6 +1525,7 @@
     </ng-template>
   </ion-modal>
 
+  </div>
 </ion-content>
 
 <!-- ===== BOTTOM TAB BAR (Glass) ===== -->

@@ -3,6 +3,7 @@ import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { Auth } from './services/auth';
 import { MenuController } from '@ionic/angular';
+import { DistributorProfileService } from './services/distributor-profile.service';
 
 @Component({
   selector: 'app-root',
@@ -33,7 +34,8 @@ export class AppComponent {
   constructor(
     private router: Router,
     private auth: Auth,
-    private menuController: MenuController
+    private menuController: MenuController,
+    private distributorProfileService: DistributorProfileService
   ) {
 
     // 🔁 Listen to route changes
@@ -54,6 +56,9 @@ export class AppComponent {
 
     // 🔁 Handle direct refresh / initial load
     this.updateAuthPageState(window.location.pathname);
+
+    // 📋 Load distributor profile globally on app init
+    this.distributorProfileService.loadProfile();
   }
 
   /**

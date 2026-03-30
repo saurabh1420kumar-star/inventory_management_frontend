@@ -241,3 +241,103 @@
 
   </div>
 </ion-content>
+
+<!-- ===== GLOBAL PROFILE MODAL ===== -->
+<ion-modal [isOpen]="showProfileModal" (didDismiss)="closeProfileModal()" [backdropDismiss]="false">
+  <ng-template>
+    <ion-header class="ion-no-border" style="--background: linear-gradient(135deg, #10b981 0%, #3b82f6 100%);">
+      <ion-toolbar style="--background: transparent;">
+        <ion-title class="text-white font-bold">Complete Profile</ion-title>
+        <ion-buttons slot="end">
+          <ion-button (click)="closeProfileModal()" class="text-white">
+            <ion-icon slot="icon-only" name="close-outline"></ion-icon>
+          </ion-button>
+        </ion-buttons>
+      </ion-toolbar>
+    </ion-header>
+    <ion-content class="ion-padding" *ngIf="distributorProfile">
+      <!-- Profile Header (Glass) -->
+      <div style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.3); border-radius: 16px; padding: 20px; margin-bottom: 20px; backdrop-filter: blur(12px);">
+        <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px;">
+          <div style="width: 60px; height: 60px; background: linear-gradient(135deg, #10b981, #3b82f6); border-radius: 12px; display: flex; align-items: center; justify-content: center;">
+            <ion-icon name="business-outline" style="font-size: 32px; color: white;"></ion-icon>
+          </div>
+          <div>
+            <h2 style="color: #047857; font-size: 18px; font-weight: bold; margin: 0;">{{ distributorProfile.firstName }} {{ distributorProfile.lastName }}</h2>
+            <p style="color: #6b7280; font-size: 12px; margin: 4px 0 0 0;">Distributor ID: {{ distributorProfile.id }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Account Information -->
+      <div style="background: rgba(59,130,246,0.05); border: 1px solid rgba(59,130,246,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h3 style="color: #1e40af; font-weight: bold; margin: 0 0 12px 0;">Account Information</h3>
+        <div style="display: grid; grid-template-columns: 1fr 1fr; gap: 12px;">
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Company Type</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.companyType || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Distributor Type</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.distributorType || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Status</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.status || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Sales Role</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.salesPersonRoleType || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Contact Information -->
+      <div style="background: rgba(34,197,94,0.05); border: 1px solid rgba(34,197,94,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h3 style="color: #15803d; font-weight: bold; margin: 0 0 12px 0;">Contact Information</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Email</p>
+            <p style="color: #111827; font-weight: 500; margin: 0; word-break: break-all;">{{ distributorProfile.contactEmail || distributorProfile.email || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Phone</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.phoneNumber || 'N/A' }}</p>
+          </div>
+          <div *ngIf="distributorProfile.alternateContact">
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Alternate Contact</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.alternateContact }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Address -->
+      <div style="background: rgba(168,85,247,0.05); border: 1px solid rgba(168,85,247,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h3 style="color: #6d28d9; font-weight: bold; margin: 0 0 12px 0;">Delivery Address</h3>
+        <p style="color: #4b5563; font-size: 13px; line-height: 1.6; margin: 0;">{{ distributorProfile.address || 'N/A' }}</p>
+      </div>
+
+      <!-- Financial Information -->
+      <div style="background: rgba(251,146,60,0.05); border: 1px solid rgba(251,146,60,0.2); border-radius: 12px; padding: 16px; margin-bottom: 16px;">
+        <h3 style="color: #c2410c; font-weight: bold; margin: 0 0 12px 0;">Financial Details</h3>
+        <div style="display: flex; flex-direction: column; gap: 10px;">
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Account Number</p>
+            <p style="color: #111827; font-weight: 500; font-family: monospace; margin: 0;">{{ distributorProfile.accountNumber || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">IFSC Code</p>
+            <p style="color: #111827; font-weight: 500; font-family: monospace; margin: 0;">{{ distributorProfile.IFSC || distributorProfile.ifsc || 'N/A' }}</p>
+          </div>
+          <div>
+            <p style="color: #6b7280; font-size: 11px; margin: 0 0 4px 0;">Account Holder</p>
+            <p style="color: #111827; font-weight: 500; margin: 0;">{{ distributorProfile.accountName || 'N/A' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Close Button -->
+      <button (click)="closeProfileModal()" style="width: 100%; padding: 12px; background-color: #10b981; color: white; border: none; border-radius: 8px; font-weight: bold; font-size: 14px; cursor: pointer;">Close</button>
+    </ion-content>
+  </ng-template>
+</ion-modal>

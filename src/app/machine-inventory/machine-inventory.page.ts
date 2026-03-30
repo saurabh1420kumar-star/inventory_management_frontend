@@ -25,6 +25,7 @@ import {
 
 import { InventoryService, InventoryItem } from '../services/inventory';
 import { HapticService } from '../services/haptic.service';
+import { Toast } from '../services/toast';
 
 @Component({
   selector: 'app-machine-inventory',
@@ -65,8 +66,31 @@ export class MachineInventoryPage implements OnInit {
   filteredMachines: InventoryItem[] = [];
 
   private haptic = inject(HapticService);
+  private toast = inject(Toast);
 
   constructor(private inventoryService: InventoryService, private fb: FormBuilder, private toastController: ToastController) {}
+
+  // Helper method to extract error message from API response
+  private extractErrorMessage(error: any): string {
+    if (!error) return 'An error occurred. Please try again.';
+    
+    if (error.error?.error) return error.error.error;
+    if (error.error?.message) return error.error.message;
+    
+    if (error.error && typeof error.error === 'object' && !Array.isArray(error.error)) {
+      const errorEntries = Object.entries(error.error);
+      if (errorEntries.length > 0) {
+        const errorMessages = errorEntries
+          .map(([field, message]) => message as string)
+          .filter(msg => msg && typeof msg === 'string');
+        
+        if (errorMessages.length > 0) return errorMessages.join('\n');
+      }
+    }
+    
+    if (error.statusText) return error.statusText;
+    return 'Failed to process machine part. Please try again.';
+  }
 
   private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success'): Promise<void> {
     const toast = await this.toastController.create({
@@ -208,8 +232,10 @@ export class MachineInventoryPage implements OnInit {
         this.showToast('Machine part added successfully!', 'success');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error(err);
-        this.showToast('Unable to add part', 'danger');
+        this.showToast(errorMessage, 'danger');
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -264,8 +290,10 @@ export class MachineInventoryPage implements OnInit {
         this.showToast('Machine part updated successfully!', 'success');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error(err);
-        this.showToast('Unable to update part', 'danger');
+        this.showToast(errorMessage, 'danger');
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
@@ -282,8 +310,10 @@ export class MachineInventoryPage implements OnInit {
         this.showToast('Machine part deleted successfully!', 'success');
       },
       error: (err) => {
+        const errorMessage = this.extractErrorMessage(err);
         console.error(err);
-        this.showToast('Unable to delete part', 'danger');
+        this.showToast(errorMessage, 'danger');
+        this.toast.present(errorMessage, 'danger');
       }
     });
   }
