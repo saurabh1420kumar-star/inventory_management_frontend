@@ -21,6 +21,9 @@
 
 <!-- CONTENT -->
 <ion-content style="--background: #f1f5f9;">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-screen pb-24" style="background: #f1f5f9;">
     <div class="max-w-5xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
 

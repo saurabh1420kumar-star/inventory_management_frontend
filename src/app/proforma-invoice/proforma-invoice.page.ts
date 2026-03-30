@@ -20,7 +20,9 @@ import {
   IonSegmentButton,
   IonLabel,
   IonSearchbar,
-  IonBadge
+  IonBadge,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/angular/standalone';
 
 import { ToastController } from '@ionic/angular';
@@ -52,7 +54,9 @@ import {
     IonMenuButton,
     IonButton,
     IonIcon,
-    IonSpinner
+    IonSpinner,
+    IonRefresher,
+    IonRefresherContent
   ]
 })
 export class ProformaInvoicePage implements OnInit {
@@ -256,6 +260,11 @@ export class ProformaInvoicePage implements OnInit {
 
   refresh() {
     this.loadInvoices();
+  }
+
+  handlePullRefresh(event: any) {
+    this.refresh();
+    setTimeout(() => event.target.complete(), 1500);
   }
 
   toggleInvoiceDetails(invoiceId: number) {

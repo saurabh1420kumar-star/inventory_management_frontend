@@ -18,6 +18,9 @@
 
 <!-- CONTENT -->
 <ion-content style="--background: #f8fafc;">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-screen pb-20" style="background: #f8fafc;">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
 
@@ -79,19 +82,19 @@
       </div>
 
       <!-- STATS -->
-      <div class="grid grid-cols-3 gap-4 mb-8">
-        <div *ngFor="let stat of statCards" class="rounded-xl p-4 sm:p-5 shadow-sm border border-slate-200 bg-white">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-10 h-10 rounded-lg flex items-center justify-center"
-              [style.background]="stat.color === 'emerald' ? '#ecfdf5' : stat.color === 'green' ? '#f0fdfa' : '#f1f5f9'"
-              [style.border]="stat.color === 'emerald' ? '1px solid #10b981' : stat.color === 'green' ? '1px solid #14b8a6' : '1px solid #cbd5e1'">
-              <ion-icon [name]="stat.icon" class="text-lg"
-                [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#64748b'">
-              </ion-icon>
-            </div>
+      <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
+        <div *ngFor="let stat of statCards" class="rounded-2xl p-3 sm:p-5 shadow-sm border-2 border-slate-100 bg-white flex items-center gap-2 sm:gap-3 hover:border-emerald-200 transition-all duration-300">
+          <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
+            [style.background]="stat.color === 'emerald' ? '#ecfdf5' : stat.color === 'green' ? '#f0fdfa' : '#f1f5f9'"
+            [style.border]="stat.color === 'emerald' ? '2px solid #10b981' : stat.color === 'green' ? '2px solid #14b8a6' : '2px solid #cbd5e1'">
+            <ion-icon [name]="stat.icon" class="text-sm sm:text-lg"
+              [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#64748b'">
+            </ion-icon>
           </div>
-          <h3 class="text-xs font-bold uppercase tracking-wider mb-1" style="color: #64748b;">{{ stat.label }}</h3>
-          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+          <div class="flex flex-col min-w-0">
+            <p class="text-lg sm:text-2xl font-extrabold text-slate-800 leading-none mb-0.5">{{ stat.value }}</p>
+            <h3 class="text-[9px] sm:text-xs font-bold uppercase tracking-wider truncate" style="color: #64748b;">{{ stat.label }}</h3>
+          </div>
         </div>
       </div>
 

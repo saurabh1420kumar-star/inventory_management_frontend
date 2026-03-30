@@ -78,6 +78,11 @@ export class ComplaintsManagementPage implements OnInit {
     });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadComplaints();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   get filteredComplaints(): Complaint[] {
     return this.complaints.filter(c => {
       const matchesSearch = !this.searchTerm ||

@@ -17,6 +17,9 @@
 
 <!-- CONTENT -->
 <ion-content class="bg-slate-50">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
@@ -48,15 +51,15 @@
       </div>
 
       <!-- STATS -->
-      <div class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-4 gap-6 mb-8">
-        <div *ngFor="let stat of statCards" class="bg-white rounded-2xl p-6 shadow border border-slate-100 hover:border-emerald-200 transition-all group">
-          <div class="flex items-center justify-between mb-4">
-            <div class="w-12 h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 group-hover:scale-110 transition-transform">
-              <ion-icon [name]="stat.icon" class="text-2xl"></ion-icon>
-            </div>
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-6 sm:mb-8">
+        <div *ngFor="let stat of statCards" class="bg-white rounded-2xl p-3 sm:p-5 shadow border-2 border-slate-100 hover:border-emerald-200 transition-all group flex items-center gap-2.5 sm:gap-3">
+          <div class="w-9 h-9 sm:w-12 sm:h-12 rounded-xl bg-emerald-50 flex items-center justify-center text-emerald-500 flex-shrink-0 group-hover:scale-110 transition-transform">
+            <ion-icon [name]="stat.icon" class="text-lg sm:text-2xl"></ion-icon>
           </div>
-          <h3 class="text-slate-500 text-xs font-bold uppercase mb-1">{{ stat.label }}</h3>
-          <p class="text-2xl font-bold text-slate-800">{{ stat.value }}</p>
+          <div class="flex flex-col min-w-0">
+            <p class="text-xl sm:text-2xl font-extrabold text-slate-800 leading-none mb-1">{{ stat.value }}</p>
+            <h3 class="text-slate-500 text-[10px] sm:text-xs font-bold uppercase truncate">{{ stat.label }}</h3>
+          </div>
         </div>
       </div>
 

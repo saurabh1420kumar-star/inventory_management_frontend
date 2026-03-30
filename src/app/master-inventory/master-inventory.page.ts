@@ -38,7 +38,9 @@ import {
   IonFab,
   IonFabButton,
   IonSelect,
-  IonSelectOption
+  IonSelectOption,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/angular/standalone';
 
 import { ModalController } from '@ionic/angular';
@@ -96,7 +98,9 @@ interface DisplayInventoryItem extends ApiInventoryItem {
     IonFab,
     IonFabButton,
     IonSelect,
-    IonSelectOption
+    IonSelectOption,
+    IonRefresher,
+    IonRefresherContent
   ]
 })
 export class MasterInventoryPage implements OnInit {
@@ -775,6 +779,11 @@ export class MasterInventoryPage implements OnInit {
 
   refreshInventory() {
     this.loadInventory();
+  }
+
+  handlePullRefresh(event: any) {
+    this.refreshInventory();
+    setTimeout(() => event.target.complete(), 1500);
   }
 
   /* ============================================ */

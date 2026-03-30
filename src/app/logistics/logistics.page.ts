@@ -400,6 +400,11 @@ export class LogisticsPage implements OnInit {
     this.applyFilters();
   }
 
+  handlePullRefresh(event: any) {
+    this.handleRefresh();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   onDownloadGDN(shipment: Shipment) {
     console.log(`Downloading GDN for shipment ${shipment.shipmentNumber}`);
   }

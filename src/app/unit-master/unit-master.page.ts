@@ -25,7 +25,9 @@ import {
   IonBadge,
   IonSpinner,
   IonFab,
-  IonFabButton
+  IonFabButton,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/angular/standalone';
 
 import { ModalController, ToastController, AlertController } from '@ionic/angular';
@@ -59,7 +61,9 @@ import { HapticService } from '../services/haptic.service';
     IonBadge,
     IonSpinner,
     IonFab,
-    IonFabButton
+    IonFabButton,
+    IonRefresher,
+    IonRefresherContent
   ]
 })
 export class UnitMasterPage implements OnInit {
@@ -524,6 +528,11 @@ export class UnitMasterPage implements OnInit {
 
   refreshUnits() {
     this.loadUnits();
+  }
+
+  handlePullRefresh(event: any) {
+    this.refreshUnits();
+    setTimeout(() => event.target.complete(), 1500);
   }
 
   getStatusBadgeClass(status: string): string {

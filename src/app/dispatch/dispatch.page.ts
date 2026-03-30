@@ -730,6 +730,11 @@ export class DispatchPage implements OnInit {
     this.loadGdns();
   }
 
+  handlePullRefresh(event: any) {
+    this.refreshData();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   // ── Form Helpers ──────────────────────────────────
   getGdnFieldError(fieldName: string): string {
     const control = this.gdnForm.get(fieldName);

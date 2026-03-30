@@ -18,6 +18,9 @@
 </ion-header>
 
 <ion-content style="--background: #0d1117;">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="px-4 pt-4 pb-8">
 
     <!-- Summary Strip -->

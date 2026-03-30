@@ -15,6 +15,9 @@
 </ion-header>
 
 <ion-content class="bg-slate-50">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-6">
 

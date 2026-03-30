@@ -17,6 +17,9 @@
 
 <!-- CONTENT -->
 <ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="page-wrapper">
     <div class="page-inner">
 

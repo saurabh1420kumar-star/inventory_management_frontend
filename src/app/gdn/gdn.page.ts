@@ -11,7 +11,9 @@ import {
   IonMenuButton,
   IonButton,
   IonIcon,
-  IonSpinner
+  IonSpinner,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/angular/standalone';
 
 import { ToastController } from '@ionic/angular';
@@ -43,7 +45,9 @@ import {
     IonMenuButton,
     IonButton,
     IonIcon,
-    IonSpinner
+    IonSpinner,
+    IonRefresher,
+    IonRefresherContent
   ]
 })
 export class GdnPage implements OnInit {
@@ -206,6 +210,11 @@ export class GdnPage implements OnInit {
 
   refresh() {
     this.loadGdns();
+  }
+
+  handlePullRefresh(event: any) {
+    this.refresh();
+    setTimeout(() => event.target.complete(), 1500);
   }
 }
 

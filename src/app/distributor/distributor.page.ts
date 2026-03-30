@@ -366,6 +366,11 @@ export class DistributorPage implements OnInit {
     });
   }
 
+  handlePullRefresh(event: any) {
+    this.fetchDistributors();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   calculateStats() {
     this.totalDistributors = this.distributors.length;
     this.totalAssignedPersons = new Set(this.distributors.map(d => d.assignedPerson)).size;

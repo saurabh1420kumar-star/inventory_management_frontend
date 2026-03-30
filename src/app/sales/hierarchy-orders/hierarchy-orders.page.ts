@@ -117,6 +117,11 @@ export class HierarchyOrdersPage implements OnInit {
     });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadData();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   buildGroupedData() {
     this.isLoading = false;
     const filtered = this.getFilteredOrders();

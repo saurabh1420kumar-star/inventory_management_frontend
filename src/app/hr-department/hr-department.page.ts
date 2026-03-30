@@ -209,6 +209,11 @@ export class HrDepartmentPage implements OnInit {
     });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadUsers();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   formatRoleType(roleType: string): string {
     const role = this.roleTypes.find(r => r.value === roleType);
     return role ? role.label : roleType.replace(/_/g, ' ');

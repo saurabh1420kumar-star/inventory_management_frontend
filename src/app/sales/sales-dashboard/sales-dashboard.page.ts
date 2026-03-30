@@ -164,6 +164,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadDistributors();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   loadPendingPayments(): void {
     this.isLoadingPendingPayments = true;
     

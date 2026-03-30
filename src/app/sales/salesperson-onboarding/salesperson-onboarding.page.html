@@ -2,7 +2,7 @@
 <ion-header class="ion-no-border">
   <ion-toolbar style="--background: #000000; --border-width: 0;">
     <ion-buttons slot="start">
-      <ion-back-button defaultHref="/sales" style="color: #ffffff;"></ion-back-button>
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
     </ion-buttons>
     <ion-title>
       <span style="color: #10b981; font-weight: 800; font-size: 1.125rem;">Sales</span>
@@ -21,6 +21,9 @@
 
 <!-- CONTENT -->
 <ion-content style="--background: #f8fafc;">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="min-h-screen pb-24" style="background: #f8fafc;">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
 

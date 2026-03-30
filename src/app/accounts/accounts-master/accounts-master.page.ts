@@ -628,6 +628,11 @@ export class AccountsMasterPage implements OnInit {
     this.loadDistributors();
   }
 
+  handlePullRefresh(event: any) {
+    this.handleRefresh();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   handleExport() {
     if (!this.selectedAccount) {
       this.showToast('Please select an account first', 'warning');

@@ -63,6 +63,11 @@ export class MyPaymentsPage implements OnInit, OnDestroy {
       });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadPayments();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   goBack(): void {
     this.router.navigate(['/sales/sales-dashboard']);
   }

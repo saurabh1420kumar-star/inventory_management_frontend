@@ -16,6 +16,9 @@
 </ion-header>
 
 <ion-content class="ion-padding">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="logistics-page-wrapper">
 
     <!-- ========== HERO BANNER ========== -->

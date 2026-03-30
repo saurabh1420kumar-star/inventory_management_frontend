@@ -190,7 +190,10 @@ export class PaymentRequestPage implements OnInit {
     this.loadPayments();
     this.showToast('Payment requests refreshed', 'success');
   }
-
+  handlePullRefresh(event: any) {
+    this.handleRefresh();
+    setTimeout(() => event.target.complete(), 1500);
+  }
   // ── Tabs & Filters ────────────────────────────────────────────────────────
 
   selectTab(tab: string) {

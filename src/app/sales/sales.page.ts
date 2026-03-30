@@ -531,4 +531,9 @@ export class SalesPage implements OnInit {
   refreshSales() {
     this.loadPendingOrders();
   }
+
+  handlePullRefresh(event: any) {
+    this.refreshSales();
+    setTimeout(() => event.target.complete(), 1500);
+  }
 }

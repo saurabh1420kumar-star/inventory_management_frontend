@@ -142,6 +142,11 @@ export class SalespersonOnboardingPage implements OnInit {
     });
   }
 
+  handlePullRefresh(event: any) {
+    this.loadSalesPersons();
+    setTimeout(() => event.target.complete(), 1500);
+  }
+
   get filteredPersons(): SalesPerson[] {
     if (!this.searchTerm.trim()) return this.salesPersons;
     const t = this.searchTerm.toLowerCase();

@@ -10,6 +10,9 @@
 </ion-header>
 
 <ion-content class="ion-no-padding" style="--background: #0d1117;">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
   <div class="max-w-6xl mx-auto px-4 pt-6 pb-8">
     
     <!-- Title Section -->

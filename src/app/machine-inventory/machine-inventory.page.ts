@@ -20,7 +20,9 @@ import {
   IonSelect,
   IonSelectOption,
   IonSpinner,
-  ToastController
+  ToastController,
+  IonRefresher,
+  IonRefresherContent
 } from '@ionic/angular/standalone';
 
 import { InventoryService, InventoryItem } from '../services/inventory';
@@ -39,7 +41,8 @@ import { Toast } from '../services/toast';
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonFab, IonFabButton, IonModal, IonInput,
-    IonItem, IonSelect, IonSelectOption
+    IonItem, IonSelect, IonSelectOption,
+    IonRefresher, IonRefresherContent
   ],
 })
 export class MachineInventoryPage implements OnInit {
@@ -121,6 +124,11 @@ export class MachineInventoryPage implements OnInit {
 
   refreshMachines() {
     this.loadMachines();
+  }
+
+  handlePullRefresh(event: any) {
+    this.refreshMachines();
+    setTimeout(() => event.target.complete(), 1500);
   }
 
   applyFilters() {
