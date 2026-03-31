@@ -1,54 +1,62 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
-import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
-import { ToastController, AlertController } from '@ionic/angular';
+import { FormsModule } from '@angular/forms';
+import { AlertController } from '@ionic/angular';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
+import { UserService } from '../services/user.service';
+import { User } from '../models/user.model';
+
+export type AccessLevel = 'NONE' | 'READ' | 'EDIT';
+
+export interface ModulePermission {
+  featureKey: string;
+  displayName: string;
+  icon: string;
+  category: string;
+  access: AccessLevel;
+}
+
+export interface PermissionCategory {
+  name: string;
+  icon: string;
+  color: string;
+  modules: ModulePermission[];
+}
 
 @Component({
   selector: 'app-user-right',
   templateUrl: './user-right.page.html',
   styleUrls: ['./user-right.page.scss'],
-  standalone: true, // ✅ Standalone component like your signup page
+  standalone: true,
   imports: [
     CommonModule,
     IonicModule,
-    ReactiveFormsModule
+    FormsModule
   ]
 })
 export class UserRightPage implements OnInit {
-  isEditMode = false;
+  // Data
+  allUsers: User[] = [];
+  filteredUsers: User[] = [];
+  selectedUser: User | null = null;
+  permissionCategories: PermissionCategory[] = [];
+
+  // UI State
+  isLoading = true;
   isSaving = false;
-  profileForm!: FormGroup;
-  
-  // User profile data (you can fetch this from a service/API)
-  userProfile: any = {
-    firstName: 'Rajesh',
-    lastName: 'Kumar',
-    email: 'rajesh.kumar@example.com',
-    contactNo: '+919876543210',
-    city: 'Mumbai',
-    country: 'India',
-    zip: '400001',
-    username: 'rajeshk',
-    roleType: 'admin',
-    profileImage: '', // URL to profile image
-    memberSince: 'Jan 2024',
-    productsManaged: 142,
-    tasksCompleted: 89
-  };
+  searchQuery = '';
+  roleFilter = 'ALL';
+  statusFilter = 'ALL';
+  hasUnsavedChanges = false;
+  showUserPanel = true;
 
-  // Backup for cancel functionality
-  private originalProfile: any;
+  // Snapshot for dirty tracking
+  private originalPermissions: Record<string, AccessLevel> = {};
 
-  // Countries list (India only)
-  countries = [
-    { label: 'India', value: 'IN' }
-  ];
-
-  // Roles list
   roles = [
+    { value: 'ALL', label: 'All Roles' },
     { value: 'ADMIN', label: 'Admin' },
     { value: 'BUSINESS_DEV_MGR', label: 'Business Dev Manager' },
     { value: 'PLANT_MGR', label: 'Plant Manager' },
@@ -73,265 +81,408 @@ export class UserRightPage implements OnInit {
   private haptic = inject(HapticService);
 
   constructor(
-    private formBuilder: FormBuilder,
-    private toastController: ToastController,
     private alertController: AlertController,
-    private toast: Toast
+    private toast: Toast,
+    private userService: UserService
   ) {}
 
   ngOnInit() {
-    this.initializeForm();
-    // TODO: Fetch user profile from your service/API
-    // this.loadUserProfile();
+    this.buildPermissionTemplate();
+    this.loadUsers();
   }
 
-  /**
-   * Initialize the profile form with validators
-   */
-  initializeForm() {
-    this.profileForm = this.formBuilder.group({
-      firstName: [this.userProfile.firstName, [Validators.required, Validators.minLength(2)]],
-      lastName: [this.userProfile.lastName, [Validators.required, Validators.minLength(2)]],
-      email: [this.userProfile.email, [Validators.required, Validators.email]],
-      contactNo: [this.userProfile.contactNo, [Validators.required, Validators.pattern(/^\+?[0-9]{10,15}$/)]],
-      city: [this.userProfile.city, Validators.required],
-      country: [this.userProfile.country, Validators.required],
-      zip: [this.userProfile.zip, [Validators.required, Validators.pattern(/^[0-9]{6}$/)]], // Indian PIN code format
-      username: [this.userProfile.username, [Validators.required, Validators.minLength(3)]],
-      roleType: [this.userProfile.roleType, Validators.required]
+  // ─── DATA LOADING ──────────────────────────────────────────
+
+  loadUsers() {
+    this.isLoading = true;
+    this.userService.getAllUsers().subscribe({
+      next: (users) => {
+        this.allUsers = users;
+        this.applyFilters();
+        this.isLoading = false;
+      },
+      error: () => {
+        this.toast.present('Failed to load users', 'danger');
+        this.isLoading = false;
+      }
     });
   }
 
-  /**
-   * Get user initials for avatar
-   */
-  getInitials(): string {
-    const first = this.userProfile?.firstName?.[0] || '';
-    const last = this.userProfile?.lastName?.[0] || '';
-    return (first + last).toUpperCase();
+  buildPermissionTemplate(): PermissionCategory[] {
+    this.permissionCategories = [
+      {
+        name: 'Core',
+        icon: 'grid-outline',
+        color: 'blue',
+        modules: [
+          { featureKey: 'DASHBOARD', displayName: 'Dashboard', icon: 'speedometer-outline', category: 'Core', access: 'NONE' },
+          { featureKey: 'OPERATIONS', displayName: 'Operations', icon: 'construct-outline', category: 'Core', access: 'NONE' },
+          { featureKey: 'FEEDBACK', displayName: 'Feedback', icon: 'chatbubbles-outline', category: 'Core', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Inventory',
+        icon: 'cube-outline',
+        color: 'emerald',
+        modules: [
+          { featureKey: 'INVENTORY_MASTERS', displayName: 'Master Inventory', icon: 'albums-outline', category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_TRANSACTIONS', displayName: 'Machine Parts', icon: 'cog-outline', category: 'Inventory', access: 'NONE' },
+          { featureKey: 'UNIT_MASTER', displayName: 'Unit Master', icon: 'layers-outline', category: 'Inventory', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Accounts',
+        icon: 'wallet-outline',
+        color: 'violet',
+        modules: [
+          { featureKey: 'ACCOUNTS', displayName: 'Accounts Master', icon: 'book-outline', category: 'Accounts', access: 'NONE' },
+          { featureKey: 'ACCOUNTS_TRANSACTION', displayName: 'Transactions', icon: 'swap-horizontal-outline', category: 'Accounts', access: 'NONE' },
+          { featureKey: 'PAYMENT_REQUEST', displayName: 'Payment Requests', icon: 'card-outline', category: 'Accounts', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Sales & Distribution',
+        icon: 'trending-up-outline',
+        color: 'amber',
+        modules: [
+          { featureKey: 'SALES', displayName: 'Sales Management', icon: 'bar-chart-outline', category: 'Sales & Distribution', access: 'NONE' },
+          { featureKey: 'DISTRIBUTOR', displayName: 'Distributor', icon: 'people-outline', category: 'Sales & Distribution', access: 'NONE' },
+          { featureKey: 'ORDER_DETAILS', displayName: 'Order Tracking', icon: 'locate-outline', category: 'Sales & Distribution', access: 'NONE' },
+          { featureKey: 'PROFORMA_INVOICE', displayName: 'Proforma Invoice', icon: 'document-text-outline', category: 'Sales & Distribution', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Logistics',
+        icon: 'bus-outline',
+        color: 'sky',
+        modules: [
+          { featureKey: 'DISPATCH', displayName: 'Dispatch', icon: 'paper-plane-outline', category: 'Logistics', access: 'NONE' },
+          { featureKey: 'GDN', displayName: 'GDN', icon: 'receipt-outline', category: 'Logistics', access: 'NONE' },
+          { featureKey: 'LOGISTICS', displayName: 'Logistics', icon: 'car-outline', category: 'Logistics', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'HR',
+        icon: 'people-circle-outline',
+        color: 'rose',
+        modules: [
+          { featureKey: 'HR', displayName: 'HR Department', icon: 'business-outline', category: 'HR', access: 'NONE' },
+          { featureKey: 'HR_DESIGNATION', displayName: 'Designation', icon: 'ribbon-outline', category: 'HR', access: 'NONE' },
+          { featureKey: 'HR_EMPLOYEE', displayName: 'Employee', icon: 'person-outline', category: 'HR', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Support',
+        icon: 'help-buoy-outline',
+        color: 'orange',
+        modules: [
+          { featureKey: 'COMPLAINT', displayName: 'Complaints', icon: 'warning-outline', category: 'Support', access: 'NONE' },
+          { featureKey: 'COMPLAINTS_MANAGEMENT', displayName: 'Manage Complaints', icon: 'shield-checkmark-outline', category: 'Support', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Administration',
+        icon: 'settings-outline',
+        color: 'slate',
+        modules: [
+          { featureKey: 'USER_RIGHTS', displayName: 'User Rights', icon: 'key-outline', category: 'Administration', access: 'NONE' },
+        ]
+      },
+    ];
+    return this.permissionCategories;
   }
 
-  /**
-   * Toggle edit mode
-   */
-  toggleEditMode() {
-    this.haptic.medium();
-    this.isEditMode = true;
-    // Store original values for cancel functionality
-    this.originalProfile = { ...this.userProfile };
-    // Populate form with current values
-    this.profileForm.patchValue(this.userProfile);
-  }
+  // ─── FILTERING ─────────────────────────────────────────────
 
-  /**
-   * Save profile changes
-   */
-  async saveProfile() {
-    this.haptic.medium();
-    if (this.profileForm.invalid) {
-      await this.showToast('Please fill all required fields correctly', 'warning');
-      return;
+  applyFilters() {
+    let users = [...this.allUsers];
+
+    if (this.searchQuery.trim()) {
+      const q = this.searchQuery.toLowerCase();
+      users = users.filter(u =>
+        u.firstName?.toLowerCase().includes(q) ||
+        u.lastName?.toLowerCase().includes(q) ||
+        u.username?.toLowerCase().includes(q) ||
+        u.email?.toLowerCase().includes(q)
+      );
     }
 
-    const alert = await this.alertController.create({
-      header: 'Confirm Changes',
-      message: 'Are you sure you want to save these changes?',
-      buttons: [
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        },
-        {
-          text: 'Save',
-          handler: () => {
-            this.performSave();
-          }
+    if (this.roleFilter !== 'ALL') {
+      users = users.filter(u => u.roleType === this.roleFilter);
+    }
+
+    if (this.statusFilter !== 'ALL') {
+      users = users.filter(u => u.status === this.statusFilter);
+    }
+
+    this.filteredUsers = users;
+  }
+
+  onSearchChange() {
+    this.applyFilters();
+  }
+
+  onFilterChange() {
+    this.applyFilters();
+  }
+
+  // ─── USER SELECTION ────────────────────────────────────────
+
+  async selectUser(user: User) {
+    if (this.hasUnsavedChanges) {
+      const alert = await this.alertController.create({
+        header: 'Unsaved Changes',
+        message: 'You have unsaved permission changes. Discard them?',
+        buttons: [
+          { text: 'Stay', role: 'cancel' },
+          { text: 'Discard', role: 'destructive', handler: () => this.doSelectUser(user) }
+        ]
+      });
+      await alert.present();
+      return;
+    }
+    this.doSelectUser(user);
+  }
+
+  private doSelectUser(user: User) {
+    this.haptic.light();
+    this.selectedUser = user;
+    this.hasUnsavedChanges = false;
+    this.showUserPanel = false;
+
+    // Reset permissions and load from user features
+    this.buildPermissionTemplate();
+    this.loadUserPermissions(user);
+    this.snapshotPermissions();
+  }
+
+  private loadUserPermissions(user: User) {
+    // Map user's existing features to permissions
+    // The user's roles array or features stored in backend would populate this
+    // For now, we check feature names against our module keys
+    const userFeatures: string[] = (user as any).featureNames || [];
+    const userPermissions: Record<string, AccessLevel> = (user as any).permissions || {};
+
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        if (userPermissions[mod.featureKey]) {
+          mod.access = userPermissions[mod.featureKey];
+        } else if (userFeatures.includes(mod.featureKey)) {
+          mod.access = 'EDIT'; // Legacy: if they had the feature, assume full edit
+        } else {
+          mod.access = 'NONE';
         }
+      }
+    }
+  }
+
+  private snapshotPermissions() {
+    this.originalPermissions = {};
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        this.originalPermissions[mod.featureKey] = mod.access;
+      }
+    }
+  }
+
+  // ─── PERMISSION CHANGES ────────────────────────────────────
+
+  setAccess(mod: ModulePermission, level: AccessLevel) {
+    this.haptic.light();
+    mod.access = level;
+    this.checkDirty();
+  }
+
+  private checkDirty() {
+    this.hasUnsavedChanges = false;
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        if (mod.access !== this.originalPermissions[mod.featureKey]) {
+          this.hasUnsavedChanges = true;
+          return;
+        }
+      }
+    }
+  }
+
+  // ─── BULK ACTIONS ──────────────────────────────────────────
+
+  setAllAccess(level: AccessLevel) {
+    this.haptic.medium();
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        mod.access = level;
+      }
+    }
+    this.checkDirty();
+  }
+
+  setCategoryAccess(category: PermissionCategory, level: AccessLevel) {
+    this.haptic.light();
+    for (const mod of category.modules) {
+      mod.access = level;
+    }
+    this.checkDirty();
+  }
+
+  // ─── SAVE / DISCARD ───────────────────────────────────────
+
+  async savePermissions() {
+    if (!this.selectedUser) return;
+    this.haptic.medium();
+
+    const alert = await this.alertController.create({
+      header: 'Save Permissions',
+      message: `Update access rights for ${this.selectedUser.firstName} ${this.selectedUser.lastName}?`,
+      buttons: [
+        { text: 'Cancel', role: 'cancel' },
+        { text: 'Save', handler: () => this.performSave() }
       ]
     });
-
     await alert.present();
   }
 
-  /**
-   * Perform the actual save operation
-   */
-  async performSave() {
+  private async performSave() {
+    if (!this.selectedUser) return;
     this.isSaving = true;
 
-    try {
-      // Get form values
-      const formData = this.profileForm.value;
-      
-      // TODO: Call your API service to save the profile
-      // await this.userService.updateProfile(formData);
-      
-      // Simulate API call
-      await this.delay(1500);
+    const permissions: Record<string, AccessLevel> = {};
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        permissions[mod.featureKey] = mod.access;
+      }
+    }
 
-      // Update local profile data
-      this.userProfile = { ...this.userProfile, ...formData };
-      
-      this.isEditMode = false;
-      await this.showToast('Profile updated successfully!', 'success');
-      
-    } catch (error) {
-      console.error('Error saving profile:', error);
-      await this.showToast('Failed to update profile. Please try again.', 'danger');
+    // TODO: Replace with actual API call:
+    // this.userService.updateUserPermissions(this.selectedUser.id, permissions).subscribe(...)
+    try {
+      await this.delay(1200);
+      this.snapshotPermissions();
+      this.hasUnsavedChanges = false;
+      this.toast.present('Permissions saved successfully!', 'success');
+    } catch {
+      this.toast.present('Failed to save permissions', 'danger');
     } finally {
       this.isSaving = false;
     }
   }
 
-  /**
-   * Cancel edit mode and restore original values
-   */
-  async cancelEdit() {
+  discardChanges() {
     this.haptic.light();
-    if (this.profileForm.dirty) {
-      const alert = await this.alertController.create({
-        header: 'Discard Changes?',
-        message: 'You have unsaved changes. Are you sure you want to discard them?',
-        buttons: [
-          {
-            text: 'Continue Editing',
-            role: 'cancel'
-          },
-          {
-            text: 'Discard',
-            role: 'destructive',
-            handler: () => {
-              this.performCancel();
-            }
-          }
-        ]
-      });
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        mod.access = this.originalPermissions[mod.featureKey] || 'NONE';
+      }
+    }
+    this.hasUnsavedChanges = false;
+  }
 
-      await alert.present();
-    } else {
-      this.performCancel();
+  // ─── HELPERS ───────────────────────────────────────────────
+
+  getUserInitials(user: User): string {
+    return ((user.firstName?.[0] || '') + (user.lastName?.[0] || '')).toUpperCase();
+  }
+
+  getRoleBadgeColor(role: string): string {
+    const map: Record<string, string> = {
+      'ADMIN': 'bg-red-100 text-red-700',
+      'SUPER_ADMIN': 'bg-purple-100 text-purple-700',
+      'BUSINESS_DEV_MGR': 'bg-blue-100 text-blue-700',
+      'PLANT_MGR': 'bg-emerald-100 text-emerald-700',
+      'HR_MGR': 'bg-pink-100 text-pink-700',
+      'LOGISTICS_MGR': 'bg-sky-100 text-sky-700',
+      'ACCOUNT_MGR': 'bg-violet-100 text-violet-700',
+      'NATIONAL_SALES_MGR': 'bg-amber-100 text-amber-700',
+    };
+    return map[role] || 'bg-slate-100 text-slate-700';
+  }
+
+  getStatusColor(status: string): string {
+    if (status === 'ACTIVE') return 'bg-emerald-500';
+    if (status === 'SUSPENDED' || status === 'REJECTED') return 'bg-red-500';
+    return 'bg-amber-500';
+  }
+
+  getStatusBadge(status: string): { bg: string; text: string; dot: string; label: string } {
+    switch (status) {
+      case 'ACTIVE':    return { bg: 'bg-emerald-50', text: 'text-emerald-700', dot: 'bg-emerald-500', label: 'Active' };
+      case 'SUSPENDED': return { bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-500',     label: 'Suspended' };
+      case 'REJECTED':  return { bg: 'bg-red-50',     text: 'text-red-700',     dot: 'bg-red-500',     label: 'Rejected' };
+      case 'PENDING':   return { bg: 'bg-amber-50',   text: 'text-amber-700',   dot: 'bg-amber-500',   label: 'Pending' };
+      default:          return { bg: 'bg-slate-50',   text: 'text-slate-500',   dot: 'bg-slate-400',   label: status || 'Unknown' };
     }
   }
 
-  /**
-   * Perform the cancel operation
-   */
-  performCancel() {
-    // Restore original values
-    this.userProfile = { ...this.originalProfile };
-    this.profileForm.patchValue(this.userProfile);
-    this.isEditMode = false;
+  formatLastLogin(lastLoginTime: string | null): string {
+    if (!lastLoginTime) return 'Never';
+    const now = new Date();
+    const then = new Date(lastLoginTime);
+    const diffMs = now.getTime() - then.getTime();
+    const diffMins = Math.floor(diffMs / 60000);
+    const diffHours = Math.floor(diffMins / 60);
+    const diffDays = Math.floor(diffHours / 24);
+    if (diffMins < 1)   return 'Just now';
+    if (diffMins < 60)  return `${diffMins}m ago`;
+    if (diffHours < 24) return `${diffHours}h ago`;
+    if (diffDays < 7)   return `${diffDays}d ago`;
+    return then.toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  /**
-   * Upload profile picture
-   */
-  async uploadProfilePicture() {
-    const alert = await this.alertController.create({
-      header: 'Upload Profile Picture',
-      message: 'Choose an option:',
-      buttons: [
-        {
-          text: 'Take Photo',
-          handler: () => {
-            this.takePhoto();
-          }
-        },
-        {
-          text: 'Choose from Gallery',
-          handler: () => {
-            this.chooseFromGallery();
-          }
-        },
-        {
-          text: 'Cancel',
-          role: 'cancel'
-        }
-      ]
-    });
-
-    await alert.present();
+  formatJoinDate(createdOn: string): string {
+    if (!createdOn) return '';
+    return new Date(createdOn).toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
   }
 
-  /**
-   * Take a photo using camera
-   */
-  async takePhoto() {
-    // TODO: Implement camera functionality using Capacitor Camera plugin
-    // import { Camera, CameraResultType, CameraSource } from '@capacitor/camera';
-    
-    try {
-      // const image = await Camera.getPhoto({
-      //   quality: 90,
-      //   allowEditing: true,
-      //   resultType: CameraResultType.DataUrl,
-      //   source: CameraSource.Camera
-      // });
-      // this.userProfile.profileImage = image.dataUrl;
-      
-      await this.showToast('Camera feature will be implemented', 'primary');
-    } catch (error) {
-      console.error('Camera error:', error);
+  getActiveCount(): number {
+    return this.filteredUsers.filter(u => u.status === 'ACTIVE').length;
+  }
+
+  formatRole(roleType: string | null | undefined): string {
+    if (!roleType) return 'No Role';
+    return roleType.replace(/_/g, ' ');
+  }
+
+  getCategoryColorClasses(color: string): { bg: string; text: string; border: string; bgLight: string } {
+    const map: Record<string, any> = {
+      'blue':    { bg: 'bg-blue-500',    text: 'text-blue-600',    border: 'border-blue-200',    bgLight: 'bg-blue-50' },
+      'emerald': { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-200', bgLight: 'bg-emerald-50' },
+      'violet':  { bg: 'bg-violet-500',  text: 'text-violet-600',  border: 'border-violet-200',  bgLight: 'bg-violet-50' },
+      'amber':   { bg: 'bg-amber-500',   text: 'text-amber-600',   border: 'border-amber-200',   bgLight: 'bg-amber-50' },
+      'sky':     { bg: 'bg-sky-500',     text: 'text-sky-600',     border: 'border-sky-200',     bgLight: 'bg-sky-50' },
+      'rose':    { bg: 'bg-rose-500',    text: 'text-rose-600',    border: 'border-rose-200',    bgLight: 'bg-rose-50' },
+      'orange':  { bg: 'bg-orange-500',  text: 'text-orange-600',  border: 'border-orange-200',  bgLight: 'bg-orange-50' },
+      'slate':   { bg: 'bg-slate-500',   text: 'text-slate-600',   border: 'border-slate-200',   bgLight: 'bg-slate-100' },
+    };
+    return map[color] || map['slate'];
+  }
+
+  getPermissionStats(): { total: number; edit: number; read: number; none: number } {
+    let total = 0, edit = 0, read = 0, none = 0;
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        total++;
+        if (mod.access === 'EDIT') edit++;
+        else if (mod.access === 'READ') read++;
+        else none++;
+      }
     }
+    return { total, edit, read, none };
   }
 
-  /**
-   * Choose photo from gallery
-   */
-  async chooseFromGallery() {
-    // TODO: Implement gallery functionality using Capacitor Camera plugin
-    
-    try {
-      // const image = await Camera.getPhoto({
-      //   quality: 90,
-      //   allowEditing: true,
-      //   resultType: CameraResultType.DataUrl,
-      //   source: CameraSource.Photos
-      // });
-      // this.userProfile.profileImage = image.dataUrl;
-      
-      await this.showToast('Gallery feature will be implemented', 'primary');
-    } catch (error) {
-      console.error('Gallery error:', error);
-    }
+  toggleUserPanel() {
+    this.showUserPanel = !this.showUserPanel;
   }
 
-  /**
-   * Load user profile from API
-   */
-  async loadUserProfile() {
-    try {
-      // TODO: Fetch from your service
-      // const profile = await this.userService.getUserProfile();
-      // this.userProfile = profile;
-      // this.initializeForm();
-    } catch (error) {
-      console.error('Error loading profile:', error);
-      await this.showToast('Failed to load profile data', 'danger');
-    }
+  backToUsers() {
+    this.showUserPanel = true;
+    this.selectedUser = null;
   }
 
-  /**
-   * Show toast message
-   */
-  async showToast(message: string, color: string = 'primary') {
-    const mapped: 'success' | 'danger' | 'warning' =
-      color === 'danger' ? 'danger' : color === 'warning' ? 'warning' : 'success';
-    await this.toast.present(message, mapped);
+  trackByUserId(index: number, user: User): number {
+    return user.id;
   }
 
-  /**
-   * Utility function to simulate async operations
-   */
   private delay(ms: number): Promise<void> {
     return new Promise(resolve => setTimeout(resolve, ms));
-  }
-
-  /**
-   * Open change password modal/page
-   */
-  async changePassword() {
-    // TODO: Navigate to change password page or open modal
-    await this.showToast('Change password feature will be implemented', 'primary');
   }
 }
