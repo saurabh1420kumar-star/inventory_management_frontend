@@ -539,6 +539,7 @@ export class MasterInventoryPage implements OnInit {
     this.inventoryService.createItem(payload).subscribe({
       next: (created) => {
         this.inventory.unshift(this.mapToDisplayItem(created));
+        this.loadInventory();
         this.resetPagination();
         this.closeAddModal();
         this.showMessage('success', 'Item added successfully!');

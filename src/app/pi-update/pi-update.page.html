@@ -1,0 +1,406 @@
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-tight text-xl">
+      <span class="text-emerald-400">Proforma</span> Invoice Requests
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="refresh()" style="--color: #ffffff;" class="rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content class="bg-slate-50">
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
+
+      <!-- ═══════ HERO ═══════ -->
+      <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-teal-500/20 blur-3xl"></div>
+
+        <div class="relative px-5 py-6 sm:px-8 sm:py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-4 sm:gap-6">
+            <div>
+              <h1 class="text-2xl sm:text-3xl font-bold text-white mb-2 tracking-tight">Proforma Invoice Requests</h1>
+              <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="checkmark-done-outline" class="text-lg"></ion-icon>
+                Review · Approve Dispatch · Manage Orders
+              </p>
+            </div>
+            <!-- Summary Badge -->
+            <div class="flex items-center gap-3">
+              <div class="bg-white/15 backdrop-blur-md border border-white/20 rounded-2xl px-5 py-3 text-center">
+                <p class="text-3xl font-black text-white">{{ approvedCount }}</p>
+                <p class="text-xs font-semibold text-emerald-100 uppercase tracking-wider">PI Ready</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ═══════ SEARCH ═══════ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex-1 w-full relative group">
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-slate-400 text-lg z-10 group-focus-within:text-emerald-500 transition-colors"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (input)="onSearchChange($event)"
+            placeholder="Search by Order No, Distributor Name, Amount..."
+            class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200 text-sm"
+          />
+        </div>
+      </div>
+
+      <!-- ═══════ LOADING ═══════ -->
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-4">
+        <div class="relative">
+          <div class="w-16 h-16 rounded-full bg-gradient-to-r from-emerald-400 to-teal-500 animate-pulse"></div>
+          <ion-spinner name="crescent" class="absolute inset-0 m-auto" style="width: 28px; height: 28px; color: white;"></ion-spinner>
+        </div>
+        <p class="text-slate-500 font-medium text-sm animate-pulse">Loading Proforma Invoice requests...</p>
+      </div>
+
+      <!-- ═══════ ERROR ═══════ -->
+      <div *ngIf="!isLoading && errorMessage" class="bg-red-50 border border-red-200 rounded-2xl p-8 text-center">
+        <div class="w-16 h-16 mx-auto mb-4 flex items-center justify-center rounded-full bg-red-100">
+          <ion-icon name="alert-circle-outline" class="text-3xl text-red-500"></ion-icon>
+        </div>
+        <p class="text-red-600 font-bold text-lg mb-2">Something went wrong</p>
+        <p class="text-red-500 text-sm mb-4">{{ errorMessage }}</p>
+        <button (click)="refresh()" class="bg-red-500 hover:bg-red-600 text-white font-bold text-sm px-6 py-2.5 rounded-xl transition-all">
+          Try Again
+        </button>
+      </div>
+
+      <!-- ═══════ EMPTY STATE ═══════ -->
+      <div *ngIf="!isLoading && !errorMessage && filteredOrders.length === 0" class="bg-white rounded-2xl border border-slate-100 p-12 text-center shadow-sm">
+        <div class="w-20 h-20 mx-auto mb-5 flex items-center justify-center rounded-full bg-gradient-to-br from-emerald-100 to-teal-100">
+          <ion-icon name="document-text-outline" class="text-4xl text-emerald-400"></ion-icon>
+        </div>
+        <p class="text-slate-700 font-bold text-lg mb-1">No PI Ready Orders</p>
+        <p class="text-slate-400 text-sm">Orders with generated Proforma Invoices will appear here.</p>
+      </div>
+
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <!-- ORDER TILES                                                -->
+      <!-- ═══════════════════════════════════════════════════════════ -->
+      <div *ngIf="!isLoading && filteredOrders.length > 0" class="grid grid-cols-1 md:grid-cols-2 xl:grid-cols-3 gap-5">
+
+        <div *ngFor="let order of filteredOrders"
+          class="bg-white rounded-2xl border border-emerald-100 overflow-hidden transition-all duration-300 hover:shadow-lg hover:border-emerald-200 group"
+          style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
+
+          <!-- Top Accent -->
+          <div class="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-400"></div>
+
+          <div class="p-5">
+
+            <!-- ── Row 1: Order No + Badge ── -->
+            <div class="flex items-start justify-between gap-3 mb-4">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-xl bg-gradient-to-br from-emerald-500 to-teal-600 flex items-center justify-center flex-shrink-0 shadow-md shadow-emerald-200/50">
+                  <ion-icon name="receipt-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <h3 class="text-base font-bold text-slate-800 truncate">{{ order.orderNo }}</h3>
+                  <p class="text-xs text-slate-400 font-medium">Cart #{{ order.invoice.cartId }}</p>
+                </div>
+              </div>
+              <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
+                <ion-icon name="checkmark-circle" class="text-xs"></ion-icon>
+                PI Ready
+              </span>
+            </div>
+
+            <!-- ── Row 2: Info Cards ── -->
+            <div class="space-y-2.5 mb-5">
+              <!-- Distributor -->
+              <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-purple-100 to-indigo-100 flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="person-outline" class="text-purple-500 text-sm"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">Distributor</p>
+                  <p class="text-sm font-bold text-slate-700 truncate">{{ order.distributorName }}</p>
+                </div>
+              </div>
+              <!-- Amount -->
+              <div class="flex items-center gap-3 bg-emerald-50/60 rounded-xl p-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-emerald-100 to-teal-100 flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="cash-outline" class="text-emerald-500 text-sm"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[10px] text-emerald-500 font-bold uppercase tracking-wider">Order Amount</p>
+                  <p class="text-sm font-extrabold text-emerald-700">{{ formatAmount(order.amount) }}</p>
+                </div>
+              </div>
+              <!-- Date -->
+              <div class="flex items-center gap-3 bg-slate-50 rounded-xl p-3">
+                <div class="w-8 h-8 rounded-lg bg-gradient-to-br from-slate-100 to-gray-100 flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="calendar-outline" class="text-slate-400 text-sm"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider">PI Date</p>
+                  <p class="text-sm font-semibold text-slate-600">{{ formatDate(order.invoice.createdAt) }}</p>
+                </div>
+              </div>
+            </div>
+
+            <!-- ── Row 3: Action Buttons ── -->
+            <div class="flex gap-2.5">
+              <button (click)="openApproveModal(order)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm rounded-xl py-3 shadow-md shadow-emerald-200/50 hover:shadow-lg active:scale-[0.97] transition-all duration-200">
+                <ion-icon name="checkmark-done-outline" class="text-base"></ion-icon>
+                Approve Dispatch
+              </button>
+              <button (click)="openRejectModal(order)"
+                class="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs sm:text-sm rounded-xl px-4 py-3 active:scale-[0.97] transition-all duration-200">
+                <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                Reject
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- APPROVE DISPATCH MODAL                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isApproveModalOpen" (didDismiss)="closeApproveModal()" [backdropDismiss]="true" cssClass="center-modal">
+    <ng-template>
+      <div class="center-modal-wrap">
+
+        <!-- Accent bar -->
+        <div class="h-1.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500"></div>
+
+        <!-- Header -->
+        <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+          <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200/60 flex-shrink-0">
+              <ion-icon name="checkmark-done-outline" class="text-white text-xl"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-slate-800 font-bold text-base leading-tight">Approve Dispatch</h2>
+              <p class="text-slate-400 text-xs mt-0.5">Verify ledger balance before approval</p>
+            </div>
+          </div>
+          <button (click)="closeApproveModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all flex-shrink-0">
+            <ion-icon name="close" class="text-slate-500 text-base"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5 space-y-4 overflow-y-auto" *ngIf="selectedOrder">
+
+          <!-- Order Summary Card -->
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-3">Order Summary</p>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-500">Order No</span>
+                <span class="text-sm font-bold text-slate-800">{{ selectedOrder.orderNo }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-500">Distributor</span>
+                <span class="text-sm font-bold text-slate-800">{{ selectedOrder.distributorName }}</span>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                <span class="text-sm font-semibold text-slate-600">Order Amount</span>
+                <span class="text-base font-extrabold text-emerald-600">{{ formatAmount(selectedOrder.amount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Ledger Balance Card -->
+          <div class="rounded-2xl p-4 border-2 transition-all"
+            [class.bg-slate-50]="isLoadingBalance"
+            [class.border-slate-200]="isLoadingBalance"
+            [class.bg-emerald-50]="!isLoadingBalance && isBalanceSufficient"
+            [class.border-emerald-200]="!isLoadingBalance && isBalanceSufficient"
+            [class.bg-red-50]="!isLoadingBalance && !isBalanceSufficient"
+            [class.border-red-200]="!isLoadingBalance && !isBalanceSufficient">
+
+            <!-- Loading skeleton -->
+            <div *ngIf="isLoadingBalance" class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-slate-200 animate-pulse"></div>
+              <div class="flex-1 space-y-2">
+                <div class="h-3 bg-slate-200 rounded animate-pulse w-1/3"></div>
+                <div class="h-5 bg-slate-200 rounded animate-pulse w-1/2"></div>
+              </div>
+            </div>
+
+            <!-- Loaded content -->
+            <ng-container *ngIf="!isLoadingBalance">
+              <div class="flex items-center gap-3 mb-3">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+                  [class.bg-emerald-100]="isBalanceSufficient"
+                  [class.bg-red-100]="!isBalanceSufficient">
+                  <ion-icon
+                    [name]="isBalanceSufficient ? 'wallet-outline' : 'warning-outline'"
+                    [class.text-emerald-600]="isBalanceSufficient"
+                    [class.text-red-500]="!isBalanceSufficient"
+                    class="text-xl"></ion-icon>
+                </div>
+                <div>
+                  <p class="text-[10px] font-bold uppercase tracking-wider"
+                    [class.text-emerald-500]="isBalanceSufficient"
+                    [class.text-red-500]="!isBalanceSufficient">Ledger Closing Balance</p>
+                  <p class="text-xl font-black"
+                    [class.text-emerald-700]="isBalanceSufficient"
+                    [class.text-red-700]="!isBalanceSufficient">
+                    {{ formatAmount(selectedLedgerBalance) }}
+                  </p>
+                </div>
+              </div>
+              <div class="rounded-xl px-3 py-2 text-xs font-bold flex items-center gap-2"
+                [class.bg-emerald-100]="isBalanceSufficient"
+                [class.text-emerald-700]="isBalanceSufficient"
+                [class.bg-red-100]="!isBalanceSufficient"
+                [class.text-red-700]="!isBalanceSufficient">
+                <ion-icon [name]="isBalanceSufficient ? 'checkmark-circle' : 'close-circle'" class="text-sm"></ion-icon>
+                <span *ngIf="isBalanceSufficient">Balance is sufficient to approve dispatch</span>
+                <span *ngIf="!isBalanceSufficient">Insufficient balance — order amount exceeds ledger balance</span>
+              </div>
+            </ng-container>
+          </div>
+
+          <!-- Comparison Bar -->
+          <div class="bg-slate-50 rounded-xl p-3 border border-slate-100">
+            <div class="flex justify-between items-center text-xs font-semibold text-slate-500 mb-2">
+              <span>Balance vs Order</span>
+              <span *ngIf="isLoadingBalance" class="text-slate-400">Loading...</span>
+              <span *ngIf="!isLoadingBalance" [class.text-emerald-600]="isBalanceSufficient" [class.text-red-500]="!isBalanceSufficient">
+                {{ isBalanceSufficient ? 'Sufficient' : 'Insufficient' }}
+              </span>
+            </div>
+            <div class="w-full h-2.5 bg-slate-200 rounded-full overflow-hidden">
+              <div class="h-full rounded-full transition-all duration-500"
+                [class.bg-gradient-to-r]="true"
+                [class.from-emerald-400]="!isLoadingBalance && isBalanceSufficient"
+                [class.to-teal-400]="!isLoadingBalance && isBalanceSufficient"
+                [class.from-red-400]="!isLoadingBalance && !isBalanceSufficient"
+                [class.to-orange-400]="!isLoadingBalance && !isBalanceSufficient"
+                [class.from-slate-300]="isLoadingBalance"
+                [class.to-slate-300]="isLoadingBalance"
+                [class.animate-pulse]="isLoadingBalance"
+                [style.width.%]="isLoadingBalance ? 100 : (selectedOrder.amount > 0 ? Math.min((selectedLedgerBalance / selectedOrder.amount) * 100, 100) : 0)">
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Button -->
+          <button (click)="confirmApproveDispatch()"
+            [disabled]="!isBalanceSufficient || isApproving || isLoadingBalance"
+            class="w-full flex items-center justify-center gap-2 font-bold text-sm rounded-xl py-3.5 transition-all duration-200 active:scale-[0.97]"
+            [class.bg-gradient-to-r]="isBalanceSufficient && !isLoadingBalance"
+            [class.from-emerald-500]="isBalanceSufficient && !isLoadingBalance"
+            [class.to-teal-500]="isBalanceSufficient && !isLoadingBalance"
+            [class.text-white]="isBalanceSufficient && !isLoadingBalance"
+            [class.shadow-md]="isBalanceSufficient && !isLoadingBalance"
+            [class.shadow-emerald-200]="isBalanceSufficient && !isLoadingBalance"
+            [class.bg-slate-200]="!isBalanceSufficient || isLoadingBalance"
+            [class.text-slate-400]="!isBalanceSufficient || isLoadingBalance"
+            [class.cursor-not-allowed]="!isBalanceSufficient || isLoadingBalance">
+            <ion-spinner *ngIf="isApproving || isLoadingBalance" name="crescent" style="width: 18px; height: 18px;"></ion-spinner>
+            <ion-icon *ngIf="!isApproving && !isLoadingBalance" name="checkmark-done-outline" class="text-lg"></ion-icon>
+            <span *ngIf="isLoadingBalance">Checking Balance...</span>
+            <span *ngIf="!isLoadingBalance && !isApproving">{{ isBalanceSufficient ? 'Approve & Go to Dispatch' : 'Insufficient Balance' }}</span>
+            <span *ngIf="!isLoadingBalance && isApproving">Approving...</span>
+          </button>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- REJECT MODAL                                                    -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isRejectModalOpen" (didDismiss)="closeRejectModal()" [backdropDismiss]="true" cssClass="center-modal">
+    <ng-template>
+      <div class="center-modal-wrap">
+
+        <!-- Accent bar -->
+        <div class="h-1.5 bg-gradient-to-r from-red-400 to-rose-500"></div>
+
+        <!-- Header -->
+        <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+          <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-md shadow-red-200/60 flex-shrink-0">
+              <ion-icon name="close-circle-outline" class="text-white text-xl"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-slate-800 font-bold text-base leading-tight">Reject Order</h2>
+              <p class="text-slate-400 text-xs mt-0.5">Provide a reason for rejection</p>
+            </div>
+          </div>
+          <button (click)="closeRejectModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all flex-shrink-0">
+            <ion-icon name="close" class="text-slate-500 text-base"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5 space-y-4" *ngIf="rejectOrder">
+
+          <!-- Order Info -->
+          <div class="bg-red-50/60 rounded-2xl p-4 border border-red-100">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-red-100 flex items-center justify-center flex-shrink-0">
+                <ion-icon name="receipt-outline" class="text-red-500 text-lg"></ion-icon>
+              </div>
+              <div class="min-w-0">
+                <p class="text-sm font-bold text-slate-800 truncate">{{ rejectOrder.orderNo }}</p>
+                <p class="text-xs text-slate-500 truncate">{{ rejectOrder.distributorName }} &middot; {{ formatAmount(rejectOrder.amount) }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Reason Input -->
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 block">Reason for Rejection *</label>
+            <textarea
+              [(ngModel)]="rejectReason"
+              placeholder="Enter the reason for rejecting this order..."
+              rows="4"
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-red-400 focus:ring-4 focus:ring-red-50 rounded-xl py-3 px-4 outline-none transition-all duration-200 text-sm resize-none">
+            </textarea>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-1">
+            <button (click)="closeRejectModal()"
+              class="flex-1 flex items-center justify-center gap-2 bg-slate-100 hover:bg-slate-200 text-slate-600 font-bold text-sm rounded-xl py-3 transition-all">
+              Cancel
+            </button>
+            <button (click)="confirmReject()"
+              [disabled]="!rejectReason.trim() || isRejecting"
+              class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-red-200 transition-all disabled:opacity-50 disabled:cursor-not-allowed active:scale-[0.97]">
+              <ion-spinner *ngIf="isRejecting" name="crescent" style="width: 16px; height: 16px;"></ion-spinner>
+              <ion-icon *ngIf="!isRejecting" name="close-circle-outline" class="text-base"></ion-icon>
+              <span>{{ isRejecting ? 'Rejecting...' : 'Confirm Reject' }}</span>
+            </button>
+          </div>
+
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

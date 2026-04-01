@@ -1,6 +1,6 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit, inject } from '@angular/core';
-import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
+import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule } from '@angular/forms';
 import { IonicModule, ModalController, ToastController } from '@ionic/angular';
 import { Router } from '@angular/router';
 import { addIcons } from 'ionicons';
@@ -167,7 +167,7 @@ export class DistributorCartPage implements OnInit {
 
   initializeForm() {
     this.orderForm = this.fb.group({
-      deliveryAddress: ['', [Validators.required]]
+      deliveryAddress: ['']
     });
   }
 
@@ -241,8 +241,9 @@ export class DistributorCartPage implements OnInit {
       this.cartService.addToCartAPI(this.distributorId || 0, [itemPayload]).subscribe({
         next: (response) => {
           console.log('Item added to cart via API:', response);
-          // Store the cart ID from response for later use
-          this.currentCartId = response?.id || response?.cartId || null;
+          // Unwrap data wrapper and store the cart ID from response for later use
+          const cartData = response?.data || response;
+          this.currentCartId = cartData?.id || cartData?.cartId || null;
           console.log('Stored currentCartId:', this.currentCartId);
           // Also add to local cart for UI display
           this.cartService.addToCart(this.selectedProduct!, this.quantityToAdd);
@@ -396,6 +397,7 @@ export class DistributorCartPage implements OnInit {
       Object.keys(this.orderForm.controls).forEach(key => {
         this.orderForm.get(key)?.markAsTouched();
       });
+      this.showToast('Please fill in all required fields.', 'warning');
       return;
     }
 
@@ -415,13 +417,13 @@ export class DistributorCartPage implements OnInit {
       console.log('Using stored currentCartId:', this.currentCartId);
       this.placeOrderWithCartId(this.currentCartId);
     } else {
-      // Fallback: fetch cart from API
-      this.cartService.getCart(this.distributorId).subscribe({
+      // Fallback: fetch active cart from API
+      this.cartService.getDistributorActiveCart(this.distributorId).subscribe({
         next: (cartResponse) => {
           console.log('Cart API response:', cartResponse);
-          const cartData = cartResponse?.data || cartResponse?.cart || cartResponse;
+          const cartData = cartResponse?.data || cartResponse;
           const cartId = cartData?.id || cartData?.cartId || 0;
-          
+
           if (!cartId) {
             console.error('No cartId found in response:', cartResponse);
             this.showToast('Cart not found. Please add items to cart first.', 'danger');
@@ -429,10 +431,11 @@ export class DistributorCartPage implements OnInit {
             return;
           }
 
+          this.currentCartId = cartId;
           this.placeOrderWithCartId(cartId);
         },
         error: (err) => {
-          console.error('Failed to fetch cart', err);
+          console.error('Failed to fetch active cart', err);
           this.showToast('Failed to fetch cart. Please try again.', 'danger');
           this.isLoading = false;
         }

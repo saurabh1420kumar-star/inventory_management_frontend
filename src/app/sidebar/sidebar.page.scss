@@ -5,6 +5,7 @@
 .sidebar-content {
   --background: var(--ion-card-background, #ffffff);
   width: 330px;
+  max-width: 100%;
   transition: width 0.25s ease;
 
   .sidebar-container {
@@ -199,11 +200,13 @@
     border-top: 1px solid var(--ion-border-color, #e5e7eb);
     margin-top: auto;
     background: linear-gradient(135deg, rgba(16, 185, 129, 0.04) 0%, rgba(59, 130, 246, 0.04) 100%);
+    overflow: visible;
 
     .user-info {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: 8px;
+      flex-wrap: wrap;
 
       .user-avatar-wrap {
         width: 38px;
@@ -250,6 +253,7 @@
         display: block;
         flex-shrink: 0;
         margin-left: auto;
+        max-width: 100%;
       }
     }
   }

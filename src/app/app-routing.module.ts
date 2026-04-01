@@ -124,6 +124,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'pi-update',
+    loadChildren: () => import('./pi-update/pi-update.module').then(m => m.PiUpdatePageModule),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }

@@ -178,6 +178,9 @@ export class AccountsMasterPage implements OnInit {
   isPendingPaymentsModalOpen: boolean = false;
   selectedTransaction: Transaction | null = null;
   
+  // API-provided closing balance
+  apiClosingBalance: number | null = null;
+
   // Pending payments
   pendingPayments: any[] = [];
   isLoadingPayments: boolean = false;
@@ -350,13 +353,20 @@ export class AccountsMasterPage implements OnInit {
     this.ledgerService.getPaymentHistory(distributorId).subscribe({
       next: (response: ApiResponse<any>) => {
         if (this.selectedAccount) {
-          // API returns array directly or wrapped in data property
-          const payments = Array.isArray(response?.data) ? response.data : (Array.isArray(response) ? response : []);
-          
+          const responseData = response?.data || {};
+          // New response shape: { closingBalance, distributorId, paymentHistory[] }
+          const payments = Array.isArray(responseData.paymentHistory)
+            ? responseData.paymentHistory
+            : (Array.isArray(responseData) ? responseData : []);
+
+          // Store the API-provided closing balance
+          this.apiClosingBalance = responseData.closingBalance != null
+            ? Number(responseData.closingBalance)
+            : null;
+
           if (payments.length > 0) {
             this.selectedAccount.transactions = this.mapPaymentHistoryToTransactions(payments);
             this.showToast(`${payments.length} transactions loaded`, 'success');
-          } else {
           }
         }
       },
@@ -381,19 +391,23 @@ export class AccountsMasterPage implements OnInit {
       const dateStr = payment.createdAt ? payment.createdAt.split('T')[0] : new Date().toISOString().split('T')[0];
       
       // Determine debit/credit based on transactionType
-      const isCredit = payment.transactionType?.toUpperCase() === 'CREDIT';
-      const debit = isCredit ? 0 : (payment.amount || 0);
-      const credit = isCredit ? (payment.amount || 0) : 0;
-      
+      const txType = (payment.transactionType || '').toUpperCase();
+      const isCredit = txType === 'CREDIT';
+      const isDebit = txType === 'DEBIT';
+      const isJV = txType === 'JV';
+      const amount = payment.amount || 0;
+      const debit = isDebit ? amount : 0;
+      const credit = (isCredit || isJV) ? amount : 0;
+
       // Update running balance
       runningBalance = runningBalance - debit + credit;
-      
+
       return {
         id: String(payment.id || index),
         date: dateStr,
         description: payment.description || '',
         reference: `TXN-${payment.id || index}`,
-        type: (isCredit ? 'credit' : 'debit') as 'credit' | 'debit' | 'jv',
+        type: (isJV ? 'jv' : isCredit ? 'credit' : 'debit') as 'credit' | 'debit' | 'jv',
         debit: debit,
         credit: credit,
         balance: runningBalance,
@@ -512,8 +526,10 @@ export class AccountsMasterPage implements OnInit {
     const totalDebits = filtered.reduce((sum, t) => sum + t.debit, 0);
     const totalCredits = filtered.reduce((sum, t) => sum + t.credit, 0);
     const openingBalance = this.selectedAccount?.openingBalance || 0;
-    // Closing balance is the balance of the last transaction in the filtered list
-    const closingBalance = filtered.length > 0 ? filtered[filtered.length - 1].balance : openingBalance;
+    // Use API-provided closing balance when available; fall back to computed value
+    const closingBalance = this.apiClosingBalance != null
+      ? this.apiClosingBalance
+      : (filtered.length > 0 ? filtered[filtered.length - 1].balance : openingBalance);
 
     return {
       totalDebits,
@@ -570,9 +586,10 @@ export class AccountsMasterPage implements OnInit {
     this.selectedAccount = account;
     this.isAccountSelectorOpen = false;
     this.accountSearchQuery = ''; // Clear search
-    // Reset filters on new account selection
+    // Reset filters and cached API values on new account selection
     this.resetFilters();
-    
+    this.apiClosingBalance = null;
+
     // Load payment history from API if distributor ID exists
     if (account.distributorId) {
       this.loadPaymentHistory(account.distributorId);
@@ -1112,6 +1129,11 @@ export class AccountsMasterPage implements OnInit {
     console.log('🟦 openJVModal() - Opening JV Modal');
     this.isJVModalOpen = true;
     this.resetJVForm();
+    // Prefill first entry with selected distributor's account details
+    if (this.selectedAccount) {
+      this.jvFormData.entries[0].accountNumber = this.selectedAccount.accountCode || '';
+      this.jvFormData.entries[0].accountName = this.selectedAccount.accountName || this.selectedAccount.name || '';
+    }
   }
 
   closeJVModal() {
@@ -1199,13 +1221,19 @@ export class AccountsMasterPage implements OnInit {
     console.log('✅ All validations passed!');
     // Prepare payload
     const payload = {
-      entries: this.jvFormData.entries.map(entry => ({
-        accountNumber: entry.accountNumber,
-        accountName: entry.accountName,
-        description: entry.description,
-        debit: entry.debit ? parseFloat(entry.debit.toString()) : 0,
-        credit: entry.credit ? parseFloat(entry.credit.toString()) : 0
-      })),
+      entries: this.jvFormData.entries.map(entry => {
+        const debitVal = entry.debit ? parseFloat(entry.debit.toString()) : 0;
+        const creditVal = entry.credit ? parseFloat(entry.credit.toString()) : 0;
+        const transactionType = debitVal > 0 ? 'DEBIT' : 'CREDIT';
+        return {
+          accountNumber: entry.accountNumber,
+          accountName: entry.accountName,
+          description: entry.description,
+          debit: debitVal,
+          credit: creditVal,
+          transactionType
+        };
+      }),
       narration: this.jvFormData.narration
     };
 
@@ -1219,8 +1247,9 @@ export class AccountsMasterPage implements OnInit {
       return;
     }
 
+    const distributorId = this.selectedAccount.distributorId;
     // Call service to create JV
-    this.ledgerService.createJournalVoucher(payload, this.selectedAccount.distributorId).subscribe({
+    this.ledgerService.createJournalVoucher(payload, distributorId).subscribe({
       next: (response) => {
         console.log('✅ Create JV Success Response:', response);
         console.log('Response Message:', response.message);
@@ -1228,6 +1257,8 @@ export class AccountsMasterPage implements OnInit {
         this.isJVModalOpen = false;
         this.resetJVForm();
         this.isSubmittingJV = false;
+        // Reload payment history for the same distributor
+        this.loadPaymentHistory(distributorId!);
       },
       error: (error) => {
         console.error('❌ Create JV Error:', error);

@@ -88,7 +88,7 @@ export class LedgerService {
         description: string,
         transactionType?: string
     ): Observable<ApiResponse<any>> {
-        let url = `${this.apiUrl}/accounts/update-balance?distributorId=${distributorId}&amount=${amount}&description=${encodeURIComponent(description)}`;
+        let url = `${this.apiUrl}/accounts/update-balance-accounts?distributorId=${distributorId}&amount=${amount}&description=${encodeURIComponent(description)}`;
         if (transactionType) {
             url += `&transactionType=${transactionType}`;
         }
@@ -108,11 +108,11 @@ export class LedgerService {
     getPaymentHistory(distributorId: number): Observable<ApiResponse<any>> {
         return this.http.get<any>(`${this.apiUrl}/accounts/payment-history/${distributorId}`).pipe(
             map((response: any) => {
-                // API returns array directly, wrap it in ApiResponse
+                // API returns { closingBalance, distributorId, paymentHistory[] }
                 return {
                     success: true,
                     message: 'Payment history retrieved successfully',
-                    data: Array.isArray(response) ? response : response.data || []
+                    data: response
                 };
             }),
             catchError(error => {
