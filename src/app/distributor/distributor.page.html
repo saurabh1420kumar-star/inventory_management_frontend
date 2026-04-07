@@ -194,29 +194,16 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">First Name *</label>
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Firm / Company Name *</label>
               <ion-input
-                formControlName="firstName"
-                placeholder="Enter first name"
+                formControlName="companyName"
+                placeholder="Enter firm or company name"
                 class="custom-input"
               ></ion-input>
-              <div *ngIf="distributorForm.get('firstName')?.invalid && distributorForm.get('firstName')?.touched" 
+              <div *ngIf="distributorForm.get('companyName')?.invalid && distributorForm.get('companyName')?.touched" 
                    class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('firstName') }}
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Last Name *</label>
-              <ion-input
-                formControlName="lastName"
-                placeholder="Enter last name"
-                class="custom-input"
-              ></ion-input>
-              <div *ngIf="distributorForm.get('lastName')?.invalid && distributorForm.get('lastName')?.touched" 
-                   class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('lastName') }}
+                {{ getErrorMessage('companyName') }}
               </div>
             </div>
 
@@ -227,10 +214,11 @@
                 placeholder="Select distributor type"
                 class="custom-select black-select"
               >
-                <ion-select-option value="Wholesale">Wholesale</ion-select-option>
-                <ion-select-option value="Retail">Retail</ion-select-option>
+                <ion-select-option value="Distributor">Distributor</ion-select-option>
+                <ion-select-option value="Dealer">Dealer</ion-select-option>
+                <ion-select-option value="Retailer">Retailer</ion-select-option>
                 <ion-select-option value="Super Stockist">Super Stockist</ion-select-option>
-                <ion-select-option value="C&F Agent">C&F Agent</ion-select-option>
+                <ion-select-option value="C&F Agent">C&amp;F Agent</ion-select-option>
               </ion-select>
               <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -286,7 +274,7 @@
             </div>
 
             <div *ngIf="distributorForm.get('assignedPerson')?.value">
-              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person</label>
               <div *ngIf="isLoadingKeyPersons" class="flex items-center gap-2 text-slate-500 text-sm">
                 <ion-spinner name="dots"></ion-spinner>
                 <span>Loading key persons...</span>
@@ -294,7 +282,7 @@
               <ion-select
                 *ngIf="!isLoadingKeyPersons"
                 formControlName="keyPerson"
-                placeholder="Select key person"
+                placeholder="Select sales person"
                 class="custom-select black-select"
               >
                 <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
@@ -352,6 +340,16 @@
               ></ion-input>
             </div>
 
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <ion-input
+                formControlName="keyPersonName"
+                type="text"
+                placeholder="Enter key person name"
+                class="custom-input"
+              ></ion-input>
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-600 mb-1">Address *</label>
               <ion-textarea
@@ -364,6 +362,43 @@
                    class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('address') }}
               </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">State</label>
+              <ion-select
+                formControlName="state"
+                placeholder="Select State"
+                interface="popover"
+                class="custom-select"
+              >
+                <ion-select-option *ngFor="let s of stateOptions" [value]="s">{{ s }}</ion-select-option>
+              </ion-select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">District</label>
+              <ion-select
+                formControlName="district"
+                placeholder="Select District"
+                interface="popover"
+                class="custom-select"
+                [disabled]="!distributorForm.get('state')?.value"
+              >
+                <ion-select-option *ngFor="let d of filteredDistricts" [value]="d.district">{{ d.district }}</ion-select-option>
+              </ion-select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Pincode</label>
+              <ion-input
+                formControlName="pincode"
+                type="text"
+                placeholder="Enter 6-digit pincode"
+                maxlength="6"
+                (ionInput)="onPincodeInput($event)"
+                class="custom-input"
+              ></ion-input>
             </div>
           </div>
         </div>
@@ -457,17 +492,6 @@
             </div>
           </div>
 
-          <div class="flex items-center gap-3 mt-4">
-            <input 
-              type="checkbox" 
-              formControlName="creditLimit"
-              id="creditLimit"
-              class="w-4 h-4 rounded text-emerald-500"
-            />
-            <label for="creditLimit" class="text-sm font-medium text-slate-600">
-              Enable Credit Limit
-            </label>
-          </div>
         </div>
 
         <!-- Bank Details -->
@@ -519,6 +543,53 @@
                 {{ getErrorMessage('accountName') }}
               </div>
             </div>
+
+            <!-- Credit Limit Toggle -->
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-3 py-2">
+                <input 
+                  type="checkbox" 
+                  formControlName="creditLimit"
+                  id="creditLimit"
+                  class="w-4 h-4 rounded text-emerald-500"
+                />
+                <label for="creditLimit" class="text-sm font-medium text-slate-600 cursor-pointer">
+                  Enable Credit Limit
+                </label>
+              </div>
+            </div>
+
+            <!-- Credit Limit Fields (shown when checkbox is enabled) -->
+            <ng-container *ngIf="distributorForm.get('creditLimit')?.value">
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Number</label>
+                <ion-input
+                  formControlName="bankGuaranteeNumber"
+                  type="text"
+                  placeholder="Enter bank guarantee number"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Credit Amount</label>
+                <ion-input
+                  formControlName="creditAmount"
+                  type="number"
+                  placeholder="Enter credit amount"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Expiry Date</label>
+                <ion-input
+                  formControlName="bankGuaranteeExpiryDate"
+                  type="date"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+            </ng-container>
           </div>
         </div>
 
@@ -562,8 +633,7 @@
               <div class="detail-header-text">
                 <h2 class="detail-name">{{ selectedDistributor.name }}</h2>
                 <div class="text-sm text-slate-200 mb-2">
-                  <span *ngIf="selectedDistributor.firstName">First Name: <strong>{{ selectedDistributor.firstName }}</strong></span>
-                  <span *ngIf="selectedDistributor.lastName" class="ml-3">Last Name: <strong>{{ selectedDistributor.lastName }}</strong></span>
+                  <span *ngIf="selectedDistributor.companyName">Firm / Company: <strong>{{ selectedDistributor.companyName }}</strong></span>
                 </div>
                 <div class="detail-badges">
                   <span class="detail-badge">{{ selectedDistributor.distributorType }}</span>
@@ -602,18 +672,10 @@
 
             <div class="detail-field">
               <div class="detail-field-label">
-                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
-                <span>First Name</span>
+                <ion-icon name="business-outline" class="text-emerald-500"></ion-icon>
+                <span>Firm / Company Name</span>
               </div>
-              <p class="detail-field-value">{{ selectedDistributor.firstName || 'N/A' }}</p>
-            </div>
-
-            <div class="detail-field">
-              <div class="detail-field-label">
-                <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
-                <span>Last Name</span>
-              </div>
-              <p class="detail-field-value">{{ selectedDistributor.lastName || 'N/A' }}</p>
+              <p class="detail-field-value">{{ selectedDistributor.companyName || selectedDistributor.name || 'N/A' }}</p>
             </div>
 
             <div class="detail-field">
@@ -752,19 +814,11 @@
           </div>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">First Name *</label>
-              <ion-input formControlName="firstName" placeholder="Enter first name" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('firstName')?.invalid && distributorForm.get('firstName')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('firstName') }}
-              </div>
-            </div>
-
-            <div>
-              <label class="block text-sm font-medium text-slate-600 mb-1">Last Name *</label>
-              <ion-input formControlName="lastName" placeholder="Enter last name" class="custom-input"></ion-input>
-              <div *ngIf="distributorForm.get('lastName')?.invalid && distributorForm.get('lastName')?.touched" class="text-xs text-red-500 mt-1">
-                {{ getErrorMessage('lastName') }}
+            <div class="md:col-span-2">
+              <label class="block text-sm font-medium text-slate-600 mb-1">Firm / Company Name *</label>
+              <ion-input formControlName="companyName" placeholder="Enter firm or company name" class="custom-input"></ion-input>
+              <div *ngIf="distributorForm.get('companyName')?.invalid && distributorForm.get('companyName')?.touched" class="text-xs text-red-500 mt-1">
+                {{ getErrorMessage('companyName') }}
               </div>
             </div>
 
@@ -773,10 +827,11 @@
               <select formControlName="distributorType"
                       class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
                 <option value="" disabled>Select distributor type</option>
-                <option value="Wholesale">Wholesale</option>
-                <option value="Retail">Retail</option>
+                <option value="Distributor">Distributor</option>
+                <option value="Dealer">Dealer</option>
+                <option value="Retailer">Retailer</option>
                 <option value="Super Stockist">Super Stockist</option>
-                <option value="C&F Agent">C&F Agent</option>
+                <option value="C&F Agent">C&amp;F Agent</option>
               </select>
               <div *ngIf="distributorForm.get('distributorType')?.invalid && distributorForm.get('distributorType')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('distributorType') }}
@@ -828,7 +883,7 @@
             </div>
 
             <div *ngIf="distributorForm.get('assignedPerson')?.value">
-              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Sales Person</label>
               <div *ngIf="isLoadingKeyPersons" class="flex items-center gap-2 text-slate-500 text-sm">
                 <ion-spinner name="dots"></ion-spinner>
                 <span>Loading key persons...</span>
@@ -836,7 +891,7 @@
               <ion-select
                 *ngIf="!isLoadingKeyPersons"
                 formControlName="keyPerson"
-                placeholder="Select key person"
+                placeholder="Select sales person"
                 class="custom-select black-select"
               >
                 <ion-select-option *ngFor="let person of keyPersonsList" [value]="person.id || person">{{ person.name || person }}</ion-select-option>
@@ -877,12 +932,54 @@
               <ion-input formControlName="alternateContact" type="tel" placeholder="Enter alternate contact" class="custom-input"></ion-input>
             </div>
 
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Key Person</label>
+              <ion-input formControlName="keyPersonName" type="text" placeholder="Enter key person name" class="custom-input"></ion-input>
+            </div>
+
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-600 mb-1">Address *</label>
               <ion-textarea formControlName="address" placeholder="Enter full address" rows="3" class="custom-textarea"></ion-textarea>
               <div *ngIf="distributorForm.get('address')?.invalid && distributorForm.get('address')?.touched" class="text-xs text-red-500 mt-1">
                 {{ getErrorMessage('address') }}
               </div>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">State</label>
+              <ion-select
+                formControlName="state"
+                placeholder="Select State"
+                interface="popover"
+                class="custom-select"
+              >
+                <ion-select-option *ngFor="let s of stateOptions" [value]="s">{{ s }}</ion-select-option>
+              </ion-select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">District</label>
+              <ion-select
+                formControlName="district"
+                placeholder="Select District"
+                interface="popover"
+                class="custom-select"
+                [disabled]="!distributorForm.get('state')?.value"
+              >
+                <ion-select-option *ngFor="let d of filteredDistricts" [value]="d.district">{{ d.district }}</ion-select-option>
+              </ion-select>
+            </div>
+
+            <div>
+              <label class="block text-sm font-medium text-slate-600 mb-1">Pincode</label>
+              <ion-input
+                formControlName="pincode"
+                type="text"
+                placeholder="Enter 6-digit pincode"
+                maxlength="6"
+                (ionInput)="onPincodeInput($event)"
+                class="custom-input"
+              ></ion-input>
             </div>
           </div>
         </div>
@@ -973,6 +1070,53 @@
                 {{ getErrorMessage('accountName') }}
               </div>
             </div>
+
+            <!-- Credit Limit Toggle -->
+            <div class="md:col-span-2">
+              <div class="flex items-center gap-3 py-2">
+                <input 
+                  type="checkbox" 
+                  formControlName="creditLimit"
+                  id="creditLimitEdit"
+                  class="w-4 h-4 rounded text-emerald-500"
+                />
+                <label for="creditLimitEdit" class="text-sm font-medium text-slate-600 cursor-pointer">
+                  Enable Credit Limit
+                </label>
+              </div>
+            </div>
+
+            <!-- Credit Limit Fields (shown when checkbox is enabled) -->
+            <ng-container *ngIf="distributorForm.get('creditLimit')?.value">
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Number</label>
+                <ion-input
+                  formControlName="bankGuaranteeNumber"
+                  type="text"
+                  placeholder="Enter bank guarantee number"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div>
+                <label class="block text-sm font-medium text-slate-600 mb-1">Credit Amount</label>
+                <ion-input
+                  formControlName="creditAmount"
+                  type="number"
+                  placeholder="Enter credit amount"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+
+              <div class="md:col-span-2">
+                <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Expiry Date</label>
+                <ion-input
+                  formControlName="bankGuaranteeExpiryDate"
+                  type="date"
+                  class="custom-input"
+                ></ion-input>
+              </div>
+            </ng-container>
           </div>
         </div>
 

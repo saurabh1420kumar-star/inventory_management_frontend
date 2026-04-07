@@ -2,6 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { Router } from '@angular/router';
 import {
   IonHeader,
   IonToolbar,
@@ -22,7 +23,8 @@ import {
   IonSearchbar,
   IonBadge,
   IonRefresher,
-  IonRefresherContent
+  IonRefresherContent,
+  IonModal
 } from '@ionic/angular/standalone';
 
 import { ToastController } from '@ionic/angular';
@@ -56,7 +58,8 @@ import {
     IonIcon,
     IonSpinner,
     IonRefresher,
-    IonRefresherContent
+    IonRefresherContent,
+    IonModal
   ]
 })
 export class ProformaInvoicePage implements OnInit {
@@ -72,6 +75,13 @@ export class ProformaInvoicePage implements OnInit {
   downloadIdentifier: 'id' | 'cartId' | 'piNumber' = 'cartId'; // Toggle between id, cartId, or piNumber for download
   viewingPdfUrl: SafeResourceUrl | null = null; // Track safe PDF URL being viewed
   rawPdfUrl: string | null = null; // Store the raw URL for download link
+
+  // Dispatch Modal State
+  isDispatchModalOpen: boolean = false;
+  selectedInvoiceForApproval: ProformaInvoice | null = null;
+  ledgerBalance: number = 0; // Will be fetched from backend
+  isLoadingLedgerBalance: boolean = false;
+  isApprovingDispatch: boolean = false;
 
   // Icon properties for template
   downloadIcon = downloadIcon;
@@ -91,7 +101,8 @@ export class ProformaInvoicePage implements OnInit {
     private proformaInvoiceService: ProformaInvoiceService,
     private toastController: ToastController,
     private sanitizer: DomSanitizer,
-    private toast: Toast
+    private toast: Toast,
+    private router: Router
   ) {
     addIcons({ downloadIcon, checkmarkIcon, eyeOffIcon, closeCircleIcon, checkmarkCircleIcon });
   }
@@ -277,5 +288,79 @@ export class ProformaInvoicePage implements OnInit {
 
     // Just toggle the expanded state - we already have the data
     this.expandedInvoiceId = invoiceId;
+  }
+
+  // Dispatch Approval Methods
+  openDispatchApprovalModal(invoice: ProformaInvoice) {
+    this.haptic.medium();
+    this.selectedInvoiceForApproval = invoice;
+    this.isDispatchModalOpen = true;
+    this.fetchLedgerBalance();
+  }
+
+  closeDispatchModal() {
+    this.haptic.light();
+    this.isDispatchModalOpen = false;
+    this.selectedInvoiceForApproval = null;
+    this.ledgerBalance = 0;
+  }
+
+  private fetchLedgerBalance() {
+    this.isLoadingLedgerBalance = true;
+    // TODO: Replace with actual API call to fetch ledger balance for distributor
+    // For now, using mock data
+    setTimeout(() => {
+      this.ledgerBalance = 1_14_916.97; // Mock closing balance
+      this.isLoadingLedgerBalance = false;
+    }, 500);
+  }
+
+  approveAndGoToDispatch() {
+    this.haptic.medium();
+    if (!this.selectedInvoiceForApproval) {
+      this.showToast('No invoice selected', 'danger');
+      return;
+    }
+
+    // Check if balance is sufficient
+    const balanceVsOrder = this.ledgerBalance - this.selectedInvoiceForApproval.amount;
+    if (balanceVsOrder < 0) {
+      this.showToast('Insufficient ledger balance to approve dispatch', 'danger');
+      return;
+    }
+
+    this.isApprovingDispatch = true;
+    this.showToast('Order marked as Ready to Dispatch!', 'success');
+    
+    // Close modal and navigate after a short delay to allow modal animation to complete
+    setTimeout(() => {
+      this.isDispatchModalOpen = false;
+      this.isApprovingDispatch = false;
+      
+      // Navigate to dispatch page with invoice data
+      this.router.navigate(['/dispatch'], {
+        queryParams: {
+          invoiceId: this.selectedInvoiceForApproval?.id,
+          cartId: this.selectedInvoiceForApproval?.cartId,
+          distributorId: this.selectedInvoiceForApproval?.distributorId
+        }
+      });
+      
+      // Reset selected invoice
+      this.selectedInvoiceForApproval = null;
+      this.ledgerBalance = 0;
+    }, 800);
+  }
+
+  rejectInvoice(invoice: ProformaInvoice) {
+    this.haptic.medium();
+    this.showToast('Invoice rejected', 'warning');
+    // TODO: Add reject logic - API call to update invoice status
+  }
+
+  // Helper to check if balance is sufficient
+  isBalanceSufficient(): boolean {
+    if (!this.selectedInvoiceForApproval) return false;
+    return this.ledgerBalance >= this.selectedInvoiceForApproval.amount;
   }
 }

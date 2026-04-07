@@ -103,7 +103,13 @@
           style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
 
           <!-- Top Accent -->
-          <div class="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-400"></div>
+          <div class="h-1.5 w-full"
+            [class.bg-gradient-to-r]="true"
+            [class.from-emerald-400]="!order.isDispatched"
+            [class.via-teal-400]="!order.isDispatched"
+            [class.to-blue-400]="!order.isDispatched"
+            [class.from-blue-400]="order.isDispatched"
+            [class.to-indigo-400]="order.isDispatched"></div>
 
           <div class="p-5">
 
@@ -118,9 +124,13 @@
                   <p class="text-xs text-slate-400 font-medium">Cart #{{ order.invoice.cartId }}</p>
                 </div>
               </div>
-              <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
+              <span *ngIf="!order.isDispatched" class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
                 <ion-icon name="checkmark-circle" class="text-xs"></ion-icon>
                 PI Ready
+              </span>
+              <span *ngIf="order.isDispatched" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
+                <ion-icon name="rocket-outline" class="text-xs"></ion-icon>
+                Dispatched
               </span>
             </div>
 
@@ -160,16 +170,25 @@
 
             <!-- ── Row 3: Action Buttons ── -->
             <div class="flex gap-2.5">
-              <button (click)="openApproveModal(order)"
-                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm rounded-xl py-3 shadow-md shadow-emerald-200/50 hover:shadow-lg active:scale-[0.97] transition-all duration-200">
+              <!-- Dispatched state -->
+              <div *ngIf="order.isDispatched"
+                class="flex-1 flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs sm:text-sm rounded-xl py-3">
                 <ion-icon name="checkmark-done-outline" class="text-base"></ion-icon>
-                Approve Dispatch
-              </button>
-              <button (click)="openRejectModal(order)"
-                class="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs sm:text-sm rounded-xl px-4 py-3 active:scale-[0.97] transition-all duration-200">
-                <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
-                Reject
-              </button>
+                Dispatched
+              </div>
+              <!-- Normal action buttons -->
+              <ng-container *ngIf="!order.isDispatched">
+                <button (click)="openApproveModal(order)"
+                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs sm:text-sm rounded-xl py-3 shadow-md shadow-emerald-200/50 hover:shadow-lg active:scale-[0.97] transition-all duration-200">
+                  <ion-icon name="checkmark-done-outline" class="text-base"></ion-icon>
+                  Approve Dispatch
+                </button>
+                <button (click)="openRejectModal(order)"
+                  class="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs sm:text-sm rounded-xl px-4 py-3 active:scale-[0.97] transition-all duration-200">
+                  <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                  Reject
+                </button>
+              </ng-container>
             </div>
           </div>
         </div>

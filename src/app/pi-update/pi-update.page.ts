@@ -19,6 +19,7 @@ interface PIOrderTile {
   orderNo: string;
   amount: number;
   distributorId: number;
+  isDispatched?: boolean;
 }
 
 @Component({
@@ -205,10 +206,12 @@ export class PiUpdatePage implements OnInit {
     this.dispatchService.approvePayment(orderId, distributorId).subscribe({
       next: (res) => {
         this.isApproving = false;
+        /* Mark the card as dispatched instead of removing */
+        const approvedId = this.selectedOrder?.invoice.id;
         this.closeApproveModal();
         this.toast.present('Dispatch approved successfully!', 'success');
-        /* Remove from list */
-        this.orders = this.orders.filter(o => o.invoice.id !== this.selectedOrder?.invoice.id);
+        const target = this.orders.find(o => o.invoice.id === approvedId);
+        if (target) target.isDispatched = true;
         this.filterOrders();
         /* Navigate to dispatch page */
         this.router.navigate(['/dispatch']);

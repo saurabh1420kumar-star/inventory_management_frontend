@@ -32,7 +32,7 @@ export interface ApiResponse<T> {
 export interface Distributor {
     id: number;
     name: string;
-    firstName?: string;
+    firmName?: string;
     lastName?: string;
     accountName: string;
     accountNumber: string;
@@ -96,6 +96,28 @@ export class LedgerService {
             catchError(error => {
                 console.error('Update Balance Error:', error);
                 // If JSON parsing fails or network error, treat as success since backend confirmed it
+                return of({
+                    success: true,
+                    message: error.statusText || 'Balance updated successfully',
+                    data: null
+                });
+            })
+        );
+    }
+
+    updateBalanceDirect(
+        distributorId: number,
+        amount: number,
+        description: string,
+        transactionType?: string
+    ): Observable<ApiResponse<any>> {
+        let url = `${this.apiUrl}/accounts/update-balance?distributorId=${distributorId}&amount=${amount}&description=${encodeURIComponent(description)}`;
+        if (transactionType) {
+            url += `&transactionType=${transactionType}`;
+        }
+        return this.http.post<ApiResponse<any>>(url, {}).pipe(
+            catchError(error => {
+                console.error('Update Balance Direct Error:', error);
                 return of({
                     success: true,
                     message: error.statusText || 'Balance updated successfully',

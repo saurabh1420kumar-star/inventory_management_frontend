@@ -839,13 +839,9 @@
               <textarea
                 formControlName="dispatchFromAddress"
                 placeholder="Enter warehouse/dispatch location address"
-                rows="2"
-                class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border focus:ring-4 rounded-xl py-3 px-4 outline-none transition-all duration-200 resize-none text-sm"
-                [class.border-slate-200]="!gdnForm.get('dispatchFromAddress')?.touched || !gdnForm.get('dispatchFromAddress')?.invalid"
-                [class.border-rose-400]="gdnForm.get('dispatchFromAddress')?.touched && gdnForm.get('dispatchFromAddress')?.invalid"
-                [class.focus:border-teal-400]="!gdnForm.get('dispatchFromAddress')?.invalid"
-                [class.focus:ring-teal-50]="!gdnForm.get('dispatchFromAddress')?.invalid"
-                [class.focus:ring-rose-50]="gdnForm.get('dispatchFromAddress')?.invalid">
+                rows="5"
+                readonly
+                class="w-full bg-slate-100 text-slate-700 border border-slate-200 rounded-xl py-3 px-4 outline-none resize-none text-sm cursor-default opacity-80">
               </textarea>
               <p *ngIf="gdnForm.get('dispatchFromAddress')?.touched && gdnForm.get('dispatchFromAddress')?.invalid" class="text-xs text-rose-500 mt-1">
                 {{ getGdnFieldError('dispatchFromAddress') }}

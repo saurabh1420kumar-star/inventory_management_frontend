@@ -345,7 +345,7 @@ export class DistributorDashboardPage implements OnInit {
     }
 
     this.isSubmittingPayment = true;
-    this.ledgerService.updateBalance(
+    this.ledgerService.updateBalanceDirect(
       this.distributorId,
       parsedAmount,
       description,

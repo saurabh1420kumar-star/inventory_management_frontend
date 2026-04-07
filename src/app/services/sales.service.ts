@@ -123,4 +123,47 @@ export class SalesService {
       body: reason ? { reason } : undefined,
     });
   }
+
+  /**
+   * Get order tracking list
+   * GET /api/order/tracking?status=all&page=0&size=50
+   * GET /api/order/tracking?status=all&distributorId=35&page=0&size=50 (for distributor login)
+   */
+  getOrderTracking(status: string = 'all', page: number = 0, size: number = 50, distributorId?: number): Observable<OrderTrackingResponse> {
+    let url = `${environment.apiUrl}/order/tracking?status=${status}&page=${page}&size=${size}`;
+    if (distributorId) {
+      url += `&distributorId=${distributorId}`;
+    }
+    return this.http.get<OrderTrackingResponse>(url, { headers: this.getAuthHeaders() });
+  }
+}
+
+// ============= ORDER TRACKING MODELS =============
+
+export interface OrderTrackingStep {
+  id: number;
+  stepSequence: number;
+  label: string;
+  status: 'completed' | 'in-progress' | 'pending' | 'cancelled';
+  date: string | null;
+  remarks: string | null;
+  assignedPerson: { name: string; role: string; contact: string; email: string; } | null;
+  hasDownload: boolean;
+  downloadLabel: string | null;
+  hasAction: boolean;
+  actionResponse: string | null;
+}
+
+export interface OrderTrackingItem {
+  id: number;
+  orderNumber: string;
+  distributorName: string;
+  distributorId: number;
+  orderDate: string;
+  totalAmount: number;
+  steps: OrderTrackingStep[];
+}
+
+export interface OrderTrackingResponse {
+  orders: OrderTrackingItem[];
 }

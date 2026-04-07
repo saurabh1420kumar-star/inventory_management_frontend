@@ -9,7 +9,7 @@ import { environment } from '../../environments/environment';
 export interface DistributorDto {
   id: number;
   name: string;
-  firstName?: string;
+  firmName?: string;
   lastName?: string;
   assignedPerson?: string;
   salesPersonRoleType?: string;
@@ -32,8 +32,7 @@ export interface DistributorDto {
  * Used when creating a new distributor account with credentials
  */
 export interface CreateDistributorRequest {
-  firstName: string;
-  lastName: string;
+  firmName: string;
   assignedPerson: string;
   salesPersonRoleType: string;
   salespersonId: number;
@@ -43,11 +42,17 @@ export interface CreateDistributorRequest {
   phoneNumber: string;
   alternateContact?: string;
   address: string;
+  state?: string;
+  district?: string;
+  pinCode?: string;
   aadhaarNumber: string;
   panNumber: string;
   gstNumber: string;
   status: string;
   creditLimit: boolean;
+  creditAmount?: number;
+  bankGuaranteeNumber?: string;
+  bgExpiryDate?: string;
   username: string;
   password: string;
   accountNumber?: string;
@@ -168,6 +173,21 @@ export class DistributorService {
   getDistributorOrders(distributorId: number | string): Observable<ApiResponse<DistributorOrder[]>> {
     return this.http.get<ApiResponse<DistributorOrder[]>>(
       `${this.baseUrl}/${distributorId}/orders`
+    );
+  }
+
+  confirmOrder(distributorId: number, payload: {
+    orderId: number;
+    gdnNumber: string;
+    status: string;
+    overallRating: number;
+    feedback: string;
+    remarks: string;
+    itemConfirmations: any[];
+  }): Observable<any> {
+    return this.http.post<any>(
+      `${this.baseUrl}/${distributorId}/confirm-order`,
+      payload
     );
   }
 }

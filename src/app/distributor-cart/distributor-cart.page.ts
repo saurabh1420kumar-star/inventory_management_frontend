@@ -362,6 +362,15 @@ export class DistributorCartPage implements OnInit {
         const cartData = response?.data || response;
         this.currentCartId = cartData?.id || cartData?.cartId || null;
         console.log('Active cart ID:', this.currentCartId);
+
+        // Map distributor address from cart response
+        const addr = cartData?.distributorAddress || cartData?.address || '';
+        if (addr) {
+          this.distributorAddress = addr;
+          this.orderForm.get('deliveryAddress')?.setValue(addr);
+          this.orderForm.get('deliveryAddress')?.disable();
+        }
+
         // Sync backend cart item IDs onto local cart items
         const apiItems: any[] = cartData?.cartItems || [];
         if (apiItems.length > 0) {

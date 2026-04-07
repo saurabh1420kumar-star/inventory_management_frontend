@@ -425,7 +425,7 @@ export class AccountsMasterPage implements OnInit {
   mapDistributorsToLedgerAccounts(distributors: Distributor[]): LedgerAccount[] {
     return distributors.map(distributor => ({
       id: distributor.id.toString(),
-      name: ((distributor.firstName || '') + ' ' + (distributor.lastName || '')).trim() || distributor.name,
+      name: (distributor.firmName || '') || distributor.name,
       accountCode: distributor.accountNumber,
       accountName: distributor.accountName,
       distributorId: distributor.id,
@@ -443,7 +443,7 @@ export class AccountsMasterPage implements OnInit {
       },
       toParty: {
         id: 'distributor-' + distributor.id,
-        name: ((distributor.firstName || '') + ' ' + (distributor.lastName || '')).trim() || distributor.name,
+        name: (distributor.firmName || '') || distributor.name,
         address: distributor.address,
         city: 'City',
         state: 'State',

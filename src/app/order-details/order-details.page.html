@@ -7,6 +7,11 @@
     <ion-title class="text-white font-bold tracking-tight text-xl">
       <span class="text-emerald-400">Order</span> Details
     </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadOrders()" [disabled]="isLoading" style="color: #ffffff;">
+        <ion-icon name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
   </ion-toolbar>
 </ion-header>
 
@@ -98,148 +103,257 @@
 
     <!-- ========== ORDER CARDS ========== -->
     <div class="orders-list">
-      <div *ngFor="let order of filteredOrders; let i = index" 
-           class="order-card"
-           [class.expanded]="order.expanded"
-           [style.animation-delay]="i * 80 + 'ms'">
 
-        <!-- Card Header (clickable) -->
-        <div class="order-header" (click)="toggleOrder(order)">
-          <div class="order-header-left">
-            <div class="order-avatar" [attr.data-status]="getOrderStatus(order)">
-              <ion-icon name="cart-outline"></ion-icon>
-            </div>
-            <div class="order-meta">
-              <h3 class="order-number">{{ order.orderNumber }}</h3>
-              <span class="order-distributor">
-                <ion-icon name="business-outline"></ion-icon>
-                {{ order.distributorName }}
-              </span>
-            </div>
-          </div>
-          <div class="order-header-right">
-            <span class="status-badge" [attr.data-status]="getOrderStatus(order)">
-              <span class="status-badge-full">{{ getOrderStatus(order) }}</span>
-              <span class="status-badge-short">{{ getShortStatus(order) }}</span>
-            </span>
-            <ion-icon 
-              [name]="order.expanded ? 'chevron-up-outline' : 'chevron-down-outline'" 
-              class="expand-icon">
-            </ion-icon>
-          </div>
+      <!-- Loading State -->
+      <div *ngIf="isLoading" class="empty-state">
+        <div class="empty-icon-wrap">
+          <ion-spinner name="crescent" style="width:48px;height:48px;color:var(--ion-color-primary)"></ion-spinner>
         </div>
+        <h3>Loading Orders...</h3>
+        <p>Fetching latest order tracking data</p>
+      </div>
 
-        <!-- Mini Info Bar -->
-        <div class="order-info-bar">
-          <div class="info-item">
-            <ion-icon name="calendar-outline"></ion-icon>
-            <span>{{ order.orderDate }}</span>
-          </div>
-          <div class="info-item">
-            <ion-icon name="cash-outline"></ion-icon>
-            <span class="amount">₹{{ order.totalAmount | number }}</span>
-          </div>
-          <div class="info-item progress-info">
-            <div class="mini-progress-bar">
-              <div class="mini-progress-fill" [style.width.%]="getProgressPercentage(order)"
-                   [attr.data-status]="getOrderStatus(order)"></div>
-            </div>
-            <span class="progress-text">{{ getProgressPercentage(order) }}%</span>
-          </div>
+      <!-- Error State -->
+      <div *ngIf="!isLoading && loadError" class="empty-state">
+        <div class="empty-icon-wrap">
+          <ion-icon name="close-circle" style="font-size:48px;color:#ef4444"></ion-icon>
         </div>
+        <h3>Something went wrong</h3>
+        <p>{{ loadError }}</p>
+        <button class="filter-chip active" style="margin-top:12px" (click)="loadOrders()">
+          <ion-icon name="refresh-outline"></ion-icon>
+          <span>Retry</span>
+        </button>
+      </div>
+      <ng-container *ngIf="!isLoading && !loadError">
+        <div *ngFor="let order of filteredOrders; let i = index" 
+             class="order-card"
+             [class.expanded]="order.expanded"
+             [style.animation-delay]="i * 80 + 'ms'">
 
-        <!-- ========== TIMELINE (Expandable) ========== -->
-        <div class="timeline-container" *ngIf="order.expanded">
-          <div class="timeline">
-            <div *ngFor="let step of order.steps; let si = index; let last = last" 
-                 class="timeline-step"
-                 [attr.data-status]="step.status"
-                 [style.animation-delay]="si * 60 + 'ms'">
-
-              <!-- Step Indicator -->
-              <div class="step-indicator">
-                <div class="step-dot" [attr.data-status]="step.status">
-                  <ion-icon [name]="getStepIcon(step)"></ion-icon>
-                </div>
-                <div *ngIf="!last" class="step-connector" [attr.data-status]="step.status"></div>
+          <!-- Card Header (clickable) -->
+          <div class="order-header" (click)="toggleOrder(order)">
+            <div class="order-header-left">
+              <div class="order-avatar" [attr.data-status]="getOrderStatus(order)">
+                <ion-icon name="cart-outline"></ion-icon>
               </div>
-
-              <!-- Step Content -->
-              <div class="step-content">
-                <div class="step-header">
-                  <div class="step-label-wrap">
-                    <ion-icon [name]="getStepLabelIcon(step)" class="step-label-icon" [attr.data-status]="step.status"></ion-icon>
-                    <h4 class="step-label">{{ step.label }}</h4>
-                  </div>
-                  <span *ngIf="step.date" class="step-date">{{ step.date }}</span>
-                </div>
-                <p *ngIf="step.remarks" class="step-remarks">{{ step.remarks }}</p>
-
-                <!-- Assigned Person Info -->
-                <div *ngIf="step.assignedPerson" class="step-person-info" [attr.data-status]="step.status">
-                  <div class="person-header">
-                    <ion-icon name="person-outline" class="person-icon"></ion-icon>
-                    <span class="person-label">Assigned To</span>
-                  </div>
-                  <div class="person-details">
-                    <div class="person-name">{{ step.assignedPerson.name }}</div>
-                    <div class="person-role">{{ step.assignedPerson.role }}</div>
-                    <div class="person-contact-row">
-                      <span class="person-contact">
-                        <ion-icon name="call-outline"></ion-icon>
-                        {{ step.assignedPerson.contact }}
-                      </span>
-                      <span class="person-email">
-                        <ion-icon name="mail-outline"></ion-icon>
-                        {{ step.assignedPerson.email }}
-                      </span>
-                    </div>
-                  </div>
-                </div>
-
-                <!-- Download Button -->
-                <button *ngIf="step.hasDownload && step.status !== 'cancelled' && step.status !== 'pending'"
-                        class="step-download-btn"
-                        (click)="onDownloadDocument(step, order)">
-                  <ion-icon name="download-outline"></ion-icon>
-                  <span>{{ step.downloadLabel }}</span>
-                </button>
-
-                <!-- Order Received Action Buttons -->
-                <div *ngIf="step.hasAction && step.status !== 'cancelled' && step.actionResponse === null && step.status !== 'pending'"
-                     class="step-action-buttons">
-                  <span class="action-label">Have you received this order?</span>
-                  <div class="action-btn-group">
-                    <button class="action-btn action-yes" (click)="onOrderReceivedAction(order, 'yes')">
-                      <ion-icon name="checkmark-circle"></ion-icon>
-                      YES
-                    </button>
-                    <button class="action-btn action-no" (click)="onOrderReceivedAction(order, 'no')">
-                      <ion-icon name="close-circle"></ion-icon>
-                      NO
-                    </button>
-                  </div>
-                </div>
-
-                <span class="step-status-tag" [attr.data-status]="step.status">
-                  <ion-icon [name]="getStepIcon(step)" class="tag-icon"></ion-icon>
-                  {{ step.status === 'in-progress' ? 'In Progress' : (step.status | titlecase) }}
+              <div class="order-meta">
+                <h3 class="order-number">{{ order.orderNumber }}</h3>
+                <span class="order-distributor">
+                  <ion-icon name="business-outline"></ion-icon>
+                  {{ order.distributorName }}
                 </span>
               </div>
             </div>
+            <div class="order-header-right">
+              <span class="status-badge" [attr.data-status]="getOrderStatus(order)">
+                <span class="status-badge-full">{{ getOrderStatus(order) }}</span>
+                <span class="status-badge-short">{{ getShortStatus(order) }}</span>
+              </span>
+              <ion-icon 
+                [name]="order.expanded ? 'chevron-up-outline' : 'chevron-down-outline'" 
+                class="expand-icon">
+              </ion-icon>
+            </div>
+          </div>
+
+          <!-- Mini Info Bar -->
+          <div class="order-info-bar">
+            <div class="info-item">
+              <ion-icon name="calendar-outline"></ion-icon>
+              <span>{{ order.orderDate }}</span>
+            </div>
+            <div class="info-item">
+              <ion-icon name="cash-outline"></ion-icon>
+              <span class="amount">₹{{ order.totalAmount | number }}</span>
+            </div>
+            <div class="info-item progress-info">
+              <div class="mini-progress-bar">
+                <div class="mini-progress-fill" [style.width.%]="getProgressPercentage(order)"
+                     [attr.data-status]="getOrderStatus(order)"></div>
+              </div>
+              <span class="progress-text">{{ getProgressPercentage(order) }}%</span>
+            </div>
+          </div>
+
+          <!-- ========== TIMELINE (Expandable) ========== -->
+          <div class="timeline-container" *ngIf="order.expanded">
+            <div class="timeline">
+              <div *ngFor="let step of order.steps; let si = index; let last = last" 
+                   class="timeline-step"
+                   [attr.data-status]="step.status"
+                   [style.animation-delay]="si * 60 + 'ms'">
+
+                <!-- Step Indicator -->
+                <div class="step-indicator">
+                  <div class="step-dot" [attr.data-status]="step.status">
+                    <ion-icon [name]="getStepIcon(step)"></ion-icon>
+                  </div>
+                  <div *ngIf="!last" class="step-connector" [attr.data-status]="step.status"></div>
+                </div>
+
+                <!-- Step Content -->
+                <div class="step-content">
+                  <div class="step-header">
+                    <div class="step-label-wrap">
+                      <ion-icon [name]="getStepLabelIcon(step)" class="step-label-icon" [attr.data-status]="step.status"></ion-icon>
+                      <h4 class="step-label">{{ step.label }}</h4>
+                    </div>
+                    <span *ngIf="step.date" class="step-date">{{ step.date }}</span>
+                  </div>
+                  <p *ngIf="step.remarks" class="step-remarks">{{ step.remarks }}</p>
+
+                  <!-- Assigned Person Info (name only – role/contact/email not in API) -->
+                  <div *ngIf="step.assignedPerson" class="step-person-info" [attr.data-status]="step.status">
+                    <div class="person-header">
+                      <ion-icon name="person-outline" class="person-icon"></ion-icon>
+                      <span class="person-label">Assigned To</span>
+                    </div>
+                    <div class="person-details">
+                      <div class="person-name">{{ step.assignedPerson.name }}</div>
+                      <div *ngIf="step.assignedPerson.role" class="person-role">{{ step.assignedPerson.role }}</div>
+                      <div *ngIf="step.assignedPerson.contact || step.assignedPerson.email" class="person-contact-row">
+                        <span *ngIf="step.assignedPerson.contact" class="person-contact">
+                          <ion-icon name="call-outline"></ion-icon>
+                          {{ step.assignedPerson.contact }}
+                        </span>
+                        <span *ngIf="step.assignedPerson.email" class="person-email">
+                          <ion-icon name="mail-outline"></ion-icon>
+                          {{ step.assignedPerson.email }}
+                        </span>
+                      </div>
+                    </div>
+                  </div>
+
+                  <!-- Download GDN Button -->
+                  <button *ngIf="step.label === 'GDN Generated' && step.status === 'completed'"
+                          class="step-download-btn"
+                          [disabled]="downloadingGdnOrderId === order.id"
+                          (click)="downloadGdnForOrder(order)">
+                    <ion-icon name="download-outline"></ion-icon>
+                    <span>{{ downloadingGdnOrderId === order.id ? 'Downloading...' : 'Download GDN' }}</span>
+                  </button>
+
+                  <!-- Order Received Action Button -->
+                  <div *ngIf="step.hasAction && step.status !== 'cancelled' && step.status !== 'completed' && step.actionResponse === null && isOnTheWayCompleted(order)"
+                       class="step-action-buttons">
+                    <button class="action-btn action-yes" (click)="onOrderReceivedAction(order, 'yes')">
+                      <ion-icon name="checkmark-circle"></ion-icon>
+                      Confirm Order Received
+                    </button>
+                  </div>
+
+                  <span class="step-status-tag" [attr.data-status]="step.status">
+                    <ion-icon [name]="getStepIcon(step)" class="tag-icon"></ion-icon>
+                    {{ step.status === 'in-progress' ? 'In Progress' : (step.status | titlecase) }}
+                  </span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Download Invoice Button (shown when all steps are completed) -->
+            <div *ngIf="isOrderComplete(order)" class="px-4 pb-4 pt-2">
+              <button class="step-download-btn w-full justify-center"
+                      style="background: linear-gradient(135deg, #6366f1, #8b5cf6); color: #fff; border: none;"
+                      [disabled]="downloadingInvoiceOrderId === order.id"
+                      (click)="downloadInvoiceForOrder(order)">
+                <ion-icon name="document-text-outline"></ion-icon>
+                <span>{{ downloadingInvoiceOrderId === order.id ? 'Downloading...' : 'Download Invoice' }}</span>
+              </button>
+            </div>
           </div>
         </div>
-      </div>
 
-      <!-- Empty State -->
-      <div *ngIf="filteredOrders.length === 0" class="empty-state">
-        <div class="empty-icon-wrap">
-          <ion-icon name="cart-outline"></ion-icon>
+        <!-- Empty State -->
+        <div *ngIf="filteredOrders.length === 0" class="empty-state">
+          <div class="empty-icon-wrap">
+            <ion-icon name="cart-outline"></ion-icon>
+          </div>
+          <h3>No Orders Found</h3>
+          <p>{{ searchQuery ? 'Try adjusting your search query' : 'No orders available' }}</p>
         </div>
-        <h3>No Orders Found</h3>
-        <p>{{ searchQuery ? 'Try adjusting your search query' : 'No orders available' }}</p>
-      </div>
+      </ng-container>
     </div>
 
   </div>
 </ion-content>
+
+<!-- Confirm Order Received Modal -->
+<ion-modal [isOpen]="showConfirmModal" (didDismiss)="closeConfirmModal()" [backdropDismiss]="false">
+  <ng-template>
+    <div class="flex flex-col bg-white rounded-t-3xl overflow-hidden" style="max-height: 90vh;">
+
+      <!-- Header -->
+      <div class="bg-gradient-to-r from-emerald-500 to-teal-500 px-6 py-5 flex items-center justify-between flex-shrink-0">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 bg-white/20 rounded-xl flex items-center justify-center border border-white/30">
+            <ion-icon name="checkbox-outline" class="text-xl text-white"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-lg font-bold text-white">Confirm Order Received</h2>
+            <p *ngIf="confirmingOrder" class="text-xs text-teal-100">{{ confirmingOrder.orderNumber }}</p>
+          </div>
+        </div>
+        <button (click)="closeConfirmModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors border border-white/30">
+          <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+        </button>
+      </div>
+
+      <!-- Body -->
+      <div class="flex-1 overflow-y-auto p-6 space-y-4">
+
+        <!-- Order ID (read-only) -->
+        <div class="bg-slate-50 rounded-xl p-4 border border-slate-200">
+          <p class="text-xs font-semibold text-slate-500 uppercase tracking-wider mb-1">Order ID</p>
+          <p class="text-lg font-bold text-slate-800">{{ confirmingOrder ? extractOrderId(confirmingOrder.orderNumber) : '' }}</p>
+        </div>
+
+        <!-- Status -->
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Status</label>
+          <select [(ngModel)]="confirmForm.status"
+                  class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40">
+            <option value="RECEIVED_COMPLETE">RECEIVED_COMPLETE</option>
+            <option value="RECEIVED_PARTIAL">RECEIVED_PARTIAL</option>
+            <option value="NOT_RECEIVED">NOT_RECEIVED</option>
+          </select>
+        </div>
+
+        <!-- Feedback -->
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Feedback</label>
+          <input type="text"
+                 [(ngModel)]="confirmForm.feedback"
+                 placeholder="Enter your feedback"
+                 class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+        </div>
+
+        <!-- Remarks -->
+        <div>
+          <label class="block text-sm font-medium text-slate-600 mb-1">Remarks</label>
+          <textarea [(ngModel)]="confirmForm.remarks"
+                    rows="3"
+                    placeholder="Enter any remarks"
+                    class="w-full px-4 py-3 bg-slate-50 border border-slate-200 rounded-xl text-slate-800 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40 resize-none"></textarea>
+        </div>
+
+      </div>
+
+      <!-- Footer Buttons -->
+      <div class="flex gap-3 p-5 border-t border-slate-100 flex-shrink-0">
+        <button (click)="closeConfirmModal()"
+                class="flex-1 py-3 bg-slate-100 text-slate-600 rounded-xl font-medium hover:bg-slate-200 transition-colors">
+          Cancel
+        </button>
+        <button (click)="submitConfirmOrder()"
+                [disabled]="isConfirming"
+                class="flex-1 py-3 bg-emerald-500 text-white rounded-xl font-semibold hover:bg-emerald-600 transition-colors disabled:opacity-60 flex items-center justify-center gap-2">
+          <ion-spinner *ngIf="isConfirming" name="dots" class="w-4 h-4"></ion-spinner>
+          <ion-icon *ngIf="!isConfirming" name="checkmark-circle"></ion-icon>
+          {{ isConfirming ? 'Confirming...' : 'Confirm' }}
+        </button>
+      </div>
+
+    </div>
+  </ng-template>
+</ion-modal>

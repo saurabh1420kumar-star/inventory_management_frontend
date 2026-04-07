@@ -1,7 +1,7 @@
 import { CommonModule } from '@angular/common';
 import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ToastController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
 import {
   searchOutline,
@@ -28,14 +28,21 @@ import {
   receiptOutline,
   walletOutline,
   checkboxOutline,
-  navigateOutline
+  navigateOutline,
+  refreshOutline
 } from 'ionicons/icons';
+import { SalesService, OrderTrackingItem, OrderTrackingStep } from '../services/sales.service';
+import { GdnService } from '../services/gdn.service';
+import { DownloadService } from '../services/download.service';
+import { DistributorService } from '../services/distributor.service';
+import { InvoiceService } from '../services/invoice.service';
+import { Auth } from '../services/auth';
 
 export interface AssignedPerson {
   name: string;
-  role: string;
-  contact: string;
-  email: string;
+  role?: string;
+  contact?: string;
+  email?: string;
 }
 
 export interface OrderStep {
@@ -54,6 +61,7 @@ export interface Order {
   id: string;
   orderNumber: string;
   distributorName: string;
+  distributorId?: number;
   orderDate: string;
   totalAmount: number;
   steps: OrderStep[];
@@ -76,13 +84,31 @@ export class OrderDetailsPage implements OnInit {
   filteredOrders: Order[] = [];
   searchQuery: string = '';
   filterStatus: string = 'all';
+  isLoading: boolean = false;
+  loadError: string = '';
+  downloadingGdnOrderId: string | null = null;
+  downloadingInvoiceOrderId: string | null = null;
+
+  // Confirm Order Received Modal
+  showConfirmModal: boolean = false;
+  confirmingOrder: Order | null = null;
+  confirmForm = { remarks: '', feedback: '', status: 'RECEIVED_COMPLETE' };
+  isConfirming: boolean = false;
 
   // Stats
   totalOrders: number = 0;
   pendingOrders: number = 0;
   completedOrders: number = 0;
 
-  constructor() {
+  constructor(
+    private salesService: SalesService,
+    private gdnService: GdnService,
+    private downloadService: DownloadService,
+    private distributorService: DistributorService,
+    private invoiceService: InvoiceService,
+    private auth: Auth,
+    private toastController: ToastController
+  ) {
     addIcons({
       'search-outline': searchOutline,
       'cart-outline': cartOutline,
@@ -108,140 +134,76 @@ export class OrderDetailsPage implements OnInit {
       'receipt-outline': receiptOutline,
       'wallet-outline': walletOutline,
       'checkbox-outline': checkboxOutline,
-      'navigate-outline': navigateOutline
+      'navigate-outline': navigateOutline,
+      'refresh-outline': refreshOutline,
     });
   }
 
   ngOnInit() {
-    this.loadSampleOrders();
-    this.updateStats();
+    this.loadOrders();
   }
 
-  loadSampleOrders() {
-    this.orders = [
-      {
-        id: '1',
-        orderNumber: 'ORD-2026-001',
-        distributorName: 'test-5 created',
-        orderDate: '2026-02-15',
-        totalAmount: 45000,
-        steps: [
-          { label: 'Order Placed', status: 'completed', date: '2026-02-15', remarks: 'Order submitted by distributor' },
-          {
-            label: 'Pending Approval from Sales', status: 'completed', date: '2026-02-16', remarks: 'Sent to sales team for review',
-            assignedPerson: { name: 'Rahul Sharma', role: 'Zonal Sales Manager', contact: '+91 98765 43210', email: 'rahul.sharma@nectar.com' }
-          },
-          {
-            label: 'Approved from Sales', status: 'completed', date: '2026-02-17', remarks: 'Approved by Zonal Sales Manager',
-            assignedPerson: { name: 'Rahul Sharma', role: 'Zonal Sales Manager', contact: '+91 98765 43210', email: 'rahul.sharma@nectar.com' }
-          },
-          {
-            label: 'Proforma Invoice Generated', status: 'in-progress', date: '2026-02-18', remarks: 'PI #PI-2026-001 being prepared',
-            hasDownload: true, downloadLabel: 'Download Proforma Invoice',
-            assignedPerson: { name: 'Priya Patel', role: 'Accounts Executive', contact: '+91 87654 32109', email: 'priya.patel@nectar.com' }
-          },
-          {
-            label: 'Awaiting Payment Confirmation from Accounts', status: 'pending',
-            assignedPerson: { name: 'Amit Verma', role: 'Accounts Manager', contact: '+91 76543 21098', email: 'amit.verma@nectar.com' }
-          },
-          {
-            label: 'Approved from Accounts', status: 'pending',
-            assignedPerson: { name: 'Amit Verma', role: 'Accounts Manager', contact: '+91 76543 21098', email: 'amit.verma@nectar.com' }
-          },
-          {
-            label: 'Awaiting Confirmation from Logistics', status: 'pending',
-            assignedPerson: { name: 'Suresh Kumar', role: 'Logistics Head', contact: '+91 65432 10987', email: 'suresh.kumar@nectar.com' }
-          },
-          {
-            label: 'Approved from Logistics', status: 'pending',
-            assignedPerson: { name: 'Suresh Kumar', role: 'Logistics Head', contact: '+91 65432 10987', email: 'suresh.kumar@nectar.com' }
-          },
-          {
-            label: 'GDN Generated', status: 'pending',
-            hasDownload: true, downloadLabel: 'Download GDN',
-            assignedPerson: { name: 'Rajesh Gupta', role: 'Warehouse Manager', contact: '+91 54321 09876', email: 'rajesh.gupta@nectar.com' }
-          },
-          { label: 'Order is On the Way', status: 'pending' },
-          { label: 'Order Received', status: 'pending', hasAction: true, actionResponse: null },
-        ],
-        expanded: true
+  loadOrders() {
+    this.isLoading = true;
+    this.loadError = '';
+    const role = this.auth.getRoleType();
+    const distributorId = role === 'DISTRIBUTOR' ? (this.auth.getUserId() ?? undefined) : undefined;
+    this.salesService.getOrderTracking('all', 0, 50, distributorId).subscribe({
+      next: (response) => {
+        this.orders = (response.orders || []).map((item: OrderTrackingItem, index: number) =>
+          this.mapApiOrderToOrder(item, index === 0)
+        );
+        this.filteredOrders = [...this.orders];
+        this.updateStats();
+        this.isLoading = false;
       },
-      {
-        id: '2',
-        orderNumber: 'ORD-2026-002',
-        distributorName: 'New Distributor',
-        orderDate: '2026-02-10',
-        totalAmount: 32000,
-        steps: [
-          { label: 'Order Placed', status: 'completed', date: '2026-02-10', remarks: 'Order submitted' },
-          {
-            label: 'Pending Approval from Sales', status: 'completed', date: '2026-02-11', remarks: 'Sent to sales team',
-            assignedPerson: { name: 'Vikram Singh', role: 'Regional Sales Manager', contact: '+91 99887 76655', email: 'vikram.singh@nectar.com' }
-          },
-          {
-            label: 'Approved from Sales', status: 'cancelled', date: '2026-02-12', remarks: 'Rejected: Insufficient stock',
-            assignedPerson: { name: 'Vikram Singh', role: 'Regional Sales Manager', contact: '+91 99887 76655', email: 'vikram.singh@nectar.com' }
-          },
-          { label: 'Proforma Invoice Generated', status: 'cancelled', hasDownload: true, downloadLabel: 'Download Proforma Invoice' },
-          { label: 'Awaiting Payment Confirmation from Accounts', status: 'cancelled' },
-          { label: 'Approved from Accounts', status: 'cancelled' },
-          { label: 'Awaiting Confirmation from Logistics', status: 'cancelled' },
-          { label: 'Approved from Logistics', status: 'cancelled' },
-          { label: 'GDN Generated', status: 'cancelled', hasDownload: true, downloadLabel: 'Download GDN' },
-          { label: 'Order is On the Way', status: 'cancelled' },
-          { label: 'Order Received', status: 'cancelled', hasAction: true, actionResponse: null },
-        ],
-        expanded: false
-      },
-      {
-        id: '3',
-        orderNumber: 'ORD-2026-003',
-        distributorName: 'test-3-edited',
-        orderDate: '2026-01-28',
-        totalAmount: 78000,
-        steps: [
-          { label: 'Order Placed', status: 'completed', date: '2026-01-28', remarks: 'Order submitted' },
-          {
-            label: 'Pending Approval from Sales', status: 'completed', date: '2026-01-29', remarks: 'Sent to sales team',
-            assignedPerson: { name: 'Rahul Sharma', role: 'Zonal Sales Manager', contact: '+91 98765 43210', email: 'rahul.sharma@nectar.com' }
-          },
-          {
-            label: 'Approved from Sales', status: 'completed', date: '2026-01-30', remarks: 'Approved by Regional Sales Manager',
-            assignedPerson: { name: 'Rahul Sharma', role: 'Zonal Sales Manager', contact: '+91 98765 43210', email: 'rahul.sharma@nectar.com' }
-          },
-          {
-            label: 'Proforma Invoice Generated', status: 'completed', date: '2026-02-01', remarks: 'Invoice #PI-2026-003',
-            hasDownload: true, downloadLabel: 'Download Proforma Invoice',
-            assignedPerson: { name: 'Priya Patel', role: 'Accounts Executive', contact: '+91 87654 32109', email: 'priya.patel@nectar.com' }
-          },
-          {
-            label: 'Awaiting Payment Confirmation from Accounts', status: 'completed', date: '2026-02-03', remarks: 'Payment verified',
-            assignedPerson: { name: 'Amit Verma', role: 'Accounts Manager', contact: '+91 76543 21098', email: 'amit.verma@nectar.com' }
-          },
-          {
-            label: 'Approved from Accounts', status: 'completed', date: '2026-02-04', remarks: 'Payment confirmed & approved',
-            assignedPerson: { name: 'Amit Verma', role: 'Accounts Manager', contact: '+91 76543 21098', email: 'amit.verma@nectar.com' }
-          },
-          {
-            label: 'Awaiting Confirmation from Logistics', status: 'completed', date: '2026-02-05', remarks: 'Logistics team notified',
-            assignedPerson: { name: 'Suresh Kumar', role: 'Logistics Head', contact: '+91 65432 10987', email: 'suresh.kumar@nectar.com' }
-          },
-          {
-            label: 'Approved from Logistics', status: 'completed', date: '2026-02-06', remarks: 'Ready for dispatch',
-            assignedPerson: { name: 'Suresh Kumar', role: 'Logistics Head', contact: '+91 65432 10987', email: 'suresh.kumar@nectar.com' }
-          },
-          {
-            label: 'GDN Generated', status: 'completed', date: '2026-02-07', remarks: 'GDN #GDN-2026-003',
-            hasDownload: true, downloadLabel: 'Download GDN',
-            assignedPerson: { name: 'Rajesh Gupta', role: 'Warehouse Manager', contact: '+91 54321 09876', email: 'rajesh.gupta@nectar.com' }
-          },
-          { label: 'Order is On the Way', status: 'completed', date: '2026-02-08', remarks: 'Shipped via logistics partner' },
-          { label: 'Order Received', status: 'completed', date: '2026-02-12', remarks: 'Delivered successfully', hasAction: true, actionResponse: 'yes' },
-        ],
-        expanded: false
+      error: (err) => {
+        console.error('Failed to load order tracking data', err);
+        this.loadError = 'Failed to load orders. Please try again.';
+        this.isLoading = false;
       }
-    ];
-    this.filteredOrders = [...this.orders];
+    });
+  }
+
+  /**
+   * Maps the API OrderTrackingItem to the local Order interface.
+   *
+   * MAPPED fields:
+   *   id, orderNumber, distributorName, distributorId, orderDate, totalAmount
+   *   steps[].label, status, date, remarks, hasDownload, downloadLabel, hasAction, actionResponse
+   *   steps[].assignedPerson → mapped as { name } only (role/contact/email NOT available from API)
+   *
+   * NOT MAPPED (not in API response):
+   *   AssignedPerson.role    – API does not return the person's role
+   *   AssignedPerson.contact – API does not return the person's phone number
+   *   AssignedPerson.email   – API does not return the person's email address
+   */
+  private mapApiOrderToOrder(item: OrderTrackingItem, expandFirst: boolean = false): Order {
+    return {
+      id: String(item.id),
+      orderNumber: item.orderNumber,
+      distributorName: item.distributorName,
+      distributorId: item.distributorId,
+      orderDate: item.orderDate,
+      totalAmount: item.totalAmount,
+      expanded: expandFirst,
+      steps: (item.steps || [])
+        .slice()
+        .sort((a, b) => a.stepSequence - b.stepSequence)
+        .map((s) => ({
+          label: s.label,
+          status: s.status,
+          date: s.date || undefined,
+          remarks: s.remarks || undefined,
+          assignedPerson: s.assignedPerson
+            ? { name: s.assignedPerson.name, role: s.assignedPerson.role, contact: s.assignedPerson.contact, email: s.assignedPerson.email }
+            : undefined,
+          hasDownload: s.hasDownload,
+          downloadLabel: s.downloadLabel || undefined,
+          hasAction: s.hasAction,
+          actionResponse: (s.actionResponse as 'yes' | 'no' | null) ?? null,
+        })),
+    };
   }
 
   updateStats() {
@@ -365,20 +327,67 @@ export class OrderDetailsPage implements OnInit {
   }
 
   onOrderReceivedAction(order: Order, response: 'yes' | 'no') {
-    const receivedStep = order.steps.find(s => s.label === 'Order Received');
-    if (receivedStep) {
-      receivedStep.actionResponse = response;
-      if (response === 'yes') {
-        receivedStep.status = 'completed';
-        receivedStep.remarks = 'Order received and confirmed by distributor';
-        receivedStep.date = new Date().toISOString().split('T')[0];
-      } else {
-        receivedStep.status = 'cancelled';
-        receivedStep.remarks = 'Distributor reported order not received';
-        receivedStep.date = new Date().toISOString().split('T')[0];
+    this.confirmingOrder = order;
+    this.confirmForm = { remarks: '', feedback: '', status: 'RECEIVED_COMPLETE' };
+    this.showConfirmModal = true;
+  }
+
+  closeConfirmModal() {
+    this.showConfirmModal = false;
+    this.confirmingOrder = null;
+    this.isConfirming = false;
+  }
+
+  extractOrderId(orderNumber: string): number {
+    // e.g. "ORD-58-20260407" → 58
+    const parts = orderNumber.split('-');
+    return parts.length >= 2 ? Number(parts[1]) : 0;
+  }
+
+  async submitConfirmOrder() {
+    if (!this.confirmingOrder || !this.confirmingOrder.distributorId) return;
+    this.isConfirming = true;
+    const orderId = this.extractOrderId(this.confirmingOrder.orderNumber);
+    const payload = {
+      orderId,
+      gdnNumber: '',
+      status: this.confirmForm.status,
+      overallRating: 1,
+      feedback: this.confirmForm.feedback,
+      remarks: this.confirmForm.remarks,
+      itemConfirmations: []
+    };
+    this.distributorService.confirmOrder(this.confirmingOrder.distributorId, payload).subscribe({
+      next: async () => {
+        const receivedStep = this.confirmingOrder!.steps.find(s => s.label === 'Order Received');
+        if (receivedStep) {
+          receivedStep.actionResponse = 'yes';
+          receivedStep.status = 'completed';
+          receivedStep.remarks = this.confirmForm.remarks || 'Order received and confirmed by distributor';
+          receivedStep.date = new Date().toISOString().split('T')[0];
+        }
+        this.updateStats();
+        this.closeConfirmModal();
+        const toast = await this.toastController.create({
+          message: 'Order confirmed successfully!',
+          duration: 3000,
+          color: 'success',
+          position: 'bottom'
+        });
+        await toast.present();
+      },
+      error: async (err) => {
+        console.error('Error confirming order receipt:', err);
+        this.isConfirming = false;
+        const toast = await this.toastController.create({
+          message: err?.error?.message || 'Failed to confirm order. Please try again.',
+          duration: 3000,
+          color: 'danger',
+          position: 'bottom'
+        });
+        await toast.present();
       }
-      this.updateStats();
-    }
+    });
   }
 
   getStepLabelIcon(step: OrderStep): string {
@@ -392,5 +401,50 @@ export class OrderDetailsPage implements OnInit {
     if (label.includes('on the way')) return 'car-outline';
     if (label.includes('order received')) return 'checkbox-outline';
     return 'ellipse-outline';
+  }
+
+  isOnTheWayCompleted(order: Order): boolean {
+    const step = order.steps.find(s => s.label.toLowerCase().includes('on the way'));
+    return step?.status === 'completed';
+  }
+
+  downloadGdnForOrder(order: Order) {
+    this.downloadingGdnOrderId = order.id;
+    this.gdnService.downloadGdnPdf(order.orderNumber).subscribe({
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `GDN-${order.orderNumber}.pdf`);
+        this.downloadingGdnOrderId = null;
+      },
+      error: (err) => {
+        console.error('Error downloading GDN:', err);
+        this.downloadingGdnOrderId = null;
+      }
+    });
+  }
+
+  isOrderComplete(order: Order): boolean {
+    return order.steps.length > 0 && order.steps.every(s => s.status === 'completed');
+  }
+
+  downloadInvoiceForOrder(order: Order) {
+    const orderId = this.extractOrderId(order.orderNumber);
+    this.downloadingInvoiceOrderId = order.id;
+    this.invoiceService.downloadInvoicePdf(orderId).subscribe({
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, `Invoice-${order.orderNumber}.pdf`);
+        this.downloadingInvoiceOrderId = null;
+      },
+      error: async (err) => {
+        console.error('Error downloading invoice:', err);
+        this.downloadingInvoiceOrderId = null;
+        const toast = await this.toastController.create({
+          message: err?.error?.message || 'Failed to download invoice. Please try again.',
+          duration: 3000,
+          color: 'danger',
+          position: 'bottom'
+        });
+        await toast.present();
+      }
+    });
   }
 }

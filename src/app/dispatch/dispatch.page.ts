@@ -230,7 +230,7 @@ export class DispatchPage implements OnInit {
       dispatchDate: order.dispatchDate,
       vehicleNumber: order.vehicleNumber,
       transporterName: order.transporterName,
-      shippingAddress: order.shippingAddress || order.address || '',
+      shippingAddress: order.shippingAddress || order.address || (order as any).distributorAddress || (order as any).deliveryAddress || (order as any).registeredAddress || '',
       originalOrder: order,
     };
     
@@ -440,8 +440,11 @@ export class DispatchPage implements OnInit {
     this.orderForGdn = order;
     this.useCustomShippingAddress = false;
     this.gdnForm.reset();
-    // Always pre-fill shipping address with distributor's address
-    this.gdnForm.patchValue({ shippingAddress: order.shippingAddress || '' });
+    // Pre-fill dispatch address with company headquarters and shipping address with distributor's address
+    this.gdnForm.patchValue({
+      dispatchFromAddress: 'Nectar Origin Private Limited\nPlot No 152/ 952, Salempur Saini, Khalgaon Barahat Bypass Road\nBhagalpur, Bihar - 813222',
+      shippingAddress: order.shippingAddress || ''
+    });
     this.isGdnModalOpen = true;
   }
 

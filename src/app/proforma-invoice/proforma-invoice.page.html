@@ -218,6 +218,22 @@
               </button>
             </div>
 
+            <!-- Dispatch Action Buttons - Only for PENDING invoices -->
+            <div *ngIf="invoice.paymentStatus === 'PENDING'" class="pt-4 flex gap-3 border-t border-slate-100">
+              <button
+                (click)="rejectInvoice(invoice)"
+                class="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-sm rounded-xl py-3 border border-red-200 active:scale-95 transition-all duration-200">
+                <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                Reject
+              </button>
+              <button
+                (click)="openDispatchApprovalModal(invoice)"
+                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                Approve Dispatch
+              </button>
+            </div>
+
             <!-- ── Expanded Details Section ── -->
             <div *ngIf="expandedInvoiceId === invoice.id" class="mt-5 pt-5 border-t border-slate-100 transition-all duration-300 ease-in-out">
               <div class="space-y-4">
@@ -362,4 +378,131 @@
       </div>
     </div>
   </div>
+
+  <!-- ═══════ DISPATCH APPROVAL MODAL ═══════ -->
+  <ion-modal [isOpen]="isDispatchModalOpen" (didDismiss)="closeDispatchModal()" [backdropDismiss]="false">
+    <ng-template>
+      <div class="bg-white h-full flex flex-col">
+        <!-- Modal Header -->
+        <div class="relative overflow-hidden bg-gradient-to-br from-emerald-500 via-teal-500 to-cyan-600 p-6">
+          <div class="absolute top-0 right-0 -mr-10 -mt-10 w-44 h-44 rounded-full bg-white/10 blur-3xl"></div>
+          <div class="absolute bottom-0 left-0 -ml-10 -mb-10 w-36 h-36 rounded-full bg-emerald-300/20 blur-3xl"></div>
+          
+          <div class="relative flex items-center justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-12 h-12 rounded-xl bg-white/20 backdrop-blur-sm flex items-center justify-center">
+                <ion-icon name="checkmark-circle-outline" class="text-white text-2xl"></ion-icon>
+              </div>
+              <div>
+                <h2 class="text-xl font-bold text-white tracking-tight">Approve Dispatch</h2>
+                <p class="text-emerald-50 text-xs mt-0.5">Verify ledger balance before approval</p>
+              </div>
+            </div>
+            <button (click)="closeDispatchModal()"
+              class="w-10 h-10 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center transition-all">
+              <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Modal Content -->
+        <ion-content class="bg-slate-50">
+          <div class="p-6 space-y-4" *ngIf="selectedInvoiceForApproval">
+            <!-- Order Summary Section -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-200 space-y-3">
+              <h3 class="text-sm font-bold text-slate-700 uppercase tracking-widest">Order Summary</h3>
+              
+              <div class="grid grid-cols-1 gap-3">
+                <!-- Order No -->
+                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl">
+                  <span class="text-sm text-slate-600 font-medium">Order No</span>
+                  <span class="font-bold text-slate-800">{{ selectedInvoiceForApproval.piNumber }}</span>
+                </div>
+                
+                <!-- Distributor -->
+                <div class="flex items-center justify-between bg-slate-50 p-3 rounded-xl">
+                  <span class="text-sm text-slate-600 font-medium">Distributor</span>
+                  <span class="font-bold text-slate-800">Distributor #{{ selectedInvoiceForApproval.distributorId }}</span>
+                </div>
+                
+                <!-- Order Amount -->
+                <div class="flex items-center justify-between bg-emerald-50 p-3 rounded-xl border border-emerald-200">
+                  <span class="text-sm text-emerald-700 font-bold">Order Amount</span>
+                  <span class="font-bold text-emerald-700">{{ formatAmount(selectedInvoiceForApproval.amount) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Ledger Balance Section -->
+            <div class="bg-gradient-to-br from-emerald-50 to-teal-50 rounded-2xl p-5 border border-emerald-200 space-y-3">
+              <div class="flex items-center justify-between mb-2">
+                <h3 class="text-sm font-bold text-emerald-700 uppercase tracking-widest">Ledger Closing Balance</h3>
+                <ion-spinner *ngIf="isLoadingLedgerBalance" name="crescent" style="width: 20px; height: 20px;" class="text-emerald-600"></ion-spinner>
+              </div>
+              
+              <div class="text-3xl font-bold text-emerald-700">
+                {{ formatAmount(ledgerBalance) }}
+              </div>
+
+              <!-- Balance vs Order Comparison -->
+              <div class="mt-4 space-y-2">
+                <div class="text-xs font-bold text-emerald-600 uppercase tracking-wide">Balance vs Order</div>
+                <div class="w-full bg-emerald-200 rounded-full h-2">
+                  <div class="bg-gradient-to-r from-emerald-500 to-teal-500 h-2 rounded-full"
+                    [style.width.%]="isBalanceSufficient() ? 100 : 30"></div>
+                </div>
+                
+                <!-- Status Message -->
+                <div class="mt-3 p-3 rounded-xl"
+                  [class.bg-emerald-100]="isBalanceSufficient()"
+                  [class.border.emerald-300]="isBalanceSufficient()"
+                  [class.border]="isBalanceSufficient()"
+                  [class.bg-red-100]="!isBalanceSufficient()"
+                  [class.border.red-300]="!isBalanceSufficient()"
+                  [class.border]="!isBalanceSufficient()">
+                  <div class="flex items-center gap-2"
+                    [class.text-emerald-700]="isBalanceSufficient()"
+                    [class.text-red-700]="!isBalanceSufficient()">
+                    <ion-icon 
+                      [name]="isBalanceSufficient() ? 'checkmark-circle-outline' : 'alert-circle-outline'"
+                      class="text-lg flex-shrink-0"></ion-icon>
+                    <span class="text-sm font-bold">
+                      {{ isBalanceSufficient() ? 'Balance is sufficient to approve dispatch' : 'Insufficient balance to approve dispatch' }}
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Footer Note -->
+            <div class="flex items-start gap-3 p-3 bg-blue-50 rounded-xl border border-blue-200">
+              <ion-icon name="information-circle-outline" class="text-blue-500 text-lg flex-shrink-0 mt-0.5"></ion-icon>
+              <p class="text-xs text-blue-700">
+                <span class="font-bold">Tip:</span> Ensure the ledger balance is sufficient before approving. This will mark the order as ready for dispatch.
+              </p>
+            </div>
+          </div>
+        </ion-content>
+
+        <!-- Modal Footer -->
+        <div class="p-4 border-t border-slate-200 bg-white flex items-center gap-3">
+          <button (click)="closeDispatchModal()"
+            [disabled]="isApprovingDispatch"
+            [class.opacity-50]="isApprovingDispatch"
+            [class.cursor-not-allowed]="isApprovingDispatch"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 rounded-xl text-sm font-bold transition-all disabled:hover:bg-slate-100">
+            <ion-icon name="close-outline" class="text-base"></ion-icon>
+            Cancel
+          </button>
+          <button (click)="approveAndGoToDispatch()"
+            [disabled]="!isBalanceSufficient() || isLoadingLedgerBalance || isApprovingDispatch"
+            class="flex-1 flex items-center justify-center gap-2 px-4 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all shadow-lg hover:shadow-xl">
+            <ion-spinner *ngIf="isApprovingDispatch" name="crescent" style="width: 18px; height: 18px;"></ion-spinner>
+            <ion-icon *ngIf="!isApprovingDispatch" name="checkmark-circle-outline" class="text-base"></ion-icon>
+            {{ isApprovingDispatch ? 'Approving...' : 'Approve & Go to Dispatch' }}
+          </button>
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
 </ion-content>
