@@ -3,8 +3,8 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ToastController } from '@ionic/angular';
-import { Router } from '@angular/router';
-import { HttpClient } from '@angular/common/http';
+import { Router, ActivatedRoute } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { addIcons } from 'ionicons';
 import {
   addOutline,
@@ -18,7 +18,11 @@ import {
   shieldCheckmarkOutline, settingsOutline, helpCircleOutline,
   searchOutline, downloadOutline, callOutline,
   closeOutline, refreshOutline, createOutline, informationCircleOutline,
-  chatbubbleEllipsesOutline, cloudUploadOutline, imageOutline, phonePortraitOutline
+  chatbubbleEllipsesOutline, cloudUploadOutline, imageOutline, phonePortraitOutline,
+  storefrontOutline, peopleOutline, bagOutline, personAddOutline, pricetagOutline,
+  bookOutline, swapVerticalOutline, trendingDownOutline,
+  folderOpenOutline, locationOutline,
+  mailOutline, chevronBackOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorOrder } from '../services/distributor.service';
 import { Auth } from '../services/auth';
@@ -52,6 +56,41 @@ interface Transaction {
   txnId: string;
   status: 'Cleared' | 'In Process' | 'Pending' | 'Failed';
   type: string;
+}
+
+interface Sale {
+  id: number;
+  itemName: string;
+  quantity: number;
+  amount: number;
+  date: string;
+}
+
+interface Dealer {
+  id: number;
+  fullName: string;
+  phone: string;
+  address: string;
+  sales: Sale[];
+}
+
+interface PriceMasterProduct {
+  id: number;
+  productName: string;
+  quantity: number;
+  price: number;
+}
+
+interface DealerLedgerTxn {
+  id: string;
+  date: string;
+  description: string;
+  reference: string;
+  type: 'credit' | 'debit' | 'jv';
+  debit: number;
+  credit: number;
+  balance: number;
+  category: string;
 }
 
 @Component({
@@ -98,6 +137,8 @@ export class DistributorDashboardPage implements OnInit {
 
   // Account Services Data
   distributorName = 'Rajesh Kumar';
+  distributorUsername: string | null = null;
+  distributorRole: string | null = null;
   distributorId: number | null = null;
 
   showAddPaymentModal = false;
@@ -143,10 +184,54 @@ export class DistributorDashboardPage implements OnInit {
   isLoadingPaymentCollections = false;
   totalCollectionAmount = 0;
 
+  // Dealer Management
+  dealers: Dealer[] = [];
+  showAddDealerModal = false;
+  dealerForm = { fullName: '', phone: '', address: '' };
+  expandedDealerId: number | null = null;
+  inlineSaleForm: { [dealerId: number]: { product: string; amount: string } } = {};
+  isLoadingDealers = false;
+
+  // Dealer Orders
+  allDealerOrders: any[] = [];
+  isLoadingDealerOrders = false;
+  dealerOrdersSearch = '';
+
+  // Price Master
+  selectedPriceMasterDealer: Dealer | null = null;
+  dealerProducts: { [dealerId: number]: PriceMasterProduct[] } = {};
+  priceMasterRows: { productName: string; quantity: number | null; price: number | null }[] = [{ productName: '', quantity: null, price: null }];
+  finishedProductsList: { id: number; name: string }[] = [];
+  isLoadingFinishedProducts = false;
+
+  // Dealer Ledger
+  selectedLedgerDealer: Dealer | null = null;
+  isDealerLedgerSelectorOpen = false;
+  dealerLedgerSearch = '';
+  dealerLedgerTxnSearch = '';
+  dealerLedgerStartDate = '';
+  dealerLedgerEndDate = '';
+  dealerLedgerSortField: 'date' | 'debit' | 'credit' | 'balance' = 'date';
+  dealerLedgerSortDir: 'asc' | 'desc' = 'desc';
+  dealerLedgerCurrentPage = 1;
+  dealerLedgerRowsPerPage = 10;
+  dealerLedgerRowsOptions = [5, 10, 25, 50];
+  isDealerLedgerDateOpen = false;
+  isLoadingLedger = false;
+  dealerLedgerTxnsData: DealerLedgerTxn[] = [];
+  dealerLedgerTotalRecords = 0;
+  dealerLedgerSummaryData = { totalDebits: 0, totalCredits: 0, netBalance: 0, closingBalance: 0, transactionCount: 0 };
+  isLedgerEntryOpen = false;
+  isSubmittingLedgerEntry = false;
+  ledgerEntryForm = { description: '', type: 'CREDIT', amount: null as number | null, category: 'Payment', date: new Date().toISOString().split('T')[0] };
+  ledgerEntryCategories = ['Payment', 'Purchase', 'Journal', 'Return', 'Adjustment'];
+  ledgerEntryTypes = ['CREDIT', 'DEBIT', 'JV'];
+
   private haptic = inject(HapticService);
 
   constructor(
     private router: Router,
+    private route: ActivatedRoute,
     private distributorService: DistributorService,
     private auth: Auth,
     private ledgerService: LedgerService,
@@ -200,7 +285,19 @@ export class DistributorDashboardPage implements OnInit {
       'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
       'cloud-upload-outline': cloudUploadOutline,
       'image-outline': imageOutline,
-      'phone-portrait-outline': phonePortraitOutline
+      'phone-portrait-outline': phonePortraitOutline,
+      'storefront-outline': storefrontOutline,
+      'people-outline': peopleOutline,
+      'bag-outline': bagOutline,
+      'person-add-outline': personAddOutline,
+      'pricetag-outline': pricetagOutline,
+      'book-outline': bookOutline,
+      'swap-vertical-outline': swapVerticalOutline,
+      'trending-down-outline': trendingDownOutline,
+      'folder-open-outline': folderOpenOutline,
+      'location-outline': locationOutline,
+      'mail-outline': mailOutline,
+      'chevron-back-outline': chevronBackOutline
     });
   }
 
@@ -208,11 +305,24 @@ export class DistributorDashboardPage implements OnInit {
     this.initializeMetrics();
     this.getDistributorId();
     this.loadOrders();
+    this.loadDealers();
     this.loadDistributorAnalytics();
+    const view = this.route.snapshot.queryParams['view'];
+    if (view) {
+      setTimeout(() => {
+        if (view === 'add-dealer') {
+          this.openAddDealerModal();
+        } else {
+          this.openOperationView(view);
+        }
+      }, 600);
+    }
   }
 
   getDistributorId() {
     this.distributorId = this.auth.getUserId();
+    this.distributorUsername = this.auth.getUsername();
+    this.distributorRole = this.auth.getRoleType();
     console.log('Dashboard - Distributor ID:', this.distributorId);
   }
 
@@ -275,6 +385,8 @@ export class DistributorDashboardPage implements OnInit {
       this.loadPaymentCollections();
     } else if (view === 'collections') {
       this.loadPaymentCollections();
+    } else if (view === 'dealer-orders') {
+      this.loadDealerOrders();
     }
   }
 
@@ -504,5 +616,480 @@ export class DistributorDashboardPage implements OnInit {
       default:
         return 'text-slate-400 bg-slate-400/10 border-slate-400/30';
     }
+  }
+
+  // ─── Dealer Management ───────────────────────────────────────────
+
+  loadDealers() {
+    if (!this.distributorId) return;
+    this.isLoadingDealers = true;
+    this.http.get<any>(`${environment.dealersUrl}/distributor/${this.distributorId}`).subscribe({
+      next: (res) => {
+        const list: any[] = Array.isArray(res) ? res : (res?.dealers ?? res?.data ?? []);
+        this.dealers = list.map((d: any) => ({
+          id: d.id,
+          fullName: d.fullName ?? d.full_name ?? d.name ?? '',
+          phone: d.phone ?? '',
+          address: d.address ?? '',
+          sales: []
+        }));
+        this.dealers.forEach(d => {
+          if (!this.inlineSaleForm[d.id]) {
+            this.inlineSaleForm[d.id] = { product: '', amount: '' };
+          }
+        });
+        this.isLoadingDealers = false;
+        this.loadAllDealerSales();
+      },
+      error: (err) => {
+        console.error('Error loading dealers:', err);
+        this.isLoadingDealers = false;
+      }
+    });
+  }
+
+  loadAllDealerSales() {
+    if (!this.distributorId) return;
+    this.http.get<any>(`${environment.apiUrl}/dealer-sales/distributor/${this.distributorId}`).subscribe({
+      next: (res) => {
+        const list: any[] = Array.isArray(res) ? res : (res?.sales ?? res?.data ?? []);
+        // Group sales by dealerId and assign to respective dealers
+        const salesMap: { [dealerId: number]: Sale[] } = {};
+        list.forEach((s: any) => {
+          const dId = s.dealerId ?? s.dealer_id;
+          if (!dId) return;
+          if (!salesMap[dId]) salesMap[dId] = [];
+          salesMap[dId].push({
+            id: s.id ?? s.saleId ?? Date.now(),
+            itemName: s.itemName ?? s.item_name ?? s.productName ?? '',
+            quantity: s.quantity ?? 1,
+            amount: s.amount ?? 0,
+            date: s.date ?? ''
+          });
+        });
+        this.allDealerOrders = list;
+        this.dealers.forEach(d => { d.sales = salesMap[d.id] ?? []; });
+      },
+      error: (err) => console.error('Error loading dealer sales:', err)
+    });
+  }
+
+  loadDealerOrders() {
+    if (!this.distributorId) return;
+    this.isLoadingDealerOrders = true;
+    this.http.get<any>(`${environment.apiUrl}/dealer-sales/distributor/${this.distributorId}`).subscribe({
+      next: (res) => {
+        this.allDealerOrders = Array.isArray(res) ? res : (res?.sales ?? res?.data ?? []);
+        this.isLoadingDealerOrders = false;
+      },
+      error: () => { this.isLoadingDealerOrders = false; }
+    });
+  }
+
+  get filteredDealerOrders(): any[] {
+    const q = this.dealerOrdersSearch.toLowerCase().trim();
+    if (!q) return this.allDealerOrders;
+    return this.allDealerOrders.filter(o =>
+      (o.itemName ?? '').toLowerCase().includes(q) ||
+      String(o.dealerId ?? o.dealer_id ?? '').includes(q) ||
+      (this.getDealerName(o.dealerId ?? o.dealer_id ?? 0)).toLowerCase().includes(q)
+    );
+  }
+
+  getDealerName(dealerId: number): string {
+    return this.dealers.find(d => d.id === dealerId)?.fullName ?? `Dealer #${dealerId}`;
+  }
+
+  getTotalDealerOrdersAmount(): number {
+    return this.filteredDealerOrders.reduce((sum, o) => sum + (o.amount ?? 0), 0);
+  }
+
+  openAddDealerModal() {
+    this.haptic.medium();
+    this.showAddDealerModal = true;
+  }
+
+  closeAddDealerModal() {
+    this.haptic.light();
+    this.showAddDealerModal = false;
+    this.dealerForm = { fullName: '', phone: '', address: '' };
+  }
+
+  submitDealer() {
+    this.haptic.heavy();
+    const { fullName, phone, address } = this.dealerForm;
+    if (!fullName.trim()) { this.showToast('Please enter dealer full name', 'danger'); return; }
+    if (!phone.trim()) { this.showToast('Please enter phone number', 'danger'); return; }
+    if (!address.trim()) { this.showToast('Please enter address', 'danger'); return; }
+    this.http.post<{ dealer?: any; data?: any; [key: string]: any }>(
+      `${environment.dealersUrl}`,
+      {
+        fullName: fullName.trim(),
+        phone: phone.trim(),
+        address: address.trim(),
+        openingBalance: 0
+      },
+      { params: { distributorId: String(this.distributorId) } }
+    ).subscribe({
+      next: (res) => {
+        const d = res?.['dealer'] ?? res?.['data'] ?? res;
+        const newDealer: Dealer = {
+          id: d?.id ?? Date.now(),
+          fullName: d?.fullName ?? d?.full_name ?? fullName.trim(),
+          phone: d?.phone ?? phone.trim(),
+          address: d?.address ?? address.trim(),
+          sales: []
+        };
+        this.dealers.unshift(newDealer);
+        this.inlineSaleForm[newDealer.id] = { product: '', amount: '' };
+        this.showToast('Dealer added successfully', 'success');
+        this.closeAddDealerModal();
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to add dealer. Please try again.';
+        this.showToast(msg, 'danger');
+        console.error('Error adding dealer:', err);
+      }
+    });
+  }
+
+  toggleDealerAccordion(dealerId: number) {
+    this.haptic.light();
+    if (this.expandedDealerId === dealerId) {
+      this.expandedDealerId = null;
+    } else {
+      this.expandedDealerId = dealerId;
+      if (!this.inlineSaleForm[dealerId]) {
+        this.inlineSaleForm[dealerId] = { product: '', amount: '' };
+      }
+    }
+  }
+
+  addInlineSale(dealer: Dealer) {
+    this.haptic.heavy();
+    const form = this.inlineSaleForm[dealer.id];
+    if (!form) return;
+    if (!form.product.trim()) { this.showToast('Please enter product name', 'danger'); return; }
+    if (!form.amount || Number(form.amount) <= 0) { this.showToast('Please enter a valid amount', 'danger'); return; }
+    const payload = {
+      dealerId: dealer.id,
+      itemName: form.product.trim(),
+      quantity: 1,
+      amount: Number(form.amount),
+      date: new Date().toISOString().split('T')[0]
+    };
+    this.http.post<any>(`${environment.apiUrl}/dealer-sales`, payload, { params: { distributorId: String(this.distributorId ?? this.auth.getUserId()) } }).subscribe({
+      next: (res) => {
+        const saved = res?.data ?? res;
+        const newSale: Sale = {
+          id: saved?.id ?? Date.now(),
+          itemName: payload.itemName,
+          quantity: 1,
+          amount: payload.amount,
+          date: payload.date
+        };
+        dealer.sales.unshift(newSale);
+        this.inlineSaleForm[dealer.id] = { product: '', amount: '' };
+        this.showToast('Sale added', 'success');
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to add sale. Please try again.';
+        this.showToast(msg, 'danger');
+        console.error('Error adding sale:', err);
+      }
+    });
+  }
+
+  dealerTotalSales(dealer: Dealer): number {
+    return dealer.sales.reduce((sum, s) => sum + s.amount, 0);
+  }
+
+  selectPriceMasterDealer(dealer: Dealer) {
+    this.haptic.light();
+    this.selectedPriceMasterDealer = dealer;
+    if (!this.dealerProducts[dealer.id]) {
+      this.dealerProducts[dealer.id] = [];
+    }
+    this.priceMasterRows = [{ productName: '', quantity: null, price: null }];
+    this.loadFinishedProducts();
+  }
+
+  loadFinishedProducts() {
+    if (this.finishedProductsList.length > 0) return;
+    this.isLoadingFinishedProducts = true;
+    this.http.get<any[]>(`${environment.productsUrl}/finished-products`).subscribe({
+      next: (products) => {
+        this.finishedProductsList = (products || []).map(p => ({ id: p.id, name: p.name }));
+        this.isLoadingFinishedProducts = false;
+      },
+      error: () => { this.isLoadingFinishedProducts = false; }
+    });
+  }
+
+  backToPriceMasterList() {
+    this.haptic.light();
+    this.selectedPriceMasterDealer = null;
+    this.priceMasterRows = [{ productName: '', quantity: null, price: null }];
+  }
+
+  addPriceMasterRow() {
+    this.priceMasterRows.push({ productName: '', quantity: null, price: null });
+  }
+
+  removePriceMasterRow(index: number) {
+    if (this.priceMasterRows.length === 1) {
+      this.priceMasterRows = [{ productName: '', quantity: null, price: null }];
+    } else {
+      this.priceMasterRows.splice(index, 1);
+    }
+  }
+
+  saveAllPriceMasterProducts() {
+    if (!this.selectedPriceMasterDealer) return;
+    const validRows = this.priceMasterRows.filter(r => r.productName?.trim() && r.quantity && r.price);
+    if (validRows.length === 0) { this.showToast('Please fill at least one product row', 'danger'); return; }
+    const dealerId = this.selectedPriceMasterDealer.id;
+    const today = new Date().toISOString().split('T')[0];
+    const requests = validRows.map(r =>
+      this.http.post<any>(`${environment.apiUrl}/dealer-sales`, {
+        dealerId,
+        itemName: r.productName.trim(),
+        quantity: r.quantity,
+        amount: r.price,
+        date: today
+      }, { params: { distributorId: String(this.distributorId ?? this.auth.getUserId()) } })
+    );
+    Promise.all(requests.map(req => req.toPromise().catch(e => e))).then(results => {
+      const failed = results.filter(r => r instanceof Error || r?.status >= 400).length;
+      const saved = validRows.length - failed;
+      if (saved > 0) {
+        const newProducts: PriceMasterProduct[] = validRows.slice(0, saved).map(r => ({
+          id: Date.now() + Math.random(),
+          productName: r.productName.trim(),
+          quantity: r.quantity!,
+          price: r.price!
+        }));
+        this.dealerProducts[dealerId] = [...newProducts, ...(this.dealerProducts[dealerId] ?? [])];
+        this.priceMasterRows = [{ productName: '', quantity: null, price: null }];
+        this.showToast(`${saved} product${saved > 1 ? 's' : ''} saved`, 'success');
+      }
+      if (failed > 0) this.showToast(`${failed} product${failed > 1 ? 's' : ''} failed to save`, 'danger');
+    });
+  }
+
+  removePriceMasterProduct(dealerId: number, productId: number) {
+    this.dealerProducts[dealerId] = (this.dealerProducts[dealerId] ?? []).filter(p => p.id !== productId);
+  }
+
+  // ── Dealer Ledger ───────────────────────────────────────────────
+  get filteredLedgerDealers(): Dealer[] {
+    const q = this.dealerLedgerSearch.toLowerCase();
+    return q ? this.dealers.filter(d => d.fullName.toLowerCase().includes(q)) : this.dealers;
+  }
+
+  selectLedgerDealer(dealer: Dealer) {
+    this.haptic.light();
+    this.selectedLedgerDealer = dealer;
+    this.isDealerLedgerSelectorOpen = false;
+    this.dealerLedgerCurrentPage = 1;
+    this.dealerLedgerTxnSearch = '';
+    this.dealerLedgerStartDate = '';
+    this.dealerLedgerEndDate = '';
+    this.dealerLedgerTxnsData = [];
+    this.dealerLedgerSummaryData = { totalDebits: 0, totalCredits: 0, netBalance: 0, closingBalance: 0, transactionCount: 0 };
+    this.loadDealerLedger();
+    this.loadDealerLedgerSummary();
+  }
+
+  loadDealerLedger() {
+    if (!this.selectedLedgerDealer) return;
+    const page = this.dealerLedgerCurrentPage - 1; // API is 0-indexed
+    const size = this.dealerLedgerRowsPerPage;
+    console.log('loadDealerLedger — dealerId:', this.selectedLedgerDealer.id, 'type:', typeof this.selectedLedgerDealer.id);
+    this.isLoadingLedger = true;
+    this.http.get<any>(`${environment.dealerLedgerUrl}/by-distributor`, {
+      params: { dealerId: String(this.selectedLedgerDealer.id), page: String(page), size: String(size), distributorId: String(this.distributorId ?? this.auth.getUserId()) }
+    }).subscribe({
+      next: (res) => {
+        const list: any[] = Array.isArray(res) ? res : (res?.content ?? res?.data ?? res?.transactions ?? []);
+        this.dealerLedgerTxnsData = list.map((t: any) => {
+          const rawType: string = (t.type ?? '').toUpperCase();
+          const isCredit = rawType === 'CREDIT';
+          const isDebit = rawType === 'DEBIT';
+          return {
+            id: String(t.id ?? t.transactionId ?? ''),
+            date: t.date ?? '',
+            description: t.description ?? '',
+            reference: t.reference ?? '',
+            type: isCredit ? 'credit' : isDebit ? 'debit' : 'jv',
+            debit: t.debit ?? (isDebit ? (t.amount ?? 0) : 0),
+            credit: t.credit ?? (isCredit ? (t.amount ?? 0) : 0),
+            balance: t.balance ?? t.runningBalance ?? 0,
+            category: t.category ?? ''
+          } as DealerLedgerTxn;
+        });
+        this.dealerLedgerTotalRecords = res?.totalElements ?? res?.total ?? res?.totalRecords ?? list.length;
+        this.isLoadingLedger = false;
+      },
+      error: (err) => {
+        console.error('Error loading dealer ledger:', err);
+        const msg = err?.error?.message ?? err?.error?.error ?? `Ledger error (${err?.status})`;
+        this.showToast(msg, 'danger');
+        this.isLoadingLedger = false;
+      }
+    });
+  }
+
+  loadDealerLedgerSummary() {
+    if (!this.selectedLedgerDealer) return;
+    console.log('loadDealerLedgerSummary — dealerId:', this.selectedLedgerDealer.id, 'type:', typeof this.selectedLedgerDealer.id);
+    this.http.get<any>(`${environment.dealerLedgerUrl}/summary/by-distributor`, {
+      params: { dealerId: String(this.selectedLedgerDealer.id), distributorId: String(this.distributorId ?? this.auth.getUserId()) }
+    }).subscribe({
+      next: (res) => {
+        this.dealerLedgerSummaryData = {
+          totalDebits: res?.totalDebits ?? res?.totalDebit ?? 0,
+          totalCredits: res?.totalCredits ?? res?.totalCredit ?? 0,
+          netBalance: res?.netBalance ?? 0,
+          closingBalance: res?.closingBalance ?? res?.balance ?? 0,
+          transactionCount: res?.transactionCount ?? res?.count ?? 0
+        };
+      },
+      error: (err) => {
+        console.error('Error loading ledger summary:', err);
+        const msg = err?.error?.message ?? err?.error?.error ?? `Summary error (${err?.status})`;
+        this.showToast(msg, 'danger');
+      }
+    });
+  }
+
+  submitLedgerEntry() {
+    if (!this.selectedLedgerDealer) return;
+    const { description, type, amount, category, date } = this.ledgerEntryForm;
+    if (!description.trim()) { this.showToast('Please enter description', 'danger'); return; }
+    if (!amount || amount <= 0) { this.showToast('Please enter a valid amount', 'danger'); return; }
+    this.isSubmittingLedgerEntry = true;
+    const autoRef = `${type.charAt(0)}-${this.selectedLedgerDealer.id}-${Date.now()}`;
+    const payload = {
+      dealerId: this.selectedLedgerDealer.id,
+      distributorId: this.distributorId ?? this.auth.getUserId(),
+      date,
+      description: description.trim(),
+      reference: autoRef,
+      type,
+      amount,
+      category
+    };
+    this.http.post<any>(`${environment.dealerLedgerUrl}`, payload).subscribe({
+      next: () => {
+        this.showToast('Ledger entry added', 'success');
+        this.isSubmittingLedgerEntry = false;
+        this.isLedgerEntryOpen = false;
+        this.ledgerEntryForm = { description: '', type: 'CREDIT', amount: null, category: 'Payment', date: new Date().toISOString().split('T')[0] };
+        this.loadDealerLedger();
+        this.loadDealerLedgerSummary();
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to add entry. Please try again.';
+        this.showToast(msg, 'danger');
+        this.isSubmittingLedgerEntry = false;
+        console.error('Error submitting ledger entry:', err);
+      }
+    });
+  }
+
+  get dealerLedgerTxns(): DealerLedgerTxn[] {
+    let txns = [...this.dealerLedgerTxnsData];
+    const q = this.dealerLedgerTxnSearch.toLowerCase();
+    if (q) txns = txns.filter(t => t.description.toLowerCase().includes(q) || t.reference.toLowerCase().includes(q));
+    if (this.dealerLedgerStartDate) txns = txns.filter(t => t.date >= this.dealerLedgerStartDate);
+    if (this.dealerLedgerEndDate) txns = txns.filter(t => t.date <= this.dealerLedgerEndDate);
+    txns.sort((a, b) => {
+      let va: any = a[this.dealerLedgerSortField], vb: any = b[this.dealerLedgerSortField];
+      if (this.dealerLedgerSortField === 'date') { va = va ?? ''; vb = vb ?? ''; }
+      return this.dealerLedgerSortDir === 'asc' ? (va > vb ? 1 : -1) : (va < vb ? 1 : -1);
+    });
+    return txns;
+  }
+
+  get dealerLedgerPaginated(): DealerLedgerTxn[] {
+    return this.dealerLedgerTxns; // server-side pagination; API returns current page only
+  }
+
+  get dealerLedgerTotalPages(): number {
+    return Math.max(1, Math.ceil(this.dealerLedgerTotalRecords / this.dealerLedgerRowsPerPage));
+  }
+
+  get dealerLedgerSummary() {
+    return this.dealerLedgerSummaryData;
+  }
+
+  sortDealerLedger(field: 'date' | 'debit' | 'credit' | 'balance') {
+    if (this.dealerLedgerSortField === field) {
+      this.dealerLedgerSortDir = this.dealerLedgerSortDir === 'asc' ? 'desc' : 'asc';
+    } else {
+      this.dealerLedgerSortField = field;
+      this.dealerLedgerSortDir = 'desc';
+    }
+    this.dealerLedgerCurrentPage = 1;
+    this.loadDealerLedger();
+  }
+
+  changeDealerLedgerPage(delta: number) {
+    const newPage = Math.max(1, Math.min(this.dealerLedgerTotalPages, this.dealerLedgerCurrentPage + delta));
+    if (newPage !== this.dealerLedgerCurrentPage) {
+      this.dealerLedgerCurrentPage = newPage;
+      this.loadDealerLedger();
+    }
+  }
+
+  formatLedgerCurrency(val: number): string {
+    return '₹' + val.toLocaleString('en-IN', { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  }
+
+  formatLedgerDate(d: string): string {
+    if (!d) return '—';
+    return new Date(d).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  getLedgerTxnConfig(type: string): { label: string; icon: string; className: string } {
+    switch (type) {
+      case 'credit': return { label: 'Credit', icon: 'arrow-up-outline', className: 'bg-emerald-50 text-emerald-700 border-emerald-200' };
+      case 'debit':  return { label: 'Debit',  icon: 'arrow-down-outline', className: 'bg-red-50 text-red-700 border-red-200' };
+      default:       return { label: 'JV',     icon: 'swap-vertical-outline', className: 'bg-blue-50 text-blue-700 border-blue-200' };
+    }
+  }
+
+  exportDealerLedger() {
+    if (!this.selectedLedgerDealer) return;
+    const txns = this.dealerLedgerTxns;
+    const summary = this.dealerLedgerSummary;
+    const headers = ['Date', 'Reference', 'Description', 'Type', 'Debit', 'Credit', 'Balance'];
+    const rows = txns.map(t => [
+      this.formatLedgerDate(t.date),
+      t.reference,
+      t.description,
+      t.type.toUpperCase(),
+      t.debit > 0 ? t.debit.toFixed(2) : '',
+      t.credit > 0 ? t.credit.toFixed(2) : '',
+      t.balance.toFixed(2)
+    ]);
+    const summaryRows = [
+      [],
+      ['', '', '', 'Total Debits', summary.totalDebits.toFixed(2), '', ''],
+      ['', '', '', 'Total Credits', '', summary.totalCredits.toFixed(2), ''],
+      ['', '', '', 'Net Balance', '', '', summary.netBalance.toFixed(2)],
+      ['', '', '', 'Closing Balance', '', '', summary.closingBalance.toFixed(2)]
+    ];
+    const csvContent = [headers, ...rows, ...summaryRows]
+      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
+      .join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `ledger_${this.selectedLedgerDealer.fullName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
+    a.click();
+    URL.revokeObjectURL(url);
   }
 }

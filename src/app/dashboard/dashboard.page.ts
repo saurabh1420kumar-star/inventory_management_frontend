@@ -6,7 +6,7 @@ import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Auth } from '../services/auth';
-import { Router } from '@angular/router';
+import { Router, ActivatedRoute } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import { HapticService } from '../services/haptic.service';
 import {
@@ -117,7 +117,7 @@ export class DashboardPage implements OnInit {
 
   private haptic = inject(HapticService);
 
-  constructor(private auth: Auth, private router: Router) {}
+  constructor(private auth: Auth, private router: Router, private route: ActivatedRoute) {}
 
   ngOnInit() {
     this.checkUserRole();
@@ -128,6 +128,13 @@ export class DashboardPage implements OnInit {
     const roleType = this.auth.getRoleType()?.toUpperCase() || '';
     const isSalesRole = roleType.includes('SALES') || roleType === 'SALESPERSON' || roleType === 'NSM' || roleType === 'RSM' || roleType === 'TSM' || roleType === 'ASM';
     if (isSalesRole) {
+      const fromSales = this.route.snapshot.queryParams['fromSales'];
+      if (fromSales) {
+        // Salesperson navigated here for dealer features — show distributor dashboard
+        this.isDistributor = true;
+        this.isReady = true;
+        return;
+      }
       this.router.navigate(['/sales/sales-dashboard'], { replaceUrl: true });
       return;
     }

@@ -85,7 +85,8 @@ export interface BillOfMaterial {
 export class InventoryService {
 
   private rawMaterialsUrl = `${environment.productsUrl}/raw-materials`;
-  private finishedProductsUrl = `${environment.productsUrl}/finished-products`;
+  private finishedProductsUrl = `${environment.productsUrl}/finished-products/all`;
+  private finishedProductsCrudUrl = `${environment.productsUrl}/finished-products`;
   private machinePartsUrl = `${environment.productsUrl}/machine-parts`;
   private bomUrl = `${environment.productsUrl}/bom`;
 
@@ -152,7 +153,7 @@ export class InventoryService {
 
     if (item.category === 'finished_product') {
       return this.http.post<InventoryItem>(
-        `${this.finishedProductsUrl}`,
+        `${this.finishedProductsCrudUrl}`,
         item
       );
     }
@@ -177,7 +178,7 @@ export class InventoryService {
 
     if (item.category === 'finished_product') {
       return this.http.put<InventoryItem>(
-        `${this.finishedProductsUrl}/${id}`,
+        `${this.finishedProductsCrudUrl}/${id}`,
         item
       );
     }
@@ -200,7 +201,7 @@ export class InventoryService {
 
     if (category === 'finished_product') {
       return this.http.delete<void>(
-        `${this.finishedProductsUrl}/${id}`
+        `${this.finishedProductsCrudUrl}/${id}`
       );
     }
 

@@ -233,6 +233,12 @@
                 <ion-icon name="warning-outline"></ion-icon>
                 Low Stock Alert
               </span>
+              <span *ngIf="item.category === 'finished_product'"
+                class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
+                [ngClass]="item.active !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'">
+                <ion-icon [name]="item.active !== false ? 'checkmark-circle-outline' : 'close-circle-outline'"></ion-icon>
+                {{ item.active !== false ? 'Active' : 'Inactive' }}
+              </span>
             </div>
 
             <!-- Actions -->
@@ -806,6 +812,38 @@
                   </ion-item>
                 </div>
               </div>
+
+              <!-- Active / Inactive Toggle -->
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Status</label>
+                <div class="flex gap-3">
+                  <button type="button"
+                    (click)="addForm.patchValue({ active: true })"
+                    [class.bg-emerald-500]="addForm.get('active')?.value === true"
+                    [class.text-white]="addForm.get('active')?.value === true"
+                    [class.border-emerald-500]="addForm.get('active')?.value === true"
+                    [class.bg-white]="addForm.get('active')?.value !== true"
+                    [class.text-slate-500]="addForm.get('active')?.value !== true"
+                    [class.border-slate-200]="addForm.get('active')?.value !== true"
+                    class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all">
+                    <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                    Active
+                  </button>
+                  <button type="button"
+                    (click)="addForm.patchValue({ active: false })"
+                    [class.bg-red-500]="addForm.get('active')?.value === false"
+                    [class.text-white]="addForm.get('active')?.value === false"
+                    [class.border-red-500]="addForm.get('active')?.value === false"
+                    [class.bg-white]="addForm.get('active')?.value !== false"
+                    [class.text-slate-500]="addForm.get('active')?.value !== false"
+                    [class.border-slate-200]="addForm.get('active')?.value !== false"
+                    class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all">
+                    <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                    Inactive
+                  </button>
+                </div>
+              </div>
+
             </ng-container>
 
             <!-- UNIT TYPE + SUB-UNIT: raw materials only -->
@@ -1005,6 +1043,37 @@
                   <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
                     <ion-input type="number" formControlName="weight" [placeholder]="getWeightPlaceholder(editForm.get('unit')?.value)" class="px-4 py-3 text-lg font-bold text-slate-800"></ion-input>
                   </ion-item>
+                </div>
+              </div>
+
+              <!-- Active / Inactive Toggle -->
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-2 ml-1">Status</label>
+                <div class="flex gap-3">
+                  <button type="button"
+                    (click)="editForm.patchValue({ active: true })"
+                    [class.bg-emerald-500]="editForm.get('active')?.value === true"
+                    [class.text-white]="editForm.get('active')?.value === true"
+                    [class.border-emerald-500]="editForm.get('active')?.value === true"
+                    [class.bg-white]="editForm.get('active')?.value !== true"
+                    [class.text-slate-500]="editForm.get('active')?.value !== true"
+                    [class.border-slate-200]="editForm.get('active')?.value !== true"
+                    class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all">
+                    <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
+                    Active
+                  </button>
+                  <button type="button"
+                    (click)="editForm.patchValue({ active: false })"
+                    [class.bg-red-500]="editForm.get('active')?.value === false"
+                    [class.text-white]="editForm.get('active')?.value === false"
+                    [class.border-red-500]="editForm.get('active')?.value === false"
+                    [class.bg-white]="editForm.get('active')?.value !== false"
+                    [class.text-slate-500]="editForm.get('active')?.value !== false"
+                    [class.border-slate-200]="editForm.get('active')?.value !== false"
+                    class="flex-1 flex items-center justify-center gap-2 py-3 rounded-xl border-2 font-semibold text-sm transition-all">
+                    <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                    Inactive
+                  </button>
                 </div>
               </div>
 

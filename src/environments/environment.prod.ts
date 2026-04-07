@@ -6,4 +6,6 @@ export const environment = {
   productsUrl: 'https://api.imsnectarorigin.com/api/products',
   distributorUrl: 'https://api.imsnectarorigin.com/api/distributors',
   ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
+  dealersUrl: 'https://api.imsnectarorigin.com/api/dealers',
+  dealerLedgerUrl: 'https://api.imsnectarorigin.com/api/dealer-ledger',
 };

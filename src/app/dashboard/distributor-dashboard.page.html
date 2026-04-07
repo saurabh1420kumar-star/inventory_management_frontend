@@ -1103,6 +1103,635 @@
     </div>
   </div>
 
+  <!-- ==================== DEALER LEDGER VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'dealer-ledger'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white"><span class="text-emerald-400">Dealer</span> Ledger</h1>
+        <p class="text-xs text-slate-500">Track dealer transactions &amp; balances</p>
+      </div>
+    </div>
+
+    <!-- Hero Banner -->
+    <div class="relative rounded-3xl overflow-hidden mb-6 p-6" style="background: linear-gradient(135deg, #10b981 0%, #14b8a6 50%, #3b82f6 100%);">
+      <div class="absolute top-0 right-0 w-48 h-48 rounded-full" style="background: rgba(255,255,255,0.08); transform: translate(30%, -30%); filter: blur(24px);"></div>
+      <div class="absolute bottom-0 left-0 w-48 h-48 rounded-full" style="background: rgba(59,130,246,0.2); transform: translate(-30%, 30%); filter: blur(24px);"></div>
+      <div class="relative">
+        <h2 class="text-2xl font-bold text-white mb-1">Dealer Ledger</h2>
+        <div class="inline-flex items-center gap-2 px-3 py-1 rounded-full text-xs font-semibold text-white" style="background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);">
+          <ion-icon name="book-outline" class="text-sm"></ion-icon>
+          Track Transactions, Purchases &amp; Sales
+        </div>
+      </div>
+    </div>
+
+    <!-- Dealer Selector -->
+    <div class="rounded-2xl p-4 mb-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <label class="block text-xs font-bold text-slate-400 uppercase tracking-wide mb-3">Select Ledger Account</label>
+      <div class="relative">
+        <button (click)="isDealerLedgerSelectorOpen = !isDealerLedgerSelectorOpen"
+                class="w-full flex items-center justify-between px-4 py-3 rounded-xl transition-all"
+                style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1);">
+          <div class="flex items-center gap-3">
+            <div class="w-9 h-9 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.2);">
+              <ion-icon name="storefront-outline" class="text-lg text-emerald-400"></ion-icon>
+            </div>
+            <div class="text-left">
+              <div class="font-semibold text-white text-sm">{{ selectedLedgerDealer ? selectedLedgerDealer.fullName : 'Select a dealer' }}</div>
+              <div *ngIf="selectedLedgerDealer" class="text-xs text-slate-500">{{ selectedLedgerDealer.phone }}</div>
+              <div *ngIf="!selectedLedgerDealer" class="text-xs text-slate-600">Tap to choose</div>
+            </div>
+          </div>
+          <ion-icon [name]="isDealerLedgerSelectorOpen ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-500"></ion-icon>
+        </button>
+
+        <!-- Dropdown -->
+        <div *ngIf="isDealerLedgerSelectorOpen" class="absolute top-full left-0 mt-2 w-full rounded-xl overflow-hidden z-50 flex flex-col"
+             style="background: #161b22; border: 1px solid rgba(255,255,255,0.1); box-shadow: 0 20px 40px rgba(0,0,0,0.5); max-height: 300px;">
+          <div class="p-3" style="border-bottom: 1px solid rgba(255,255,255,0.06);">
+            <div class="relative">
+              <ion-icon name="search-outline" class="absolute text-slate-500" style="left: 10px; top: 50%; transform: translateY(-50%);"></ion-icon>
+              <input type="text" [(ngModel)]="dealerLedgerSearch" placeholder="Search dealers..."
+                     class="w-full rounded-lg text-sm focus:outline-none"
+                     style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px 8px 32px; color: #e2e8f0;" />
+            </div>
+          </div>
+          <div class="overflow-y-auto">
+            <div *ngIf="isLoadingDealers" class="px-4 py-8 text-center">
+              <ion-spinner name="crescent" style="color: #10b981;"></ion-spinner>
+              <p class="text-sm text-slate-500 mt-2">Loading dealers...</p>
+            </div>
+            <div *ngIf="!isLoadingDealers && filteredLedgerDealers.length === 0" class="px-4 py-8 text-center text-sm text-slate-500">No dealers found</div>
+            <div *ngFor="let d of filteredLedgerDealers"
+                 (click)="selectLedgerDealer(d)"
+                 class="flex items-center justify-between px-4 py-3 cursor-pointer transition-colors"
+                 style="border-bottom: 1px solid rgba(255,255,255,0.04);"
+                 [style.background]="selectedLedgerDealer?.id === d.id ? 'rgba(16,185,129,0.1)' : 'transparent'">
+              <div>
+                <div class="font-semibold text-slate-200 text-sm">{{ d.fullName }}</div>
+                <div class="text-xs text-slate-500">{{ d.phone }}</div>
+              </div>
+              <ion-icon *ngIf="selectedLedgerDealer?.id === d.id" name="checkmark-circle-outline" class="text-emerald-400 text-xl"></ion-icon>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Party Info Row -->
+    <div *ngIf="selectedLedgerDealer" class="flex flex-col gap-2.5 mb-4">
+      <!-- Distributor full card -->
+      <div class="rounded-2xl p-4" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(59,130,246,0.18); border: 1px solid rgba(59,130,246,0.25);">
+            <ion-icon name="business-outline" class="text-lg text-blue-400"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <p class="text-xs font-bold uppercase tracking-wide text-blue-400">Distributor</p>
+              <span class="px-1.5 py-0.5 rounded text-xs font-semibold" style="background: rgba(59,130,246,0.15); color: #93c5fd;">{{ distributorRole || 'DISTRIBUTOR' }}</span>
+            </div>
+            <p class="text-sm font-bold text-white leading-tight">{{ distributorName }}</p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-xs text-slate-500">@{{ distributorUsername || 'N/A' }}</span>
+              <span class="text-xs text-slate-600">·</span>
+              <span class="text-xs text-slate-500">ID: {{ distributorId }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+      <!-- Dealer full card -->
+      <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+        <div class="flex items-center gap-3">
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.18); border: 1px solid rgba(16,185,129,0.25);">
+            <ion-icon name="storefront-outline" class="text-lg text-emerald-400"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 mb-0.5">
+              <p class="text-xs font-bold uppercase tracking-wide text-emerald-400">Dealer</p>
+              <span class="px-1.5 py-0.5 rounded text-xs font-semibold" style="background: rgba(16,185,129,0.15); color: #6ee7b7;">Active</span>
+            </div>
+            <p class="text-sm font-bold text-white leading-tight">{{ selectedLedgerDealer.fullName }}</p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-xs text-slate-500">{{ selectedLedgerDealer.phone }}</span>
+              <span *ngIf="selectedLedgerDealer.address" class="text-xs text-slate-600">·</span>
+              <span *ngIf="selectedLedgerDealer.address" class="text-xs text-slate-500 truncate">{{ selectedLedgerDealer.address }}</span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Summary KPIs (2×2) -->
+    <div *ngIf="selectedLedgerDealer" class="grid grid-cols-2 gap-2.5 mb-5">
+      <!-- Debits -->
+      <div class="rounded-2xl p-3.5" style="background: rgba(239,68,68,0.07); border: 1px solid rgba(239,68,68,0.18);">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(239,68,68,0.18);">
+            <ion-icon name="arrow-down-outline" class="text-xs text-red-400"></ion-icon>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-wide text-red-400">Total Debits</p>
+        </div>
+        <p class="text-base font-extrabold text-red-300 leading-tight">{{ formatLedgerCurrency(dealerLedgerSummary.totalDebits) }}</p>
+        <p class="text-xs text-slate-600 mt-1">{{ dealerLedgerSummary.transactionCount }} txns</p>
+      </div>
+      <!-- Credits -->
+      <div class="rounded-2xl p-3.5" style="background: rgba(16,185,129,0.07); border: 1px solid rgba(16,185,129,0.18);">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.18);">
+            <ion-icon name="arrow-up-outline" class="text-xs text-emerald-400"></ion-icon>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-wide text-emerald-400">Total Credits</p>
+        </div>
+        <p class="text-base font-extrabold text-emerald-300 leading-tight">{{ formatLedgerCurrency(dealerLedgerSummary.totalCredits) }}</p>
+        <p class="text-xs text-slate-600 mt-1">Incoming</p>
+      </div>
+      <!-- Net Balance -->
+      <div class="rounded-2xl p-3.5" style="background: rgba(139,92,246,0.07); border: 1px solid rgba(139,92,246,0.18);">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(139,92,246,0.18);">
+            <ion-icon name="swap-vertical-outline" class="text-xs text-violet-400"></ion-icon>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-wide text-violet-400">Net Balance</p>
+        </div>
+        <p class="text-base font-extrabold text-white leading-tight">{{ formatLedgerCurrency(dealerLedgerSummary.netBalance) }}</p>
+        <div class="flex items-center gap-1 mt-1">
+          <ion-icon *ngIf="dealerLedgerSummary.netBalance >= 0" name="trending-up-outline" class="text-xs text-emerald-400"></ion-icon>
+          <ion-icon *ngIf="dealerLedgerSummary.netBalance < 0" name="trending-down-outline" class="text-xs text-red-400"></ion-icon>
+          <p class="text-xs text-slate-600">{{ dealerLedgerSummary.netBalance >= 0 ? 'Surplus' : 'Deficit' }}</p>
+        </div>
+      </div>
+      <!-- Closing Balance -->
+      <div class="rounded-2xl p-3.5" style="background: rgba(59,130,246,0.07); border: 1px solid rgba(59,130,246,0.18);">
+        <div class="flex items-center gap-2 mb-2">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(59,130,246,0.18);">
+            <ion-icon name="analytics-outline" class="text-xs text-blue-400"></ion-icon>
+          </div>
+          <p class="text-xs font-bold uppercase tracking-wide text-blue-400">Closing Bal.</p>
+        </div>
+        <p class="text-base font-extrabold text-white leading-tight">{{ formatLedgerCurrency(dealerLedgerSummary.closingBalance) }}</p>
+        <p class="text-xs text-slate-600 mt-1">As of today</p>
+      </div>
+    </div>
+
+    <!-- Search + Filter Bar -->
+    <div *ngIf="selectedLedgerDealer" class="mb-4">
+      <div class="flex gap-2 mb-2">
+        <div class="relative flex-1">
+          <ion-icon name="search-outline" class="absolute text-slate-500" style="left: 10px; top: 50%; transform: translateY(-50%);"></ion-icon>
+          <input type="text" [(ngModel)]="dealerLedgerTxnSearch" placeholder="Search transactions..."
+                 class="w-full rounded-xl text-sm focus:outline-none"
+                 style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 10px 10px 10px 34px; color: #e2e8f0;" />
+        </div>
+        <button (click)="isDealerLedgerDateOpen = !isDealerLedgerDateOpen"
+                class="flex items-center gap-1.5 rounded-xl px-3 text-sm font-semibold flex-shrink-0"
+                [style.background]="(dealerLedgerStartDate || dealerLedgerEndDate) ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)'"
+                [style.border]="(dealerLedgerStartDate || dealerLedgerEndDate) ? '1px solid rgba(16,185,129,0.3)' : '1px solid rgba(255,255,255,0.08)'"
+                [style.color]="(dealerLedgerStartDate || dealerLedgerEndDate) ? '#34d399' : '#94a3b8'">
+          <ion-icon name="calendar-outline" class="text-base"></ion-icon>
+          <span *ngIf="!dealerLedgerStartDate && !dealerLedgerEndDate">Date</span>
+          <span *ngIf="dealerLedgerStartDate || dealerLedgerEndDate" class="text-xs">Filtered</span>
+          <ion-icon *ngIf="dealerLedgerStartDate || dealerLedgerEndDate" name="close-outline" class="text-sm"
+                    (click)="$event.stopPropagation(); dealerLedgerStartDate=''; dealerLedgerEndDate=''; dealerLedgerCurrentPage=1"></ion-icon>
+        </button>
+        <button (click)="exportDealerLedger()"
+                class="flex items-center gap-1.5 rounded-xl px-3 text-sm font-semibold flex-shrink-0"
+                style="background: rgba(59,130,246,0.12); border: 1px solid rgba(59,130,246,0.25); color: #60a5fa;">
+          <ion-icon name="download-outline" class="text-base"></ion-icon>
+          <span>CSV</span>
+        </button>
+        <button *ngIf="selectedLedgerDealer" (click)="isLedgerEntryOpen = !isLedgerEntryOpen"
+                class="flex items-center gap-1.5 rounded-xl px-3 text-sm font-semibold flex-shrink-0"
+                [style.background]="isLedgerEntryOpen ? 'rgba(139,92,246,0.2)' : 'rgba(139,92,246,0.1)'"
+                style="border: 1px solid rgba(139,92,246,0.3); color: #a78bfa;">
+          <ion-icon [name]="isLedgerEntryOpen ? 'close-outline' : 'add-outline'" class="text-base"></ion-icon>
+          <span>Add Entry</span>
+        </button>
+      </div>
+
+      <!-- Add Ledger Entry Form -->
+      <div *ngIf="isLedgerEntryOpen && selectedLedgerDealer" class="rounded-xl p-4 flex flex-col gap-3"
+           style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2);">
+        <p class="text-xs font-bold tracking-widest" style="color: #a78bfa;">NEW LEDGER ENTRY</p>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Date</label>
+            <input type="date" [(ngModel)]="ledgerEntryForm.date"
+                   class="w-full rounded-lg text-sm focus:outline-none"
+                   style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 10px; color: #e2e8f0;" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Type</label>
+            <select [(ngModel)]="ledgerEntryForm.type"
+                    class="w-full rounded-lg text-sm focus:outline-none cursor-pointer"
+                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 10px; color: #e2e8f0;">
+              <option *ngFor="let t of ledgerEntryTypes" [value]="t" style="background: #161b22;">{{ t }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Amount (₹)</label>
+            <input type="number" [(ngModel)]="ledgerEntryForm.amount" placeholder="0.00" min="0"
+                   class="w-full rounded-lg text-sm focus:outline-none"
+                   style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 10px; color: #e2e8f0;" />
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Category</label>
+            <select [(ngModel)]="ledgerEntryForm.category"
+                    class="w-full rounded-lg text-sm focus:outline-none cursor-pointer"
+                    style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 10px; color: #e2e8f0;">
+              <option *ngFor="let c of ledgerEntryCategories" [value]="c" style="background: #161b22;">{{ c }}</option>
+            </select>
+          </div>
+          <div>
+            <label class="text-xs font-bold text-slate-500 uppercase block mb-1">Description</label>
+            <input type="text" [(ngModel)]="ledgerEntryForm.description" placeholder="e.g. Cement 50kg supply"
+                   class="w-full rounded-lg text-sm focus:outline-none"
+                   style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.1); padding: 8px 10px; color: #e2e8f0;" />
+          </div>
+        </div>
+        <button (click)="submitLedgerEntry()" [disabled]="isSubmittingLedgerEntry"
+                class="w-full py-3 rounded-xl text-sm font-bold flex items-center justify-center gap-2 disabled:opacity-50"
+                style="background: rgba(139,92,246,0.2); border: 1px solid rgba(139,92,246,0.4); color: #a78bfa;">
+          <ion-spinner *ngIf="isSubmittingLedgerEntry" name="crescent" style="width:16px;height:16px;color:#a78bfa;"></ion-spinner>
+          <ion-icon *ngIf="!isSubmittingLedgerEntry" name="checkmark-done-outline" class="text-base"></ion-icon>
+          {{ isSubmittingLedgerEntry ? 'Saving...' : 'Save Entry' }}
+        </button>
+      </div>
+      <div *ngIf="isDealerLedgerDateOpen" class="rounded-xl p-3 grid grid-cols-2 gap-3" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div>
+          <label class="text-xs font-bold text-slate-500 uppercase block mb-1">From</label>
+          <input type="date" [(ngModel)]="dealerLedgerStartDate" (change)="dealerLedgerCurrentPage=1"
+                 class="w-full rounded-lg text-sm focus:outline-none"
+                 style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; color: #e2e8f0;" />
+        </div>
+        <div>
+          <label class="text-xs font-bold text-slate-500 uppercase block mb-1">To</label>
+          <input type="date" [(ngModel)]="dealerLedgerEndDate" (change)="dealerLedgerCurrentPage=1"
+                 class="w-full rounded-lg text-sm focus:outline-none"
+                 style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08); padding: 8px 10px; color: #e2e8f0;" />
+        </div>
+      </div>
+    </div>
+
+    <!-- Transaction Cards -->
+    <!-- Loading -->
+    <div *ngIf="isLoadingLedger" class="rounded-2xl p-10 text-center mb-4"
+         style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
+      <ion-spinner name="crescent" style="color: #10b981; width: 36px; height: 36px;"></ion-spinner>
+      <p class="text-sm text-slate-500 mt-3">Loading transactions...</p>
+    </div>
+
+    <div *ngIf="!isLoadingLedger && selectedLedgerDealer && dealerLedgerPaginated.length > 0" class="flex flex-col gap-3 mb-4">
+      <div *ngFor="let txn of dealerLedgerPaginated"
+           class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-start justify-between mb-3">
+          <div class="flex-1 min-w-0">
+            <h3 class="font-bold text-white text-sm">{{ txn.description }}</h3>
+            <span class="inline-block font-mono text-xs px-2 py-0.5 rounded-lg mt-1" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); color: #94a3b8;">{{ txn.reference }}</span>
+          </div>
+          <span [class]="getLedgerTxnConfig(txn.type).className"
+                class="ml-2 flex-shrink-0 px-2.5 py-1 rounded-full text-xs font-semibold border inline-flex items-center gap-1">
+            <ion-icon [name]="getLedgerTxnConfig(txn.type).icon" class="text-xs"></ion-icon>
+            {{ getLedgerTxnConfig(txn.type).label }}
+          </span>
+        </div>
+        <div class="grid grid-cols-2 gap-2 mb-3">
+          <div class="rounded-lg p-2.5" style="background: rgba(239,68,68,0.08); border: 1px solid rgba(239,68,68,0.2);">
+            <p class="text-xs font-bold text-red-400 uppercase">Debit</p>
+            <p class="text-sm font-bold text-red-300">{{ txn.debit > 0 ? formatLedgerCurrency(txn.debit) : '—' }}</p>
+          </div>
+          <div class="rounded-lg p-2.5" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+            <p class="text-xs font-bold text-emerald-400 uppercase">Credit</p>
+            <p class="text-sm font-bold text-emerald-300">{{ txn.credit > 0 ? formatLedgerCurrency(txn.credit) : '—' }}</p>
+          </div>
+        </div>
+        <div class="flex items-center justify-between pt-2.5" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <span class="text-xs text-slate-500">{{ formatLedgerDate(txn.date) }}</span>
+          <span class="text-xs font-bold text-slate-300">Balance: {{ formatLedgerCurrency(txn.balance) }}</span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Empty: no txns -->
+    <div *ngIf="!isLoadingLedger && selectedLedgerDealer && dealerLedgerTxns.length === 0"
+         class="rounded-2xl p-10 text-center mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background: rgba(255,255,255,0.05);">
+        <ion-icon name="search-outline" class="text-3xl text-slate-600"></ion-icon>
+      </div>
+      <h3 class="font-bold text-slate-300 mb-1">No Transactions Found</h3>
+      <p class="text-sm text-slate-600">No transactions match your current filters.</p>
+    </div>
+
+    <!-- Empty: no dealer selected -->
+    <div *ngIf="!selectedLedgerDealer"
+         class="rounded-2xl p-10 text-center mb-4" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
+      <div class="w-14 h-14 rounded-2xl flex items-center justify-center mx-auto mb-3" style="background: rgba(255,255,255,0.05);">
+        <ion-icon name="folder-open-outline" class="text-3xl text-slate-600"></ion-icon>
+      </div>
+      <h3 class="font-bold text-slate-300 mb-1">No Account Selected</h3>
+      <p class="text-sm text-slate-600">Please select a dealer above to view transactions.</p>
+    </div>
+
+    <!-- Pagination -->
+    <div *ngIf="!isLoadingLedger && selectedLedgerDealer && dealerLedgerTotalRecords > 0"
+         class="rounded-2xl p-4 flex items-center justify-between" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <div class="flex items-center gap-2 text-sm text-slate-400">
+        <span>Rows:</span>
+        <select [(ngModel)]="dealerLedgerRowsPerPage" (change)="dealerLedgerCurrentPage = 1; loadDealerLedger()"
+                class="rounded-lg text-sm focus:outline-none cursor-pointer"
+                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); padding: 4px 8px; color: #e2e8f0;">
+          <option *ngFor="let o of dealerLedgerRowsOptions" [value]="o" style="background: #161b22;">{{ o }}</option>
+        </select>
+      </div>
+      <div class="flex items-center gap-3">
+        <span class="text-sm text-slate-400">{{ (dealerLedgerCurrentPage - 1) * dealerLedgerRowsPerPage + 1 }}–{{ Math.min(dealerLedgerCurrentPage * dealerLedgerRowsPerPage, dealerLedgerTotalRecords) }} of {{ dealerLedgerTotalRecords }}</span>
+        <div class="flex gap-1">
+          <button (click)="changeDealerLedgerPage(-1)" [disabled]="dealerLedgerCurrentPage === 1"
+                  class="p-2 rounded-lg transition-colors disabled:opacity-30 text-slate-400"
+                  style="background: rgba(255,255,255,0.05);">
+            <ion-icon name="chevron-back-outline" class="text-xl"></ion-icon>
+          </button>
+          <button (click)="changeDealerLedgerPage(1)" [disabled]="dealerLedgerCurrentPage === dealerLedgerTotalPages"
+                  class="p-2 rounded-lg transition-colors disabled:opacity-30 text-slate-400"
+                  style="background: rgba(255,255,255,0.05);">
+            <ion-icon name="chevron-forward-outline" class="text-xl"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ==================== DEALER ORDERS VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'dealer-orders'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white"><span class="text-violet-400">Dealer</span> Orders</h1>
+        <p class="text-xs text-slate-500 mt-0.5">All dealer sales &amp; orders</p>
+      </div>
+      <div class="text-right">
+        <p class="text-lg font-bold text-violet-400">{{ allDealerOrders.length }}</p>
+        <p class="text-xs text-slate-500">Total Orders</p>
+      </div>
+    </div>
+
+    <!-- Search Bar -->
+    <div class="relative mb-4">
+      <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base pointer-events-none"></ion-icon>
+      <input
+        [(ngModel)]="dealerOrdersSearch"
+        type="text"
+        placeholder="Search by dealer or item..."
+        class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500 outline-none"
+        style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);"
+      />
+    </div>
+
+    <!-- Loading Spinner -->
+    <div *ngIf="isLoadingDealerOrders" class="flex flex-col items-center justify-center py-16 gap-3">
+      <div class="w-10 h-10 rounded-full border-2 border-violet-500 border-t-transparent animate-spin"></div>
+      <p class="text-slate-500 text-sm">Loading orders...</p>
+    </div>
+
+    <!-- Empty State -->
+    <div *ngIf="!isLoadingDealerOrders && filteredDealerOrders.length === 0" class="flex flex-col items-center justify-center py-16 gap-3">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
+        <ion-icon name="receipt-outline" class="text-violet-400 text-3xl"></ion-icon>
+      </div>
+      <p class="text-white font-semibold">No orders found</p>
+      <p class="text-slate-500 text-sm text-center">{{ dealerOrdersSearch ? 'Try a different search term' : 'No dealer sales recorded yet' }}</p>
+    </div>
+
+    <!-- Orders Table -->
+    <div *ngIf="!isLoadingDealerOrders && filteredDealerOrders.length > 0" class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.03); border: 1px solid rgba(255,255,255,0.07);">
+
+      <!-- Table Header -->
+      <div class="grid grid-cols-12 gap-2 px-4 py-3 text-xs font-semibold text-slate-500 uppercase tracking-wide" style="background: rgba(255,255,255,0.04); border-bottom: 1px solid rgba(255,255,255,0.06);">
+        <div class="col-span-3">Dealer</div>
+        <div class="col-span-3">Item</div>
+        <div class="col-span-2 text-center">Qty</div>
+        <div class="col-span-2 text-right">Amount</div>
+        <div class="col-span-2 text-right">Date</div>
+      </div>
+
+      <!-- Table Rows -->
+      <div *ngFor="let order of filteredDealerOrders; let i = index"
+           class="grid grid-cols-12 gap-2 px-4 py-3 items-center"
+           [style.border-bottom]="i < filteredDealerOrders.length - 1 ? '1px solid rgba(255,255,255,0.04)' : 'none'"
+           [style.background]="i % 2 === 0 ? 'transparent' : 'rgba(255,255,255,0.015)'">
+
+        <!-- Dealer Name -->
+        <div class="col-span-3 flex items-center gap-2 min-w-0">
+          <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0" style="background: rgba(139,92,246,0.15);">
+            <ion-icon name="person-outline" class="text-violet-400 text-xs"></ion-icon>
+          </div>
+          <p class="text-white text-xs font-medium truncate">{{ getDealerName(order.dealerId ?? order.dealer_id ?? 0) }}</p>
+        </div>
+
+        <!-- Item Name -->
+        <div class="col-span-3 min-w-0">
+          <p class="text-slate-300 text-xs truncate">{{ order.itemName ?? order.item_name ?? order.productName ?? '—' }}</p>
+        </div>
+
+        <!-- Quantity -->
+        <div class="col-span-2 text-center">
+          <span class="text-emerald-400 text-xs font-semibold">{{ order.quantity ?? 1 }}</span>
+        </div>
+
+        <!-- Amount -->
+        <div class="col-span-2 text-right">
+          <p class="text-white text-xs font-semibold">₹{{ (order.amount ?? 0) | number:'1.0-0' }}</p>
+        </div>
+
+        <!-- Date -->
+        <div class="col-span-2 text-right">
+          <p class="text-slate-500 text-xs">{{ order.date ? (order.date | date:'dd MMM') : '—' }}</p>
+        </div>
+
+      </div>
+
+      <!-- Summary Footer -->
+      <div class="flex items-center justify-between px-4 py-3" style="background: rgba(139,92,246,0.06); border-top: 1px solid rgba(139,92,246,0.12);">
+        <p class="text-xs text-slate-400">{{ filteredDealerOrders.length }} order{{ filteredDealerOrders.length !== 1 ? 's' : '' }}</p>
+        <p class="text-sm font-bold text-violet-400">Total: ₹{{ getTotalDealerOrdersAmount() | number:'1.0-0' }}</p>
+      </div>
+
+    </div>
+
+  </div>
+
+  <!-- ==================== PRICE MASTER VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'price-master'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="selectedPriceMasterDealer ? backToPriceMasterList() : goBackToOperations()"
+              class="w-10 h-10 rounded-xl flex items-center justify-center"
+              style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">{{ selectedPriceMasterDealer ? selectedPriceMasterDealer.fullName : 'Price Master' }}</h1>
+        <p class="text-xs text-slate-500">{{ selectedPriceMasterDealer ? 'Manage product pricing' : 'Select a dealer to manage products' }}</p>
+      </div>
+    </div>
+
+    <!-- ── DEALER LIST (no dealer selected) ── -->
+    <ng-container *ngIf="!selectedPriceMasterDealer">
+      <div class="flex flex-col gap-3">
+
+        <!-- Loading State -->
+        <div *ngIf="isLoadingDealers" class="text-center py-12 rounded-2xl"
+             style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+          <ion-spinner name="crescent" style="color: #a78bfa;"></ion-spinner>
+          <p class="text-slate-500 text-sm mt-3">Loading dealers...</p>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="!isLoadingDealers && dealers.length === 0" class="text-center py-12 rounded-2xl"
+             style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+          <ion-icon name="storefront-outline" class="text-slate-600 text-5xl mb-3 block"></ion-icon>
+          <p class="text-slate-400 font-semibold">No dealers registered</p>
+          <p class="text-slate-600 text-sm mt-1">Add dealers first from the Dealers section</p>
+        </div>
+
+        <!-- Dealer Cards -->
+        <button *ngFor="let dealer of dealers"
+                (click)="selectPriceMasterDealer(dealer)"
+                class="flex items-center gap-4 p-4 rounded-2xl text-left transition-all"
+                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0"
+               style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25);">
+            <ion-icon name="storefront-outline" class="text-violet-400 text-2xl"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-white text-sm truncate">{{ dealer.fullName }}</p>
+            <p class="text-xs text-slate-500 mt-0.5 truncate">{{ dealer.phone }}</p>
+            <p class="text-xs text-slate-600 mt-0.5 truncate">{{ dealer.address }}</p>
+          </div>
+          <div class="text-right flex-shrink-0">
+            <p class="text-xs font-semibold" style="color: #a78bfa;">{{ (dealerProducts[dealer.id] || []).length }} product{{ (dealerProducts[dealer.id] || []).length !== 1 ? 's' : '' }}</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg flex-shrink-0"></ion-icon>
+        </button>
+
+      </div>
+    </ng-container>
+
+    <!-- ── DEALER PRODUCT VIEW (dealer selected) ── -->
+    <ng-container *ngIf="selectedPriceMasterDealer">
+
+      <!-- Add Product Form (multi-row) -->
+      <div class="rounded-2xl p-4 mb-5" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.2);">
+        <div class="flex items-center justify-between mb-3">
+          <p class="text-xs font-bold tracking-widest" style="color: #a78bfa;">ADD PRODUCTS</p>
+          <button (click)="addPriceMasterRow()"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-lg text-xs font-semibold"
+                  style="background: rgba(139,92,246,0.15); color: #a78bfa; border: 1px solid rgba(139,92,246,0.25);">
+            <ion-icon name="add-outline" class="text-sm"></ion-icon>
+            Add Row
+          </button>
+        </div>
+
+        <!-- Column Labels -->
+        <div class="flex items-center gap-2 mb-1.5 px-1">
+          <div class="text-xs text-slate-500" style="flex: 5;">
+            Product
+            <span *ngIf="isLoadingFinishedProducts" class="ml-1 text-violet-400">(loading...)</span>
+          </div>
+          <div class="text-xs text-slate-500" style="flex: 3;">Qty</div>
+          <div class="text-xs text-slate-500" style="flex: 3;">Price (₹)</div>
+          <div style="width: 32px; flex-shrink: 0;"></div>
+        </div>
+
+        <!-- Draft Rows -->
+        <div class="flex flex-col gap-3">
+          <div *ngFor="let row of priceMasterRows; let i = index" class="flex items-center gap-2">
+            <!-- Product Name Dropdown -->
+            <select [(ngModel)]="row.productName"
+                    class="px-2.5 py-2.5 rounded-xl text-sm focus:outline-none min-w-0"
+                    style="flex: 5; background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.3); color: white; appearance: none; -webkit-appearance: none;">
+              <option value="" disabled selected style="background:#1a1f2e; color: #64748b;">Select product</option>
+              <option *ngFor="let p of finishedProductsList" [value]="p.name" style="background:#1a1f2e; color: white;">{{ p.name }}</option>
+            </select>
+            <input type="number" [(ngModel)]="row.quantity"
+                   placeholder="Qty" min="1"
+                   class="px-2.5 py-2.5 rounded-xl text-sm placeholder:text-slate-600 focus:outline-none min-w-0"
+                   style="flex: 3; background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.3); color: white;" />
+            <input type="number" [(ngModel)]="row.price"
+                   placeholder="0.00" min="0"
+                   class="px-2.5 py-2.5 rounded-xl text-sm placeholder:text-slate-600 focus:outline-none min-w-0"
+                   style="flex: 3; background: rgba(255,255,255,0.06); border: 1px solid rgba(139,92,246,0.3); color: white;" />
+            <button (click)="removePriceMasterRow(i)"
+                    class="w-8 h-8 rounded-lg flex items-center justify-center flex-shrink-0"
+                    style="background: rgba(239,68,68,0.1); width: 32px;">
+              <ion-icon name="close-outline" class="text-red-400 text-base"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <!-- Save All -->
+        <button (click)="saveAllPriceMasterProducts()"
+                class="w-full py-3 rounded-xl font-bold text-sm text-white mt-4"
+                style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 4px 12px rgba(139,92,246,0.3);">
+          Save All Products
+        </button>
+      </div>
+
+      <!-- Product Table -->
+      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+
+        <!-- Table Header -->
+        <div class="flex items-center px-4 py-3 text-xs font-bold tracking-widest text-slate-500 uppercase"
+             style="border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
+          <div style="flex: 5;">Product</div>
+          <div class="text-center" style="flex: 3;">Qty</div>
+          <div class="text-right" style="flex: 3;">Price</div>
+          <div style="width: 28px; flex-shrink: 0;"></div>
+        </div>
+
+        <!-- Empty State -->
+        <div *ngIf="(dealerProducts[selectedPriceMasterDealer.id] || []).length === 0"
+             class="text-center py-10">
+          <ion-icon name="cube-outline" class="text-slate-600 text-4xl mb-2 block"></ion-icon>
+          <p class="text-slate-500 text-sm font-semibold">No products yet</p>
+          <p class="text-slate-600 text-xs mt-1">Add a product using the form above</p>
+        </div>
+
+        <!-- Product Rows -->
+        <div *ngFor="let product of (dealerProducts[selectedPriceMasterDealer.id] || []); let last = last"
+             class="flex items-center px-4 py-3"
+             [style]="last ? '' : 'border-bottom: 1px solid rgba(255,255,255,0.04);'">
+          <p class="text-white font-semibold text-sm truncate" style="flex: 5;">{{ product.productName }}</p>
+          <div class="text-center" style="flex: 3;">
+            <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
+                  style="background: rgba(139,92,246,0.15); color: #a78bfa;">{{ product.quantity }}</span>
+          </div>
+          <p class="text-emerald-400 font-bold text-sm text-right" style="flex: 3;">₹{{ product.price | number:'1.0-2' }}</p>
+          <div style="width: 28px; flex-shrink: 0;" class="flex justify-end">
+            <button (click)="removePriceMasterProduct(selectedPriceMasterDealer.id, product.id)"
+                    class="w-7 h-7 rounded-lg flex items-center justify-center"
+                    style="background: rgba(239,68,68,0.1);">
+              <ion-icon name="close-outline" class="text-red-400 text-sm"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+      </div>
+    </ng-container>
+
+  </div>
+
   <!-- ==================== MAIN DASHBOARD / OPERATIONS VIEW ==================== -->
   <div *ngIf="!activeOperationView" class="max-w-6xl mx-auto px-4 pt-5 pb-8">
 
@@ -1286,6 +1915,69 @@
             <div>
               <p class="font-semibold text-white text-sm">Orders</p>
               <p class="text-xs text-slate-500">View all your orders</p>
+            </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+          </button>
+        </div>
+      </div>
+
+      <!-- Dealers -->
+      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
+        <button (click)="toggleMenu('dealers')" class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
+          <div class="flex items-center gap-3">
+            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25);">
+              <ion-icon name="storefront-outline" class="text-violet-400 text-2xl"></ion-icon>
+            </div>
+            <div class="text-left">
+              <h3 class="font-bold text-white text-sm">Dealers</h3>
+              <p class="text-xs text-slate-500">Manage your dealer network</p>
+            </div>
+          </div>
+          <ion-icon [name]="expandedMenu === 'dealers' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
+        </button>
+        <div *ngIf="expandedMenu === 'dealers'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <!-- Add Dealer -->
+          <button (click)="openAddDealerModal()" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
+              <ion-icon name="person-add-outline" class="text-violet-400 text-lg"></ion-icon>
+            </div>
+            <div>
+              <p class="font-semibold text-white text-sm">Add Dealer</p>
+              <p class="text-xs text-slate-500">Register a new dealer</p>
+            </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+          </button>
+          <!-- Price Master -->
+          <button (click)="openOperationView('price-master')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
+              <ion-icon name="pricetag-outline" class="text-violet-400 text-lg"></ion-icon>
+            </div>
+            <div>
+              <p class="font-semibold text-white text-sm">Price Master</p>
+              <p class="text-xs text-slate-500">View and manage product pricing</p>
+            </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+          </button>
+          <!-- Dealer Ledger -->
+          <button (click)="openOperationView('dealer-ledger')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
+              <ion-icon name="book-outline" class="text-violet-400 text-lg"></ion-icon>
+            </div>
+            <div>
+              <p class="font-semibold text-white text-sm">Dealer Ledger</p>
+              <p class="text-xs text-slate-500">Track dealer transactions &amp; balances</p>
+            </div>
+            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+          </button>
+
+          <!-- Dealer Orders -->
+          <button (click)="openOperationView('dealer-orders')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
+              <ion-icon name="receipt-outline" class="text-violet-400 text-lg"></ion-icon>
+            </div>
+            <div>
+              <p class="font-semibold text-white text-sm">Dealer Orders</p>
+              <p class="text-xs text-slate-500">View all dealer sales &amp; orders</p>
             </div>
             <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
           </button>
@@ -1518,6 +2210,76 @@
             style="background: linear-gradient(135deg, #0ea5e9 0%, #14b8a6 55%, #10b981 100%); letter-spacing: 0.02em;">
             <ion-spinner *ngIf="isSubmittingPayment" name="crescent"></ion-spinner>
             {{ isSubmittingPayment ? 'Saving...' : 'Save Payment' }}
+          </button>
+        </div>
+
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ==================== ADD DEALER MODAL ==================== -->
+  <ion-modal [isOpen]="showAddDealerModal" (didDismiss)="closeAddDealerModal()" [backdropDismiss]="false">
+    <ng-template>
+      <div class="h-full flex flex-col" style="background: #0d1117;">
+
+        <!-- Header -->
+        <div class="relative overflow-hidden" style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 55%, #a78bfa 100%);">
+          <div class="absolute inset-0" style="background: radial-gradient(ellipse at top right, rgba(255,255,255,0.18), transparent 60%);"></div>
+          <div class="relative flex justify-end pt-3 pr-4">
+            <button (click)="closeAddDealerModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+              style="background: rgba(0,0,0,0.22); color: white; backdrop-filter: blur(8px);">
+              Close
+              <div class="w-4 h-4 rounded-full flex items-center justify-center" style="background: rgba(255,255,255,0.25);">
+                <ion-icon name="close-outline" style="font-size: 11px;"></ion-icon>
+              </div>
+            </button>
+          </div>
+          <div class="relative flex items-center gap-3 px-5 pb-5 pt-2">
+            <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);">
+              <ion-icon name="storefront-outline" class="text-white" style="font-size: 20px;"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-white font-bold" style="font-size: 18px; line-height: 1.2;">Add Dealer</h2>
+              <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Register a new dealer</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Body -->
+        <div class="flex-1 overflow-y-auto px-5 pt-5 pb-4 space-y-4">
+
+          <!-- Full Name -->
+          <div>
+            <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">FULL NAME *</p>
+            <input type="text" [(ngModel)]="dealerForm.fullName" placeholder="Enter dealer full name"
+                   class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                   style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
+          </div>
+
+          <!-- Phone Number -->
+          <div>
+            <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">PHONE NUMBER *</p>
+            <input type="tel" [(ngModel)]="dealerForm.phone" placeholder="Enter phone number"
+                   class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                   style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
+          </div>
+
+          <!-- Address -->
+          <div>
+            <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">ADDRESS *</p>
+            <textarea [(ngModel)]="dealerForm.address" placeholder="Enter full address" rows="3"
+                      class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-none"
+                      style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Footer -->
+        <div class="px-5 pb-8 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+          <button (click)="submitDealer()"
+                  class="w-full py-4 rounded-2xl font-bold text-sm text-white transition-all"
+                  style="background: linear-gradient(135deg, #8b5cf6, #7c3aed); box-shadow: 0 10px 30px rgba(139,92,246,0.3);">
+            Add Dealer
           </button>
         </div>
 

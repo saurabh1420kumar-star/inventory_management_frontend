@@ -140,24 +140,88 @@
           <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
         </button>
 
-        <!-- Collect Payment -->
-        <button (click)="openPaymentModal()"
+        <!-- Add Dealer -->
+        <button (click)="openAddDealerModal()"
                 class="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
-                style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px);">
-          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
-            <ion-icon name="add-circle-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
+                style="background: rgba(139,92,246,0.08); border: 1.5px solid rgba(139,92,246,0.2); backdrop-filter: blur(12px);">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25);">
+            <ion-icon name="person-add-outline" style="font-size: 20px; color: #a78bfa;"></ion-icon>
           </div>
           <div class="flex-1">
-            <p class="font-bold text-white text-sm">Collect Payment</p>
-            <p class="text-xs text-slate-500">Record a credit or debit entry</p>
+            <p class="font-bold text-white text-sm">Add Dealer</p>
+            <p class="text-xs text-slate-500">Register a new dealer</p>
           </div>
           <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
         </button>
 
       </div>
+
     </div>
   </div>
 </ion-content>
+
+<!-- ==================== ADD DEALER MODAL ==================== -->
+<ion-modal [isOpen]="showAddDealerModal" (didDismiss)="closeAddDealerModal()" [backdropDismiss]="true">
+  <ng-template>
+    <div class="h-screen flex flex-col overflow-hidden" style="background: #0d1117;">
+      <div class="flex-shrink-0 relative overflow-hidden" style="background: linear-gradient(135deg, #7c3aed 0%, #a855f7 55%, #9333ea 100%);">
+        <div class="absolute inset-0" style="background: radial-gradient(ellipse at top right, rgba(255,255,255,0.18), transparent 60%);"></div>
+        <div class="relative flex justify-end pt-3 pr-4">
+          <button (click)="closeAddDealerModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                  style="background: rgba(0,0,0,0.2); color: white; border: 1px solid rgba(255,255,255,0.2);">
+            <ion-icon name="close-outline" style="font-size: 14px;"></ion-icon> Close
+          </button>
+        </div>
+        <div class="relative flex items-center gap-3 px-5 pb-5 pt-2">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0" style="background: rgba(255,255,255,0.2); backdrop-filter: blur(8px);">
+            <ion-icon name="person-add-outline" class="text-white" style="font-size: 20px;"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-white font-bold" style="font-size: 18px; line-height: 1.2;">Add Dealer</h2>
+            <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Register a new dealer</p>
+          </div>
+        </div>
+      </div>
+      <div class="flex-1 overflow-y-auto px-5 pt-5 pb-4 space-y-4">
+        <div>
+          <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">SELECT DISTRIBUTOR *</p>
+          <select [(ngModel)]="dealerForm.selectedDistributorId"
+                  class="w-full px-4 py-3 rounded-2xl font-medium text-sm focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                  style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;">
+            <option [ngValue]="null" disabled style="background:#1e293b;">-- Select Distributor --</option>
+            <option *ngFor="let d of distributors" [ngValue]="d.distributorId" style="background:#1e293b;">{{ d.distributorName }} (ID: {{ d.distributorId }})</option>
+          </select>
+        </div>
+        <div>
+          <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">FULL NAME *</p>
+          <input type="text" [(ngModel)]="dealerForm.fullName" placeholder="Enter dealer full name"
+                 class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                 style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
+        </div>
+        <div>
+          <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">PHONE NUMBER *</p>
+          <input type="tel" [(ngModel)]="dealerForm.phone" placeholder="Enter phone number"
+                 class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
+                 style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
+        </div>
+        <div>
+          <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">ADDRESS *</p>
+          <textarea [(ngModel)]="dealerForm.address" placeholder="Enter address" rows="3"
+                    class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30 resize-none"
+                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;"></textarea>
+        </div>
+      </div>
+      <div class="flex-shrink-0 px-5 pb-6 pt-3" style="border-top: 1px solid rgba(255,255,255,0.06);">
+        <button (click)="submitDealer()" [disabled]="isSubmittingDealer"
+                class="w-full py-4 rounded-2xl font-bold text-sm text-white transition-all"
+                style="background: linear-gradient(135deg, #7c3aed, #a855f7);">
+          <span *ngIf="!isSubmittingDealer">Add Dealer</span>
+          <span *ngIf="isSubmittingDealer">Adding...</span>
+        </button>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
 
 <!-- ==================== ADD PAYMENT MODAL ==================== -->
 <ion-modal [isOpen]="isPaymentModalOpen" (didDismiss)="closePaymentModal()" [backdropDismiss]="true">

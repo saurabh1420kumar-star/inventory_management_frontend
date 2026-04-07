@@ -1,9 +1,10 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule } from '@angular/common/http';
+import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { environment } from '../../../environments/environment';
 import { IonicModule, ToastController } from '@ionic/angular';
-import { RouterModule } from '@angular/router';
+import { RouterModule, Router } from '@angular/router';
 import { SalesAnalyticsService, SalesAnalyticsData } from './sales-analytics.service';
 import { PaymentService, PaymentRequest, PaymentResponse } from './payment.service';
 import { DistributorService, Distributor } from './distributor.service';
@@ -12,7 +13,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HapticService } from '../../services/haptic.service';
 import { addIcons } from 'ionicons';
-import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline } from 'ionicons/icons';
+import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline } from 'ionicons/icons';
 
 interface PaymentForm {
   balanceType: 'credit' | 'debit' | '';
@@ -62,6 +63,9 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isLoadingPendingPayments = false;
   showMyPayments = false;
   receiptFileName = '';
+  showAddDealerModal = false;
+  isSubmittingDealer = false;
+  dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null as number | null };
   
   distributors: Distributor[] = [];
   pendingPayments: any[] = [];
@@ -99,9 +103,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private paymentService: PaymentService,
     private distributorService: DistributorService,
     private toastController: ToastController,
-    private auth: Auth
+    private auth: Auth,
+    private router: Router,
+    private http: HttpClient
   ) {
-    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline });
+    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline });
   }
 
   ngOnInit(): void {
@@ -191,6 +197,43 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   openPaymentModal(): void {
     this.haptic.medium();
     this.isPaymentModalOpen = true;
+  }
+
+  openAddDealerModal(): void {
+    this.haptic.medium();
+    this.dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null };
+    this.showAddDealerModal = true;
+  }
+
+  closeAddDealerModal(): void {
+    this.haptic.light();
+    this.showAddDealerModal = false;
+  }
+
+  submitDealer(): void {
+    this.haptic.heavy();
+    const { fullName, phone, address, selectedDistributorId } = this.dealerForm;
+    if (!fullName.trim()) { this.showToast('Please enter dealer full name', 'warning'); return; }
+    if (!phone.trim()) { this.showToast('Please enter phone number', 'warning'); return; }
+    if (!address.trim()) { this.showToast('Please enter address', 'warning'); return; }
+    if (!selectedDistributorId) { this.showToast('Please select a distributor', 'warning'); return; }
+    this.isSubmittingDealer = true;
+    this.http.post<any>(
+      `${environment.dealersUrl}`,
+      { fullName: fullName.trim(), phone: phone.trim(), address: address.trim(), openingBalance: 0 },
+      { params: { distributorId: String(selectedDistributorId), salespersonId: String(this.salespersonId) } }
+    ).subscribe({
+      next: () => {
+        this.showToast('Dealer added successfully', 'success');
+        this.isSubmittingDealer = false;
+        this.closeAddDealerModal();
+      },
+      error: (err) => {
+        const msg = err?.error?.message ?? 'Failed to add dealer. Please try again.';
+        this.showToast(msg, 'danger');
+        this.isSubmittingDealer = false;
+      }
+    });
   }
 
   closePaymentModal(): void {

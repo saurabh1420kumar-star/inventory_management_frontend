@@ -184,6 +184,7 @@ export class MasterInventoryPage implements OnInit {
       description: [''],
       price: [0, [Validators.min(0)]],
       weight: [0, [Validators.min(0)]],
+      active: [true],
       // common
       unit: ['KG', Validators.required],
       quantity: [0, [Validators.required, Validators.min(0)]],
@@ -200,6 +201,7 @@ export class MasterInventoryPage implements OnInit {
       sku: [''],
       description: [''],
       weight: [0, [Validators.min(0)]],
+      active: [true],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
     });
@@ -531,6 +533,7 @@ export class MasterInventoryPage implements OnInit {
         price: formVal.price ?? 0,
         unit: formVal.unit || 'KG',
         weight: formVal.weight ?? 0,
+        active: formVal.active !== false,
         quantity: formVal.quantity,
         minimumThreshold: formVal.minimumThreshold
       };
@@ -580,6 +583,7 @@ export class MasterInventoryPage implements OnInit {
       sku: item.sku || '',
       description: item.description || '',
       weight: (item as any).weight || 0,
+      active: (item as any).active !== false,
       quantity: item.quantity,
       minimumThreshold: item.minimumThreshold
     });
@@ -614,6 +618,7 @@ export class MasterInventoryPage implements OnInit {
         price: formVal.price ?? 0,
         unit: formVal.unit || 'KG',
         weight: formVal.weight ?? 0,
+        active: formVal.active !== false,
         quantity: formVal.quantity,
         minimumThreshold: formVal.minimumThreshold
       };
