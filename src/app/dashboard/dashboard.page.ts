@@ -72,8 +72,8 @@ export class DashboardPage implements OnInit {
   statsCards: StatsCard[] = [
     {
       label: 'Total Revenue',
-      value: '$45,231',
-      change: '+12.5%',
+      value: '₹0',
+      change: '+0%',
       icon: 'trending-up',
       bgClass: 'bg-emerald-50',
       iconClass: 'text-emerald-500',
@@ -82,8 +82,8 @@ export class DashboardPage implements OnInit {
     },
     {
       label: 'Active Users',
-      value: '2,845',
-      change: '+8.2%',
+      value: '0',
+      change: '+0%',
       icon: 'people-outline',
       bgClass: 'bg-blue-50',
       iconClass: 'text-blue-500',
@@ -92,8 +92,8 @@ export class DashboardPage implements OnInit {
     },
     {
       label: 'Total Orders',
-      value: '1,248',
-      change: '+23.1%',
+      value: '0',
+      change: '+0%',
       icon: 'cart-outline',
       bgClass: 'bg-purple-50',
       iconClass: 'text-purple-500',
@@ -102,8 +102,8 @@ export class DashboardPage implements OnInit {
     },
     {
       label: 'Conversion Rate',
-      value: '3.24%',
-      change: '+5.4%',
+      value: '0%',
+      change: '+0%',
       icon: 'stats-chart-outline',
       bgClass: 'bg-amber-50',
       iconClass: 'text-amber-500',

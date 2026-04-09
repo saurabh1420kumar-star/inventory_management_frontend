@@ -213,8 +213,11 @@ export class PiUpdatePage implements OnInit {
         const target = this.orders.find(o => o.invoice.id === approvedId);
         if (target) target.isDispatched = true;
         this.filterOrders();
-        /* Navigate to dispatch page */
-        this.router.navigate(['/dispatch']);
+        // Wait for the modal dismiss animation to finish before navigating
+        // to prevent Ionic page transition conflicts that cause the UI to get stuck
+        setTimeout(() => {
+          this.router.navigate(['/dispatch']);
+        }, 350);
       },
       error: (err) => {
         console.error('Error approving dispatch:', err);
