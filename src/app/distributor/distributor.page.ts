@@ -489,11 +489,17 @@ interface Distributor {
   contact: string;
   alternateContact?: string;
   address: string;
+  state?: string;
+  district?: string;
+  pinCode?: string;
   aadhaarNumber: string;
   panNumber: string;
   gstNumber: string;
   status?: string;
   creditLimit?: boolean;
+  creditAmount?: number;
+  bankGuaranteeNumber?: string;
+  bgExpiryDate?: string;
   username?: string;
   password?: string;
   accountNumber?: string;
@@ -730,51 +736,48 @@ export class DistributorPage implements OnInit {
     return {
       id: dto.id.toString(),
       name: dto.name || (dto.firmName || '') || '',
-      companyName: (dto as any).companyName || dto.name || (dto.firmName || '') || '',
+      companyName: dto.companyName || dto.name || (dto.firmName || '') || '',
       assignedPerson: dto.assignedPerson || '',
       salesPersonRoleType: dto.salesPersonRoleType || '',
-      salespersonId: (dto as any).salespersonId,
+      salespersonId: dto.salespersonId,
       distributorType: dto.distributorType,
       companyType: dto.companyType,
       email: dto.contactEmail,
       contact: dto.phoneNumber,
       alternateContact: dto.alternateContact || '',
       address: dto.address,
+      state: dto.state || '',
+      district: dto.district || '',
+      pinCode: dto.pinCode || '',
       aadhaarNumber: dto.aadhaarNumber,
       panNumber: dto.panNumber,
       gstNumber: dto.gstNumber,
-      accountNumber: (dto as any).accountNumber || '',
-      ifsc: (dto as any).IFSC || (dto as any).ifsc || '',
-      accountName: (dto as any).accountName || '',
-      username: (dto as any).username || '',
-      password: (dto as any).password || '',
-      creditLimit: (dto as any).creditLimit || false,
+      status: dto.status,
+      creditLimit: dto.creditLimit || false,
+      creditAmount: dto.creditAmount,
+      bankGuaranteeNumber: dto.bankGuaranteeNumber || '',
+      bgExpiryDate: dto.bgExpiryDate || '',
+      accountNumber: dto.accountNumber || '',
+      ifsc: dto.ifsc || '',
+      accountName: dto.accountName || '',
+      username: dto.username || '',
+      password: dto.password || '',
       createdAt: dto.createdOn
     };
   }
 
   // Helper method to map form data to API payload
   private mapFormToPayload(formData: any) {
-    // When editing, use the stored salesPersonRoleType from API response
-    // When creating, extract from the selected key person
-    let salesPersonRoleType = '';
-    let assignedPersonName = '';
-    
     const selectedKeyPerson = this.keyPersonsList.find(person => person.id === formData.keyPerson);
-    
-    if (this.isEditing && this.editingSalesPersonRoleType) {
-      // Use the role that came from API during edit
-      salesPersonRoleType = this.editingSalesPersonRoleType;
-    } else {
-      // For new distributor, get role from selected key person
-      salesPersonRoleType = selectedKeyPerson?.role || formData.assignedPerson || '';
-    }
-    
+
+    // salesPersonRoleType always comes from the role dropdown (assignedPerson field)
+    const salesPersonRoleType = formData.assignedPerson || '';
+
     // Get the key person's actual name
-    if (selectedKeyPerson) {
-      assignedPersonName = (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim();
-    }
-    
+    const assignedPersonName = selectedKeyPerson
+      ? (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim()
+      : '';
+
     const payload = {
       companyName: formData.companyName || '',
       firmName: formData.companyName || '',
@@ -957,54 +960,70 @@ export class DistributorPage implements OnInit {
     this.haptic.medium();
     if (this.selectedDistributor) {
       this.isEditing = true;
-      // Store the salesPersonRoleType from the API response for use during save
+      // editingSalesPersonRoleType kept for reference but no longer used in payload
       this.editingSalesPersonRoleType = this.selectedDistributor.salesPersonRoleType || '';
-      const keyPersonName = this.selectedDistributor.assignedPerson || '';
-      
+
       // setTimeout ensures the *ngIf="isEditing" DOM (including ion-select) is fully
       // rendered before patchValue is called, otherwise selects ignore the value.
       setTimeout(() => {
-        // First set the role which will trigger fetching key persons
+        const dist = this.selectedDistributor!;
+
+        // Pre-populate filteredDistricts from state so district dropdown is ready
+        if (dist.state) {
+          this.filteredDistricts = INDIA_LOCATION_DATA[dist.state] || [];
+        }
+
+        // Patch all form fields (assignedPerson = role dropdown value)
         this.distributorForm.patchValue({
-          companyName: this.selectedDistributor!.companyName || this.selectedDistributor!.name || '',
-          assignedPerson: this.selectedDistributor!.salesPersonRoleType || '',
-          distributorType: this.selectedDistributor!.distributorType,
-          companyType: this.selectedDistributor!.companyType,
-          email: this.selectedDistributor!.email,
-          contact: this.selectedDistributor!.contact,
-          alternateContact: this.selectedDistributor!.alternateContact,
-          address: this.selectedDistributor!.address,
-          aadhaarNumber: this.selectedDistributor!.aadhaarNumber,
-          panNumber: this.selectedDistributor!.panNumber,
-          gstNumber: this.selectedDistributor!.gstNumber,
-          accountNumber: this.selectedDistributor!.accountNumber,
-          ifsc: this.selectedDistributor!.ifsc,
-          accountName: this.selectedDistributor!.accountName,
-          creditLimit: (this.selectedDistributor as any).creditLimit || false,
-          username: this.selectedDistributor!.username || '',
-          password: this.selectedDistributor!.password || ''
+          companyName: dist.companyName || dist.name || '',
+          assignedPerson: dist.salesPersonRoleType || '',
+          distributorType: dist.distributorType,
+          companyType: dist.companyType,
+          email: dist.email,
+          contact: dist.contact,
+          alternateContact: dist.alternateContact || '',
+          address: dist.address,
+          aadhaarNumber: dist.aadhaarNumber,
+          panNumber: dist.panNumber,
+          gstNumber: dist.gstNumber,
+          accountNumber: dist.accountNumber || '',
+          ifsc: dist.ifsc || '',
+          accountName: dist.accountName || '',
+          creditLimit: dist.creditLimit || false,
+          creditAmount: dist.creditAmount || '',
+          bankGuaranteeNumber: dist.bankGuaranteeNumber || '',
+          bankGuaranteeExpiryDate: dist.bgExpiryDate || '',
+          username: dist.username || '',
+          password: dist.password || '',
+          pincode: dist.pinCode || ''
         });
-        
-        // After key persons are loaded, find and set the matching one by name
+
+        // Set state silently to avoid valueChanges resetting district/pincode
+        this.distributorForm.get('state')?.setValue(dist.state || '', { emitEvent: false });
+        // Set district silently
+        this.distributorForm.get('district')?.setValue(dist.district || '', { emitEvent: false });
+
+        // After key persons are loaded, find and set matching one by salespersonId (then by name)
         const checkAndSetKeyPerson = () => {
           if (this.keyPersonsList && this.keyPersonsList.length > 0) {
-            const matchingKeyPerson = this.keyPersonsList.find(person => 
-              (person.firstName + ' ' + person.lastName).trim() === keyPersonName
+            const matchById = dist.salespersonId
+              ? this.keyPersonsList.find(p => p.id === dist.salespersonId)
+              : null;
+            const matchByName = this.keyPersonsList.find(p =>
+              (p.firstName + ' ' + p.lastName).trim() === (dist.assignedPerson || '')
             );
-            if (matchingKeyPerson) {
-              this.distributorForm.patchValue({
-                keyPerson: matchingKeyPerson.id
-              });
+            const match = matchById || matchByName;
+            if (match) {
+              this.distributorForm.patchValue({ keyPerson: match.id });
             }
           } else {
-            // If key persons not loaded yet, wait a bit and try again
             setTimeout(checkAndSetKeyPerson, 500);
           }
         };
-        
+
         // Start checking after a short delay to allow key persons to load
         setTimeout(checkAndSetKeyPerson, 1000);
-        
+
         this.cdr.detectChanges();
       }, 300);
     }
