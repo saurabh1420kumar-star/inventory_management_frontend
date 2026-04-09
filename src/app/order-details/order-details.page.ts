@@ -34,7 +34,7 @@ import {
 import { SalesService, OrderTrackingItem, OrderTrackingStep } from '../services/sales.service';
 import { GdnService } from '../services/gdn.service';
 import { DownloadService } from '../services/download.service';
-import { DistributorService } from '../services/distributor.service';
+import { DistributorService, OrderCartItem } from '../services/distributor.service';
 import { InvoiceService } from '../services/invoice.service';
 import { Auth } from '../services/auth';
 
@@ -55,6 +55,16 @@ export interface OrderStep {
   downloadLabel?: string;
   hasAction?: boolean;
   actionResponse?: 'yes' | 'no' | null;
+}
+
+export interface ConfirmOrderItem {
+  itemId: number;
+  itemName: string;
+  itemSku: string;
+  dispatchedQuantity: number;
+  receivedQuantity: number;
+  condition: string;
+  itemRemarks: string;
 }
 
 export interface Order {
@@ -94,6 +104,8 @@ export class OrderDetailsPage implements OnInit {
   confirmingOrder: Order | null = null;
   confirmForm = { remarks: '', feedback: '', status: 'RECEIVED_COMPLETE' };
   isConfirming: boolean = false;
+  confirmOrderItems: ConfirmOrderItem[] = [];
+  isLoadingOrderItems: boolean = false;
 
   // Stats
   totalOrders: number = 0;
@@ -329,13 +341,38 @@ export class OrderDetailsPage implements OnInit {
   onOrderReceivedAction(order: Order, response: 'yes' | 'no') {
     this.confirmingOrder = order;
     this.confirmForm = { remarks: '', feedback: '', status: 'RECEIVED_COMPLETE' };
+    this.confirmOrderItems = [];
     this.showConfirmModal = true;
+
+    if (!order.distributorId) return;
+    this.isLoadingOrderItems = true;
+    const orderId = this.extractOrderId(order.orderNumber);
+    this.distributorService.getDistributorOrders(order.distributorId).subscribe({
+      next: (res) => {
+        const matched = (res.data || []).find((o: any) => o.id === orderId);
+        this.confirmOrderItems = (matched?.cartItems || []).map((item: OrderCartItem) => ({
+          itemId: item.itemId,
+          itemName: item.itemName,
+          itemSku: item.itemSku,
+          dispatchedQuantity: item.quantity,
+          receivedQuantity: item.quantity,
+          condition: 'GOOD',
+          itemRemarks: ''
+        }));
+        this.isLoadingOrderItems = false;
+      },
+      error: () => {
+        this.isLoadingOrderItems = false;
+      }
+    });
   }
 
   closeConfirmModal() {
     this.showConfirmModal = false;
     this.confirmingOrder = null;
     this.isConfirming = false;
+    this.confirmOrderItems = [];
+    this.isLoadingOrderItems = false;
   }
 
   extractOrderId(orderNumber: string): number {
@@ -355,7 +392,13 @@ export class OrderDetailsPage implements OnInit {
       overallRating: 1,
       feedback: this.confirmForm.feedback,
       remarks: this.confirmForm.remarks,
-      itemConfirmations: []
+      itemConfirmations: this.confirmOrderItems.map(item => ({
+        itemId: item.itemId,
+        dispatchedQuantity: item.dispatchedQuantity,
+        receivedQuantity: item.receivedQuantity,
+        condition: item.condition,
+        itemRemarks: item.itemRemarks
+      }))
     };
     this.distributorService.confirmOrder(this.confirmingOrder.distributorId, payload).subscribe({
       next: async () => {
