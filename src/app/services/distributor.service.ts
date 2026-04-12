@@ -204,4 +204,66 @@ export class DistributorService {
       payload
     );
   }
+
+  /**
+   * Check if distributor can place a new order
+   * 
+   * BUTTON STATE LOGIC:
+   * ❌ DISABLED if: ANY order in history has status = PLACED (currently being processed)
+   * ✅ ENABLED if: No PLACED orders AND latest order status = ACTIVE, GDN_GENERATED, DISMISSED, GDN_REJECTED
+   * ✅ ENABLED if: First order (no previous orders)
+   */
+  canDistributorPlaceOrder(orders: DistributorOrder[]): { canPlace: boolean; message: string; lastOrder?: DistributorOrder } {
+    console.log('🔍 Checking order eligibility. Total orders:', orders.length);
+    
+    if (!orders || orders.length === 0) {
+      console.log('✅ No previous orders - First order ALLOWED');
+      return { 
+        canPlace: true, 
+        message: 'Ready to place your first order' 
+      };
+    }
+
+    // ❌ CHECK 1: Is there ANY PLACED order in history?
+    const placedOrders = orders.filter(o => o.status?.toUpperCase() === 'PLACED');
+    if (placedOrders.length > 0) {
+      console.log('❌ FOUND PLACED ORDER(S) in history:', placedOrders.length);
+      placedOrders.forEach(o => {
+        console.log('   - Order ID:', o.id, 'Status:', o.status, 'Created:', o.createdAt);
+      });
+      return {
+        canPlace: false,
+        message: `Cannot place new order yet. You have a previous order still in PLACED status waiting for GDN generation.`,
+        lastOrder: placedOrders[0]
+      };
+    }
+
+    // CHECK 2: Get the latest order
+    const sortedOrders = [...orders].sort(
+      (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
+    );
+    const lastOrder = sortedOrders[0];
+    const lastOrderStatus = lastOrder.status?.toUpperCase() || 'UNKNOWN';
+    
+    console.log('📋 Latest order status:', lastOrderStatus);
+
+    // ✅ ENABLED statuses: can place next order
+    const enabledStatuses = ['ACTIVE', 'GDN_GENERATED', 'DISMISSED', 'GDN_REJECTED'];
+    if (enabledStatuses.includes(lastOrderStatus)) {
+      console.log('✅', lastOrderStatus, ': Button ENABLED - Ready to place next order');
+      return {
+        canPlace: true,
+        message: `Ready to place next order (Previous: ${lastOrderStatus})`,
+        lastOrder
+      };
+    }
+
+    // ❌ Any other status defaults to DISABLED (safety)
+    console.log('❌ Status:', lastOrderStatus, '- Button DISABLED by default');
+    return {
+      canPlace: false,
+      message: `Cannot place order yet. Previous order status: ${lastOrderStatus}. Please wait for GDN generation.`,
+      lastOrder
+    };
+  }
 }

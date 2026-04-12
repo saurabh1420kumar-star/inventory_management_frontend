@@ -21,6 +21,7 @@ import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } fr
 import { Auth } from '../services/auth';
 import { DistributorProfileService } from '../services/distributor-profile.service';
 import { HapticService } from '../services/haptic.service';
+import { DistributorService } from '../services/distributor.service';
 
 @Component({
   selector: 'app-distributor-cart',
@@ -67,6 +68,13 @@ export class DistributorCartPage implements OnInit {
   // Full distributor profile data
   distributorProfile: any = null;
 
+  // Order eligibility state
+  isOrderEligible: boolean = true;
+  orderEligibilityMessage: string = '';
+  
+  // Auto-refresh eligibility check interval
+  private eligibilityRefreshInterval: any = null;
+
   // Make Math available in template
   Math = Math;
 
@@ -79,7 +87,8 @@ export class DistributorCartPage implements OnInit {
     private auth: Auth,
     private router: Router,
     private distributorProfileService: DistributorProfileService,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private distributorService: DistributorService
   ) {
     addIcons({
       'cart-outline': cartOutline,
@@ -113,6 +122,7 @@ export class DistributorCartPage implements OnInit {
     this.subscribeToDistributorProfile();
     this.fetchFinishedProducts();
     this.subscribeToCart();
+    this.checkOrderEligibility();
   }
 
   getDistributorId() {
@@ -147,6 +157,81 @@ export class DistributorCartPage implements OnInit {
         console.error('Failed to subscribe to distributor profile:', error);
       }
     });
+  }
+
+  /**
+   * Check if distributor is eligible to place a new order
+   */
+  checkOrderEligibility() {
+    if (!this.distributorId) {
+      console.warn('Distributor ID not available for eligibility check');
+      return;
+    }
+
+    console.log('📋 Checking order eligibility for distributor:', this.distributorId);
+    this.distributorService.getDistributorOrders(this.distributorId).subscribe({
+      next: (response) => {
+        const orders = response?.data || [];
+        console.log('📦 Retrieved orders:', orders.length);
+        
+        // Log all orders for debugging
+        if (orders.length > 0) {
+          console.log('📋 All orders:', orders.map(o => ({
+            id: o.id,
+            status: o.status,
+            createdAt: o.createdAt
+          })));
+        }
+        
+        const eligibilityCheck = this.distributorService.canDistributorPlaceOrder(orders);
+        this.isOrderEligible = eligibilityCheck.canPlace;
+        this.orderEligibilityMessage = eligibilityCheck.message;
+        
+        console.log('✅ Order eligibility updated:', {
+          canPlace: this.isOrderEligible,
+          message: this.orderEligibilityMessage,
+          lastOrder: eligibilityCheck.lastOrder ? {
+            id: eligibilityCheck.lastOrder.id,
+            status: eligibilityCheck.lastOrder.status
+          } : 'None'
+        });
+      },
+      error: (error) => {
+        console.error('❌ Failed to check order eligibility:', error);
+        // Default to allowed if check fails
+        this.isOrderEligible = true;
+        this.orderEligibilityMessage = 'Ready to place order';
+      }
+    });
+  }
+
+  /**
+   * Start auto-refresh of eligibility check (every 3 seconds)
+   * Used when checkout modal is open to reflect real-time status changes
+   */
+  private startEligibilityAutoRefresh() {
+    // Clear any existing interval
+    if (this.eligibilityRefreshInterval) {
+      clearInterval(this.eligibilityRefreshInterval);
+    }
+    
+    console.log('🔄 Starting eligibility auto-refresh (every 3 seconds)');
+    this.eligibilityRefreshInterval = setInterval(() => {
+      console.log('🔄 Auto-refreshing order eligibility...');
+      this.checkOrderEligibility();
+    }, 3000); // Refresh every 3 seconds
+  }
+
+  /**
+   * Stop auto-refresh of eligibility check
+   * Used when checkout modal is closed
+   */
+  private stopEligibilityAutoRefresh() {
+    if (this.eligibilityRefreshInterval) {
+      console.log('⏹️ Stopping eligibility auto-refresh');
+      clearInterval(this.eligibilityRefreshInterval);
+      this.eligibilityRefreshInterval = null;
+    }
   }
 
   /**
@@ -249,6 +334,10 @@ export class DistributorCartPage implements OnInit {
           this.cartService.addToCart(this.selectedProduct!, this.quantityToAdd);
           this.closeProductModal();
           this.isLoading = false;
+          
+          // Re-check eligibility after adding items
+          console.log('🔄 Re-checking eligibility after adding items to cart');
+          this.checkOrderEligibility();
         },
         error: (err) => {
           console.error('Failed to add item to cart', err);
@@ -338,6 +427,14 @@ export class DistributorCartPage implements OnInit {
       this.showToast('Your cart is empty', 'warning');
       return;
     }
+    
+    // Re-check eligibility before opening checkout modal
+    console.log('🔄 Re-checking eligibility before checkout...');
+    this.checkOrderEligibility();
+    
+    // Start auto-refresh of eligibility status
+    this.startEligibilityAutoRefresh();
+    
     // Re-apply address each time in case form was reset
     if (this.distributorAddress) {
       this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
@@ -396,6 +493,8 @@ export class DistributorCartPage implements OnInit {
 
   closeCheckoutModal() {
     this.haptic.light();
+    // Stop auto-refresh of eligibility check
+    this.stopEligibilityAutoRefresh();
     this.showCheckoutModal = false;
     this.orderForm.reset();
   }
@@ -412,6 +511,12 @@ export class DistributorCartPage implements OnInit {
 
     if (!this.distributorId) {
       this.showToast('Distributor ID not found. Please log in again.', 'danger');
+      return;
+    }
+
+    // Check eligibility before submitting
+    if (!this.isOrderEligible) {
+      this.showToast('❌ ' + this.orderEligibilityMessage, 'danger');
       return;
     }
 
@@ -472,6 +577,12 @@ export class DistributorCartPage implements OnInit {
         this.currentCartId = null; // Reset cart ID after successful order
         this.closeCheckoutModal();
         this.isLoading = false;
+        
+        // Refresh eligibility check - this will disable the button if next order not allowed
+        console.log('🔄 Refreshing order eligibility...');
+        setTimeout(() => {
+          this.checkOrderEligibility();
+        }, 500);
       },
       error: (err) => {
         console.error('=== ORDER FAILED ===');

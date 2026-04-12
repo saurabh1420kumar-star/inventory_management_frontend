@@ -234,6 +234,15 @@
                     <span>{{ downloadingGdnOrderId === order.id ? 'Downloading...' : 'Download GDN' }}</span>
                   </button>
 
+                  <!-- Download Proforma Invoice Button -->
+                  <button *ngIf="step.label === 'Proforma Invoice Generated' && step.status === 'completed'"
+                          class="step-download-btn"
+                          [disabled]="downloadingProformaInvoiceOrderId === order.id"
+                          (click)="onDownloadDocument(step, order)">
+                    <ion-icon name="download-outline"></ion-icon>
+                    <span>{{ downloadingProformaInvoiceOrderId === order.id ? 'Downloading...' : 'Download Proforma Invoice' }}</span>
+                  </button>
+
                   <!-- Order Received Action Button -->
                   <div *ngIf="step.hasAction && step.status !== 'cancelled' && step.status !== 'completed' && step.actionResponse === null && isOnTheWayCompleted(order)"
                        class="step-action-buttons">

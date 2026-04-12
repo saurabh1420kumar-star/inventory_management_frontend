@@ -2260,6 +2260,7 @@
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">PHONE NUMBER *</p>
             <input type="tel" [(ngModel)]="dealerForm.phone" placeholder="Enter phone number"
+                   maxlength="10" inputmode="numeric" pattern="[0-9]+"
                    class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-violet-500/30"
                    style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
           </div>

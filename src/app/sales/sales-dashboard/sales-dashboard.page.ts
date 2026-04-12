@@ -1,7 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { HttpClientModule, HttpClient } from '@angular/common/http';
+import { HttpClientModule, HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { IonicModule, ToastController } from '@ionic/angular';
 import { RouterModule, Router } from '@angular/router';
@@ -215,16 +215,33 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     const { fullName, phone, address, selectedDistributorId } = this.dealerForm;
     if (!fullName.trim()) { this.showToast('Please enter dealer full name', 'warning'); return; }
     if (!phone.trim()) { this.showToast('Please enter phone number', 'warning'); return; }
+    
+    // Validate phone number: must be exactly 10 digits
+    const phoneDigits = phone.trim().replace(/\D/g, '');
+    if (phoneDigits.length !== 10) { 
+      this.showToast('Phone must be a valid 10-digit Indian mobile number', 'warning'); 
+      return; 
+    }
+    
     if (!address.trim()) { this.showToast('Please enter address', 'warning'); return; }
     if (!selectedDistributorId) { this.showToast('Please select a distributor', 'warning'); return; }
+    
     this.isSubmittingDealer = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    
     this.http.post<any>(
       `${environment.dealersUrl}`,
-      { fullName: fullName.trim(), phone: phone.trim(), address: address.trim(), openingBalance: 0 },
-      { params: { distributorId: String(selectedDistributorId), salespersonId: String(this.salespersonId) } }
+      { fullName: fullName.trim(), phone: phoneDigits, address: address.trim(), openingBalance: 0 },
+      { 
+        params: { distributorId: String(selectedDistributorId), salespersonId: String(this.salespersonId) },
+        headers: headers
+      }
     ).subscribe({
       next: () => {
-        this.showToast('Dealer added successfully', 'success');
+        this.showToast('Dealer is created', 'success');
         this.isSubmittingDealer = false;
         this.closeAddDealerModal();
       },

@@ -98,6 +98,7 @@ export class OrderDetailsPage implements OnInit {
   loadError: string = '';
   downloadingGdnOrderId: string | null = null;
   downloadingInvoiceOrderId: string | null = null;
+  downloadingProformaInvoiceOrderId: string | null = null;
 
   // Confirm Order Received Modal
   showConfirmModal: boolean = false;
@@ -334,8 +335,83 @@ export class OrderDetailsPage implements OnInit {
   }
 
   onDownloadDocument(step: OrderStep, order: Order) {
-    console.log(`Downloading ${step.downloadLabel} for order ${order.orderNumber}`);
-    // TODO: Implement actual download logic via API
+    const orderId = this.extractOrderId(order.orderNumber);
+    
+    console.log(`Downloading ${step.downloadLabel} for order ID: ${orderId}`);
+    
+    if (step.downloadLabel === 'Proforma Invoice' || step.label === 'Proforma Invoice Generated') {
+      this.downloadProformaInvoice(orderId);
+    } else if (step.downloadLabel === 'Invoice') {
+      this.downloadInvoice(orderId);
+    } else {
+      console.warn('Unknown document type:', step.downloadLabel);
+    }
+  }
+
+  /**
+   * Download Proforma Invoice for an order
+   */
+  private downloadProformaInvoice(orderId: number) {
+    this.downloadingProformaInvoiceOrderId = orderId.toString();
+    console.log('📥 Downloading Proforma Invoice for order:', orderId);
+
+    this.invoiceService.downloadProformaInvoice(orderId).subscribe({
+      next: (blob) => {
+        console.log('✅ Proforma Invoice downloaded successfully');
+        // Create blob download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `proforma-invoice-${orderId}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingProformaInvoiceOrderId = null;
+      },
+      error: (error) => {
+        console.error('❌ Failed to download Proforma Invoice:', error);
+        this.downloadingProformaInvoiceOrderId = null;
+        const msg = error?.error?.message || 'Failed to download proforma invoice';
+        this.showToast(msg, 'danger');
+      }
+    });
+  }
+
+  /**
+   * Download Invoice for an order
+   */
+  private downloadInvoice(orderId: number) {
+    this.downloadingInvoiceOrderId = orderId.toString();
+    console.log('📥 Downloading Invoice for order:', orderId);
+
+    this.invoiceService.downloadInvoicePdf(orderId).subscribe({
+      next: (blob) => {
+        console.log('✅ Invoice downloaded successfully');
+        // Create blob download
+        const url = window.URL.createObjectURL(blob);
+        const link = document.createElement('a');
+        link.href = url;
+        link.download = `invoice-${orderId}.pdf`;
+        link.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingInvoiceOrderId = null;
+      },
+      error: (error) => {
+        console.error('❌ Failed to download Invoice:', error);
+        this.downloadingInvoiceOrderId = null;
+        const msg = error?.error?.message || 'Failed to download invoice';
+        this.showToast(msg, 'danger');
+      }
+    });
+  }
+
+  private showToast(message: string, color: string = 'success') {
+    this.toastController.create({
+      message,
+      duration: 3000,
+      position: 'top',
+      color,
+      buttons: [{ icon: 'close', role: 'cancel' }]
+    }).then(toast => toast.present());
   }
 
   onOrderReceivedAction(order: Order, response: 'yes' | 'no') {

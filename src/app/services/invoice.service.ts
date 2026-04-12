@@ -50,4 +50,15 @@ export class InvoiceService {
       responseType: 'blob'
     });
   }
+
+  /**
+   * Download Proforma Invoice PDF by order ID
+   * GET /api/order/proforma-invoice/{orderId}/download
+   */
+  downloadProformaInvoice(orderId: number): Observable<Blob> {
+    return this.http.get(`${environment.apiUrl}/order/proforma-invoice/${orderId}/download`, {
+      headers: this.getAuthHeaders(),
+      responseType: 'blob'
+    });
+  }
 }

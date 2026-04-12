@@ -9,6 +9,7 @@ import { Auth } from '../services/auth';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import { HapticService } from '../services/haptic.service';
+import { DashboardService } from '../services/dashboard.service';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -117,11 +118,80 @@ export class DashboardPage implements OnInit {
 
   private haptic = inject(HapticService);
 
-  constructor(private auth: Auth, private router: Router, private route: ActivatedRoute) {}
+  constructor(
+    private auth: Auth, 
+    private router: Router, 
+    private route: ActivatedRoute,
+    private dashboardService: DashboardService
+  ) {}
 
   ngOnInit() {
     this.checkUserRole();
     this.initializeChart();
+    this.loadDashboardAnalytics();
+  }
+
+  /**
+   * Load dashboard analytics from API
+   * Maps API response data to stats cards
+   */
+  loadDashboardAnalytics() {
+    console.log('📊 Loading dashboard analytics...');
+    this.dashboardService.getAnalytics().subscribe({
+      next: (analytics: any) => {
+        console.log('✅ Analytics data received:', analytics);
+        
+        if (analytics && Object.keys(analytics).length > 0) {
+          // Extract Month-To-Date metrics
+          const mtd = analytics.monthToDate || {};
+          const ytd = analytics.yearToDate || {};
+          const wtd = analytics.weekToDate || {};
+          
+          // Calculate totals and metrics
+          const totalSales = mtd.totalSales || 0;
+          const transactionCount = mtd.transactionCount || 0;
+          const avgOrderValue = mtd.averageOrderValue || 0;
+          
+          // Get sales by category (sum all categories)
+          const salesByCategory = analytics.salesByCategory || {};
+          const totalCategoryRevenue = Object.values(salesByCategory).reduce((sum: any, val: any) => sum + val, 0);
+          
+          // Get sales by region (sum all regions)
+          const salesByRegion = analytics.salesByRegion || {};
+          const topRegion = Object.entries(salesByRegion).reduce((max: any, [region, amount]: any) => 
+            amount > (max.amount || 0) ? { region, amount } : max, {});
+          
+          // Calculate growth metrics
+          const wtdSales = wtd.totalSales || 0;
+          const ytdSales = ytd.totalSales || 0;
+          const mtdGrowth = wtdSales > 0 ? ((totalSales - wtdSales) / wtdSales * 100).toFixed(1) : 0;
+          
+          // Update stats cards with API data
+          this.statsCards[0].value = `₹${(totalSales / 100000).toFixed(2)}L`;
+          this.statsCards[0].change = `+${mtdGrowth}%`;
+          
+          this.statsCards[1].value = `${transactionCount}`;
+          this.statsCards[1].change = `+${transactionCount > 0 ? '100' : '0'}%`;
+          
+          this.statsCards[2].value = `₹${(avgOrderValue / 1000).toFixed(1)}K`;
+          this.statsCards[2].change = `+${((avgOrderValue / totalSales * 100) || 0).toFixed(1)}%`;
+          
+          this.statsCards[3].value = Object.keys(salesByCategory).length.toString();
+          this.statsCards[3].change = `+${topRegion.region ? '100' : '0'}%`;
+          
+          console.log('📈 Stats Updated:', {
+            totalSales: `₹${(totalSales / 100000).toFixed(2)}L`,
+            transactions: transactionCount,
+            avgOrder: `₹${(avgOrderValue / 1000).toFixed(1)}K`,
+            categories: Object.keys(salesByCategory).length,
+            topRegion: topRegion.region
+          });
+        }
+      },
+      error: (err) => {
+        console.error('❌ Failed to load dashboard analytics:', err);
+      }
+    });
   }
 
   checkUserRole() {

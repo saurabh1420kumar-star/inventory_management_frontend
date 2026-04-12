@@ -335,11 +335,23 @@ export class DistributorDashboardPage implements OnInit {
     this.isLoadingOrders = true;
     this.distributorService.getDistributorOrders(this.distributorId).subscribe({
       next: (response) => {
-        this.orders = response.data.sort(
+        // Show all orders EXCEPT ACTIVE
+        // ACTIVE orders are already being processed, so hide them
+        const visibleOrders = (response.data || []).filter((order: any) => {
+          const status = order.status?.toUpperCase();
+          return status !== 'ACTIVE';
+        });
+
+        this.orders = visibleOrders.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
         this.isLoadingOrders = false;
-        console.log('Orders loaded:', this.orders.length);
+        console.log('📋 Orders loaded (excluding ACTIVE):', this.orders.length, '(filtered from', response.data?.length, 'total)');
+        
+        // Log order statuses for debugging
+        this.orders.forEach(o => {
+          console.log('   - Order ID:', o.id, 'Status:', o.status, 'Created:', o.createdAt);
+        });
       },
       error: (error) => {
         console.error('Error loading orders:', error);
@@ -720,16 +732,33 @@ export class DistributorDashboardPage implements OnInit {
     const { fullName, phone, address } = this.dealerForm;
     if (!fullName.trim()) { this.showToast('Please enter dealer full name', 'danger'); return; }
     if (!phone.trim()) { this.showToast('Please enter phone number', 'danger'); return; }
+    
+    // Validate phone number: must be exactly 10 digits
+    const phoneDigits = phone.trim().replace(/\D/g, '');
+    if (phoneDigits.length !== 10) { 
+      this.showToast('Phone must be a valid 10-digit Indian mobile number', 'danger'); 
+      return; 
+    }
+    
     if (!address.trim()) { this.showToast('Please enter address', 'danger'); return; }
+    
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    
     this.http.post<{ dealer?: any; data?: any; [key: string]: any }>(
       `${environment.dealersUrl}`,
       {
         fullName: fullName.trim(),
-        phone: phone.trim(),
+        phone: phoneDigits,
         address: address.trim(),
         openingBalance: 0
       },
-      { params: { distributorId: String(this.distributorId) } }
+      { 
+        params: { distributorId: String(this.distributorId) },
+        headers: headers 
+      }
     ).subscribe({
       next: (res) => {
         const d = res?.['dealer'] ?? res?.['data'] ?? res;
@@ -742,7 +771,7 @@ export class DistributorDashboardPage implements OnInit {
         };
         this.dealers.unshift(newDealer);
         this.inlineSaleForm[newDealer.id] = { product: '', amount: '' };
-        this.showToast('Dealer added successfully', 'success');
+        this.showToast('Dealer is created', 'success');
         this.closeAddDealerModal();
       },
       error: (err) => {
