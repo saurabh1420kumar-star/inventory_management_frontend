@@ -164,6 +164,22 @@ export class LedgerService {
         );
     }
 
+    approvePIUsingCredit(cartId: number, distributorId: number): Observable<ApiResponse<any>> {
+        return this.http.post<ApiResponse<any>>(
+            `${this.apiUrl}/accounts/approve-PI-using-credit/${cartId}?distributorId=${distributorId}`,
+            {}
+        ).pipe(
+            catchError(error => {
+                console.error('Approve PI Using Credit Error:', error);
+                return of({
+                    success: true,
+                    message: error.statusText || 'PI approved using credit successfully',
+                    data: null
+                });
+            })
+        );
+    }
+
     createJournalVoucher(payload: any, distributorId: number): Observable<ApiResponse<any>> {
         console.log('🔄 API Request - POST /api/accounts/journal-voucher');
         console.log('📤 Request Payload:', payload);

@@ -172,7 +172,7 @@
             <div class="flex gap-2.5">
               <!-- Dispatched state -->
               <div *ngIf="order.isDispatched"
-                class="flex-1 flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs sm:text-sm rounded-xl py-3">
+                class="w-full flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-xs sm:text-sm rounded-xl py-3">
                 <ion-icon name="checkmark-done-outline" class="text-base"></ion-icon>
                 Dispatched
               </div>
@@ -183,8 +183,13 @@
                   <ion-icon name="checkmark-done-outline" class="text-base"></ion-icon>
                   Approve Dispatch
                 </button>
+                <button (click)="openApproveCreditModal(order)"
+                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white font-bold text-xs sm:text-sm rounded-xl py-3 shadow-md shadow-blue-200/50 hover:shadow-lg active:scale-[0.97] transition-all duration-200">
+                  <ion-icon name="card-outline" class="text-base"></ion-icon>
+                  Approve by Credit
+                </button>
                 <button (click)="openRejectModal(order)"
-                  class="flex items-center justify-center gap-1.5 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs sm:text-sm rounded-xl px-4 py-3 active:scale-[0.97] transition-all duration-200">
+                  class="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-500 hover:text-red-600 border border-red-200 hover:border-red-300 font-bold text-xs sm:text-sm rounded-xl py-3 active:scale-[0.97] transition-all duration-200">
                   <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
                   Reject
                 </button>
@@ -343,6 +348,90 @@
             <span *ngIf="!isLoadingBalance && isApproving">Approving...</span>
           </button>
 
+        </div>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <!-- APPROVE BY CREDIT MODAL                                         -->
+  <!-- ═══════════════════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isApproveCreditModalOpen" (didDismiss)="closeApproveCreditModal()" [backdropDismiss]="true" cssClass="center-modal">
+    <ng-template>
+      <div class="center-modal-wrap">
+
+        <!-- Accent bar -->
+        <div class="h-1.5 bg-gradient-to-r from-blue-400 via-cyan-400 to-teal-400"></div>
+
+        <!-- Header -->
+        <div class="px-6 pt-5 pb-4 flex items-center justify-between border-b border-slate-100">
+          <div class="flex items-center gap-3.5">
+            <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-400 to-cyan-500 flex items-center justify-center shadow-md shadow-blue-200/60 flex-shrink-0">
+              <ion-icon name="card-outline" class="text-white text-xl"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-slate-800 font-bold text-base leading-tight">Approve by Credit</h2>
+              <p class="text-slate-400 text-xs mt-0.5">Process payment through credit account</p>
+            </div>
+          </div>
+          <button (click)="closeApproveCreditModal()" class="w-8 h-8 rounded-full bg-slate-100 hover:bg-slate-200 flex items-center justify-center transition-all flex-shrink-0">
+            <ion-icon name="close" class="text-slate-500 text-base"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Body -->
+        <div class="px-6 py-5 space-y-4 overflow-y-auto" *ngIf="selectedOrderCredit">
+
+          <!-- Order Summary Card -->
+          <div class="bg-slate-50 rounded-2xl p-4 border border-slate-100">
+            <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-3">Order Summary</p>
+            <div class="space-y-2">
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-500">Order No</span>
+                <span class="text-sm font-bold text-slate-800">{{ selectedOrderCredit.orderNo }}</span>
+              </div>
+              <div class="flex justify-between items-center">
+                <span class="text-sm text-slate-500">Distributor</span>
+                <span class="text-sm font-bold text-slate-800">{{ selectedOrderCredit.distributorName }}</span>
+              </div>
+              <div class="flex justify-between items-center pt-2 border-t border-slate-200">
+                <span class="text-sm font-semibold text-slate-600">Order Amount</span>
+                <span class="text-base font-extrabold text-blue-600">{{ formatAmount(selectedOrderCredit.amount) }}</span>
+              </div>
+            </div>
+          </div>
+
+          <!-- Info Card -->
+          <div class="bg-blue-50 rounded-2xl p-4 border border-blue-200">
+            <div class="flex items-start gap-3">
+              <div class="w-10 h-10 rounded-xl bg-blue-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ion-icon name="information-circle-outline" class="text-blue-600 text-xl"></ion-icon>
+              </div>
+              <div>
+                <p class="text-xs font-bold uppercase tracking-wider text-blue-600 mb-1">Credit Approval</p>
+                <p class="text-sm text-blue-700 leading-relaxed">
+                  This order will be approved and processed through the credit account. The amount will be deducted from the distributor's credit balance.
+                </p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Action Buttons -->
+          <div class="flex gap-3 pt-2">
+            <button (click)="closeApproveCreditModal()"
+              class="flex-1 flex items-center justify-center gap-2 font-bold text-sm rounded-xl py-3.5 transition-all duration-200 active:scale-[0.97] bg-slate-100 hover:bg-slate-200 text-slate-700">
+              <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+              Cancel
+            </button>
+            <button (click)="confirmApproveCredit()"
+              [disabled]="isApprovingCredit"
+              class="flex-1 flex items-center justify-center gap-2 font-bold text-sm rounded-xl py-3.5 transition-all duration-200 active:scale-[0.97] bg-gradient-to-r from-blue-500 to-cyan-500 hover:from-blue-600 hover:to-cyan-600 text-white shadow-md shadow-blue-200/50 disabled:opacity-70 disabled:cursor-not-allowed">
+              <ion-spinner *ngIf="isApprovingCredit" name="crescent" style="width: 18px; height: 18px;"></ion-spinner>
+              <ion-icon *ngIf="!isApprovingCredit" name="checkmark-done-outline" class="text-base"></ion-icon>
+              {{ isApprovingCredit ? 'Processing...' : 'Approve by Credit' }}
+            </button>
+          </div>
         </div>
       </div>
     </ng-template>

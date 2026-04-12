@@ -52,6 +52,11 @@ export class PiUpdatePage implements OnInit {
   isApproving = false;
   isLoadingBalance = false;
 
+  /* ── Approve by Credit Modal ── */
+  isApproveCreditModalOpen = false;
+  selectedOrderCredit: PIOrderTile | null = null;
+  isApprovingCredit = false;
+
   /* ── Reject Modal ── */
   isRejectModalOpen = false;
   rejectOrder: PIOrderTile | null = null;
@@ -122,7 +127,8 @@ export class PiUpdatePage implements OnInit {
             distributorName: this.distributorMap.get(inv.distributorId) || `Distributor #${inv.distributorId}`,
             orderNo: inv.piNumber || `ORD-${inv.cartId}`,
             amount: inv.amount,
-            distributorId: inv.distributorId
+            distributorId: inv.distributorId,
+            isDispatched: inv.paymentStatus === 'APPROVED_USING_CREDIT'
           }));
 
         console.log('PI Update - Filtered orders (PAID):', this.orders);
@@ -223,6 +229,50 @@ export class PiUpdatePage implements OnInit {
         console.error('Error approving dispatch:', err);
         this.isApproving = false;
         const msg = err?.error?.message || err?.message || 'Failed to approve dispatch';
+        this.toast.present(msg, 'danger');
+      }
+    });
+  }
+
+  /* ══════════════════════════════════════════════════════════════ */
+  /*  APPROVE BY CREDIT MODAL                                      */
+  /* ══════════════════════════════════════════════════════════════ */
+  openApproveCreditModal(order: PIOrderTile) {
+    this.haptic.medium();
+    this.selectedOrderCredit = order;
+    this.isApprovingCredit = false;
+    this.isApproveCreditModalOpen = true;
+  }
+
+  closeApproveCreditModal() {
+    this.haptic.light();
+    this.isApproveCreditModalOpen = false;
+    this.selectedOrderCredit = null;
+    this.isApprovingCredit = false;
+  }
+
+  confirmApproveCredit() {
+    if (!this.selectedOrderCredit) return;
+    this.haptic.medium();
+    this.isApprovingCredit = true;
+
+    const cartId = this.selectedOrderCredit.invoice.cartId;
+    const distributorId = this.selectedOrderCredit.distributorId;
+
+    this.ledgerService.approvePIUsingCredit(cartId, distributorId).subscribe({
+      next: (res) => {
+        this.isApprovingCredit = false;
+        const approvedId = this.selectedOrderCredit?.invoice.id;
+        this.closeApproveCreditModal();
+        this.toast.present('Proforma invoice approved by credit successfully!', 'success');
+        const target = this.orders.find(o => o.invoice.id === approvedId);
+        if (target) target.isDispatched = true;
+        this.filterOrders();
+      },
+      error: (err) => {
+        console.error('Error approving by credit:', err);
+        this.isApprovingCredit = false;
+        const msg = err?.error?.message || err?.message || 'Failed to approve by credit';
         this.toast.present(msg, 'danger');
       }
     });
