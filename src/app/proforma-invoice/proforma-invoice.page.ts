@@ -82,6 +82,7 @@ export class ProformaInvoicePage implements OnInit {
   ledgerBalance: number = 0; // Will be fetched from backend
   isLoadingLedgerBalance: boolean = false;
   isApprovingDispatch: boolean = false;
+  approvedInvoiceIds = new Set<number>();
 
   // Icon properties for template
   downloadIcon = downloadIcon;
@@ -330,26 +331,39 @@ export class ProformaInvoicePage implements OnInit {
     }
 
     this.isApprovingDispatch = true;
-    this.showToast('Order marked as Ready to Dispatch!', 'success');
-    
-    // Close modal and navigate after a short delay to allow modal animation to complete
-    setTimeout(() => {
-      this.isDispatchModalOpen = false;
-      this.isApprovingDispatch = false;
-      
-      // Navigate to dispatch page with invoice data
-      this.router.navigate(['/dispatch'], {
-        queryParams: {
-          invoiceId: this.selectedInvoiceForApproval?.id,
-          cartId: this.selectedInvoiceForApproval?.cartId,
-          distributorId: this.selectedInvoiceForApproval?.distributorId
+    const invoice = this.selectedInvoiceForApproval;
+
+    this.proformaInvoiceService.approveProformaInvoice(invoice.id, invoice.distributorId).subscribe({
+      next: () => {
+        this.approvedInvoiceIds.add(invoice.id);
+        this.showToast('Order approved and marked as Ready to Dispatch!', 'success');
+        this.isDispatchModalOpen = false;
+        this.isApprovingDispatch = false;
+        this.selectedInvoiceForApproval = null;
+        this.ledgerBalance = 0;
+
+        this.router.navigate(['/dispatch'], {
+          queryParams: {
+            invoiceId: invoice.id,
+            cartId: invoice.cartId,
+            distributorId: invoice.distributorId
+          }
+        });
+      },
+      error: (err) => {
+        console.error('Error approving PI:', err);
+        this.isApprovingDispatch = false;
+        if (err.status === 400) {
+          this.showToast('Approval failed: invalid request', 'danger');
+        } else if (err.status === 403) {
+          this.showToast('You do not have permission to approve this invoice', 'danger');
+        } else if (err.status === 404) {
+          this.showToast('Invoice not found', 'danger');
+        } else {
+          this.showToast('Failed to approve invoice. Please try again.', 'danger');
         }
-      });
-      
-      // Reset selected invoice
-      this.selectedInvoiceForApproval = null;
-      this.ledgerBalance = 0;
-    }, 800);
+      }
+    });
   }
 
   rejectInvoice(invoice: ProformaInvoice) {

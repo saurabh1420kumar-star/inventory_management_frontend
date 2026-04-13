@@ -69,4 +69,17 @@ export class ProformaInvoiceService {
       headers: this.getAuthHeaders()
     });
   }
+
+  /**
+   * Approve a proforma invoice for dispatch
+   * @param piId The PI numeric ID
+   * @param distributorId The distributor ID
+   */
+  approveProformaInvoice(piId: number, distributorId: number): Observable<any> {
+    return this.http.post(
+      `${environment.apiUrl}/accounts/approve-PI/${piId}?distributorId=${distributorId}`,
+      {},
+      { headers: this.getAuthHeaders() }
+    );
+  }
 }

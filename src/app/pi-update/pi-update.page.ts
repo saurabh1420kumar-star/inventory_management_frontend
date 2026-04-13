@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
-import { IonicModule } from '@ionic/angular';
+import { IonicModule, ViewWillEnter } from '@ionic/angular';
 
 import { forkJoin, of, catchError } from 'rxjs';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
@@ -31,7 +31,7 @@ interface PIOrderTile {
     CommonModule, FormsModule, RouterModule, IonicModule
   ]
 })
-export class PiUpdatePage implements OnInit {
+export class PiUpdatePage implements OnInit, ViewWillEnter {
 
   /* ── Data ── */
   orders: PIOrderTile[] = [];
@@ -79,6 +79,10 @@ export class PiUpdatePage implements OnInit {
     this.loadData();
   }
 
+  ionViewWillEnter() {
+    this.loadData();
+  }
+
   /* ══════════════════════════════════════════════════════════════ */
   /*  LOAD DATA                                                    */
   /* ══════════════════════════════════════════════════════════════ */
@@ -106,9 +110,7 @@ export class PiUpdatePage implements OnInit {
         this.distributorMap.clear();
         const distList = Array.isArray(distributors) ? distributors : distributors?.data || [];
         distList.forEach((d: any) => {
-          const displayName = d.firstName && d.lastName
-            ? `${d.firstName} ${d.lastName}`
-            : d.name || d.accountName || `Distributor #${d.id}`;
+          const displayName = d.firmName || (d.firstName && d.lastName ? `${d.firstName} ${d.lastName}` : null) || d.name || d.accountName || `Distributor #${d.id}`;
           this.distributorMap.set(d.id, displayName);
         });
 

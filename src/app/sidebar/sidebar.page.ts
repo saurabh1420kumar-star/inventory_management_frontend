@@ -123,9 +123,7 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   onMenuItemClick() {
     this.haptic.light();
-    if (this.isMobile) {
-      this.toggleSidebar.emit();
-    }
+    this.toggleSidebar.emit();
   }
 
   logout() {

@@ -52,6 +52,10 @@ export interface Distributor {
     IFSC: string;
     createdOn: string;
     updatedOn: string;
+    creditLimit?: boolean;
+    creditAmount?: number;
+    bankGuaranteeNumber?: string;
+    bgExpiryDate?: string;
 }
 
 @Injectable({

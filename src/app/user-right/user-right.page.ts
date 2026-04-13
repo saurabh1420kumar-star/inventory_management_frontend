@@ -3,9 +3,12 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
 import { AlertController } from '@ionic/angular';
+import { forkJoin, of, Observable } from 'rxjs';
+import { catchError } from 'rxjs/operators';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 import { UserService } from '../services/user.service';
+import { UserRightsService, RoleFeaturePermission, PermissionPayload } from '../services/user-rights.service';
 import { User } from '../models/user.model';
 
 export type AccessLevel = 'NONE' | 'READ' | 'EDIT';
@@ -43,8 +46,12 @@ export class UserRightPage implements OnInit {
   selectedUser: User | null = null;
   permissionCategories: PermissionCategory[] = [];
 
+  // Feature → featureId lookup (from GET /features)
+  featureIdMap: Record<string, number> = {};
+
   // UI State
   isLoading = true;
+  isLoadingPermissions = false;
   isSaving = false;
   searchQuery = '';
   roleFilter = 'ALL';
@@ -83,26 +90,33 @@ export class UserRightPage implements OnInit {
   constructor(
     private alertController: AlertController,
     private toast: Toast,
-    private userService: UserService
+    private userService: UserService,
+    private userRightsService: UserRightsService
   ) {}
 
   ngOnInit() {
     this.buildPermissionTemplate();
-    this.loadUsers();
+    this.loadInitialData();
   }
 
   // ─── DATA LOADING ──────────────────────────────────────────
 
-  loadUsers() {
+  loadInitialData() {
     this.isLoading = true;
-    this.userService.getAllUsers().subscribe({
-      next: (users) => {
-        this.allUsers = users;
+    forkJoin({
+      users: this.userService.getAllUsers().pipe(catchError(() => of([]))),
+      features: this.userRightsService.getFeatures()
+    }).subscribe({
+      next: ({ users, features }) => {
+        this.allUsers = users as User[];
         this.applyFilters();
+        for (const f of features) {
+          this.featureIdMap[f.name] = f.id;
+        }
         this.isLoading = false;
       },
       error: () => {
-        this.toast.present('Failed to load users', 'danger');
+        this.toast.present('Failed to load data', 'danger');
         this.isLoading = false;
       }
     });
@@ -249,30 +263,68 @@ export class UserRightPage implements OnInit {
     this.selectedUser = user;
     this.hasUnsavedChanges = false;
     this.showUserPanel = false;
-
-    // Reset permissions and load from user features
     this.buildPermissionTemplate();
-    this.loadUserPermissions(user);
+    this.loadRolePermissions(user);
+  }
+
+  private loadRolePermissions(user: User) {
+    this.isLoadingPermissions = true;
+
+    // Build one GET per feature using the known featureIdMap
+    const featureEntries = Object.entries(this.featureIdMap);
+    if (featureEntries.length === 0) {
+      // featureIdMap not ready yet — nothing to load
+      this.snapshotPermissions();
+      this.isLoadingPermissions = false;
+      return;
+    }
+
+    const requests: Record<string, Observable<RoleFeaturePermission | null>> = {};
+    for (const [featureName, featureId] of featureEntries) {
+      requests[featureName] = this.userRightsService.getFeaturePermission(user.id, featureId);
+    }
+
+    forkJoin(requests).subscribe({
+      next: (results: Record<string, RoleFeaturePermission | null>) => {
+        const perms: RoleFeaturePermission[] = Object.values(results).filter(
+          (p): p is RoleFeaturePermission => p !== null
+        );
+        this.applyPermissions(perms);
+        this.isLoadingPermissions = false;
+      },
+      error: () => {
+        this.snapshotPermissions();
+        this.isLoadingPermissions = false;
+      }
+    });
+  }
+
+  private applyPermissions(perms: RoleFeaturePermission[]) {
+    const permMap: Record<string, AccessLevel> = {};
+    for (const p of perms) {
+      permMap[p.feature] = this.crudToAccess(p);
+    }
+    for (const cat of this.permissionCategories) {
+      for (const mod of cat.modules) {
+        mod.access = permMap[mod.featureKey] ?? 'NONE';
+      }
+    }
     this.snapshotPermissions();
   }
 
-  private loadUserPermissions(user: User) {
-    // Map user's existing features to permissions
-    // The user's roles array or features stored in backend would populate this
-    // For now, we check feature names against our module keys
-    const userFeatures: string[] = (user as any).featureNames || [];
-    const userPermissions: Record<string, AccessLevel> = (user as any).permissions || {};
+  /** Map CRUD booleans from API → AccessLevel */
+  private crudToAccess(p: RoleFeaturePermission): AccessLevel {
+    if (p.canCreate && p.canUpdate) return 'EDIT';
+    if (p.canRead) return 'READ';
+    return 'NONE';
+  }
 
-    for (const cat of this.permissionCategories) {
-      for (const mod of cat.modules) {
-        if (userPermissions[mod.featureKey]) {
-          mod.access = userPermissions[mod.featureKey];
-        } else if (userFeatures.includes(mod.featureKey)) {
-          mod.access = 'EDIT'; // Legacy: if they had the feature, assume full edit
-        } else {
-          mod.access = 'NONE';
-        }
-      }
+  /** Map AccessLevel → CRUD payload for PUT API */
+  private accessToPayload(access: AccessLevel): PermissionPayload {
+    switch (access) {
+      case 'READ': return { canCreate: false, canRead: true,  canUpdate: false, canDelete: false };
+      case 'EDIT': return { canCreate: true,  canRead: false, canUpdate: true,  canDelete: false };
+      case 'NONE': return { canCreate: false, canRead: false, canUpdate: false, canDelete: true  };
     }
   }
 
@@ -342,29 +394,42 @@ export class UserRightPage implements OnInit {
     await alert.present();
   }
 
-  private async performSave() {
+  private performSave() {
     if (!this.selectedUser) return;
     this.isSaving = true;
 
-    const permissions: Record<string, AccessLevel> = {};
-    for (const cat of this.permissionCategories) {
-      for (const mod of cat.modules) {
-        permissions[mod.featureKey] = mod.access;
-      }
+    const allMods: ModulePermission[] = ([] as ModulePermission[]).concat(
+      ...this.permissionCategories.map(cat => cat.modules)
+    );
+    const saveRequests = allMods
+      .filter((mod: ModulePermission) => this.featureIdMap[mod.featureKey] != null)
+      .map((mod: ModulePermission) =>
+        this.userRightsService.setFeaturePermission(
+          this.selectedUser!.id,
+          this.featureIdMap[mod.featureKey],
+          this.accessToPayload(mod.access)
+        )
+      );
+
+    if (saveRequests.length === 0) {
+      this.isSaving = false;
+      this.toast.present('No features loaded — try refreshing', 'warning');
+      return;
     }
 
-    // TODO: Replace with actual API call:
-    // this.userService.updateUserPermissions(this.selectedUser.id, permissions).subscribe(...)
-    try {
-      await this.delay(1200);
-      this.snapshotPermissions();
-      this.hasUnsavedChanges = false;
-      this.toast.present('Permissions saved successfully!', 'success');
-    } catch {
-      this.toast.present('Failed to save permissions', 'danger');
-    } finally {
-      this.isSaving = false;
-    }
+    forkJoin(saveRequests).subscribe({
+      next: () => {
+        this.snapshotPermissions();
+        this.hasUnsavedChanges = false;
+        this.isSaving = false;
+        this.haptic.medium();
+        this.toast.present('Permissions saved successfully!', 'success');
+      },
+      error: () => {
+        this.isSaving = false;
+        this.toast.present('Failed to save permissions', 'danger');
+      }
+    });
   }
 
   discardChanges() {
@@ -480,9 +545,5 @@ export class UserRightPage implements OnInit {
 
   trackByUserId(index: number, user: User): number {
     return user.id;
-  }
-
-  private delay(ms: number): Promise<void> {
-    return new Promise(resolve => setTimeout(resolve, ms));
   }
 }

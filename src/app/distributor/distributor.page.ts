@@ -19,7 +19,9 @@ import {
   trashOutline,
   lockClosedOutline,
   eyeOutline,
-  eyeOffOutline
+  eyeOffOutline,
+  checkmarkCircleOutline,
+  closeCircleOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto } from '../services/distributor.service';
 import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
@@ -496,6 +498,7 @@ interface Distributor {
   panNumber: string;
   gstNumber: string;
   status?: string;
+  isActive?: boolean;
   creditLimit?: boolean;
   creditAmount?: number;
   bankGuaranteeNumber?: string;
@@ -599,7 +602,9 @@ export class DistributorPage implements OnInit {
       'trash-outline': trashOutline,
       'lock-closed-outline': lockClosedOutline,
       'eye-outline': eyeOutline,
-      'eye-off-outline': eyeOffOutline
+      'eye-off-outline': eyeOffOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'close-circle-outline': closeCircleOutline
     });
   }
 
@@ -708,6 +713,7 @@ export class DistributorPage implements OnInit {
       keyPerson: [''],
       distributorType: ['', [Validators.required]],
       companyType: ['', [Validators.required]],
+      isActive: [true],
       email: ['', [Validators.required, Validators.email]],
       contact: ['', [Validators.required, Validators.minLength(10)]],
       alternateContact: [''],
@@ -753,6 +759,7 @@ export class DistributorPage implements OnInit {
       panNumber: dto.panNumber,
       gstNumber: dto.gstNumber,
       status: dto.status,
+      isActive: dto.status === 'ACTIVE' || dto.status === undefined || dto.status === null,
       creditLimit: dto.creditLimit || false,
       creditAmount: dto.creditAmount,
       bankGuaranteeNumber: dto.bankGuaranteeNumber || '',
@@ -797,7 +804,7 @@ export class DistributorPage implements OnInit {
       aadhaarNumber: formData.aadhaarNumber,
       panNumber: formData.panNumber,
       gstNumber: formData.gstNumber,
-      status: 'ACTIVE',
+      status: formData.isActive !== false ? 'ACTIVE' : 'INACTIVE',
       creditLimit: formData.creditLimit || false,
       creditAmount: formData.creditAmount || 0,
       bankGuaranteeNumber: formData.bankGuaranteeNumber || '',
@@ -995,7 +1002,8 @@ export class DistributorPage implements OnInit {
           bankGuaranteeExpiryDate: dist.bgExpiryDate || '',
           username: dist.username || '',
           password: dist.password || '',
-          pincode: dist.pinCode || ''
+          pincode: dist.pinCode || '',
+          isActive: dist.status === 'ACTIVE' || !dist.status
         });
 
         // Set state silently to avoid valueChanges resetting district/pincode

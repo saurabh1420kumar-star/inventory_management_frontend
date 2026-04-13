@@ -108,6 +108,10 @@ interface LedgerAccount {
   transactions: Transaction[];
   distributorId?: number;
   salespersonId?: number;
+  distributorCreditLimit?: boolean;
+  distributorCreditAmount?: number;
+  distributorBGNumber?: string;
+  distributorBGExpiry?: string;
 }
 
 interface LedgerSummary {
@@ -453,7 +457,11 @@ export class AccountsMasterPage implements OnInit {
         gstin: distributor.gstNumber
       },
       openingBalance: 0,
-      transactions: [] // Transactions will be loaded from API when account is selected
+      transactions: [], // Transactions will be loaded from API when account is selected
+      distributorCreditLimit: distributor.creditLimit || false,
+      distributorCreditAmount: distributor.creditAmount || 0,
+      distributorBGNumber: distributor.bankGuaranteeNumber || '',
+      distributorBGExpiry: distributor.bgExpiryDate || ''
     }));
   }
 
@@ -577,6 +585,21 @@ export class AccountsMasterPage implements OnInit {
       account.name.toLowerCase().includes(query) ||
       account.accountCode.toLowerCase().includes(query)
     );
+  }
+
+  get creditUtilized(): number {
+    return Math.max(0, this.apiClosingBalance ?? 0);
+  }
+
+  get creditAvailable(): number {
+    const limit = this.selectedAccount?.distributorCreditAmount ?? 0;
+    return Math.max(0, limit - this.creditUtilized);
+  }
+
+  get creditUsagePercent(): number {
+    const limit = this.selectedAccount?.distributorCreditAmount ?? 0;
+    if (limit <= 0) return 0;
+    return Math.min(100, Math.round((this.creditUtilized / limit) * 100));
   }
 
 

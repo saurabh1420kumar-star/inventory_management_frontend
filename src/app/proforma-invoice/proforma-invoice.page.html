@@ -218,8 +218,8 @@
               </button>
             </div>
 
-            <!-- Dispatch Action Buttons - Only for PENDING invoices -->
-            <div *ngIf="invoice.paymentStatus === 'PENDING'" class="pt-4 flex gap-3 border-t border-slate-100">
+            <!-- Dispatch Action Buttons - Only for PENDING invoices not yet approved -->
+            <div *ngIf="invoice.paymentStatus === 'PENDING' && !approvedInvoiceIds.has(invoice.id)" class="pt-4 flex gap-3 border-t border-slate-100">
               <button
                 (click)="rejectInvoice(invoice)"
                 class="flex-1 flex items-center justify-center gap-2 bg-red-50 hover:bg-red-100 text-red-600 font-bold text-sm rounded-xl py-3 border border-red-200 active:scale-95 transition-all duration-200">
@@ -232,6 +232,14 @@
                 <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
                 Approve Dispatch
               </button>
+            </div>
+
+            <!-- Approved Badge - shown after dispatch approval -->
+            <div *ngIf="approvedInvoiceIds.has(invoice.id)" class="pt-4 border-t border-emerald-100">
+              <div class="flex items-center justify-center gap-2 bg-emerald-50 border border-emerald-200 rounded-xl py-3">
+                <ion-icon name="checkmark-circle-outline" class="text-emerald-500 text-xl"></ion-icon>
+                <span class="text-emerald-600 font-bold text-sm">Approved for Dispatch</span>
+              </div>
             </div>
 
             <!-- ── Expanded Details Section ── -->
