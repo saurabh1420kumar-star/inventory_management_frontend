@@ -123,7 +123,11 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   onMenuItemClick() {
     this.haptic.light();
-    this.toggleSidebar.emit();
+    // Only emit toggle on mobile to close the sidebar
+    // On desktop, sidebar should remain open
+    if (this.isMobile) {
+      this.toggleSidebar.emit();
+    }
   }
 
   logout() {

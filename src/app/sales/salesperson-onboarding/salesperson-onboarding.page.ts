@@ -8,6 +8,7 @@ import { RoleFilterPipe } from './hierarchy.pipes';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
 import { HapticService } from '../../services/haptic.service';
 import { Toast } from '../../services/toast';
+import { Auth } from '../../services/auth';
 
 @Component({
   selector: 'app-salesperson-onboarding',
@@ -22,6 +23,7 @@ export class SalespersonOnboardingPage implements OnInit {
   isLoading = false;
 
   salesPersons: SalesPerson[] = [];
+  currentUserSalesPerson: SalesPerson | null = null;
   editingPerson: SalesPerson | null = null;
   showForm = false;
   searchTerm = '';
@@ -64,7 +66,8 @@ export class SalespersonOnboardingPage implements OnInit {
     private fb: FormBuilder,
     private hierarchyService: SalesHierarchyService,
     private toastController: ToastController,
-    private modalController: ModalController
+    private modalController: ModalController,
+    private auth: Auth
   ) {}
 
   ngOnInit() {
@@ -136,10 +139,47 @@ export class SalespersonOnboardingPage implements OnInit {
     this.hierarchyService.getAllSalesPersons().subscribe({
       next: (data: SalesPerson[]) => {
         this.salesPersons = data;
+        this.identifyCurrentUser(data);
         this.isLoading = false;
       },
       error: () => { this.isLoading = false; }
     });
+  }
+
+  private identifyCurrentUser(persons: SalesPerson[]) {
+    const username = this.auth.getUsername();
+    if (!username) { this.currentUserSalesPerson = null; return; }
+    this.currentUserSalesPerson = persons.find(
+      p => p.username?.toLowerCase() === username.toLowerCase()
+    ) ?? null;
+  }
+
+  /** Returns IDs of all persons below rootId in the managerId tree. */
+  private getDescendantIds(rootId: number, all: SalesPerson[]): Set<number> {
+    const result = new Set<number>();
+    const queue = [rootId];
+    while (queue.length) {
+      const parentId = queue.shift()!;
+      all.forEach(p => {
+        if (p.managerId === parentId && !result.has(p.id)) {
+          result.add(p.id);
+          queue.push(p.id);
+        }
+      });
+    }
+    return result;
+  }
+
+  /**
+   * Persons the logged-in user is allowed to see:
+   * - If the user is not found in the salesperson list (admin / super-admin), show everyone.
+   * - Otherwise show only themselves + all direct/indirect reports.
+   */
+  get visibleToCurrentUser(): SalesPerson[] {
+    if (!this.currentUserSalesPerson) return this.salesPersons;
+    const allowed = this.getDescendantIds(this.currentUserSalesPerson.id, this.salesPersons);
+    allowed.add(this.currentUserSalesPerson.id);
+    return this.salesPersons.filter(p => allowed.has(p.id));
   }
 
   handlePullRefresh(event: any) {
@@ -148,9 +188,10 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   get filteredPersons(): SalesPerson[] {
-    if (!this.searchTerm.trim()) return this.salesPersons;
+    const base = this.visibleToCurrentUser;
+    if (!this.searchTerm.trim()) return base;
     const t = this.searchTerm.toLowerCase();
-    return this.salesPersons.filter(p =>
+    return base.filter(p =>
       p.name.toLowerCase().includes(t) ||
       p.role.toLowerCase().includes(t) ||
       (p.zone ?? '').toLowerCase().includes(t) ||
@@ -168,7 +209,7 @@ export class SalespersonOnboardingPage implements OnInit {
 
   // Stats helpers
   countByRole(role: string): number {
-    return this.salesPersons.filter(p => p.role === role).length;
+    return this.visibleToCurrentUser.filter(p => p.role === role).length;
   }
 
   getRoleLabel(role: string): string {

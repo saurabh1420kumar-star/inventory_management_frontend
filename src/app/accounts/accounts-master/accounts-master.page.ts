@@ -617,8 +617,6 @@ export class AccountsMasterPage implements OnInit {
     if (account.distributorId) {
       this.loadPaymentHistory(account.distributorId);
     }
-    
-    this.showToast(`Selected ${account.name}`);
   }
 
   handleSort(field: typeof this.sortField) {
