@@ -80,7 +80,7 @@ export class LoginPage {
         // Distributor and Sales Officer accounts are only allowed on the mobile app
         if ((role === 'DISTRIBUTOR' || role === 'SALES_OFFICER') && !isMobile) {
           // Clear only auth keys — do NOT use localStorage.clear()
-          ['auth_token','auth_token_type','auth_username','auth_user_id','auth_role_type','auth_features','auth_feature_names']
+          ['auth_token','auth_token_type','auth_username','auth_user_id','auth_salesperson_id','auth_role_type','auth_features','auth_feature_names']
             .forEach(key => localStorage.removeItem(key));
           await this.toast.present(
             `${role === 'DISTRIBUTOR' ? 'Distributor' : 'Sales Officer'} login is only available on the mobile app.`,

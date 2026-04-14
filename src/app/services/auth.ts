@@ -24,6 +24,7 @@ export interface LoginResponse {
   token: string;
   type: string;
   userId: number;
+  salespersonId?: number;
   username: string;
   roleType: string; // SUPER_ADMIN / ADMIN / USER
 }
@@ -218,6 +219,11 @@ export class Auth {
   }
 
   getUserId(): number | null {
+    const id = localStorage.getItem('auth_user_id');
+    return id ? Number(id) : null;
+  }
+
+  getSalespersonId(): number | null {
     const id = localStorage.getItem('auth_user_id');
     return id ? Number(id) : null;
   }

@@ -6,6 +6,7 @@ import { HttpClientModule } from '@angular/common/http';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { PaymentService } from '../sales-dashboard/payment.service';
+import { Auth } from '../../services/auth';
 import { addIcons } from 'ionicons';
 import {
   arrowBackOutline,
@@ -24,18 +25,20 @@ import {
 export class MyPaymentsPage implements OnInit, OnDestroy {
   payments: any[] = [];
   isLoading = false;
-  salespersonId = 1;
+  salespersonId = 0;
   totalAmount = 0;
   private destroy$ = new Subject<void>();
 
   constructor(
     private router: Router,
-    private paymentService: PaymentService
+    private paymentService: PaymentService,
+    private auth: Auth
   ) {
     addIcons({ arrowBackOutline, walletOutline, refreshOutline, receiptOutline, checkmarkCircleOutline });
   }
 
   ngOnInit(): void {
+    this.salespersonId = this.auth.getSalespersonId() ?? 0;
     this.loadPayments();
   }
 

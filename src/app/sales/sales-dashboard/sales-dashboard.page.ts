@@ -75,7 +75,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
   isLoadingDealerDistributors = false;
   pendingPayments: any[] = [];
-  salespersonId: number = 1;
+  salespersonId: number = 0;
   
   paymentForm: PaymentForm = {
     balanceType: '',
@@ -117,7 +117,13 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
-    this.salespersonId = this.auth.getUserId() ?? 1;
+    const id = this.auth.getSalespersonId();
+    if (!id) {
+      this.showToast('Session expired. Please log in again.', 'danger');
+      this.router.navigateByUrl('/login', { replaceUrl: true });
+      return;
+    }
+    this.salespersonId = id;
     this.loadAnalytics();
     this.loadDistributors();
     this.loadPendingPayments();
@@ -235,6 +241,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   openPaymentModal(): void {
     this.haptic.medium();
     this.isPaymentModalOpen = true;
+    this.loadDealersBySalesperson();
   }
 
   openAddDealerModal(): void {

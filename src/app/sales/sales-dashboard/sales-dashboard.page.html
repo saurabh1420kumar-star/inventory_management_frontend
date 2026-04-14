@@ -140,6 +140,20 @@
           <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
         </button>
 
+        <!-- Add Payment on behalf of Distributor -->
+        <button (click)="openPaymentModal()"
+                class="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
+                style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px);">
+          <div class="w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
+            <ion-icon name="cash-outline" style="font-size: 20px; color: #34d399;"></ion-icon>
+          </div>
+          <div class="flex-1">
+            <p class="font-bold text-white text-sm">Add Payment</p>
+            <p class="text-xs text-slate-500">Add payment on behalf of distributor</p>
+          </div>
+          <ion-icon name="chevron-forward-outline" style="font-size: 18px; color: #475569; flex-shrink: 0;"></ion-icon>
+        </button>
+
         <!-- Add Dealer -->
         <button (click)="openAddDealerModal()"
                 class="w-full rounded-2xl p-4 flex items-center gap-4 text-left transition-all active:scale-[0.98]"
@@ -335,17 +349,17 @@
           <!-- Distributor Selection -->
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">SELECT DISTRIBUTOR *</p>
-            <div *ngIf="isLoadingDistributors" class="py-3 text-center">
+            <div *ngIf="isLoadingDealerDistributors" class="py-3 text-center">
               <ion-spinner name="crescent" style="font-size: 20px; color: #10b981;"></ion-spinner>
               <p style="font-size: 12px; color: #475569; margin-top: 8px;">Loading distributors...</p>
             </div>
             <select [(ngModel)]="paymentForm.selectedDistributorId" name="selectedDistributor"
               class="w-full px-4 rounded-xl focus:outline-none"
               style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 44px; font-size: 14px;"
-              *ngIf="!isLoadingDistributors"
+              *ngIf="!isLoadingDealerDistributors"
               [style.color]="paymentForm.selectedDistributorId ? 'white' : '#475569'">
               <option value="" style="background: #0d1117; color: #475569;">-- Select Distributor --</option>
-              <option *ngFor="let dist of distributors" [value]="dist.distributorId" style="background: #0d1117; color: white;">
+              <option *ngFor="let dist of dealerFormDistributors" [value]="dist.distributorId" style="background: #0d1117; color: white;">
                 {{ dist.distributorName }} (ID: {{ dist.distributorId }})
               </option>
             </select>
