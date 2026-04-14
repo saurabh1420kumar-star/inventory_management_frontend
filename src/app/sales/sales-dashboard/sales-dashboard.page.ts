@@ -66,7 +66,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   showAddDealerModal = false;
   isSubmittingDealer = false;
   dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null as number | null };
-  
+
+  myDealers: any[] = [];
+  isLoadingMyDealers = false;
+  showMyDealersModal = false;
+
   distributors: Distributor[] = [];
   dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
   isLoadingDealerDistributors = false;
@@ -117,6 +121,38 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.loadAnalytics();
     this.loadDistributors();
     this.loadPendingPayments();
+    this.loadMyDealers();
+  }
+
+  loadMyDealers(): void {
+    this.isLoadingMyDealers = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    this.http.get<any>(
+      `${environment.apiUrl}/dealers/by-salesperson/${this.salespersonId}`,
+      { headers }
+    ).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (res) => {
+        this.myDealers = Array.isArray(res) ? res : (res?.data ?? []);
+        this.isLoadingMyDealers = false;
+      },
+      error: () => {
+        this.isLoadingMyDealers = false;
+      }
+    });
+  }
+
+  openMyDealersModal(): void {
+    this.haptic.medium();
+    this.showMyDealersModal = true;
+  }
+
+  closeMyDealersModal(): void {
+    this.haptic.light();
+    this.showMyDealersModal = false;
   }
 
   ngOnDestroy(): void {
