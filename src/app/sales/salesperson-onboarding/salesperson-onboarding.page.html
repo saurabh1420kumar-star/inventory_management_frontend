@@ -40,7 +40,7 @@
             </div>
           </div>
           <!-- Add Button desktop -->
-          <button (click)="openAddForm()"
+          <button *ngIf="canAddPerson" (click)="openAddForm()"
             class="hidden sm:flex items-center gap-2 px-5 py-2.5 rounded-xl font-semibold text-sm shadow-lg transition-all"
             style="background: #ffffff; color: #10b981; white-space: nowrap;">
             <ion-icon name="person-add-outline"></ion-icon>
@@ -255,7 +255,7 @@
        ADD / EDIT MODAL
   ════════════════════════════════════════════ -->
   <!-- Mobile FAB -->
-  <button (click)="openAddForm()"
+  <button *ngIf="canAddPerson" (click)="openAddForm()"
     class="sm:hidden fixed bottom-6 right-5 z-50 flex items-center gap-2 px-5 py-3.5 rounded-2xl text-sm font-bold text-white shadow-2xl"
     style="background: linear-gradient(135deg, #10b981, #14b8a6);">
     <ion-icon name="person-add-outline" class="text-lg"></ion-icon>

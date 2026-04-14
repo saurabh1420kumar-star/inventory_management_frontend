@@ -429,6 +429,15 @@ export class SalespersonOnboardingPage implements OnInit {
     return m ? `${m.name} (${this.getRoleLabel(m.role)})` : '—';
   }
 
+  /**
+   * Only SUPER_ADMIN, ADMIN (system role) or NSM (salesperson role) can add/edit/delete.
+   */
+  get canAddPerson(): boolean {
+    const sysRole = this.auth.getRoleType();
+    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN') return true;
+    return this.currentUserSalesPerson?.role === 'NATIONAL_SALES_MGR';
+  }
+
 
 
   async openHierarchyMap() {
