@@ -68,6 +68,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null as number | null };
   
   distributors: Distributor[] = [];
+  dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
+  isLoadingDealerDistributors = false;
   pendingPayments: any[] = [];
   salespersonId: number = 1;
   
@@ -203,6 +205,38 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.haptic.medium();
     this.dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null };
     this.showAddDealerModal = true;
+    this.loadDealersBySalesperson();
+  }
+
+  loadDealersBySalesperson(): void {
+    this.isLoadingDealerDistributors = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    this.http.get<any>(
+      `${environment.apiUrl}/dealers/salesperson/${this.salespersonId}`,
+      { headers }
+    ).subscribe({
+      next: (res) => {
+        const items: any[] = Array.isArray(res) ? res : (res?.data ?? []);
+        const seen = new Set<number>();
+        this.dealerFormDistributors = items
+          .filter((item: any) => item.id != null)
+          .reduce((acc: { distributorId: number; distributorName: string }[], item: any) => {
+            if (!seen.has(item.id)) {
+              seen.add(item.id);
+              const name = item.firmName || `Distributor ${item.id}`;
+              acc.push({ distributorId: item.id, distributorName: name });
+            }
+            return acc;
+          }, []);
+        this.isLoadingDealerDistributors = false;
+      },
+      error: () => {
+        this.isLoadingDealerDistributors = false;
+      }
+    });
   }
 
   closeAddDealerModal(): void {
