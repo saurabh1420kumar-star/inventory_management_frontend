@@ -1,6 +1,6 @@
 <!-- sidebar.page.html -->
 
-<ion-content class="sidebar-content" [class.collapsed]="isCollapsed">
+<ion-content class="sidebar-content" [class.dark-mode]="isDarkMode" [class.collapsed]="isCollapsed">
   <div class="sidebar-container" [class.collapsed]="isCollapsed">
 
     <!-- ========================= -->
@@ -110,25 +110,7 @@
           </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== PRODUCT MENU (Distributor login only) ===== -->
-        <ng-container *ngIf="isMobile && userRole === 'DISTRIBUTOR'">
-          <ion-accordion-group>
-            <ion-accordion>
-              <ion-item slot="header" button>
-                <ion-icon name="cube-outline" slot="start"></ion-icon>
-                <ion-label>Product</ion-label>
-              </ion-item>
-              <div slot="content">
-                <ion-item routerLink="/distributor-cart" routerLinkActive="active" (click)="onMenuItemClick()">
-                  <ion-icon name="cart-outline" slot="start"></ion-icon>
-                  <ion-label>Shopping Cart</ion-label>
-                </ion-item>
-              </div>
-            </ion-accordion>
-          </ion-accordion-group>
-        </ng-container>
-
-        <ng-container *ngIf="isMobile || isAdmin">
+        <ng-container *ngIf="(isMobile || isAdmin) && !isSalesRole">
         <ion-accordion-group *appAcl="{ features: ['SALES'] }">
           <ion-accordion>
             <ion-item slot="header" button>
@@ -143,14 +125,8 @@
               </ion-item>
               <ion-item *appAcl="'SALES'" routerLink="/sales/salesperson-onboarding" routerLinkActive="active" (click)="onMenuItemClick()">
                 <ion-icon name="person-add-outline" slot="start"></ion-icon>
-                <ion-label>Salesperson Onboarding</ion-label>
+                <ion-label>Reporting Manager</ion-label>
               </ion-item>
-              <!-- Hierarchy Orders hidden --
-              <ion-item *appAcl="'SALES'" routerLink="/sales/hierarchy-orders" routerLinkActive="active" (click)="onMenuItemClick()">
-                <ion-icon name="git-network-outline" slot="start"></ion-icon>
-                <ion-label>Hierarchy Orders</ion-label>
-              </ion-item>
-              -->
             </div>
           </ion-accordion>
         </ion-accordion-group>
@@ -183,11 +159,13 @@
           </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== ORDER TRACKING (Both mobile & desktop) ===== -->
-        <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/order-details" routerLinkActive="active" (click)="onMenuItemClick()">
-          <ion-icon name="document-text-outline" slot="start"></ion-icon>
-          <ion-label>Order Tracking</ion-label>
-        </ion-item>
+        <!-- ===== ORDER TRACKING (Both mobile & desktop, hidden for salespeople and distributors) ===== -->
+        <ng-container *ngIf="!isSalesRole && userRole !== 'DISTRIBUTOR'">
+          <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/order-details" routerLinkActive="active" (click)="onMenuItemClick()">
+            <ion-icon name="document-text-outline" slot="start"></ion-icon>
+            <ion-label>Order Tracking</ion-label>
+          </ion-item>
+        </ng-container>
 
         <!-- ===== DISPATCH (Both mobile & desktop) ===== -->
         <ion-item *appAcl="'DISPATCH'" routerLink="/dispatch" routerLinkActive="active" (click)="onMenuItemClick()">

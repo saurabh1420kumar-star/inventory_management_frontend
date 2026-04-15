@@ -154,6 +154,19 @@ export class SalespersonOnboardingPage implements OnInit {
     ) ?? null;
   }
 
+  /** Resolves the reporting manager of the currently logged-in user from the loaded salesPersons list. */
+  get currentUserManager(): SalesPerson | null {
+    if (!this.currentUserSalesPerson) return null;
+    const { managerName, managerId } = this.currentUserSalesPerson;
+    if (managerId) {
+      return this.salesPersons.find(p => p.id === managerId) ?? null;
+    }
+    if (managerName) {
+      return this.salesPersons.find(p => p.name === managerName) ?? null;
+    }
+    return null;
+  }
+
   /** Returns IDs of all persons below rootId in the managerId tree. */
   private getDescendantIds(rootId: number, all: SalesPerson[]): Set<number> {
     const result = new Set<number>();

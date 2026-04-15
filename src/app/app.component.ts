@@ -31,6 +31,22 @@ export class AppComponent {
   sidebarCollapsed = false;
   isDesktop = window.innerWidth >= 992;
 
+  get isSalesRole(): boolean {
+    const role = this.userRole || '';
+    return role.includes('SALES') || role === 'SALESPERSON' || role === 'NSM' || role === 'RSM' || role === 'TSM' || role === 'ASM';
+  }
+
+  private isDarkModeRole(role: string | null): boolean {
+    if (!role) return false;
+    return role.includes('SALES') || role === 'DISTRIBUTOR' ||
+      role === 'SALESPERSON' || role === 'NSM' || role === 'RSM' ||
+      role === 'TSM' || role === 'ASM';
+  }
+
+  private applyTheme(role: string | null): void {
+    document.documentElement.classList.toggle('dark', this.isDarkModeRole(role));
+  }
+
   constructor(
     private router: Router,
     private auth: Auth,
@@ -48,14 +64,17 @@ export class AppComponent {
         if (!this.isAuthPage) {
           this.userRole = this.auth.getRoleType();
           this.userName = this.auth.getUsername();
+          this.applyTheme(this.userRole);
         } else {
           this.userRole = null;
           this.userName = null;
+          this.applyTheme(null);
         }
       });
 
     // 🔁 Handle direct refresh / initial load
     this.updateAuthPageState(window.location.pathname);
+    this.applyTheme(this.auth.getRoleType());
 
     // 📋 Load distributor profile globally on app init
     this.distributorProfileService.loadProfile();

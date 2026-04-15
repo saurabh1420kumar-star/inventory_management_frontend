@@ -117,6 +117,14 @@ export class SalesService {
     );
   }
 
+  approvePIOrder(orderId: number, distributorId: number): Observable<any> {
+    return this.http.post<any>(
+      `${environment.apiUrl}/accounts/approve-PI/${orderId}?distributorId=${distributorId}`,
+      '',
+      { headers: this.getAuthHeaders() }
+    );
+  }
+
   dismissOrder(cartId: number, reason?: string): Observable<any> {
     return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`, {
       headers: this.getAuthHeaders(),

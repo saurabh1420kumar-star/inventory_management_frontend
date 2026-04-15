@@ -1733,259 +1733,292 @@
   </div>
 
   <!-- ==================== MAIN DASHBOARD / OPERATIONS VIEW ==================== -->
-  <div *ngIf="!activeOperationView" class="max-w-6xl mx-auto px-4 pt-5 pb-8">
+  <div *ngIf="!activeOperationView" class="dd-shell">
 
-    <!-- Title -->
-    <div class="mb-5">
-      <h1 class="text-2xl font-bold text-white">Distributor Dashboard</h1>
-      <p class="text-sm text-slate-500 mt-0.5">{{ fiscalYear }}</p>
+    <!-- ── Tab Selector ── -->
+    <div class="dd-tabs">
+      <button class="dd-tabs__btn" [class.dd-tabs__btn--active]="activeTab === 'dashboard'" (click)="switchTab('dashboard')">Dashboard</button>
+      <button class="dd-tabs__btn" [class.dd-tabs__btn--active]="activeTab === 'operations'" (click)="switchTab('operations')">Operations</button>
     </div>
 
-    <!-- Tab Selector (Glass pill) -->
-    <div class="flex gap-0 mb-6 rounded-xl p-1" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-      <button
-        (click)="switchTab('dashboard')"
-        class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all"
-        [ngClass]="activeTab === 'dashboard'
-          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-          : 'text-slate-400 hover:text-slate-200'">
-        Dashboard
-      </button>
-      <button
-        (click)="switchTab('operations')"
-        class="flex-1 py-2.5 px-4 rounded-lg font-semibold text-sm transition-all"
-        [ngClass]="activeTab === 'operations'
-          ? 'bg-emerald-500 text-white shadow-lg shadow-emerald-500/30'
-          : 'text-slate-400 hover:text-slate-200'">
-        Operations
-      </button>
-    </div>
+    <!-- ── Body ── -->
+    <div class="dd-body">
 
     <!-- ===== DASHBOARD TAB ===== -->
-    <div *ngIf="activeTab === 'dashboard'" class="flex flex-col gap-5">
+    <div *ngIf="activeTab === 'dashboard'" class="dd-fade-in">
 
-      <!-- ── Analytics Section ── -->
-      <div>
-        <!-- Period Filter -->
-        <div class="flex items-center gap-2 mb-3">
-          <span class="text-xs font-semibold text-slate-400">Period:</span>
-          <div class="flex gap-1 rounded-lg p-0.5" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-            <button *ngFor="let p of [{v:'today',l:'Today'},{v:'month',l:'Month'},{v:'year',l:'Year'}]"
-              (click)="selectedPeriod = $any(p.v); onAnalyticsPeriodChange()"
-              class="px-3 py-1.5 rounded-md text-xs font-semibold transition-all"
-              [ngClass]="selectedPeriod === p.v ? 'bg-emerald-500 text-white' : 'text-slate-400'">
-              {{ p.l }}
-            </button>
-          </div>
-        </div>
+      <!-- FY Label -->
+      <p class="dd-fy-label">{{ currentFYLabel }}</p>
 
-        <!-- Loading -->
-        <div *ngIf="isLoadingAnalytics" class="flex items-center gap-2 py-4">
-          <ion-spinner name="crescent" style="font-size:18px; color:#10b981;"></ion-spinner>
-          <span class="text-sm text-slate-500">Loading analytics...</span>
-        </div>
-
-        <!-- Stats Cards -->
-        <div *ngIf="!isLoadingAnalytics && distributorAnalytics" class="grid grid-cols-2 gap-3">
-          <!-- Total Orders -->
-          <div class="rounded-2xl p-4" style="background: rgba(6,182,212,0.08); border: 1.5px solid rgba(6,182,212,0.25); backdrop-filter: blur(12px);">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="cart-outline" class="text-cyan-400 text-base"></ion-icon>
-              <p class="text-[10px] font-bold text-cyan-400 uppercase tracking-widest">Orders</p>
-            </div>
-            <p class="text-3xl font-extrabold text-white tracking-tight">{{ distributorAnalytics.totalOrders }}</p>
-          </div>
-          <!-- Total Amount -->
-          <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1.5px solid rgba(16,185,129,0.25); backdrop-filter: blur(12px);">
-            <div class="flex items-center gap-2 mb-1">
-              <ion-icon name="cash-outline" class="text-emerald-400 text-base"></ion-icon>
-              <p class="text-[10px] font-bold text-emerald-400 uppercase tracking-widest">Amount</p>
-            </div>
-            <p class="text-2xl font-extrabold text-white tracking-tight">₹{{ distributorAnalytics.totalAmount | number:'1.0-0' }}</p>
-          </div>
-        </div>
-
-        <!-- No data -->
-        <div *ngIf="!isLoadingAnalytics && !distributorAnalytics" class="text-center py-6 rounded-2xl" style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.06);">
-          <p class="text-slate-500 text-sm">No data for selected period</p>
-        </div>
+      <!-- Loading -->
+      <div *ngIf="isLoadingAnalytics" class="dd-loading">
+        <ion-spinner name="crescent"></ion-spinner>
+        <span>Loading analytics...</span>
       </div>
 
-      <!-- Divider -->
-      <div style="height:1px; background: rgba(255,255,255,0.06);"></div>
+      <!-- Stats Cards -->
+      <div *ngIf="!isLoadingAnalytics">
 
-      <!-- Quick Actions FAB -->
-      <div class="flex justify-start mt-2">
-        <button (click)="goToCatalog()" class="flex items-center gap-2.5 px-5 py-3 rounded-2xl font-semibold text-sm text-white transition-all"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.1); backdrop-filter: blur(12px);">
-          Quick Actions
-          <div class="w-7 h-7 rounded-full bg-emerald-500 flex items-center justify-center shadow-lg shadow-emerald-500/30">
-            <ion-icon name="add-outline" class="text-white text-base"></ion-icon>
+        <!-- Volume Row (Green) -->
+        <div class="dd-card-row">
+          <div class="dd-stat-card dd-stat-card--green">
+            <p class="dd-stat-card__label">Vol MTD</p>
+            <p class="dd-stat-card__value">{{ periodData.volMTD }}</p>
           </div>
-        </button>
+          <div class="dd-stat-card dd-stat-card--green">
+            <p class="dd-stat-card__label">Vol YTD</p>
+            <p class="dd-stat-card__value">{{ periodData.volYTD }}</p>
+          </div>
+        </div>
+
+        <!-- Value Row (Light) -->
+        <div class="dd-card-row">
+          <div class="dd-stat-card dd-stat-card--light">
+            <p class="dd-stat-card__label dd-stat-card__label--emerald">Value MTD</p>
+            <p class="dd-stat-card__value dd-stat-card__value--dark">{{ periodData.valueMTD }}</p>
+          </div>
+          <div class="dd-stat-card dd-stat-card--light">
+            <p class="dd-stat-card__label dd-stat-card__label--emerald">Value YTD</p>
+            <p class="dd-stat-card__value dd-stat-card__value--dark">{{ periodData.valueYTD }}</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="dd-divider"></div>
+
+        <!-- Financial Stats Rows -->
+        <div class="dd-info-row">
+          <div class="dd-info-cell">
+            <p class="dd-info-cell__label">Total O/S</p>
+            <p class="dd-info-cell__value">{{ distributorAnalytics ? '₹' + (distributorAnalytics.totalAmount | number:'1.0-0') : '₹0' }}</p>
+          </div>
+          <div class="dd-info-divider"></div>
+          <div class="dd-info-cell">
+            <p class="dd-info-cell__label dd-info-cell__label--teal">Coll MTD</p>
+            <p class="dd-info-cell__value">₹{{ totalCollectionAmount | number:'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <div class="dd-info-row">
+          <div class="dd-info-cell">
+            <p class="dd-info-cell__label dd-info-cell__label--rose">Total OD</p>
+            <p class="dd-info-cell__value">{{ distributorAnalytics ? distributorAnalytics.totalOrders : 0 }}</p>
+          </div>
+          <div class="dd-info-divider"></div>
+          <div class="dd-info-cell">
+            <p class="dd-info-cell__label dd-info-cell__label--teal">Coll YTD</p>
+            <p class="dd-info-cell__value">₹{{ totalCollectionAmount | number:'1.0-0' }}</p>
+          </div>
+        </div>
+
+        <!-- Divider -->
+        <div class="dd-divider"></div>
+
+        <!-- Quick Actions -->
+        <div style="text-align:center;">
+          <button (click)="goToCatalog()" class="dd-quick-action-btn">
+            <ion-icon name="cart-outline" style="font-size:18px;"></ion-icon>
+            Place Order
+          </button>
+        </div>
+
       </div>
 
     </div>
 
     <!-- ===== OPERATIONS TAB ===== -->
-    <div *ngIf="activeTab === 'operations'" class="flex flex-col gap-4">
+    <div *ngIf="activeTab === 'operations'" class="ops-tab dd-fade-in">
 
-      <!-- Search -->
-      <div class="relative mb-1">
-        <ion-icon class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-500 text-lg pointer-events-none z-10" name="search-outline"></ion-icon>
-        <input type="text" placeholder="Search operations"
-               style="background: rgba(255,255,255,0.05); color: #e2e8f0; border: 1px solid rgba(255,255,255,0.08);"
-               class="w-full pl-11 pr-4 py-3 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/30 placeholder:text-slate-600 font-medium text-sm" />
-      </div>
-
-      <!-- Payment & Collections -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('payment')"
-                class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(16,185,129,0.15); border: 1px solid rgba(16,185,129,0.25);">
-              <ion-icon name="checkmark-circle-outline" class="text-emerald-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Payment &amp; Collections</h3>
-              <p class="text-xs text-slate-500">Manage payments and track collections</p>
-            </div>
+      <!-- ── Quick Access ───────────────────────────── -->
+      <div class="ops-section">
+        <div class="ops-section-header">
+          <div class="ops-section-icon" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.25);">
+            <ion-icon name="apps-outline" style="font-size: 18px; color: #38bdf8;"></ion-icon>
           </div>
-          <ion-icon [name]="expandedMenu === 'payment' ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-        <div *ngIf="expandedMenu === 'payment'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <!-- My Payments View -->
-          <button (click)="openOperationView('collections')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(34,197,94,0.06); border: 1px solid rgba(34,197,94,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(34,197,94,0.12);">
-              <ion-icon name="cash-outline" class="text-green-400 text-lg"></ion-icon>
+          <div>
+            <h2 class="text-white font-bold text-base">Quick Access</h2>
+            <p class="text-xs" style="color: #475569;">Navigate your key screens</p>
+          </div>
+        </div>
+        <div class="ops-grid">
+          <button (click)="goToCatalog()" class="ops-card ops-card--cyan">
+            <div class="ops-card__icon" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3);">
+              <ion-icon name="cart-outline" style="font-size: 28px; color: #38bdf8;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">My Payments</p>
-              <p class="text-xs text-slate-500">View cleared & settled payments</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Shopping Cart</p>
+            <p class="ops-card__desc">Browse &amp; place orders</p>
           </button>
-
-          <!-- Add Payment — prominent CTA -->
-          <button (click)="openAddPaymentModal()" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: linear-gradient(135deg, rgba(16,185,129,0.18), rgba(20,184,166,0.14)); border: 1.5px solid rgba(16,185,129,0.35);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: linear-gradient(135deg, #10b981, #14b8a6);">
-              <ion-icon name="add-outline" class="text-white text-lg"></ion-icon>
+          <button (click)="goToOrderTracking()" class="ops-card ops-card--amber">
+            <div class="ops-card__icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3);">
+              <ion-icon name="location-outline" style="font-size: 28px; color: #fbbf24;"></ion-icon>
             </div>
-            <div>
-              <p class="font-bold text-emerald-400 text-sm">Add Payment</p>
-              <p class="text-xs text-slate-500">Record a credit or debit entry</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-emerald-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Order Tracking</p>
+            <p class="ops-card__desc">Track orders &amp; delivery status</p>
           </button>
         </div>
       </div>
 
-      <!-- Orders & Dispatch -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('orders')"
-                class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(244,63,94,0.15); border: 1px solid rgba(244,63,94,0.25);">
-              <ion-icon name="cube-outline" class="text-rose-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Orders &amp; Dispatch</h3>
-              <p class="text-xs text-slate-500">Place and track your orders</p>
-            </div>
+      <!-- ── Payments & Finance ─────────────────────── -->
+      <div class="ops-section">
+        <div class="ops-section-header">
+          <div class="ops-section-icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.25);">
+            <ion-icon name="cash-outline" style="font-size: 18px; color: #34d399;"></ion-icon>
           </div>
-          <ion-icon [name]="expandedMenu === 'orders' ? 'chevron-up-outline' : 'chevron-down-outline'"
-                    class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-        <div *ngIf="expandedMenu === 'orders'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <button (click)="openOperationView('dispatch-report')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
-              <ion-icon name="car-outline" class="text-rose-400 text-lg"></ion-icon>
+          <div>
+            <h2 class="text-white font-bold text-base">Payments &amp; Finance</h2>
+            <p class="text-xs" style="color: #475569;">Manage payments and accounts</p>
+          </div>
+        </div>
+        <div class="ops-grid">
+          <button (click)="openOperationView('collections')" class="ops-card ops-card--teal">
+            <div class="ops-card__icon" style="background: rgba(20,184,166,0.15); border-color: rgba(20,184,166,0.3);">
+              <ion-icon name="cash-outline" style="font-size: 28px; color: #2dd4bf;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Dispatch Report</p>
-              <p class="text-xs text-slate-500">View dispatch & delivery status</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">My Payments</p>
+            <p class="ops-card__desc">View cleared &amp; settled payments</p>
           </button>
-          <button (click)="openOperationView('orders')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(244,63,94,0.06); border: 1px solid rgba(244,63,94,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(244,63,94,0.12);">
-              <ion-icon name="cart-outline" class="text-rose-400 text-lg"></ion-icon>
+          <button (click)="openAddPaymentModal()" class="ops-card ops-card--emerald">
+            <div class="ops-card__icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3);">
+              <ion-icon name="add-circle-outline" style="font-size: 28px; color: #34d399;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Orders</p>
-              <p class="text-xs text-slate-500">View all your orders</p>
+            <p class="ops-card__title">Add Payment</p>
+            <p class="ops-card__desc">Record a credit or debit entry</p>
+          </button>
+          <button (click)="openOperationView('payment-report')" class="ops-card ops-card--violet">
+            <div class="ops-card__icon" style="background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.3);">
+              <ion-icon name="bar-chart-outline" style="font-size: 28px; color: #a78bfa;"></ion-icon>
             </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Payment Report</p>
+            <p class="ops-card__desc">View payment analytics</p>
+          </button>
+          <button (click)="openOperationView('account-statement')" class="ops-card ops-card--sky">
+            <div class="ops-card__icon" style="background: rgba(14,165,233,0.15); border-color: rgba(14,165,233,0.3);">
+              <ion-icon name="newspaper-outline" style="font-size: 28px; color: #38bdf8;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Account Statement</p>
+            <p class="ops-card__desc">Full account transaction history</p>
+          </button>
+          <button (click)="openOperationView('balance-confirmation')" class="ops-card ops-card--rose">
+            <div class="ops-card__icon" style="background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3);">
+              <ion-icon name="checkmark-done-circle-outline" style="font-size: 28px; color: #fb7185;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Balance Confirmation</p>
+            <p class="ops-card__desc">Confirm outstanding balance</p>
+          </button>
+          <button (click)="openOperationView('credit-limit')" class="ops-card ops-card--amber">
+            <div class="ops-card__icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3);">
+              <ion-icon name="wallet-outline" style="font-size: 28px; color: #fbbf24;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Credit Limit</p>
+            <p class="ops-card__desc">View your credit limit &amp; usage</p>
+          </button>
+          <button (click)="openOperationView('copy-invoice')" class="ops-card ops-card--orange">
+            <div class="ops-card__icon" style="background: rgba(249,115,22,0.15); border-color: rgba(249,115,22,0.3);">
+              <ion-icon name="receipt-outline" style="font-size: 28px; color: #fb923c;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Invoices</p>
+            <p class="ops-card__desc">Download invoice copies</p>
+          </button>
+          <button (click)="openOperationView('account-services')" class="ops-card ops-card--purple">
+            <div class="ops-card__icon" style="background: rgba(168,85,247,0.15); border-color: rgba(168,85,247,0.3);">
+              <ion-icon name="card-outline" style="font-size: 28px; color: #c084fc;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Account Services</p>
+            <p class="ops-card__desc">Manage account settings</p>
           </button>
         </div>
       </div>
 
-      <!-- Dealers -->
-      <div class="rounded-2xl overflow-hidden" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
-        <button (click)="toggleMenu('dealers')" class="w-full flex items-center justify-between p-4 transition-all" style="background: transparent;">
-          <div class="flex items-center gap-3">
-            <div class="w-11 h-11 rounded-xl flex items-center justify-center" style="background: rgba(139,92,246,0.15); border: 1px solid rgba(139,92,246,0.25);">
-              <ion-icon name="storefront-outline" class="text-violet-400 text-2xl"></ion-icon>
-            </div>
-            <div class="text-left">
-              <h3 class="font-bold text-white text-sm">Dealers</h3>
-              <p class="text-xs text-slate-500">Manage your dealer network</p>
-            </div>
+      <!-- ── Orders & Dispatch ──────────────────────── -->
+      <div class="ops-section">
+        <div class="ops-section-header">
+          <div class="ops-section-icon" style="background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.25);">
+            <ion-icon name="cube-outline" style="font-size: 18px; color: #fb7185;"></ion-icon>
           </div>
-          <ion-icon [name]="expandedMenu === 'dealers' ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-500 text-lg flex-shrink-0"></ion-icon>
-        </button>
-        <div *ngIf="expandedMenu === 'dealers'" class="px-4 pb-4 grid grid-cols-1 gap-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-          <!-- Add Dealer -->
-          <button (click)="openAddDealerModal()" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left mt-2" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
-              <ion-icon name="person-add-outline" class="text-violet-400 text-lg"></ion-icon>
+          <div>
+            <h2 class="text-white font-bold text-base">Orders &amp; Dispatch</h2>
+            <p class="text-xs" style="color: #475569;">Place and track your orders</p>
+          </div>
+        </div>
+        <div class="ops-grid">
+          <button (click)="openOperationView('orders')" class="ops-card ops-card--cyan">
+            <div class="ops-card__icon" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3);">
+              <ion-icon name="cube-outline" style="font-size: 28px; color: #38bdf8;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Add Dealer</p>
-              <p class="text-xs text-slate-500">Register a new dealer</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">My Orders</p>
+            <p class="ops-card__desc">View all your orders</p>
           </button>
-          <!-- Price Master -->
-          <button (click)="openOperationView('price-master')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
-              <ion-icon name="pricetag-outline" class="text-violet-400 text-lg"></ion-icon>
+          <button (click)="openOperationView('dispatch-report')" class="ops-card ops-card--rose">
+            <div class="ops-card__icon" style="background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3);">
+              <ion-icon name="car-outline" style="font-size: 28px; color: #fb7185;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Price Master</p>
-              <p class="text-xs text-slate-500">View and manage product pricing</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Dispatch Report</p>
+            <p class="ops-card__desc">View dispatch &amp; delivery status</p>
           </button>
-          <!-- Dealer Ledger -->
-          <button (click)="openOperationView('dealer-ledger')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
-              <ion-icon name="book-outline" class="text-violet-400 text-lg"></ion-icon>
+          <button (click)="openOperationView('pending-report')" class="ops-card ops-card--amber">
+            <div class="ops-card__icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3);">
+              <ion-icon name="time-outline" style="font-size: 28px; color: #fbbf24;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Dealer Ledger</p>
-              <p class="text-xs text-slate-500">Track dealer transactions &amp; balances</p>
-            </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Pending Orders</p>
+            <p class="ops-card__desc">Track orders awaiting dispatch</p>
           </button>
+          <button (click)="openOperationView('summarized-account')" class="ops-card ops-card--teal">
+            <div class="ops-card__icon" style="background: rgba(20,184,166,0.15); border-color: rgba(20,184,166,0.3);">
+              <ion-icon name="analytics-outline" style="font-size: 28px; color: #2dd4bf;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Summarized Account</p>
+            <p class="ops-card__desc">View account summary</p>
+          </button>
+        </div>
+      </div>
 
-          <!-- Dealer Orders -->
-          <button (click)="openOperationView('dealer-orders')" class="flex items-center gap-3 p-3 rounded-xl transition-all text-left" style="background: rgba(139,92,246,0.06); border: 1px solid rgba(139,92,246,0.1);">
-            <div class="w-9 h-9 rounded-lg flex items-center justify-center" style="background: rgba(139,92,246,0.12);">
-              <ion-icon name="receipt-outline" class="text-violet-400 text-lg"></ion-icon>
+      <!-- ── Dealer Management ──────────────────────── -->
+      <div class="ops-section">
+        <div class="ops-section-header">
+          <div class="ops-section-icon" style="background: rgba(139,92,246,0.15); border-color: rgba(139,92,246,0.25);">
+            <ion-icon name="storefront-outline" style="font-size: 18px; color: #a78bfa;"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-white font-bold text-base">Dealer Management</h2>
+            <p class="text-xs" style="color: #475569;">Manage your dealer network</p>
+          </div>
+        </div>
+        <div class="ops-grid">
+          <button (click)="openOperationView('dealer-ledger')" class="ops-card ops-card--violet">
+            <div class="ops-card__icon" style="background: rgba(124,58,237,0.15); border-color: rgba(124,58,237,0.3);">
+              <ion-icon name="book-outline" style="font-size: 28px; color: #a78bfa;"></ion-icon>
             </div>
-            <div>
-              <p class="font-semibold text-white text-sm">Dealer Orders</p>
-              <p class="text-xs text-slate-500">View all dealer sales &amp; orders</p>
+            <p class="ops-card__title">Dealer Ledger</p>
+            <p class="ops-card__desc">Track dealer transactions &amp; balances</p>
+          </button>
+          <button (click)="openOperationView('dealer-orders')" class="ops-card ops-card--cyan">
+            <div class="ops-card__icon" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3);">
+              <ion-icon name="briefcase-outline" style="font-size: 28px; color: #38bdf8;"></ion-icon>
             </div>
-            <ion-icon name="chevron-forward-outline" class="text-slate-600 text-lg ml-auto"></ion-icon>
+            <p class="ops-card__title">Dealer Orders</p>
+            <p class="ops-card__desc">View all dealer sales &amp; orders</p>
+          </button>
+          <button (click)="openAddDealerModal()" class="ops-card ops-card--emerald">
+            <div class="ops-card__icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3);">
+              <ion-icon name="person-add-outline" style="font-size: 28px; color: #34d399;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Add Dealer</p>
+            <p class="ops-card__desc">Register a new dealer</p>
+          </button>
+          <button (click)="openOperationView('price-master')" class="ops-card ops-card--amber">
+            <div class="ops-card__icon" style="background: rgba(245,158,11,0.15); border-color: rgba(245,158,11,0.3);">
+              <ion-icon name="pricetag-outline" style="font-size: 28px; color: #fbbf24;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Price Master</p>
+            <p class="ops-card__desc">View and manage product pricing</p>
           </button>
         </div>
       </div>
 
     </div>
-  </div>
+
+    </div><!-- /dd-body -->
+  </div><!-- /dd-shell -->
   <!-- ==================== ADD PAYMENT MODAL ==================== -->
   <ion-modal [isOpen]="showAddPaymentModal" (didDismiss)="closeAddPaymentModal()" [backdropDismiss]="false">
     <ng-template>

@@ -367,7 +367,7 @@ export class SalesPage implements OnInit {
     }
 
     this.approvingPaymentId = order.id;
-    this.salesService.approvePayment(order.id, order.distributorId).subscribe({
+    this.salesService.approvePIOrder(order.id, order.distributorId).subscribe({
       next: async () => {
         // Remove from approveCarts local list
         this.approveCarts = this.approveCarts.filter(o => o.id !== order.id);

@@ -6,14 +6,15 @@
     <ion-menu
       *ngIf="!isDesktop"
       contentId="main"
-      type="overlay">
+      type="overlay"
+      [class.sales-dark-menu]="isSalesRole">
       <app-sidebar
         (toggleSidebar)="toggleMobileMenu()">
       </app-sidebar>
     </ion-menu>
 
     <!-- ========== DESKTOP LAYOUT ========== -->
-    <div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed">
+    <div class="app-layout" [class.sidebar-collapsed]="sidebarCollapsed" [class.sales-dark-layout]="isSalesRole">
 
       <!-- Desktop Sidebar -->
       <app-sidebar

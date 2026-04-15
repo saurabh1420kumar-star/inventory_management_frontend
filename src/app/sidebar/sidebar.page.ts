@@ -52,6 +52,11 @@ export class SidebarPage implements OnInit, OnDestroy {
     return this.collapsed;
   }
 
+  @HostBinding('class.dark-theme')
+  get darkThemeClass() {
+    return this.isDarkMode;
+  }
+
   private static readonly MOBILE_BREAKPOINT = 768;
 
   private haptic = inject(HapticService);
@@ -102,6 +107,15 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   get isAdmin(): boolean {
     return this.userRole === 'ADMIN' || this.userRole === 'SUPER_ADMIN';
+  }
+
+  get isSalesRole(): boolean {
+    const role = this.userRole || '';
+    return role.includes('SALES') || role === 'SALESPERSON' || role === 'NSM' || role === 'RSM' || role === 'TSM' || role === 'ASM';
+  }
+
+  get isDarkMode(): boolean {
+    return this.isSalesRole || this.userRole === 'DISTRIBUTOR';
   }
 
   private checkMobile() {

@@ -113,6 +113,13 @@ export class OrderDetailsPage implements OnInit {
   pendingOrders: number = 0;
   completedOrders: number = 0;
 
+  get isDarkMode(): boolean {
+    const role = this.auth.getRoleType() || '';
+    return role.includes('SALES') || role === 'DISTRIBUTOR' ||
+      role === 'SALESPERSON' || role === 'NSM' || role === 'RSM' ||
+      role === 'TSM' || role === 'ASM';
+  }
+
   constructor(
     private salesService: SalesService,
     private gdnService: GdnService,

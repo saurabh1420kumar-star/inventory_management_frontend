@@ -22,7 +22,8 @@ import {
   storefrontOutline, peopleOutline, bagOutline, personAddOutline, pricetagOutline,
   bookOutline, swapVerticalOutline, trendingDownOutline,
   folderOpenOutline, locationOutline,
-  mailOutline, chevronBackOutline
+  mailOutline, chevronBackOutline,
+  homeOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorOrder } from '../services/distributor.service';
 import { Auth } from '../services/auth';
@@ -106,6 +107,14 @@ export class DistributorDashboardPage implements OnInit {
   activeOperationView: string | null = null;
   fiscalYear = 'FY 2025 - 2026';
   Math = Math;
+
+  get currentFYLabel(): string {
+    const now = new Date();
+    const month = now.getMonth(); // 0-based
+    const year = now.getFullYear();
+    const startYear = month >= 3 ? year : year - 1;
+    return `FY ${startYear} - ${startYear + 1}`;
+  }
 
   dashboardMetrics: MetricCard[] = [];
   operationsMetrics: MetricCard[] = [];
@@ -297,7 +306,8 @@ export class DistributorDashboardPage implements OnInit {
       'folder-open-outline': folderOpenOutline,
       'location-outline': locationOutline,
       'mail-outline': mailOutline,
-      'chevron-back-outline': chevronBackOutline
+      'chevron-back-outline': chevronBackOutline,
+      'home-outline': homeOutline
     });
   }
 
@@ -383,6 +393,11 @@ export class DistributorDashboardPage implements OnInit {
   goToCatalog() {
     this.haptic.medium();
     this.router.navigate(['/distributor-cart']);
+  }
+
+  goToOrderTracking() {
+    this.haptic.medium();
+    this.router.navigate(['/order-details']);
   }
 
   toggleMenu(menu: string) {

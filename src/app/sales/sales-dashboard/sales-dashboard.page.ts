@@ -13,7 +13,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HapticService } from '../../services/haptic.service';
 import { addIcons } from 'ionicons';
-import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline } from 'ionicons/icons';
+import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline } from 'ionicons/icons';
 
 interface PaymentForm {
   balanceType: 'credit' | 'debit' | '';
@@ -55,6 +55,16 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   selectedMonth: number = new Date().getMonth() + 1;
   selectedYear: number = new Date().getFullYear();
   selectedTab: 'dashboard' | 'operations' = 'dashboard';
+  
+  get currentFYLabel(): string {
+    const now = new Date();
+    const year = now.getFullYear();
+    const month = now.getMonth() + 1;
+    if (month >= 4) {
+      return `${year}-${(year + 1).toString().slice(2)}`;
+    }
+    return `${year - 1}-${year.toString().slice(2)}`;
+  }
   
   isPaymentModalOpen = false;
   isLoadingAnalytics = false;
@@ -113,7 +123,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private router: Router,
     private http: HttpClient
   ) {
-    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline });
+    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline });
   }
 
   ngOnInit(): void {
