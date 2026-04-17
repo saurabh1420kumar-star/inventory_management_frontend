@@ -81,6 +81,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isLoadingMyDealers = false;
   showMyDealersModal = false;
 
+  selectedDistributorForBalance: number | null = null;
+  distributorBalance: number | null = null;
+  isLoadingBalance = false;
+  showBalanceModal = false;
+
   distributors: Distributor[] = [];
   dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
   isLoadingDealerDistributors = false;
@@ -138,6 +143,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.loadDistributors();
     this.loadPendingPayments();
     this.loadMyDealers();
+    this.loadDealersBySalesperson();
   }
 
   loadMyDealers(): void {
@@ -292,9 +298,46 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     });
   }
 
+  openBalanceModal(): void {
+    this.haptic.medium();
+    this.selectedDistributorForBalance = null;
+    this.distributorBalance = null;
+    this.showBalanceModal = true;
+  }
+
+  closeBalanceModal(): void {
+    this.haptic.light();
+    this.showBalanceModal = false;
+  }
+
   closeAddDealerModal(): void {
     this.haptic.light();
     this.showAddDealerModal = false;
+  }
+
+  onDistributorBalanceChange(): void {
+    this.distributorBalance = null;
+    if (!this.selectedDistributorForBalance) return;
+    this.isLoadingBalance = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    this.http.get<any>(
+      `${environment.apiUrl}/distributors/${this.selectedDistributorForBalance}/balance`,
+      { headers }
+    ).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (res) => {
+        this.distributorBalance = res?.data ?? res?.balance ?? null;
+        this.isLoadingBalance = false;
+      },
+      error: () => {
+        this.distributorBalance = null;
+        this.isLoadingBalance = false;
+        this.showToast('Failed to fetch distributor balance', 'danger');
+      }
+    });
   }
 
   submitDealer(): void {
@@ -333,7 +376,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
         this.closeAddDealerModal();
       },
       error: (err) => {
-        const msg = err?.error?.message ?? 'Failed to add dealer. Please try again.';
+        const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to add dealer. Please try again.';
         this.showToast(msg, 'danger');
         this.isSubmittingDealer = false;
       }

@@ -11,6 +11,8 @@ import { ToastController } from '@ionic/angular';
 import { Toast } from '../services/toast';
 import { DownloadService } from '../services/download.service';
 import { HapticService } from '../services/haptic.service';
+import { Auth } from '../services/auth';
+import { SalesHierarchyService, SalesPerson } from '../services/sales-hierarchy.service';
 
 @Component({
   selector: 'app-sales',
@@ -22,6 +24,11 @@ import { HapticService } from '../services/haptic.service';
 export class SalesPage implements OnInit {
   isLoading = false;
   errorMessage = '';
+
+  // ── Hierarchy visibility ─────────────────────────────────
+  // Lazily populated after salesPersons are fetched.
+  private salesPersons: SalesPerson[] = [];
+  private currentSalesperson: SalesPerson | null = null;
 
   // ── Order Approval ──────────────────────────────────────
   pendingOrders: PendingOrder[] = [];
@@ -74,10 +81,13 @@ export class SalesPage implements OnInit {
     private toastController: ToastController,
     private sanitizer: DomSanitizer,
     private toast: Toast,
-    private downloadService: DownloadService
+    private downloadService: DownloadService,
+    private auth: Auth,
+    private hierarchyService: SalesHierarchyService
   ) {}
 
   ngOnInit() {
+    this.loadHierarchy();
     this.loadPendingOrders();
     this.loadApproveCarts();
     this.loadProformaInvoices();
@@ -85,9 +95,41 @@ export class SalesPage implements OnInit {
   }
 
   ionViewWillEnter() {
+    this.loadHierarchy();
     this.loadPendingOrders();
     this.loadApproveCarts();
     this.loadProformaInvoices();
+  }
+
+  loadHierarchy() {
+    this.hierarchyService.getAllSalesPersons().subscribe({
+      next: (data) => {
+        this.salesPersons = data;
+        const username = this.auth.getUsername();
+        this.currentSalesperson = username
+          ? (this.salesPersons.find(p => p.username === username) ?? null)
+          : null;
+      }
+    });
+  }
+
+  /**
+   * BFS: collect the logged-in user's id + every subordinate id at any depth.
+   * Returns null when no restriction applies (SUPER_ADMIN or user not in hierarchy).
+   */
+  private getVisibleSalespersonIds(): Set<number> | null {
+    if (this.auth.isSuperAdmin()) return null;
+    if (!this.currentSalesperson) return null;
+    const visibleIds = new Set<number>();
+    const queue: number[] = [this.currentSalesperson.id];
+    while (queue.length > 0) {
+      const id = queue.shift()!;
+      visibleIds.add(id);
+      this.salesPersons
+        .filter(p => p.managerId === id)
+        .forEach(p => queue.push(p.id));
+    }
+    return visibleIds;
   }
 
   loadProformaInvoices() {
@@ -289,18 +331,26 @@ export class SalesPage implements OnInit {
 
   // ── Order Helpers ───────────────────────────────
   get filteredOrderSummaries(): PendingOrder[] {
+    const visibleIds = this.getVisibleSalespersonIds();
+
+    // Helper: applies hierarchy filter to any order list.
+    const applyHierarchyFilter = (list: PendingOrder[]) =>
+      visibleIds !== null
+        ? list.filter(o => o.salespersonId != null && visibleIds.has(o.salespersonId))
+        : list;
+
     let filtered: PendingOrder[];
     if (this.orderFilterTab === 'all') {
-      filtered = this.pendingOrders;
+      filtered = applyHierarchyFilter(this.pendingOrders);
     } else if (this.orderFilterTab === 'pending') {
-      filtered = this.pendingOrders.filter(o => o.status === 'PLACED');
+      filtered = applyHierarchyFilter(this.pendingOrders.filter(o => o.status === 'PLACED'));
     } else if (this.orderFilterTab === 'approved') {
       // Powered by GET /api/order/approve-carts
-      filtered = this.approveCarts;
+      filtered = applyHierarchyFilter(this.approveCarts);
     } else if (this.orderFilterTab === 'rejected') {
-      filtered = this.pendingOrders.filter(o => o.status === 'DISMISSED');
+      filtered = applyHierarchyFilter(this.pendingOrders.filter(o => o.status === 'DISMISSED'));
     } else {
-      filtered = this.pendingOrders;
+      filtered = applyHierarchyFilter(this.pendingOrders);
     }
 
     if (this.orderSearchTerm.trim()) {

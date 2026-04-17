@@ -93,6 +93,7 @@
           <p class="sd-info-cell__value">0</p>
         </div>
       </div>
+
     </div>
 
     <!-- ══════ OPERATIONS TAB ══════ -->
@@ -178,6 +179,13 @@
               <p class="ops-card__title">My Dealers</p>
               <p class="ops-card__desc">View all registered dealers</p>
             </button>
+            <button (click)="openBalanceModal()" class="ops-card ops-card--sky">
+              <div class="ops-card__icon" style="background: rgba(56,189,248,0.15); border-color: rgba(56,189,248,0.3);">
+                <ion-icon name="stats-chart-outline" style="font-size: 28px; color: #38bdf8;"></ion-icon>
+              </div>
+              <p class="ops-card__title">My Distributor</p>
+              <p class="ops-card__desc">View distributor balance</p>
+            </button>
           </div>
         </div>
 
@@ -186,6 +194,70 @@
 
   </div>
 </ion-content>
+
+<!-- ==================== DISTRIBUTOR BALANCE MODAL ==================== -->
+<ion-modal [isOpen]="showBalanceModal" (didDismiss)="closeBalanceModal()" [backdropDismiss]="true">
+  <ng-template>
+    <div class="flex flex-col h-full" style="background: #0d1117;">
+
+      <!-- Header -->
+      <div style="background: linear-gradient(135deg, #1e3a5f, #1a2a4a);">
+        <div class="flex items-center justify-between px-5 pt-5 pb-2">
+          <button (click)="closeBalanceModal()" class="flex items-center gap-1.5 px-3 py-1.5 rounded-full text-xs font-semibold"
+                  style="background: rgba(255,255,255,0.1); color: rgba(255,255,255,0.8);">&#8592; Back</button>
+        </div>
+        <div class="flex items-center gap-3 px-5 pb-5 pt-2">
+          <div class="w-10 h-10 rounded-2xl flex items-center justify-center flex-shrink-0"
+               style="background: rgba(56,189,248,0.2); backdrop-filter: blur(8px);">
+            <ion-icon name="stats-chart-outline" style="font-size: 20px; color: #38bdf8;"></ion-icon>
+          </div>
+          <div>
+            <h2 style="color: #fff; font-size: 20px; font-weight: 800; margin: 0;">My Distributor</h2>
+            <p style="color: rgba(255,255,255,0.5); font-size: 12px; margin: 2px 0 0;">Select a distributor to view balance</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Body -->
+      <div class="flex flex-col gap-4" style="padding: 20px 16px; overflow-y: auto; flex: 1;">
+
+        <!-- Distributor Select -->
+        <div class="bm-field">
+          <p class="bm-field__label">Distributor</p>
+          <div class="bm-field__select-wrap">
+            <select
+              class="bm-field__select"
+              [(ngModel)]="selectedDistributorForBalance"
+              (ngModelChange)="onDistributorBalanceChange()"
+              [disabled]="isLoadingDealerDistributors">
+              <option [ngValue]="null" disabled>
+                {{ isLoadingDealerDistributors ? 'Loading distributors…' : 'Select a distributor' }}
+              </option>
+              <option *ngFor="let d of dealerFormDistributors" [ngValue]="d.distributorId">
+                {{ d.distributorName }}
+              </option>
+            </select>
+            <ion-icon name="chevron-down-outline" class="bm-field__arrow"></ion-icon>
+          </div>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingBalance" class="bm-loader">
+          <ion-spinner name="crescent" style="color: #38bdf8; width: 28px; height: 28px;"></ion-spinner>
+          <span>Fetching balance…</span>
+        </div>
+
+        <!-- Balance Result -->
+        <div *ngIf="!isLoadingBalance && distributorBalance !== null" class="bm-result">
+          <ion-icon name="trending-up-outline" style="font-size: 32px; color: #34d399;"></ion-icon>
+          <p class="bm-result__label">Available Balance</p>
+          <p class="bm-result__value">₹{{ distributorBalance | number:'1.0-2' }}</p>
+        </div>
+
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>
 
 <!-- ==================== MY DEALERS MODAL ==================== -->
 <ion-modal [isOpen]="showMyDealersModal" (didDismiss)="closeMyDealersModal()" [backdropDismiss]="true">

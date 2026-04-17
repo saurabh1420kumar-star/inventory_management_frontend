@@ -11,6 +11,7 @@ import {
   HIERARCHY_ROLES
 } from '../../services/sales-hierarchy.service';
 import { HierarchyMapComponent } from '../hierarchy-map/hierarchy-map.component';
+import { Auth } from '../../services/auth';
 
 interface GroupedOrders {
   zone: string;
@@ -60,6 +61,10 @@ export class HierarchyOrdersPage implements OnInit {
   allOrders: OrderWithSalesPerson[] = [];
   groupedData: GroupedOrders[] = [];
 
+  // The salesperson record that corresponds to the currently logged-in user.
+  // null means the user is not in the sales hierarchy (e.g. SUPER_ADMIN) → no filter.
+  private currentSalesperson: SalesPerson | null = null;
+
   // Filters
   filterZone = '';
   filterStatus = '';
@@ -72,7 +77,11 @@ export class HierarchyOrdersPage implements OnInit {
   totalAmount = 0;
   expandedZones = new Set<string>();
 
-  constructor(private hierarchyService: SalesHierarchyService, private modalController: ModalController) {}
+  constructor(
+    private hierarchyService: SalesHierarchyService,
+    private modalController: ModalController,
+    private auth: Auth
+  ) {}
 
   ngOnInit() {
     this.loadData();
@@ -93,6 +102,12 @@ export class HierarchyOrdersPage implements OnInit {
     this.hierarchyService.getAllSalesPersons().subscribe({
       next: (data) => {
         this.salesPersons = data;
+        // Identify current logged-in user in the hierarchy by username.
+        // SUPER_ADMIN won't have a salesperson record — currentSalesperson stays null (no filter).
+        const loggedInUsername = this.auth.getUsername();
+        this.currentSalesperson = loggedInUsername
+          ? (this.salesPersons.find(p => p.username === loggedInUsername) ?? null)
+          : null;
         personsLoaded = true;
         if (ordersLoaded) this.buildGroupedData();
       },
@@ -195,8 +210,42 @@ export class HierarchyOrdersPage implements OnInit {
     }).filter(z => z.rsms.length > 0);
   }
 
+  /**
+   * Returns the set of salesperson IDs that the current user is allowed to see orders for.
+   * A user can see orders for themselves and everyone that reports to them (recursively).
+   * Returns null when no restriction should be applied (SUPER_ADMIN or user not in hierarchy).
+   */
+  private getVisibleSalespersonIds(): Set<number> | null {
+    // SUPER_ADMIN bypasses all hierarchy filtering.
+    if (this.auth.isSuperAdmin()) return null;
+
+    // If the logged-in user has no matching salesperson record, apply no filter as a safe fallback.
+    if (!this.currentSalesperson) return null;
+
+    // BFS: collect the current user's id + all subordinates' ids at every depth.
+    const visibleIds = new Set<number>();
+    const queue: number[] = [this.currentSalesperson.id];
+    while (queue.length > 0) {
+      const currentId = queue.shift()!;
+      visibleIds.add(currentId);
+      this.salesPersons
+        .filter(p => p.managerId === currentId)
+        .forEach(p => queue.push(p.id));
+    }
+    return visibleIds;
+  }
+
   getFilteredOrders(): OrderWithSalesPerson[] {
     let list = [...this.allOrders];
+
+    // Hierarchy visibility filter: only show orders assigned to salespersons
+    // within the current user's subtree (themselves + all downward reports).
+    // Orders assigned to someone ABOVE the current user are excluded.
+    const visibleIds = this.getVisibleSalespersonIds();
+    if (visibleIds !== null) {
+      list = list.filter(o => o.salespersonId != null && visibleIds.has(o.salespersonId));
+    }
+
     if (this.filterStatus) {
       list = list.filter(o => o.status?.toLowerCase() === this.filterStatus.toLowerCase());
     }
