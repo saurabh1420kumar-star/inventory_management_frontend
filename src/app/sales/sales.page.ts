@@ -375,12 +375,44 @@ export class SalesPage implements OnInit {
     );
   }
 
+  get filteredApproveCarts(): PendingOrder[] {
+    const visibleIds = this.getVisibleSalespersonIds();
+    let list = visibleIds !== null
+      ? this.approveCarts.filter(o => o.salespersonId != null && visibleIds.has(o.salespersonId))
+      : [...this.approveCarts];
+    if (this.orderSearchTerm.trim()) {
+      const term = this.orderSearchTerm.toLowerCase();
+      list = list.filter(o =>
+        String(o.id).includes(term) ||
+        (o.distributorName || '').toLowerCase().includes(term) ||
+        (o.salespersonName || '').toLowerCase().includes(term)
+      );
+    }
+    return list;
+  }
+
+  downloadPIForCart(order: PendingOrder) {
+    this.haptic.medium();
+    this.downloadingPIId = order.id;
+    const filename = `PI-${order.id}.pdf`;
+    this.proformaInvoiceService.downloadInvoicePdf(order.id).subscribe({
+      next: async (blob) => {
+        await this.downloadService.downloadBlob(blob, filename);
+        this.downloadingPIId = null;
+      },
+      error: () => {
+        this.downloadingPIId = null;
+        this.showToast('Failed to download Proforma Invoice', 'danger');
+      }
+    });
+  }
+
   get orderTabCounts(): Record<string, number> {
     return {
       all: this.pendingOrders.length,
       pending: this.pendingOrders.filter(o => o.status === 'ACTIVE' || o.status === 'PLACED').length,
       approved: this.approveCarts.length,
-      pi_ready: this.piReadyInvoices.length,
+      pi_ready: this.approveCarts.length,
       rejected: this.pendingOrders.filter(o => o.status === 'DISMISSED').length,
     };
   }
@@ -391,10 +423,10 @@ export class SalesPage implements OnInit {
     this.salesService.approveOrder(order.id).subscribe({
       next: () => {
         this.isApprovingOrderId = null;
-        // Reload both lists fresh from API so Approved tab shows newest-first
+        // Reload both lists so PI Ready tab reflects the newly approved order
         this.loadPendingOrders();
         this.loadApproveCarts();
-        this.orderFilterTab = 'approved';
+        this.orderFilterTab = 'pi_ready';
       },
       error: (error) => {
         this.isApprovingOrderId = null;

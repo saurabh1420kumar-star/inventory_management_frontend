@@ -103,13 +103,7 @@
           style="box-shadow: 0 4px 20px rgb(0,0,0,0.03);">
 
           <!-- Top Accent -->
-          <div class="h-1.5 w-full"
-            [class.bg-gradient-to-r]="true"
-            [class.from-emerald-400]="!order.isDispatched"
-            [class.via-teal-400]="!order.isDispatched"
-            [class.to-blue-400]="!order.isDispatched"
-            [class.from-blue-400]="order.isDispatched"
-            [class.to-indigo-400]="order.isDispatched"></div>
+          <div class="h-1.5 w-full bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-400"></div>
 
           <div class="p-5">
 
@@ -121,16 +115,12 @@
                 </div>
                 <div class="min-w-0">
                   <h3 class="text-base font-bold text-slate-800 truncate">{{ order.orderNo }}</h3>
-                  <p class="text-xs text-slate-400 font-medium">Cart #{{ order.invoice.cartId }}</p>
+                  <p class="text-xs text-slate-400 font-medium">Cart #{{ order.invoice.id }}</p>
                 </div>
               </div>
-              <span *ngIf="!order.isDispatched" class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
+              <span class="inline-flex items-center gap-1.5 bg-emerald-50 text-emerald-600 border border-emerald-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
                 <ion-icon name="checkmark-circle" class="text-xs"></ion-icon>
                 PI Ready
-              </span>
-              <span *ngIf="order.isDispatched" class="inline-flex items-center gap-1.5 bg-blue-50 text-blue-600 border border-blue-200 text-[10px] font-bold px-2.5 py-1 rounded-full flex-shrink-0 uppercase tracking-wider">
-                <ion-icon name="rocket-outline" class="text-xs"></ion-icon>
-                Dispatched
               </span>
             </div>
 
@@ -169,14 +159,6 @@
             </div>
 
             <!-- ── Row 3: Action Buttons ── -->
-            <!-- Dispatched state -->
-            <div *ngIf="order.isDispatched"
-              class="flex items-center justify-center gap-2 bg-blue-50 border border-blue-200 text-blue-600 font-bold text-sm rounded-2xl py-3.5 w-full">
-              <ion-icon name="checkmark-done-circle-outline" class="text-lg"></ion-icon>
-              Dispatched
-            </div>
-            <!-- Normal action buttons: 2-row layout -->
-            <ng-container *ngIf="!order.isDispatched">
               <!-- Row A: Primary approve buttons -->
               <div class="flex gap-2 mb-2">
                 <button (click)="openApproveModal(order)"
@@ -196,7 +178,6 @@
                 <ion-icon name="close-circle-outline" class="text-sm"></ion-icon>
                 Reject Order
               </button>
-            </ng-container>
           </div>
         </div>
       </div>

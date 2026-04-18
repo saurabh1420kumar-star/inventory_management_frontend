@@ -2,7 +2,9 @@ import { Component, OnInit } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule, ModalController } from '@ionic/angular';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
+import { SalesService } from '../../services/sales.service';
+import { Toast } from '../../services/toast';
 import {
   SalesHierarchyService,
   SalesPerson,
@@ -77,10 +79,16 @@ export class HierarchyOrdersPage implements OnInit {
   totalAmount = 0;
   expandedZones = new Set<string>();
 
+  // Track which orderId is currently being approved
+  approvingOrderId: number | null = null;
+
   constructor(
     private hierarchyService: SalesHierarchyService,
     private modalController: ModalController,
-    private auth: Auth
+    private auth: Auth,
+    private salesService: SalesService,
+    private router: Router,
+    private toast: Toast
   ) {}
 
   ngOnInit() {
@@ -327,6 +335,28 @@ export class HierarchyOrdersPage implements OnInit {
   formatDate(dateStr: string): string {
     if (!dateStr) return '—';
     return new Date(dateStr).toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+  }
+
+  approveOrder(order: OrderWithSalesPerson) {
+    if (this.approvingOrderId) return;
+    this.approvingOrderId = order.orderId;
+    this.salesService.approveOrder(order.orderId).subscribe({
+      next: (res) => {
+        this.approvingOrderId = null;
+        const msg = res?.message || 'Order approved — ready for dispatch!';
+        this.toast.present(msg, 'success');
+        // Update local status so the badge refreshes immediately
+        const found = this.allOrders.find(o => o.orderId === order.orderId);
+        if (found) found.status = 'approved';
+        this.buildGroupedData();
+        setTimeout(() => this.router.navigate(['/dispatch']), 350);
+      },
+      error: (err) => {
+        this.approvingOrderId = null;
+        const msg = err?.error?.message || 'Failed to approve order. Please try again.';
+        this.toast.present(msg, 'danger');
+      }
+    });
   }
 
   async openHierarchyMap() {

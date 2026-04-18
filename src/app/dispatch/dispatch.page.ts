@@ -114,6 +114,8 @@ export class DispatchPage implements OnInit {
   orderForGdnReject: DispatchOrderDisplay | null = null;
 
   expandedIds = new Set<number>();
+  verifiedOrderIds = new Set<number>();
+  verifyingOrderId: number | null = null;
 
   private haptic = inject(HapticService);
 
@@ -233,10 +235,6 @@ export class DispatchPage implements OnInit {
       shippingAddress: order.shippingAddress || order.address || (order as any).distributorAddress || (order as any).deliveryAddress || (order as any).registeredAddress || '',
       originalOrder: order,
     };
-    
-    if (order.id === 75 || order.id === 52) {
-      console.log(`Order ${order.id} detailed mapping:`, result);
-    }
     
     return result;
   }
@@ -630,6 +628,24 @@ export class DispatchPage implements OnInit {
   }
 
   // Legacy method for backward compatibility
+  verifyInventory(order: DispatchOrderDisplay) {
+    if (this.verifyingOrderId) return;
+    this.verifyingOrderId = order.id;
+    this.dispatchService.verifyInventory(order.id).subscribe({
+      next: (res) => {
+        this.verifyingOrderId = null;
+        this.verifiedOrderIds.add(order.id);
+        const msg = res?.message || 'Inventory verified! You can now generate GDN.';
+        this.toast.present(msg, 'success');
+      },
+      error: (err) => {
+        this.verifyingOrderId = null;
+        const msg = err?.error?.message || 'Inventory verification failed. Please check stock.';
+        this.toast.present(msg, 'danger');
+      }
+    });
+  }
+
   generateGdn(order: DispatchOrderDisplay) {
     this.openGdnModal(order);
   }

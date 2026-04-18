@@ -286,6 +286,17 @@
                                 <div class="text-xs text-slate-400 mt-1">Invoice Value</div>
                               </div>
                             </div>
+                            <!-- Approve button (pending orders only) -->
+                            <div *ngIf="order.status.toLowerCase() === 'pending'" class="mt-2.5">
+                              <button (click)="approveOrder(order)"
+                                [disabled]="approvingOrderId === order.orderId"
+                                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold text-white transition-all active:scale-95 disabled:opacity-60"
+                                style="background: linear-gradient(135deg, #10b981, #0ea5e9);">
+                                <ion-icon *ngIf="approvingOrderId !== order.orderId" name="checkmark-circle-outline" class="text-base"></ion-icon>
+                                <ion-spinner *ngIf="approvingOrderId === order.orderId" name="crescent" class="w-4 h-4 text-white"></ion-spinner>
+                                {{ approvingOrderId === order.orderId ? 'Approving…' : 'Approve → Dispatch' }}
+                              </button>
+                            </div>
                             <!-- Hover indicator line -->
                             <div class="absolute left-0 top-0 h-full w-1 bg-gradient-to-b from-emerald-400 to-teal-400 opacity-0 group-hover:opacity-100 transition-opacity rounded-l"></div>
                           </div>

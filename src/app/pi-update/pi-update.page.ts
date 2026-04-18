@@ -4,17 +4,17 @@ import { FormsModule } from '@angular/forms';
 import { Router, RouterModule } from '@angular/router';
 import { IonicModule, ViewWillEnter } from '@ionic/angular';
 
-import { forkJoin, of, catchError } from 'rxjs';
-import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
-import { LedgerService, LedgerDto } from '../services/accountsLedger.service';
+import { forkJoin, catchError, of } from 'rxjs';
+import { LedgerService } from '../services/accountsLedger.service';
 import { DispatchService } from '../services/dispatch.service';
+import { SalesService, PendingOrder } from '../services/sales.service';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 import { Auth } from '../services/auth';
 
 /* ── Display model ── */
 interface PIOrderTile {
-  invoice: ProformaInvoice;
+  invoice: PendingOrder;
   distributorName: string;
   orderNo: string;
   amount: number;
@@ -36,8 +36,6 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
   /* ── Data ── */
   orders: PIOrderTile[] = [];
   filteredOrders: PIOrderTile[] = [];
-  ledgers: LedgerDto[] = [];
-  distributorMap: Map<number, string> = new Map();
 
   /* ── UI State ── */
   isLoading = false;
@@ -67,7 +65,7 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
   Math = Math; // Expose to template
 
   constructor(
-    private proformaInvoiceService: ProformaInvoiceService,
+    private salesService: SalesService,
     private ledgerService: LedgerService,
     private dispatchService: DispatchService,
     private toast: Toast,
@@ -90,58 +88,27 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
     this.isLoading = true;
     this.errorMessage = '';
 
-    forkJoin({
-      invoices: this.proformaInvoiceService.getAllInvoices().pipe(
-        catchError(err => { console.error('Error fetching invoices:', err); return of([] as ProformaInvoice[]); })
-      ),
-      ledgers: this.ledgerService.getAllLedgers().pipe(
-        catchError(err => { console.error('Error fetching ledgers:', err); return of({ data: [] } as any); })
-      ),
-      distributors: this.ledgerService.getDistributors().pipe(
-        catchError(err => { console.error('Error fetching distributors:', err); return of({ data: [] } as any); })
-      )
-    }).subscribe({
-      next: ({ invoices, ledgers, distributors }) => {
-        console.log('PI Update - Raw invoices:', invoices);
-        console.log('PI Update - Raw ledgers:', ledgers);
-        console.log('PI Update - Raw distributors:', distributors);
-
-        /* Build distributor name map */
-        this.distributorMap.clear();
-        const distList = Array.isArray(distributors) ? distributors : distributors?.data || [];
-        distList.forEach((d: any) => {
-          const displayName = d.firmName || (d.firstName && d.lastName ? `${d.firstName} ${d.lastName}` : null) || d.name || d.accountName || `Distributor #${d.id}`;
-          this.distributorMap.set(d.id, displayName);
-        });
-
-        /* Store ledgers */
-        this.ledgers = Array.isArray(ledgers) ? ledgers : ledgers?.data || [];
-
-        /* All proforma invoices = PI approved/ready orders */
-        const invoiceList = Array.isArray(invoices) ? invoices : (invoices as any)?.data || [];
-        console.log('PI Update - Invoice list (parsed):', invoiceList);
-        console.log('PI Update - Invoice statuses:', invoiceList.map((i: any) => i.paymentStatus));
-
-        this.orders = invoiceList
-          .sort((a: any, b: any) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
-          .map((inv: any) => ({
-            invoice: inv,
-            distributorName: this.distributorMap.get(inv.distributorId) || `Distributor #${inv.distributorId}`,
-            orderNo: inv.piNumber || `ORD-${inv.cartId}`,
-            amount: inv.amount,
-            distributorId: inv.distributorId,
-            isDispatched: inv.paymentStatus === 'APPROVED_USING_CREDIT'
+    this.salesService.getApproveCarts().subscribe({
+      next: (carts) => {
+        const list: PendingOrder[] = Array.isArray(carts) ? carts : (carts as any)?.data || [];
+        this.orders = list
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime())
+          .map(cart => ({
+            invoice: cart,
+            distributorName: cart.distributorName || `Distributor #${cart.distributorId}`,
+            orderNo: `ORD-${cart.id}`,
+            amount: cart.totalCartAmount,
+            distributorId: cart.distributorId ?? 0,
+            isDispatched: false
           }));
-
-        console.log('PI Update - Filtered orders (PAID):', this.orders);
         this.filterOrders();
         this.isLoading = false;
       },
       error: (err) => {
-        console.error('Error loading PI update data:', err);
+        console.error('Error loading PI requests:', err);
         this.errorMessage = 'Failed to load data. Please try again.';
         this.isLoading = false;
-        this.toast.present('Error loading PI approved orders', 'danger');
+        this.toast.present('Error loading PI requests', 'danger');
       }
     });
   }
@@ -208,21 +175,17 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
     this.haptic.medium();
     this.isApproving = true;
 
-    const orderId = this.selectedOrder.invoice.cartId;
-    const distributorId = this.selectedOrder.distributorId;
+    // approve-PI expects the cart id
+    const orderId = this.selectedOrder.invoice.id;
+    const distributorId = this.selectedOrder.invoice.distributorId ?? this.selectedOrder.distributorId;
 
     this.dispatchService.approvePayment(orderId, distributorId).subscribe({
       next: (res) => {
         this.isApproving = false;
-        /* Mark the card as dispatched instead of removing */
-        const approvedId = this.selectedOrder?.invoice.id;
         this.closeApproveModal();
-        this.toast.present('Dispatch approved successfully!', 'success');
-        const target = this.orders.find(o => o.invoice.id === approvedId);
-        if (target) target.isDispatched = true;
-        this.filterOrders();
-        // Wait for the modal dismiss animation to finish before navigating
-        // to prevent Ionic page transition conflicts that cause the UI to get stuck
+        const successMsg = res?.message || 'Dispatch approved successfully!';
+        this.toast.present(successMsg, 'success');
+        this.loadData();
         setTimeout(() => {
           this.router.navigate(['/dispatch']);
         }, 350);
@@ -258,20 +221,15 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
     this.haptic.medium();
     this.isApprovingCredit = true;
 
-    const cartId = this.selectedOrderCredit.invoice.cartId;
-    const distributorId = this.selectedOrderCredit.distributorId;
+    const cartId = this.selectedOrderCredit.invoice.id;
+    const distributorId = this.selectedOrderCredit.invoice.distributorId ?? this.selectedOrderCredit.distributorId;
 
     this.ledgerService.approvePIUsingCredit(cartId, distributorId).subscribe({
       next: (res) => {
         this.isApprovingCredit = false;
-        const approvedId = this.selectedOrderCredit?.invoice.id;
         this.closeApproveCreditModal();
         this.toast.present('Proforma invoice approved by credit successfully!', 'success');
-        const target = this.orders.find(o => o.invoice.id === approvedId);
-        if (target) target.isDispatched = true;
-        this.filterOrders();
-        // Wait for the modal dismiss animation to finish before navigating
-        // to prevent Ionic page transition conflicts that cause the UI to get stuck
+        this.loadData();
         setTimeout(() => {
           this.router.navigate(['/dispatch']);
         }, 350);
@@ -308,7 +266,7 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
     this.haptic.medium();
     this.isRejecting = true;
 
-    const cartId = this.rejectOrder.invoice.cartId;
+    const cartId = this.rejectOrder.invoice.id;
 
     this.dispatchService.rejectGdn(cartId, this.rejectReason.trim()).subscribe({
       next: () => {

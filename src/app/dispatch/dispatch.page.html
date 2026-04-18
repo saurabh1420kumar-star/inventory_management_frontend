@@ -374,14 +374,31 @@
               </button>
             </div>
 
-            <!-- PAYMENT_APPROVED + no GDN → Generate GDN -->
+            <!-- PAYMENT_APPROVED + no GDN → Verify Inventory first, then Generate GDN -->
             <div *ngIf="order.approvalStatus === 'payment_approved' && order.gdnStatus === 'not-generated'" class="flex gap-3">
-              <button
-                (click)="generateGdn(order)"
-                class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
-                <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
-                Generate GDN
-              </button>
+
+              <!-- Step 1: Verify Inventory (shown when not yet verified) -->
+              <ng-container *ngIf="!verifiedOrderIds.has(order.id)">
+                <button
+                  (click)="verifyInventory(order)"
+                  [disabled]="verifyingOrderId === order.id"
+                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-amber-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-60">
+                  <ion-spinner *ngIf="verifyingOrderId === order.id" name="crescent" class="w-4 h-4 text-white"></ion-spinner>
+                  <ion-icon *ngIf="verifyingOrderId !== order.id" name="shield-checkmark-outline" class="text-lg"></ion-icon>
+                  {{ verifyingOrderId === order.id ? 'Verifying…' : 'Verify Inventory' }}
+                </button>
+              </ng-container>
+
+              <!-- Step 2: Generate GDN (shown only after verification passes) -->
+              <ng-container *ngIf="verifiedOrderIds.has(order.id)">
+                <button
+                  (click)="generateGdn(order)"
+                  class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
+                  <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                  Generate GDN
+                </button>
+              </ng-container>
+
               <button
                 (click)="openGdnRejectModal(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95 transition-all duration-200">

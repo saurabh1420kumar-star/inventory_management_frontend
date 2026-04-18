@@ -41,6 +41,46 @@ export interface DispatchOrder {
   shippingAddress?: string;
 }
 
+// ── Interfaces for GET /api/accounts/payment-approved-orders ──
+
+export interface PaymentApprovedItemDetail {
+  id: number;
+  name: string;
+  description?: string;
+  sku: string;
+  unit?: string;
+  weight?: number;
+  unitType?: string;
+  productSize?: string;
+  unitName?: string;
+  unitCode?: string;
+  price: number;
+  quantity?: number;
+  imageUrl?: string | null;
+}
+
+export interface PaymentApprovedCartItem {
+  id: number;
+  item: PaymentApprovedItemDetail;
+  quantity: number;
+  priceAtTime: number;
+  unitType?: string;
+}
+
+export interface PaymentApprovedOrder {
+  id: number;
+  status: string;
+  distributorId: number;
+  distributorName: string | null;
+  salespersonId: number | null;
+  salespersonName: string | null;
+  totalCartAmount: number;
+  createdAt: string;
+  updatedAt: string;
+  address?: string;
+  cartItems: PaymentApprovedCartItem[];
+}
+
 export interface GdnGenerateRequest {
   dispatchFromAddress: string;
   shippingAddress: string;
@@ -130,12 +170,12 @@ export class DispatchService {
   }
 
   /**
-   * Approve Payment (PI Approval)
-   * POST /api/accounts/approve-payment/{orderId}?distributorId={distributorId}
+   * Approve PI Dispatch
+   * POST /api/accounts/approve-PI/{orderId}?distributorId={distributorId}
    */
   approvePayment(orderId: number, distributorId: number): Observable<any> {
     return this.http.post<any>(
-      `${environment.apiUrl}/accounts/approve-payment/${orderId}?distributorId=${distributorId}`,
+      `${environment.apiUrl}/accounts/approve-PI/${orderId}?distributorId=${distributorId}`,
       {},
       {
         headers: this.getAuthHeaders()
@@ -163,6 +203,16 @@ export class DispatchService {
    */
   markDispatchedOrder(orderId: number): Observable<any> {
     return this.http.put<any>(`${this.dispatchApiUrl}/${orderId}/dispatch`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Get payment-approved orders from accounts service
+   * GET /api/accounts/payment-approved-orders
+   */
+  getPaymentApprovedOrders(): Observable<PaymentApprovedOrder[]> {
+    return this.http.get<PaymentApprovedOrder[]>(`${environment.apiUrl}/accounts/payment-approved-orders`, {
       headers: this.getAuthHeaders()
     });
   }
