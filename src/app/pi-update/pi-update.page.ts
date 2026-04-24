@@ -268,7 +268,7 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
 
     const cartId = this.rejectOrder.invoice.id;
 
-    this.dispatchService.rejectGdn(cartId, this.rejectReason.trim()).subscribe({
+    this.dispatchService.dismissOrder(cartId, this.rejectReason.trim()).subscribe({
       next: () => {
         this.isRejecting = false;
         this.toast.present('Order rejected successfully', 'success');
@@ -281,7 +281,8 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
       error: (err) => {
         console.error('Error rejecting order:', err);
         this.isRejecting = false;
-        const msg = err?.error?.message || err?.message || 'Failed to reject order';
+        const serverMsg = err?.error?.message || err?.message || 'Failed to reject order';
+        const msg = `${serverMsg} — Reason: ${this.rejectReason.trim()}`;
         this.toast.present(msg, 'danger');
       }
     });

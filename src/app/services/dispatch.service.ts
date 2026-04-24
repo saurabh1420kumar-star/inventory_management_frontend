@@ -151,9 +151,10 @@ export class DispatchService {
    * Dismiss/Reject an order
    * DELETE /api/cart/{cartId}/dismiss
    */
-  dismissOrder(cartId: number): Observable<any> {
+  dismissOrder(cartId: number, reason?: string): Observable<any> {
     return this.http.delete<any>(`${this.cartApiUrl}/${cartId}/dismiss`, {
-      headers: this.getAuthHeaders()
+      headers: this.getAuthHeaders(),
+      body: reason ? { reason } : undefined
     });
   }
 
