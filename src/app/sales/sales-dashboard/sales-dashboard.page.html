@@ -407,7 +407,7 @@
           </div>
           <div class="flex-1">
             <h2 class="text-white font-bold" style="font-size: 18px; line-height: 1.2;">Add Payment</h2>
-            <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Record a credit or debit entry</p>
+            <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Record a credit entry</p>
           </div>
         </div>
       </div>
@@ -438,24 +438,15 @@
           <!-- Balance Type -->
           <div>
             <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">BALANCE TYPE</p>
-            <div class="grid grid-cols-2 gap-2">
+            <div>
               <!-- Credit -->
               <button type="button" (click)="paymentForm.balanceType = 'credit'; generatePaymentReference()"
-                class="rounded-xl py-2.5 flex items-center justify-center gap-2 font-bold text-sm transition-all"
+                class="rounded-xl py-2.5 flex items-center justify-center gap-2 font-bold text-sm transition-all w-full"
                 [style.background]="paymentForm.balanceType === 'credit' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)'"
                 [style.border]="paymentForm.balanceType === 'credit' ? '1.5px solid rgba(74,222,128,0.55)' : '1.5px solid rgba(255,255,255,0.08)'"
                 [style.color]="paymentForm.balanceType === 'credit' ? '#4ade80' : '#475569'">
                 <ion-icon name="arrow-up-outline" style="font-size: 16px;"></ion-icon>
                 Credit
-              </button>
-              <!-- Debit -->
-              <button type="button" (click)="paymentForm.balanceType = 'debit'; generatePaymentReference()"
-                class="rounded-xl py-2.5 flex items-center justify-center gap-2 font-bold text-sm transition-all"
-                [style.background]="paymentForm.balanceType === 'debit' ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.05)'"
-                [style.border]="paymentForm.balanceType === 'debit' ? '1.5px solid rgba(248,113,113,0.6)' : '1.5px solid rgba(255,255,255,0.08)'"
-                [style.color]="paymentForm.balanceType === 'debit' ? '#f87171' : '#475569'">
-                <ion-icon name="arrow-down-outline" style="font-size: 16px;"></ion-icon>
-                Debit
               </button>
             </div>
           </div>

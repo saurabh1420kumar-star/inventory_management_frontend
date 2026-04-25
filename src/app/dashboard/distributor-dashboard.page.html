@@ -195,22 +195,30 @@
     <div class="mb-2">
       <h3 class="text-sm font-bold text-white mb-3">Recent Transactions</h3>
     </div>
+    <div *ngIf="isLoadingPaymentCollections" class="rounded-2xl p-6 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-spinner name="crescent" style="color: #10b981;"></ion-spinner>
+      <p class="text-xs text-slate-500 mt-2">Loading transactions...</p>
+    </div>
+    <div *ngIf="!isLoadingPaymentCollections && paymentCollections.length === 0" class="rounded-2xl p-6 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+      <ion-icon name="wallet-outline" class="text-slate-600 text-4xl mb-2 block"></ion-icon>
+      <p class="text-sm text-slate-400 font-semibold">No transactions found</p>
+    </div>
     <div class="flex flex-col gap-3">
-      <ng-container *ngFor="let txn of transactions">
-        <div *ngIf="paymentFilter === 'all' || (paymentFilter === 'cleared' && txn.status === 'Cleared') || (paymentFilter === 'process' && txn.status === 'In Process') || (paymentFilter === 'neft' && txn.type === 'NEFT')"
+      <ng-container *ngFor="let payment of paymentCollections | slice:0:10">
+        <div *ngIf="paymentFilter === 'all' || (paymentFilter === 'cleared' && payment.status === 'LEDGER_UPDATED') || (paymentFilter === 'process' && payment.status === 'PENDING') || (paymentFilter === 'neft' && payment.paymentMethod === 'NEFT')"
              class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(12px);">
           <div class="flex items-start justify-between mb-2">
             <div>
-              <p class="text-sm font-bold text-white">{{ txn.amount }}</p>
-              <p class="text-xs text-slate-500 mt-0.5">{{ txn.date }}</p>
+              <p class="text-sm font-bold text-white">{{ formatAmount(payment.amount) }}</p>
+              <p class="text-xs text-slate-500 mt-0.5">{{ payment.createdAt | date: 'MMM dd, yyyy' }}</p>
             </div>
             <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
-                  [style.background]="getStatusBg(txn.status)"
-                  [style.color]="getStatusColor(txn.status)">{{ txn.status }}</span>
+                  [style.background]="payment.transactionType === 'CREDIT' ? 'rgba(16,185,129,0.15)' : 'rgba(239,68,68,0.15)'"
+                  [style.color]="payment.transactionType === 'CREDIT' ? '#10b981' : '#ef4444'">{{ payment.transactionType }}</span>
           </div>
           <div class="flex items-center justify-between pt-2" style="border-top: 1px solid rgba(255,255,255,0.06);">
-            <span class="text-xs text-slate-500 font-mono">{{ txn.txnId }}</span>
-            <span class="text-xs font-medium px-2 py-0.5 rounded" style="background: rgba(255,255,255,0.06); color: #94a3b8;">{{ txn.type }}</span>
+            <span class="text-xs text-slate-500 font-mono">ID: {{ payment.paymentId }}</span>
+            <span class="text-xs font-medium px-2 py-0.5 rounded" style="background: rgba(255,255,255,0.06); color: #94a3b8;">{{ payment.paymentMethod || payment.status }}</span>
           </div>
         </div>
       </ng-container>
@@ -1839,6 +1847,91 @@
 
   </div>
 
+  <!-- ==================== MY STOCK VIEW ==================== -->
+  <div *ngIf="activeOperationView === 'my-stock'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- Header -->
+    <div class="flex items-center gap-3 mb-5">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+      </button>
+      <div class="flex-1">
+        <h1 class="text-xl font-bold text-white">My Stock</h1>
+        <p class="text-xs text-slate-500">Current stock levels at your location</p>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoadingStock" class="flex flex-col items-center justify-center py-16 gap-3">
+      <ion-spinner name="crescent" style="color: #10b981; width: 32px; height: 32px;"></ion-spinner>
+      <p class="text-slate-500 text-sm">Loading stock...</p>
+    </div>
+
+    <!-- Empty -->
+    <div *ngIf="!isLoadingStock && !distributorStock" class="text-center py-16">
+      <ion-icon name="layers-outline" class="text-slate-600 text-5xl mb-3 block mx-auto"></ion-icon>
+      <p class="text-slate-400 font-semibold">No stock data available</p>
+    </div>
+
+    <!-- Stock Data -->
+    <ng-container *ngIf="!isLoadingStock && distributorStock">
+
+      <!-- Summary Cards -->
+      <div class="grid grid-cols-3 gap-3 mb-5">
+        <div class="rounded-2xl p-4 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
+          <p class="text-xs font-bold tracking-widest mb-1" style="color: #475569;">UNIQUE ITEMS</p>
+          <p class="text-2xl font-bold text-white">{{ distributorStock.totalUniqueItems }}</p>
+        </div>
+        <div class="rounded-2xl p-4 text-center" style="background: rgba(56,189,248,0.08); border: 1px solid rgba(56,189,248,0.2);">
+          <p class="text-xs font-bold tracking-widest mb-1" style="color: #475569;">TOTAL QTY</p>
+          <p class="text-2xl font-bold text-white">{{ distributorStock.totalQuantity }}</p>
+        </div>
+        <div class="rounded-2xl p-4 text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
+          <p class="text-xs font-bold tracking-widest mb-1" style="color: #475569;">STOCK VALUE</p>
+          <p class="text-lg font-bold text-white">₹{{ distributorStock.totalStockValue | number:'1.0-0' }}</p>
+        </div>
+      </div>
+
+      <!-- Stock Items -->
+      <div class="flex flex-col gap-3">
+        <div *ngFor="let item of distributorStock.stockItems"
+             class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <div class="flex items-start justify-between gap-3">
+            <div class="flex-1 min-w-0">
+              <p class="text-white font-bold text-sm">{{ item.itemName }}</p>
+              <p class="text-xs mt-0.5" style="color: #475569;">SKU: {{ item.itemSku }}</p>
+            </div>
+            <div class="text-right flex-shrink-0">
+              <p class="text-emerald-400 font-bold text-sm">₹{{ item.totalValue | number:'1.0-0' }}</p>
+              <p class="text-xs" style="color: #475569;">Total Value</p>
+            </div>
+          </div>
+          <div class="grid grid-cols-3 gap-2 mt-3">
+            <div class="rounded-xl p-2.5 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+              <p class="text-xs" style="color: #475569;">Quantity</p>
+              <p class="text-white font-semibold text-sm mt-0.5">{{ item.totalQuantity }}</p>
+              <p class="text-xs" style="color: #475569;">{{ item.unitType }}</p>
+            </div>
+            <div class="rounded-xl p-2.5 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
+              <p class="text-xs" style="color: #475569;">Unit Price</p>
+              <p class="text-white font-semibold text-sm mt-0.5">₹{{ item.unitPrice | number:'1.0-2' }}</p>
+            </div>
+            <div class="rounded-xl p-2.5 text-center" style="background: rgba(16,185,129,0.06); border: 1px solid rgba(16,185,129,0.15);">
+              <p class="text-xs" style="color: #475569;">Value</p>
+              <p class="text-emerald-400 font-bold text-sm mt-0.5">₹{{ item.totalValue | number:'1.0-0' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Last Updated -->
+      <p class="text-xs text-center mt-4" style="color: #475569;">
+        Last updated: {{ distributorStock.lastUpdated | date:'dd MMM yyyy, hh:mm a' }}
+      </p>
+
+    </ng-container>
+  </div>
+
   <!-- ==================== MAIN DASHBOARD / OPERATIONS VIEW ==================== -->
   <div *ngIf="!activeOperationView" class="dd-shell">
 
@@ -2055,6 +2148,13 @@
             <p class="ops-card__title">My Orders</p>
             <p class="ops-card__desc">View all your orders</p>
           </button>
+          <button (click)="openOperationView('my-stock')" class="ops-card ops-card--emerald">
+            <div class="ops-card__icon" style="background: rgba(16,185,129,0.15); border-color: rgba(16,185,129,0.3);">
+              <ion-icon name="layers-outline" style="font-size: 28px; color: #34d399;"></ion-icon>
+            </div>
+            <p class="ops-card__title">My Stock</p>
+            <p class="ops-card__desc">View your current stock levels</p>
+          </button>
           <button (click)="openOperationView('dispatch-report')" class="ops-card ops-card--rose">
             <div class="ops-card__icon" style="background: rgba(244,63,94,0.15); border-color: rgba(244,63,94,0.3);">
               <ion-icon name="car-outline" style="font-size: 28px; color: #fb7185;"></ion-icon>
@@ -2151,7 +2251,7 @@
             </div>
             <div class="flex-1">
               <h2 class="text-white font-bold" style="font-size: 18px; line-height: 1.2;">Add Payment</h2>
-              <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Record a credit or debit entry</p>
+              <p style="font-size: 12px; color: rgba(255,255,255,0.75);">Record a credit entry</p>
             </div>
           </div>
           <!-- Distributor pills -->
@@ -2168,25 +2268,15 @@
             <!-- Balance Type -->
             <div>
               <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">BALANCE TYPE</p>
-              <div class="grid grid-cols-2 gap-3">
+              <div>
                 <!-- Credit -->
                 <button type="button" (click)="paymentForm.balanceType = 'credit'; generatePaymentReference()"
-                  class="rounded-2xl py-3.5 flex items-center justify-center gap-2.5 font-bold text-sm transition-all"
+                  class="rounded-2xl py-3.5 flex items-center justify-center gap-2.5 font-bold text-sm transition-all w-full"
                   [style.background]="paymentForm.balanceType === 'credit' ? 'rgba(16,185,129,0.12)' : 'rgba(255,255,255,0.05)'"
                   [style.border]="paymentForm.balanceType === 'credit' ? '1.5px solid rgba(74,222,128,0.55)' : '1.5px solid rgba(255,255,255,0.08)'"
                   [style.color]="paymentForm.balanceType === 'credit' ? '#4ade80' : '#475569'">
                   <ion-icon name="arrow-up-outline" style="font-size: 16px;"></ion-icon>
                   Credit
-                </button>
-                <!-- Debit -->
-                <button type="button" (click)="paymentForm.balanceType = 'debit'; generatePaymentReference()"
-                  class="rounded-2xl py-3.5 flex items-center justify-center gap-2.5 font-bold text-sm transition-all"
-                  [style.background]="paymentForm.balanceType === 'debit' ? 'rgba(239,68,68,0.10)' : 'rgba(255,255,255,0.05)'"
-                  [style.border]="paymentForm.balanceType === 'debit' ? '1.5px solid rgba(248,113,113,0.6)' : '1.5px solid rgba(255,255,255,0.08)'"
-                  [style.color]="paymentForm.balanceType === 'debit' ? '#f87171' : '#475569'"
-                  [style.boxShadow]="paymentForm.balanceType === 'debit' ? '0 0 16px rgba(239,68,68,0.18)' : 'none'">
-                  <ion-icon name="arrow-down-outline" style="font-size: 16px;"></ion-icon>
-                  Debit
                 </button>
               </div>
             </div>

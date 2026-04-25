@@ -83,6 +83,26 @@ export interface ApiResponse<T> {
   data: T;
 }
 
+export interface DistributorStockItem {
+  itemId: number;
+  itemName: string;
+  itemSku: string;
+  totalQuantity: number;
+  totalValue: number;
+  unitPrice: number;
+  unitType: string;
+}
+
+export interface DistributorStock {
+  distributorId: number;
+  distributorName: string;
+  lastUpdated: string;
+  stockItems: DistributorStockItem[];
+  totalQuantity: number;
+  totalStockValue: number;
+  totalUniqueItems: number;
+}
+
 // ============= ORDER MODELS =============
 
 export interface OrderCartItem {
@@ -155,6 +175,12 @@ export class DistributorService {
   deleteDistributor(id: number): Observable<ApiResponse<string>> {
     return this.http.delete<ApiResponse<string>>(
       `${this.baseUrl}/${id}`
+    );
+  }
+
+  getDistributorStock(id: number): Observable<ApiResponse<DistributorStock>> {
+    return this.http.get<ApiResponse<DistributorStock>>(
+      `${this.baseUrl}/${id}/stock`
     );
   }
 

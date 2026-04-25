@@ -52,6 +52,14 @@ interface PaymentMethod {
 export class SalesDashboardPage implements OnInit, OnDestroy {
   salesAnalytics: SalesAnalyticsData | null = null;
   selectedPeriod: 'today' | 'month' | 'year' = 'today';
+  isLoadingVolumeAnalytics = false;
+  volumeAnalytics: any = null;
+  periodData = {
+    volMTD: '0 Units',
+    volYTD: '0 Units',
+    callMTD: '0',
+    callYTD: '0'
+  };
   selectedMonth: number = new Date().getMonth() + 1;
   selectedYear: number = new Date().getFullYear();
   selectedTab: 'dashboard' | 'operations' = 'dashboard';
@@ -144,6 +152,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.loadPendingPayments();
     this.loadMyDealers();
     this.loadDealersBySalesperson();
+    this.loadVolumeAnalytics();
   }
 
   loadMyDealers(): void {
@@ -513,5 +522,25 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   getYearOptions(): number[] {
     const currentYear = new Date().getFullYear();
     return Array.from({ length: 5 }, (_, i) => currentYear - i);
+  }
+
+  loadVolumeAnalytics(): void {
+    if (!this.salespersonId) return;
+    this.isLoadingVolumeAnalytics = true;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    const url = `${environment.apiUrl}/dashboard/volume-analytics?salesPersonId=${this.salespersonId}`;
+    this.http.get<any>(url, { headers })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (res) => {
+          this.volumeAnalytics = res;
+          this.periodData.volMTD = `${res.monthToDate?.totalQuantity ?? 0} Units`;
+          this.periodData.volYTD = `${res.yearToDate?.totalQuantity ?? 0} Units`;
+          this.periodData.callMTD = `${res.monthToDate?.totalTransactions ?? 0}`;
+          this.periodData.callYTD = `${res.yearToDate?.totalTransactions ?? 0}`;
+          this.isLoadingVolumeAnalytics = false;
+        },
+        error: () => { this.isLoadingVolumeAnalytics = false; }
+      });
   }
 }

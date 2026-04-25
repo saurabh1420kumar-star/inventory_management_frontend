@@ -23,9 +23,9 @@ import {
   bookOutline, swapVerticalOutline, trendingDownOutline,
   folderOpenOutline, locationOutline,
   mailOutline, chevronBackOutline,
-  homeOutline
+  homeOutline, layersOutline
 } from 'ionicons/icons';
-import { DistributorService, DistributorOrder } from '../services/distributor.service';
+import { DistributorService, DistributorOrder, DistributorStock } from '../services/distributor.service';
 import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
@@ -39,6 +39,20 @@ interface MetricCard {
   change: number;
   changeType: 'positive' | 'negative' | 'neutral';
   bgColor: string;
+}
+
+interface VolumeAnalyticsPeriod {
+  totalTransactions: number;
+  totalQuantity: number;
+  averageQuantityPerTransaction: number;
+}
+
+interface VolumeAnalytics {
+  monthToDate: VolumeAnalyticsPeriod;
+  weekToDate: VolumeAnalyticsPeriod;
+  yearToDate: VolumeAnalyticsPeriod;
+  volumeByCategory: { [key: string]: number };
+  volumeByRegion: { [key: string]: number };
 }
 
 interface PeriodMetrics {
@@ -135,31 +149,30 @@ export class DistributorDashboardPage implements OnInit {
 
   periodData: PeriodMetrics = {
     volMTD: '0.00 MT',
-    volYTD: '42.00 MT',
+    volYTD: '0.00 MT',
     valueMTD: 'Rs 0.00 L',
-    valueYTD: 'Rs 8.02 L',
-    totalOrders: '152',
-    callMTD: '12',
-    callYTD: '145'
+    valueYTD: 'Rs 0.00 L',
+    totalOrders: '0',
+    callMTD: '0',
+    callYTD: '0'
   };
 
   // Payment Report Data
-  totalCollections = '₹45,210.50';
-  collectionGrowth = '+12.5%';
-  dateRange = 'Oct 1 - Oct 31, 2024';
+  totalCollections = '₹0.00';
+  collectionGrowth = '—';
+  get dateRange(): string {
+    const now = new Date();
+    const start = new Date(now.getFullYear(), now.getMonth(), 1);
+    const end = new Date(now.getFullYear(), now.getMonth() + 1, 0);
+    const fmt = (d: Date) => d.toLocaleDateString('en-IN', { month: 'short', day: 'numeric', year: 'numeric' });
+    return `${fmt(start)} – ${fmt(end)}`;
+  }
   paymentFilter = 'all';
 
-  transactions: Transaction[] = [
-    { date: 'Oct 28, 2024', amount: '₹12,500.00', txnId: 'TXN-20241028-001', status: 'Cleared', type: 'NEFT' },
-    { date: 'Oct 25, 2024', amount: '₹8,750.00', txnId: 'TXN-20241025-003', status: 'Cleared', type: 'UPI' },
-    { date: 'Oct 22, 2024', amount: '₹5,200.00', txnId: 'TXN-20241022-007', status: 'In Process', type: 'Cheque' },
-    { date: 'Oct 18, 2024', amount: '₹9,460.50', txnId: 'TXN-20241018-002', status: 'Cleared', type: 'NEFT' },
-    { date: 'Oct 15, 2024', amount: '₹6,300.00', txnId: 'TXN-20241015-005', status: 'In Process', type: 'UPI' },
-    { date: 'Oct 10, 2024', amount: '₹3,000.00', txnId: 'TXN-20241010-009', status: 'Cleared', type: 'Cash' }
-  ];
+  transactions: Transaction[] = [];
 
   // Account Services Data
-  distributorName = 'Rajesh Kumar';
+  distributorName = '';
   distributorUsername: string | null = null;
   distributorRole: string | null = null;
   distributorId: number | null = null;
@@ -195,14 +208,16 @@ export class DistributorDashboardPage implements OnInit {
   orders: DistributorOrder[] = [];
   expandedOrderId: number | null = null;
   isLoadingOrders = false;
-  pendingOrdersCount = 8;
-  dispatchedCount = 23;
-  deliveredCount = 45;
+  pendingOrdersCount = 0;
+  dispatchedCount = 0;
+  deliveredCount = 0;
 
   // Analytics
   selectedPeriod: 'today' | 'month' | 'year' = 'month';
   isLoadingAnalytics = false;
+  isLoadingVolumeAnalytics = false;
   distributorAnalytics: { totalOrders: number; totalAmount: number } | null = null;
+  volumeAnalytics: VolumeAnalytics | null = null;
 
   // Payment Collections
   paymentCollections: any[] = [];
@@ -256,6 +271,10 @@ export class DistributorDashboardPage implements OnInit {
   ledgerEntryTypes = ['CREDIT', 'DEBIT', 'JV'];
 
   private haptic = inject(HapticService);
+
+  // Stock
+  distributorStock: DistributorStock | null = null;
+  isLoadingStock = false;
 
   constructor(
     private router: Router,
@@ -326,7 +345,8 @@ export class DistributorDashboardPage implements OnInit {
       'location-outline': locationOutline,
       'mail-outline': mailOutline,
       'chevron-back-outline': chevronBackOutline,
-      'home-outline': homeOutline
+      'home-outline': homeOutline,
+      'layers-outline': layersOutline
     });
   }
 
@@ -337,6 +357,7 @@ export class DistributorDashboardPage implements OnInit {
     this.loadOrders();
     this.loadDealers();
     this.loadDistributorAnalytics();
+    this.loadVolumeAnalytics();
     const view = this.route.snapshot.queryParams['view'];
     if (view) {
       setTimeout(() => {
@@ -394,6 +415,9 @@ export class DistributorDashboardPage implements OnInit {
         this.orders = visibleOrders.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
         );
+        this.pendingOrdersCount = this.orders.filter(o => o.status?.toUpperCase() === 'PENDING').length;
+        this.dispatchedCount = this.orders.filter(o => o.status?.toUpperCase() === 'DISPATCHED').length;
+        this.deliveredCount = this.orders.filter(o => ['DELIVERED', 'COMPLETED'].includes(o.status?.toUpperCase() ?? '')).length;
         this.isLoadingOrders = false;
         console.log('📋 Orders loaded (excluding ACTIVE):', this.orders.length, '(filtered from', response.data?.length, 'total)');
         
@@ -412,11 +436,11 @@ export class DistributorDashboardPage implements OnInit {
   initializeMetrics() {
     this.dashboardMetrics = [
       { title: 'Volume MTD', value: '0.00', unit: 'MT', icon: 'trending-up-outline', change: 0, changeType: 'neutral', bgColor: 'bg-emerald-500' },
-      { title: 'Volume YTD', value: '42.00', unit: 'MT', icon: 'statistics-outline', change: 12.5, changeType: 'positive', bgColor: 'bg-emerald-600' }
+      { title: 'Volume YTD', value: '0.00', unit: 'MT', icon: 'statistics-outline', change: 0, changeType: 'neutral', bgColor: 'bg-emerald-600' }
     ];
     this.operationsMetrics = [
-      { title: 'Total Orders', value: '1.22', unit: 'L', icon: 'business-outline', change: 5.3, changeType: 'positive', bgColor: 'bg-blue-500' },
-      { title: 'Call Rate', value: '6.45', unit: 'L', icon: 'checkmark-done-outline', change: -2.1, changeType: 'negative', bgColor: 'bg-blue-600' }
+      { title: 'Total Orders', value: '0', unit: '', icon: 'business-outline', change: 0, changeType: 'neutral', bgColor: 'bg-blue-500' },
+      { title: 'Call Rate', value: '0.00', unit: 'L', icon: 'checkmark-done-outline', change: 0, changeType: 'neutral', bgColor: 'bg-blue-600' }
     ];
   }
 
@@ -453,6 +477,8 @@ export class DistributorDashboardPage implements OnInit {
       this.loadPaymentCollections();
     } else if (view === 'dealer-orders') {
       this.loadDealerOrders();
+    } else if (view === 'my-stock') {
+      this.loadDistributorStock();
     }
   }
 
@@ -578,21 +604,79 @@ export class DistributorDashboardPage implements OnInit {
     this.activeOperationView = null;
   }
 
+  loadDistributorStock() {
+    if (!this.distributorId) return;
+    this.isLoadingStock = true;
+    this.distributorStock = null;
+    this.distributorService.getDistributorStock(this.distributorId).subscribe({
+      next: (res) => {
+        if (res.success && res.data) {
+          this.distributorStock = res.data;
+        }
+        this.isLoadingStock = false;
+      },
+      error: () => { this.isLoadingStock = false; }
+    });
+  }
+
   loadDistributorAnalytics() {
     if (!this.distributorId) return;
     this.isLoadingAnalytics = true;
     const url = `${environment.apiUrl}/dashboard/distributor-orders?period=${this.selectedPeriod}&distributorId=${this.distributorId}`;
     this.http.get<any>(url).subscribe({
       next: (res) => {
-        this.distributorAnalytics = res?.data ?? res ?? null;
+        const data = res?.data ?? res ?? null;
+        this.distributorAnalytics = data;
+        if (data) {
+          this.periodData.totalOrders = `${data.totalOrders ?? 0}`;
+          if (this.selectedPeriod === 'month') {
+            this.periodData.valueMTD = `Rs ${((data.totalAmount ?? 0) / 100000).toFixed(2)} L`;
+          }
+        }
         this.isLoadingAnalytics = false;
       },
       error: () => { this.isLoadingAnalytics = false; }
+    });
+    // Also load YTD separately for valueYTD
+    const ytdUrl = `${environment.apiUrl}/dashboard/distributor-orders?period=year&distributorId=${this.distributorId}`;
+    this.http.get<any>(ytdUrl).subscribe({
+      next: (res) => {
+        const data = res?.data ?? res ?? null;
+        if (data) {
+          this.periodData.valueYTD = `Rs ${((data.totalAmount ?? 0) / 100000).toFixed(2)} L`;
+        }
+      },
+      error: () => {}
     });
   }
 
   onAnalyticsPeriodChange() {
     this.loadDistributorAnalytics();
+  }
+
+  loadVolumeAnalytics() {
+    if (!this.distributorId) {
+      console.warn('ID not available for volume analytics');
+      return;
+    }
+    this.isLoadingVolumeAnalytics = true;
+    const role = this.distributorRole?.toUpperCase();
+    const param = (role === 'SALES' || role === 'SALESPERSON' || role === 'SALES_PERSON')
+      ? `salesPersonId=${this.distributorId}`
+      : `distributorId=${this.distributorId}`;
+    const url = `${environment.apiUrl}/dashboard/volume-analytics?${param}`;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<VolumeAnalytics>(url, { headers }).subscribe({
+      next: (res) => {
+        this.volumeAnalytics = res;
+        this.periodData.volMTD = `${res.monthToDate?.totalQuantity ?? 0} Units`;
+        this.periodData.volYTD = `${res.yearToDate?.totalQuantity ?? 0} Units`;
+        this.periodData.callMTD = `${res.monthToDate?.totalTransactions ?? 0}`;
+        this.periodData.callYTD = `${res.yearToDate?.totalTransactions ?? 0}`;
+        this.isLoadingVolumeAnalytics = false;
+      },
+      error: () => { this.isLoadingVolumeAnalytics = false; }
+    });
   }
 
   loadPaymentCollections() {
@@ -609,6 +693,7 @@ export class DistributorDashboardPage implements OnInit {
         console.log('✅ Payment Collections Fetched:', response);
         this.paymentCollections = Array.isArray(response) ? response : response?.data || [];
         this.totalCollectionAmount = this.paymentCollections.reduce((sum, payment) => sum + (payment.amount || 0), 0);
+        this.totalCollections = this.formatAmount(this.totalCollectionAmount);
         this.isLoadingPaymentCollections = false;
       },
       error: (error) => {
@@ -794,8 +879,13 @@ export class DistributorDashboardPage implements OnInit {
     );
     Promise.all(calls.map(c => c.toPromise())).then(() => {
       this.isPlacingOrder = false;
+      this.showToast('Order placed successfully', 'success');
       this.selectBillingDealer(this.selectedBillingDealer);
-    }).catch(() => { this.isPlacingOrder = false; });
+    }).catch((err: any) => {
+      this.isPlacingOrder = false;
+      const msg = err?.error?.error || err?.error?.message || 'Failed to place order';
+      this.showToast(msg, 'danger');
+    });
   }
 
   get dealerSalesTotal(): number {

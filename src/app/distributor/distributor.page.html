@@ -813,6 +813,71 @@
           </div>
         </div>
 
+        <!-- Stock Section -->
+        <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-6 mb-4">
+          <div class="flex items-center gap-2 mb-4 pb-2 border-b border-slate-100">
+            <ion-icon name="cube-outline" class="text-emerald-500 text-xl"></ion-icon>
+            <h3 class="text-base font-semibold text-slate-700 m-0">Stock Summary</h3>
+          </div>
+
+          <!-- Loading state -->
+          <div *ngIf="isLoadingStock" class="flex items-center justify-center py-6">
+            <ion-spinner name="crescent" style="color: #10b981;"></ion-spinner>
+            <span class="ml-2 text-slate-500 text-sm">Loading stock...</span>
+          </div>
+
+          <!-- No stock data -->
+          <div *ngIf="!isLoadingStock && !distributorStock" class="text-center py-4 text-slate-400 text-sm">
+            No stock data available
+          </div>
+
+          <!-- Stock data -->
+          <ng-container *ngIf="!isLoadingStock && distributorStock">
+            <!-- Summary cards -->
+            <div class="grid grid-cols-3 gap-3 mb-4">
+              <div class="detail-doc-card detail-doc-blue text-center">
+                <p class="text-xs text-slate-500 mb-1">Unique Items</p>
+                <p class="text-xl font-bold text-slate-800">{{ distributorStock.totalUniqueItems }}</p>
+              </div>
+              <div class="detail-doc-card detail-doc-green text-center">
+                <p class="text-xs text-slate-500 mb-1">Total Qty</p>
+                <p class="text-xl font-bold text-slate-800">{{ distributorStock.totalQuantity }}</p>
+              </div>
+              <div class="detail-doc-card detail-doc-orange text-center">
+                <p class="text-xs text-slate-500 mb-1">Stock Value</p>
+                <p class="text-lg font-bold text-slate-800">₹{{ distributorStock.totalStockValue | number:'1.0-0' }}</p>
+              </div>
+            </div>
+
+            <!-- Stock items table -->
+            <div class="overflow-x-auto rounded-xl border border-slate-100">
+              <table class="w-full text-sm">
+                <thead>
+                  <tr class="bg-slate-50 text-slate-500 text-xs uppercase tracking-wider">
+                    <th class="px-3 py-2 text-left font-semibold">Item</th>
+                    <th class="px-3 py-2 text-left font-semibold">SKU</th>
+                    <th class="px-3 py-2 text-right font-semibold">Qty</th>
+                    <th class="px-3 py-2 text-right font-semibold">Unit Price</th>
+                    <th class="px-3 py-2 text-right font-semibold">Value</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let item of distributorStock.stockItems; let i = index"
+                      [class]="i % 2 === 0 ? 'bg-white' : 'bg-slate-50/50'">
+                    <td class="px-3 py-2.5 font-medium text-slate-700">{{ item.itemName }}</td>
+                    <td class="px-3 py-2.5 text-slate-500">{{ item.itemSku }}</td>
+                    <td class="px-3 py-2.5 text-right text-slate-700">{{ item.totalQuantity }} <span class="text-xs text-slate-400">{{ item.unitType }}</span></td>
+                    <td class="px-3 py-2.5 text-right text-slate-700">₹{{ item.unitPrice | number:'1.0-2' }}</td>
+                    <td class="px-3 py-2.5 text-right font-semibold text-emerald-600">₹{{ item.totalValue | number:'1.0-0' }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </div>
+
+            <p class="text-xs text-slate-400 mt-2 text-right">Last updated: {{ distributorStock.lastUpdated | date:'dd MMM yyyy, hh:mm a' }}</p>
+          </ng-container>
+        </div>
+
         <!-- Metadata -->
         <div class="flex items-center gap-2 text-sm text-slate-500 mb-4 justify-center">
           <ion-icon name="calendar-outline"></ion-icon>

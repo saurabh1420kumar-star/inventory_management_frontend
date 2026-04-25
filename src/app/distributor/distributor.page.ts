@@ -21,9 +21,10 @@ import {
   eyeOutline,
   eyeOffOutline,
   checkmarkCircleOutline,
-  closeCircleOutline
+  closeCircleOutline,
+  cubeOutline
 } from 'ionicons/icons';
-import { DistributorService, DistributorDto } from '../services/distributor.service';
+import { DistributorService, DistributorDto, DistributorStock } from '../services/distributor.service';
 import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
@@ -566,7 +567,11 @@ export class DistributorPage implements OnInit {
 
   // Loading state
   isLoading: boolean = false;
-  
+
+  // Stock state
+  distributorStock: DistributorStock | null = null;
+  isLoadingStock: boolean = false;
+
   // Editing state
   editingSalesPersonRoleType: string = '';
   
@@ -604,7 +609,8 @@ export class DistributorPage implements OnInit {
       'eye-outline': eyeOutline,
       'eye-off-outline': eyeOffOutline,
       'checkmark-circle-outline': checkmarkCircleOutline,
-      'close-circle-outline': closeCircleOutline
+      'close-circle-outline': closeCircleOutline,
+      'cube-outline': cubeOutline
     });
   }
 
@@ -933,6 +939,8 @@ export class DistributorPage implements OnInit {
     this.haptic.medium();
     const id = Number(distributor.id);
     this.isLoading = true;
+    this.distributorStock = null;
+    this.isLoadingStock = true;
 
     this.distributorService.getDistributorById(id).subscribe({
       next: (response) => {
@@ -953,12 +961,25 @@ export class DistributorPage implements OnInit {
         this.isLoading = false;
       }
     });
+
+    this.distributorService.getDistributorStock(id).subscribe({
+      next: (response) => {
+        if (response.success && response.data) {
+          this.distributorStock = response.data;
+        }
+        this.isLoadingStock = false;
+      },
+      error: () => {
+        this.isLoadingStock = false;
+      }
+    });
   }
 
   closeDetailsModal() {
     this.haptic.light();
     this.showDetailsModal = false;
     this.selectedDistributor = null;
+    this.distributorStock = null;
     this.isEditing = false;
     this.editingSalesPersonRoleType = '';
   }
