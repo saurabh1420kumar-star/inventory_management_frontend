@@ -487,6 +487,7 @@ interface Distributor {
   salesPersonRoleType?: string;
   salespersonId?: number;
   distributorType: string;
+  distributorCode?: string;
   companyType: string;
   email: string;
   contact: string;
@@ -753,6 +754,7 @@ export class DistributorPage implements OnInit {
       salesPersonRoleType: dto.salesPersonRoleType || '',
       salespersonId: dto.salespersonId,
       distributorType: dto.distributorType,
+      distributorCode: dto.distributorCode || '',
       companyType: dto.companyType,
       email: dto.contactEmail,
       contact: dto.phoneNumber,

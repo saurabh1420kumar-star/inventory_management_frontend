@@ -237,7 +237,9 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
       error: (err) => {
         console.error('Error approving by credit:', err);
         this.isApprovingCredit = false;
-        const msg = err?.error?.message || err?.message || 'Failed to approve by credit';
+        const rawMsg: string = err?.error?.error || err?.error?.message || err?.message || 'Failed to approve by credit';
+        const match = rawMsg.match(/Credit not available for distributor/i);
+        const msg = match ? 'Credit not available for distributor' : rawMsg;
         this.toast.present(msg, 'danger');
       }
     });
