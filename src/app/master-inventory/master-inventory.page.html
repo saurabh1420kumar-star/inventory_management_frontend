@@ -772,15 +772,17 @@
               </div>
             </div>
 
-            <!-- 2. Material Code -->
+            <!-- 2. Code Field (dynamic label by category) -->
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
-                Material Code
+                {{ selectedCategory === 'raw_material' ? 'Material Code' : selectedCategory === 'finished_product' ? 'SKU' : 'Item Code' }}
               </label>
               <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
                 <ion-item lines="none" class="bg-transparent rounded-2xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                  <ion-input type="text" formControlName="materialCode" placeholder="e.g. MAT-001" class="px-4 py-3 text-slate-900 font-mono font-semibold text-base"></ion-input>
+                  <ion-input type="text" formControlName="materialCode"
+                    [placeholder]="selectedCategory === 'raw_material' ? 'e.g. MAT-001' : selectedCategory === 'finished_product' ? 'e.g. FP-001' : 'e.g. SC-001'"
+                    class="px-4 py-3 text-slate-900 font-mono font-semibold text-base"></ion-input>
                 </ion-item>
               </div>
             </div>

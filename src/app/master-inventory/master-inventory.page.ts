@@ -225,7 +225,7 @@ export class MasterInventoryPage implements OnInit {
 
     this.unitMasterForm = this.fb.group({
       category: ['', Validators.required],
-      unitName: ['', [Validators.required, Validators.minLength(2)]],
+      unitName: [''],
       unitCode: [1000],
       unitType: ['KG'],
       productSize: ['small'],
@@ -518,6 +518,13 @@ export class MasterInventoryPage implements OnInit {
     this.haptic.light();
     this.isUnitMasterModalOpen = false;
     this.unitMasterSelectedCategory = null;
+
+    // Clear dynamic validators before reset so form is clean on re-open
+    ['unitName', 'name', 'sku'].forEach(ctrl => {
+      this.unitMasterForm.get(ctrl)!.clearValidators();
+      this.unitMasterForm.get(ctrl)!.updateValueAndValidity();
+    });
+
     this.unitMasterForm.reset({
       status: 'ACTIVE',
       unitType: 'KG',
@@ -529,11 +536,26 @@ export class MasterInventoryPage implements OnInit {
   onUnitMasterCategoryChange(category: 'Raw Material' | 'Finished Product') {
     this.unitMasterSelectedCategory = category;
     this.unitMasterForm.patchValue({ category });
+
+    const unitNameCtrl = this.unitMasterForm.get('unitName')!;
+    const nameCtrl = this.unitMasterForm.get('name')!;
+    const skuCtrl = this.unitMasterForm.get('sku')!;
+
     if (category === 'Raw Material') {
-      this.unitMasterForm.patchValue({ sku: '', price: 0, name: '', quantity: 0, minimumThreshold: 0 });
+      unitNameCtrl.setValidators([Validators.required, Validators.minLength(2)]);
+      nameCtrl.clearValidators();
+      skuCtrl.clearValidators();
+      this.unitMasterForm.patchValue({ sku: '', name: '' });
     } else {
-      this.unitMasterForm.patchValue({ unitName: '', unitCode: 1000, unitType: 'KG', productSize: 'small' });
+      nameCtrl.setValidators([Validators.required, Validators.minLength(2)]);
+      skuCtrl.setValidators([Validators.required]);
+      unitNameCtrl.clearValidators();
+      this.unitMasterForm.patchValue({ unitName: '' });
     }
+
+    unitNameCtrl.updateValueAndValidity();
+    nameCtrl.updateValueAndValidity();
+    skuCtrl.updateValueAndValidity();
   }
 
   submitUnitMaster() {
@@ -558,12 +580,11 @@ export class MasterInventoryPage implements OnInit {
     } else {
       payload = {
         category: 'Finished Product',
-        name: fv.name,
-        sku: fv.sku,
-        price: fv.price || 0,
-        quantity: fv.quantity || 0,
+        unitName: fv.name,
+        unitCode: String(fv.sku || ''),
+        unitType: 'PIECE',
+        productSize: 'small',
         description: fv.description || '',
-        minimumThreshold: fv.minimumThreshold || 0,
         status: fv.status || 'ACTIVE'
       };
     }
@@ -575,8 +596,9 @@ export class MasterInventoryPage implements OnInit {
         this.showMessage('success', 'Unit created successfully!');
       },
       error: (err) => {
-        const msg = err.error?.message || err.message || 'Failed to create unit';
+        const msg = this.extractErrorMessage(err);
         this.showMessage('error', msg);
+        this.toast.present(msg, 'danger');
       }
     });
   }
@@ -621,21 +643,25 @@ export class MasterInventoryPage implements OnInit {
     this.haptic.medium();
     if (this.addForm.invalid || !this.selectedCategory) return;
 
-    const formVal = this.addForm.value;
+    const { name, materialCode, unit } = this.addForm.value;
+    const category = this.selectedCategory;
+    let payload: Record<string, any>;
 
-    // Simplified payload: name, materialCode, unit, category
-    const payload: Record<string, any> = {
-      category: this.selectedCategory,
-      name: formVal.name,
-      materialCode: formVal.materialCode || undefined,
-      unit: formVal.unit || 'KG',
-      quantity: 0,
-      minimumThreshold: 0
-    };
+    switch (category) {
+      case 'raw_material':
+        payload = { name, materialCode: materialCode || undefined, unit: unit || 'KG' };
+        break;
+      case 'finished_product':
+        payload = { name, sku: materialCode || undefined, unit: unit || 'KG' };
+        break;
+      default:
+        // spare_parts, promotional_items, scrap_material → itemCode
+        payload = { name, itemCode: materialCode || undefined, unit: unit || 'KG' };
+        break;
+    }
 
-    this.inventoryService.createItem(payload).subscribe({
-      next: (created) => {
-        this.inventory.unshift(this.mapToDisplayItem(created));
+    this.inventoryService.createItem({ category, ...payload } as any).subscribe({
+      next: () => {
         this.loadInventory();
         this.resetPagination();
         this.closeAddModal();
