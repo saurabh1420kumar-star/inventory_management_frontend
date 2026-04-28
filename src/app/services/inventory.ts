@@ -35,7 +35,11 @@ export interface InventoryItem {
     | 'finished_product'
     | 'TOOL'
     | 'SPARE_PART'
-    | 'MACHINE';
+    | 'MACHINE'
+    | 'spare_parts'
+    | 'promotional_items'
+    | 'scrap_material'
+    | 'unit_master';
 
   createdAt: string;
   updatedAt: string;

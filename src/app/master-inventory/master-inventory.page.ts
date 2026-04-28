@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { Router } from '@angular/router';
 import {
   FormsModule,
   ReactiveFormsModule,
@@ -51,12 +52,13 @@ import {
   BOMComponent,
   AdditionalCost
 } from '../services/inventory';
+import { UnitService } from '../services/unit.service';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
-type ItemCategory = 'raw_material' | 'finished_product';
+type ItemCategory = 'raw_material' | 'finished_product' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'unit_master' | 'TOOL' | 'SPARE_PART' | 'MACHINE';
 
 interface DisplayInventoryItem extends ApiInventoryItem {
   status: ItemStatus;
@@ -106,7 +108,17 @@ interface DisplayInventoryItem extends ApiInventoryItem {
 export class MasterInventoryPage implements OnInit {
 
   /* ---------- UI STATE ---------- */
-  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' = 'all';
+  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' = 'all';
+  filterDropdownOpen = false;
+  filterOptions = [
+    { value: 'all',               label: 'All Categories',    dot: 'bg-emerald-400' },
+    { value: 'raw_material',      label: 'Raw Material',      dot: 'bg-blue-400' },
+    { value: 'finished_product',  label: 'Finished Product',  dot: 'bg-purple-400' },
+    { value: 'spare_parts',       label: 'Spare Parts',       dot: 'bg-orange-400' },
+    { value: 'promotional_items', label: 'Promotional Items', dot: 'bg-pink-400' },
+    { value: 'scrap_material',    label: 'Scrap Material',    dot: 'bg-slate-400' },
+    { value: 'bom',               label: 'Bill of Material',  dot: 'bg-teal-400' }
+  ];
   searchTerm = '';
   isAddModalOpen = false;
   isEditModalOpen = false;
@@ -122,7 +134,7 @@ export class MasterInventoryPage implements OnInit {
   viewItemSelectedItem: DisplayInventoryItem | null = null;
   currentPage = 1;
   itemsPerPage = 6;
-  selectedCategory: 'raw_material' | 'finished_product' | null = null;
+  selectedCategory: ItemCategory | null = null;
   rawMaterials: DisplayInventoryItem[] = [];
   finishedProducts: DisplayInventoryItem[] = [];
 
@@ -153,6 +165,11 @@ export class MasterInventoryPage implements OnInit {
   /* ---------- FORM ---------- */
   addForm: FormGroup;
   editForm: FormGroup;
+  unitMasterForm!: FormGroup;
+
+  /* ---------- UNIT MASTER MODAL STATE ---------- */
+  isUnitMasterModalOpen = false;
+  unitMasterSelectedCategory: 'Raw Material' | 'Finished Product' | null = null;
 
   previewImage: string | ArrayBuffer | null = null;
   selectedImageFile: File | null = null;
@@ -166,29 +183,29 @@ export class MasterInventoryPage implements OnInit {
   constructor(
     private fb: FormBuilder,
     private modalCtrl: ModalController,
-    private inventoryService: InventoryService
+    private inventoryService: InventoryService,
+    private unitService: UnitService,
+    private router: Router
   ) {
     this.addForm = this.fb.group({
       category: ['', Validators.required],
       name: ['', Validators.required],
-      // raw material only
       materialCode: [''],
+      unit: ['KG', Validators.required],
+      // kept for reset compatibility
       subUnit: ['KG'],
       vendorId: [''],
       vendorName: [''],
       transportName: [''],
       driverName: [''],
       driverMobile: [''],
-      // finished product only
       sku: [''],
       description: [''],
-      price: [0, [Validators.min(0)]],
-      weight: [0, [Validators.min(0)]],
+      price: [0],
+      weight: [0],
       active: [true],
-      // common
-      unit: ['KG', Validators.required],
-      quantity: [0, [Validators.required, Validators.min(0)]],
-      minimumThreshold: [0, [Validators.required, Validators.min(0)]]
+      quantity: [0],
+      minimumThreshold: [0]
     });
 
     this.editForm = this.fb.group({
@@ -204,6 +221,21 @@ export class MasterInventoryPage implements OnInit {
       active: [true],
       quantity: [0, [Validators.required, Validators.min(0)]],
       minimumThreshold: [0, [Validators.required, Validators.min(0)]]
+    });
+
+    this.unitMasterForm = this.fb.group({
+      category: ['', Validators.required],
+      unitName: ['', [Validators.required, Validators.minLength(2)]],
+      unitCode: [1000],
+      unitType: ['KG'],
+      productSize: ['small'],
+      sku: [''],
+      price: [0],
+      name: [''],
+      quantity: [0],
+      minimumThreshold: [0],
+      description: [''],
+      status: ['ACTIVE']
     });
   }
 
@@ -409,15 +441,9 @@ export class MasterInventoryPage implements OnInit {
         item.sku?.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q);
 
-      if (this.activeTab === 'raw_material') {
-        return match && item.category === 'raw_material';
-      }
+      if (this.activeTab === 'all') return match;
 
-      if (this.activeTab === 'finished_product') {
-        return match && item.category === 'finished_product';
-      }
-
-      return match;
+      return match && item.category === this.activeTab;
     });
   }
 
@@ -448,24 +474,116 @@ export class MasterInventoryPage implements OnInit {
     this.isAddModalOpen = true;
   }
 
-  onCategoryChange(category: 'raw_material' | 'finished_product') {
+  onCategoryChange(category: ItemCategory) {
     this.selectedCategory = category;
     this.addForm.patchValue({ category });
+    // All fields optional — only name and unit are required
+    this.addForm.get('materialCode')!.clearValidators();
+    this.addForm.get('materialCode')!.updateValueAndValidity();
+    this.addForm.get('sku')!.clearValidators();
+    this.addForm.get('sku')!.updateValueAndValidity();
+  }
 
-    // Apply dynamic validators based on category
-    const materialCodeCtrl = this.addForm.get('materialCode')!;
-    const skuCtrl = this.addForm.get('sku')!;
+  getCategoryIcon(category: ItemCategory | null): string {
+    const map: Partial<Record<ItemCategory, string>> = {
+      raw_material: 'layers-outline',
+      finished_product: 'cube-outline',
+      spare_parts: 'build-outline',
+      promotional_items: 'pricetag-outline',
+      scrap_material: 'trash-outline',
+      unit_master: 'albums-outline'
+    };
+    return (category && map[category]) || 'cube-outline';
+  }
 
-    if (category === 'raw_material') {
-      materialCodeCtrl.setValidators([Validators.required]);
-      skuCtrl.clearValidators();
+  getCategoryLabel(category: ItemCategory | null): string {
+    const map: Partial<Record<ItemCategory, string>> = {
+      raw_material: 'Raw Material',
+      finished_product: 'Finished Product',
+      spare_parts: 'Spare Parts',
+      promotional_items: 'Promotional Items',
+      scrap_material: 'Scrap Material',
+      unit_master: 'Unit Master'
+    };
+    return (category && map[category]) || '';
+  }
+
+  openUnitMasterModal() {
+    this.haptic.medium();
+    this.selectedCategory = null;
+    this.isUnitMasterModalOpen = true;
+  }
+
+  closeUnitMasterModal() {
+    this.haptic.light();
+    this.isUnitMasterModalOpen = false;
+    this.unitMasterSelectedCategory = null;
+    this.unitMasterForm.reset({
+      status: 'ACTIVE',
+      unitType: 'KG',
+      productSize: 'small',
+      unitCode: 1000
+    });
+  }
+
+  onUnitMasterCategoryChange(category: 'Raw Material' | 'Finished Product') {
+    this.unitMasterSelectedCategory = category;
+    this.unitMasterForm.patchValue({ category });
+    if (category === 'Raw Material') {
+      this.unitMasterForm.patchValue({ sku: '', price: 0, name: '', quantity: 0, minimumThreshold: 0 });
     } else {
-      skuCtrl.setValidators([Validators.required]);
-      materialCodeCtrl.clearValidators();
-      materialCodeCtrl.setValue('');
+      this.unitMasterForm.patchValue({ unitName: '', unitCode: 1000, unitType: 'KG', productSize: 'small' });
     }
-    materialCodeCtrl.updateValueAndValidity();
-    skuCtrl.updateValueAndValidity();
+  }
+
+  submitUnitMaster() {
+    this.haptic.medium();
+    if (this.unitMasterForm.invalid || !this.unitMasterSelectedCategory) {
+      return;
+    }
+
+    const fv = this.unitMasterForm.value;
+    let payload: any;
+
+    if (fv.category === 'Raw Material') {
+      payload = {
+        category: 'Raw Material',
+        unitName: fv.unitName,
+        unitCode: fv.unitCode || 1000,
+        unitType: fv.unitType || 'KG',
+        productSize: fv.productSize || 'small',
+        description: fv.description || '',
+        status: fv.status || 'ACTIVE'
+      };
+    } else {
+      payload = {
+        category: 'Finished Product',
+        name: fv.name,
+        sku: fv.sku,
+        price: fv.price || 0,
+        quantity: fv.quantity || 0,
+        description: fv.description || '',
+        minimumThreshold: fv.minimumThreshold || 0,
+        status: fv.status || 'ACTIVE'
+      };
+    }
+
+    this.unitService.createUnit(payload).subscribe({
+      next: () => {
+        this.closeUnitMasterModal();
+        this.closeAddModal();
+        this.showMessage('success', 'Unit created successfully!');
+      },
+      error: (err) => {
+        const msg = err.error?.message || err.message || 'Failed to create unit';
+        this.showMessage('error', msg);
+      }
+    });
+  }
+
+  navigateToUnitMaster() {
+    this.closeAddModal();
+    this.router.navigate(['/unit-master']);
   }
 
   closeAddModal() {
@@ -505,39 +623,15 @@ export class MasterInventoryPage implements OnInit {
 
     const formVal = this.addForm.value;
 
-    // Build a clean payload: only send fields the target endpoint accepts.
-    let payload: Record<string, any>;
-    if (this.selectedCategory === 'raw_material') {
-      payload = {
-        category: 'raw_material',
-        name: formVal.name,
-        materialCode: formVal.materialCode,
-        unit: formVal.unit,
-        subUnit: formVal.subUnit || undefined,
-        price: formVal.price ?? 0,
-        quantity: formVal.quantity,
-        minimumThreshold: formVal.minimumThreshold,
-        vendorId: formVal.vendorId || undefined,
-        vendorName: formVal.vendorName || undefined,
-        transportName: formVal.transportName || undefined,
-        driverName: formVal.driverName || undefined,
-        driverMobile: formVal.driverMobile || undefined
-      };
-    } else {
-      // finished product schema: { name, description, sku, price, unit, weight, quantity, minimumThreshold }
-      payload = {
-        category: 'finished_product',
-        name: formVal.name,
-        description: formVal.description || '',
-        sku: formVal.sku,
-        price: formVal.price ?? 0,
-        unit: formVal.unit || 'KG',
-        weight: formVal.weight ?? 0,
-        active: formVal.active !== false,
-        quantity: formVal.quantity,
-        minimumThreshold: formVal.minimumThreshold
-      };
-    }
+    // Simplified payload: name, materialCode, unit, category
+    const payload: Record<string, any> = {
+      category: this.selectedCategory,
+      name: formVal.name,
+      materialCode: formVal.materialCode || undefined,
+      unit: formVal.unit || 'KG',
+      quantity: 0,
+      minimumThreshold: 0
+    };
 
     this.inventoryService.createItem(payload).subscribe({
       next: (created) => {
@@ -773,7 +867,7 @@ export class MasterInventoryPage implements OnInit {
     this.confirmCallback = null;
   }
 
-  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom') {
+  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material') {
     this.haptic.selectionChanged();
     this.activeTab = tab;
     this.resetPagination();
@@ -961,6 +1055,11 @@ export class MasterInventoryPage implements OnInit {
 
   get rawMaterialsList(): DisplayInventoryItem[] {
     return this.inventory.filter(i => i.category === 'raw_material');
+  }
+
+  openBomFromAddModal() {
+    this.closeAddModal();
+    this.openBomModal();
   }
 
   /* ---------- BOM MODAL ---------- */
