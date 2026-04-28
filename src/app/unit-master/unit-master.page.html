@@ -332,7 +332,13 @@
                   [class.bg-white]="selectedCategory !== 'Raw Material'"
                   class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-3 hover:border-blue-400 hover:shadow-lg hover:scale-105"
                 >
-                  <ion-icon name="cube-outline" class="text-3xl" [class.text-blue-500]="selectedCategory === 'Raw Material'" [class.text-slate-400]="selectedCategory !== 'Raw Material'"></ion-icon>
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
+                    [class.bg-blue-500]="selectedCategory === 'Raw Material'"
+                    [class.bg-blue-50]="selectedCategory !== 'Raw Material'">
+                    <ion-icon name="layers-outline" class="text-2xl transition-colors"
+                      [class.text-white]="selectedCategory === 'Raw Material'"
+                      [class.text-blue-400]="selectedCategory !== 'Raw Material'"></ion-icon>
+                  </div>
                   <span [class.text-blue-700]="selectedCategory === 'Raw Material'" [class.text-slate-700]="selectedCategory !== 'Raw Material'">Raw Material</span>
                 </button>
                 <button
@@ -347,7 +353,13 @@
                   [class.bg-white]="selectedCategory !== 'Finished Product'"
                   class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-3 hover:border-emerald-400 hover:shadow-lg hover:scale-105"
                 >
-                  <ion-icon name="cube-outline" class="text-3xl" [class.text-emerald-500]="selectedCategory === 'Finished Product'" [class.text-slate-400]="selectedCategory !== 'Finished Product'"></ion-icon>
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
+                    [class.bg-emerald-500]="selectedCategory === 'Finished Product'"
+                    [class.bg-emerald-50]="selectedCategory !== 'Finished Product'">
+                    <ion-icon name="cube-outline" class="text-2xl transition-colors"
+                      [class.text-white]="selectedCategory === 'Finished Product'"
+                      [class.text-emerald-400]="selectedCategory !== 'Finished Product'"></ion-icon>
+                  </div>
                   <span [class.text-emerald-700]="selectedCategory === 'Finished Product'" [class.text-slate-700]="selectedCategory !== 'Finished Product'">Finished Product</span>
                 </button>
               </div>
@@ -528,7 +540,13 @@
                   [class.bg-white]="selectedCategory !== 'Raw Material'"
                   class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-3 hover:border-blue-400 hover:shadow-lg hover:scale-105"
                 >
-                  <ion-icon name="cube-outline" class="text-3xl" [class.text-blue-500]="selectedCategory === 'Raw Material'" [class.text-slate-400]="selectedCategory !== 'Raw Material'"></ion-icon>
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
+                    [class.bg-blue-500]="selectedCategory === 'Raw Material'"
+                    [class.bg-blue-50]="selectedCategory !== 'Raw Material'">
+                    <ion-icon name="layers-outline" class="text-2xl transition-colors"
+                      [class.text-white]="selectedCategory === 'Raw Material'"
+                      [class.text-blue-400]="selectedCategory !== 'Raw Material'"></ion-icon>
+                  </div>
                   <span [class.text-blue-700]="selectedCategory === 'Raw Material'" [class.text-slate-700]="selectedCategory !== 'Raw Material'">Raw Material</span>
                 </button>
                 <button
@@ -543,7 +561,13 @@
                   [class.bg-white]="selectedCategory !== 'Finished Product'"
                   class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-3 hover:border-emerald-400 hover:shadow-lg hover:scale-105"
                 >
-                  <ion-icon name="cube-outline" class="text-3xl" [class.text-emerald-500]="selectedCategory === 'Finished Product'" [class.text-slate-400]="selectedCategory !== 'Finished Product'"></ion-icon>
+                  <div class="w-12 h-12 rounded-xl flex items-center justify-center transition-colors"
+                    [class.bg-emerald-500]="selectedCategory === 'Finished Product'"
+                    [class.bg-emerald-50]="selectedCategory !== 'Finished Product'">
+                    <ion-icon name="cube-outline" class="text-2xl transition-colors"
+                      [class.text-white]="selectedCategory === 'Finished Product'"
+                      [class.text-emerald-400]="selectedCategory !== 'Finished Product'"></ion-icon>
+                  </div>
                   <span [class.text-emerald-700]="selectedCategory === 'Finished Product'" [class.text-slate-700]="selectedCategory !== 'Finished Product'">Finished Product</span>
                 </button>
               </div>
