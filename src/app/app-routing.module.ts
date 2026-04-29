@@ -69,7 +69,7 @@ const routes: Routes = [
   },
   {
     path: 'outward-inventory',
-    loadChildren: () => import('./outward-inventory/outward-inventory.module').then(m => m.OutwardInventoryPageModule),
+    loadComponent: () => import('./outward-inventory/outward-inventory.page').then(m => m.OutwardInventoryPage),
     canActivate: [AuthGuard]
   },
   {
