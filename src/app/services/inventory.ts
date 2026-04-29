@@ -14,6 +14,12 @@ export interface InventoryItem {
   price?: number;  // Unit cost/price from API
   perItemPrice?: number;  // Per item price (used in BOM)
 
+  /** Scrap / promotional / spare parts */
+  itemCode?: string;
+
+  /** Finished product */
+  sku?: string;
+
   /** Machine parts only */
   partCode?: string;
   partNumber?: string;
@@ -35,7 +41,11 @@ export interface InventoryItem {
     | 'finished_product'
     | 'TOOL'
     | 'SPARE_PART'
-    | 'MACHINE';
+    | 'MACHINE'
+    | 'spare_parts'
+    | 'promotional_items'
+    | 'scrap_material'
+    | 'unit_master';
 
   createdAt: string;
   updatedAt: string;
@@ -88,6 +98,8 @@ export class InventoryService {
   private finishedProductsUrl = `${environment.productsUrl}/finished-products/all`;
   private finishedProductsCrudUrl = `${environment.productsUrl}/finished-products`;
   private machinePartsUrl = `${environment.productsUrl}/machine-parts`;
+  private promotionalItemsUrl = `${environment.productsUrl}/promotional-items`;
+  private scrapItemsUrl = `${environment.productsUrl}/scrap-items`;
   private bomUrl = `${environment.productsUrl}/bom`;
 
   constructor(private http: HttpClient) {}
@@ -143,26 +155,26 @@ export class InventoryService {
   // 🔹 CREATE NEW RECORD
   // =======================================
   createItem(item: Partial<InventoryItem>): Observable<InventoryItem> {
-    // raw or finished → routed correctly
-    if (item.category === 'raw_material') {
-      return this.http.post<InventoryItem>(
-        `${this.rawMaterialsUrl}`,
-        item
-      );
+    const { category, ...payload } = item;
+
+    if (category === 'raw_material') {
+      return this.http.post<InventoryItem>(this.rawMaterialsUrl, payload);
+    }
+    if (category === 'finished_product') {
+      return this.http.post<InventoryItem>(this.finishedProductsCrudUrl, payload);
+    }
+    if (category === 'spare_parts') {
+      return this.http.post<InventoryItem>(this.machinePartsUrl, payload);
+    }
+    if (category === 'promotional_items') {
+      return this.http.post<InventoryItem>(this.promotionalItemsUrl, payload);
+    }
+    if (category === 'scrap_material') {
+      return this.http.post<InventoryItem>(this.scrapItemsUrl, payload);
     }
 
-    if (item.category === 'finished_product') {
-      return this.http.post<InventoryItem>(
-        `${this.finishedProductsCrudUrl}`,
-        item
-      );
-    }
-
-    // Anything else → machine parts
-    return this.http.post<InventoryItem>(
-      `${this.machinePartsUrl}`,
-      item
-    );
+    // Fallback → machine parts
+    return this.http.post<InventoryItem>(this.machinePartsUrl, payload);
   }
 
   // =======================================

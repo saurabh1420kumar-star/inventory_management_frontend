@@ -535,8 +535,9 @@ export class OrderDetailsPage implements OnInit {
   }
 
   downloadGdnForOrder(order: Order) {
+    const cartId = this.extractOrderId(order.orderNumber);
     this.downloadingGdnOrderId = order.id;
-    this.gdnService.downloadGdnPdf(order.orderNumber).subscribe({
+    this.gdnService.downloadGdnPdf(cartId).subscribe({
       next: async (blob) => {
         await this.downloadService.downloadBlob(blob, `GDN-${order.orderNumber}.pdf`);
         this.downloadingGdnOrderId = null;
