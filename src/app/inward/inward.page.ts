@@ -38,6 +38,13 @@ export interface InwardEntry {
   date: string;
   remarks: string;
   createdAt?: string;
+  // spare parts extra
+  partNumber?: string;
+  category?: string;
+  vendor?: string;
+  purchaseDate?: string;
+  warrantyExpiryDate?: string;
+  condition?: string;
 }
 
 const UNIT_TYPES = [
@@ -86,6 +93,26 @@ export class InwardPage implements OnInit {
 
   form: InwardEntry = this.emptyForm();
 
+  // Raw materials dropdown
+  rawMaterials: any[] = [];
+  isLoadingRawMaterials = false;
+
+  // Scrap items dropdown
+  scrapItems: any[] = [];
+  isLoadingScrapItems = false;
+
+  // Promotional items dropdown
+  promotionalItems: any[] = [];
+  isLoadingPromotionalItems = false;
+
+  // Machine parts (spare parts) dropdown
+  machineParts: any[] = [];
+  isLoadingMachineParts = false;
+
+  // Finished products (BOM) dropdown
+  finishedProducts: any[] = [];
+  isLoadingFinishedProducts = false;
+
   constructor(
     private http: HttpClient,
     private auth: Auth,
@@ -119,6 +146,11 @@ export class InwardPage implements OnInit {
   }
 
   ngOnInit() {
+    const role = this.auth.getRoleType()?.toUpperCase() || '';
+    if (role === 'DISTRIBUTOR' || role === 'DEALER') {
+      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      return;
+    }
     this.loadEntries();
   }
 
@@ -141,7 +173,13 @@ export class InwardPage implements OnInit {
       driverMobile: '',
       invoiceNumber: '',
       date: new Date().toISOString().split('T')[0],
-      remarks: ''
+      remarks: '',
+      partNumber: '',
+      category: 'MACHINE',
+      vendor: '',
+      purchaseDate: new Date().toISOString().split('T')[0],
+      warrantyExpiryDate: '',
+      condition: 'NEW'
     };
   }
 
@@ -192,6 +230,142 @@ export class InwardPage implements OnInit {
   selectType(type: InwardItemType) {
     this.selectedType = type;
     this.form.itemType = type;
+    this.form.itemName = '';
+    this.form.itemCode = '';
+    if (type === 'raw_material') {
+      this.loadRawMaterials();
+    } else if (type === 'scrap') {
+      this.loadScrapItems();
+    } else if (type === 'promotional') {
+      this.loadPromotionalItems();
+    } else if (type === 'spare_parts') {
+      this.loadMachineParts();
+    } else if (type === 'finished_product') {
+      this.loadFinishedProducts();
+    }
+  }
+
+  loadRawMaterials() {
+    this.isLoadingRawMaterials = true;
+    this.http.get<any[]>(`${environment.apiUrl}/products/raw-materials`, { headers: this.headers() }).subscribe({
+      next: (res) => {
+        this.rawMaterials = Array.isArray(res) ? res : (res as any)?.data ?? [];
+        this.isLoadingRawMaterials = false;
+      },
+      error: () => {
+        this.isLoadingRawMaterials = false;
+      }
+    });
+  }
+
+  onRawMaterialSelect(id: string) {
+    const mat = this.rawMaterials.find(m => String(m.id) === id);
+    if (mat) {
+      this.form.itemName = mat.name ?? '';
+      this.form.itemCode = mat.materialCode ?? '';
+      if (mat.unit) {
+        const matched = this.unitTypes.find(u => u.value === mat.unit);
+        this.form.unit = matched ? matched.value : this.form.unit;
+      }
+    }
+  }
+
+  loadScrapItems() {
+    this.isLoadingScrapItems = true;
+    this.http.get<any[]>(`${environment.apiUrl}/products/scrap-items`, { headers: this.headers() }).subscribe({
+      next: (res) => {
+        this.scrapItems = Array.isArray(res) ? res : (res as any)?.data ?? [];
+        this.isLoadingScrapItems = false;
+      },
+      error: () => {
+        this.isLoadingScrapItems = false;
+      }
+    });
+  }
+
+  onScrapItemSelect(id: string) {
+    const item = this.scrapItems.find(s => String(s.id) === id);
+    if (item) {
+      this.form.itemName = item.name ?? '';
+      this.form.itemCode = item.materialCode ?? '';
+      if (item.unit) {
+        const matched = this.unitTypes.find(u => u.value === item.unit);
+        this.form.unit = matched ? matched.value : this.form.unit;
+      }
+    }
+  }
+
+  loadPromotionalItems() {
+    this.isLoadingPromotionalItems = true;
+    this.http.get<any[]>(`${environment.apiUrl}/products/promotional-items`, { headers: this.headers() }).subscribe({
+      next: (res) => {
+        this.promotionalItems = Array.isArray(res) ? res : (res as any)?.data ?? [];
+        this.isLoadingPromotionalItems = false;
+      },
+      error: () => {
+        this.isLoadingPromotionalItems = false;
+      }
+    });
+  }
+
+  onPromotionalItemSelect(id: string) {
+    const item = this.promotionalItems.find(p => String(p.id) === id);
+    if (item) {
+      this.form.itemName = item.name ?? '';
+      this.form.itemCode = item.materialCode ?? '';
+      if (item.unit) {
+        const matched = this.unitTypes.find(u => u.value === item.unit);
+        this.form.unit = matched ? matched.value : this.form.unit;
+      }
+    }
+  }
+
+  loadMachineParts() {
+    this.isLoadingMachineParts = true;
+    this.http.get<any[]>(`${environment.apiUrl}/products/machine-parts`, { headers: this.headers() }).subscribe({
+      next: (res) => {
+        this.machineParts = Array.isArray(res) ? res : (res as any)?.data ?? [];
+        this.isLoadingMachineParts = false;
+      },
+      error: () => {
+        this.isLoadingMachineParts = false;
+      }
+    });
+  }
+
+  onMachinePartSelect(id: string) {
+    const item = this.machineParts.find(m => String(m.id) === id);
+    if (item) {
+      this.form.itemName = item.name ?? '';
+      this.form.itemCode = item.materialCode ?? '';
+      if (item.unit) {
+        const matched = this.unitTypes.find(u => u.value === item.unit);
+        this.form.unit = matched ? matched.value : this.form.unit;
+      }
+    }
+  }
+
+  loadFinishedProducts() {
+    this.isLoadingFinishedProducts = true;
+    this.http.get<any>(`${environment.apiUrl}/bill-of-materials/list?page=0&size=200&sortBy=createdAt&sortDir=desc`, { headers: this.headers() }).subscribe({
+      next: (res) => {
+        this.finishedProducts = res?.content ?? (Array.isArray(res) ? res : []);
+        this.isLoadingFinishedProducts = false;
+      },
+      error: () => {
+        this.isLoadingFinishedProducts = false;
+      }
+    });
+  }
+
+  onFinishedProductSelect(id: string) {
+    const item = this.finishedProducts.find(p => String(p.id) === id);
+    if (item) {
+      this.form.itemName = item.finishedProductName ?? '';
+      this.form.itemCode = item.bomName ?? '';
+      this.form.unit = item.outputUnit ?? 'KG';
+      this.form.quantity = item.outputQuantity ?? 0;
+    }
   }
 
   getTypeConfig(type: InwardItemType) {
@@ -208,6 +382,124 @@ export class InwardPage implements OnInit {
     if (!this.form.quantity || this.form.quantity <= 0) { this.showToast('Enter a valid quantity', 'warning'); return; }
 
     this.isSubmitting = true;
+
+    if (this.selectedType === 'raw_material') {
+      const payload = {
+        name: this.form.itemName,
+        materialCode: this.form.itemCode,
+        unit: this.form.unit,
+        price: 0,
+        quantity: this.form.quantity,
+        minimumThreshold: this.form.minThreshold ?? 0,
+        vendorId: this.form.vendorId,
+        vendorName: this.form.vendorName,
+        transportName: this.form.transportName,
+        driverName: this.form.driverName,
+        driverMobile: this.form.driverMobile
+      };
+      this.http.post<any>(`${environment.apiUrl}/products/raw-materials`, payload, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.showToast('Raw material created successfully', 'success');
+          this.loadEntries();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create raw material';
+          this.showToast(msg, 'danger');
+        }
+      });
+      return;
+    }
+
+    if (this.selectedType === 'promotional') {
+      const payload = {
+        name: this.form.itemName,
+        itemCode: this.form.itemCode,
+        unit: this.form.unit,
+        price: 0,
+        quantity: this.form.quantity,
+        minimumThreshold: this.form.minThreshold ?? 0,
+        vendorId: this.form.vendorId,
+        vendorName: this.form.vendorName,
+        transportName: this.form.transportName,
+        driverName: this.form.driverName,
+        driverMobile: this.form.driverMobile
+      };
+      this.http.post<any>(`${environment.apiUrl}/products/promotional-items`, payload, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.showToast('Promotional item created successfully', 'success');
+          this.loadEntries();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create promotional item';
+          this.showToast(msg, 'danger');
+        }
+      });
+      return;
+    }
+
+    if (this.selectedType === 'scrap') {
+      const payload = {
+        name: this.form.itemName,
+        itemCode: this.form.itemCode,
+        unit: this.form.unit,
+        price: 0,
+        quantity: this.form.quantity,
+        minimumThreshold: this.form.minThreshold ?? 0,
+        vendorId: this.form.vendorId,
+        vendorName: this.form.vendorName,
+        transportName: this.form.transportName,
+        driverName: this.form.driverName,
+        driverMobile: this.form.driverMobile
+      };
+      this.http.post<any>(`${environment.apiUrl}/products/scrap-items`, payload, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.showToast('Scrap item created successfully', 'success');
+          this.loadEntries();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create scrap item';
+          this.showToast(msg, 'danger');
+        }
+      });
+      return;
+    }
+
+    if (this.selectedType === 'spare_parts') {
+      const payload = {
+        name: this.form.itemName,
+        partNumber: this.form.partNumber,
+        category: this.form.category ?? 'MACHINE',
+        vendor: this.form.vendor,
+        purchaseDate: this.form.purchaseDate,
+        warrantyExpiryDate: this.form.warrantyExpiryDate || null,
+        quantity: this.form.quantity,
+        condition: this.form.condition ?? 'NEW'
+      };
+      this.http.post<any>(`${environment.apiUrl}/products/machine-parts`, payload, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.showToast('Machine part created successfully', 'success');
+          this.loadEntries();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create machine part';
+          this.showToast(msg, 'danger');
+        }
+      });
+      return;
+    }
+
     const payload = { ...this.form };
 
     this.http.post<any>(`${environment.apiUrl}/inward`, payload, { headers: this.headers() }).subscribe({

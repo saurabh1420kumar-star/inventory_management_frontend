@@ -110,7 +110,7 @@
           </ion-accordion-group>
         </ng-container>
 
-        <ng-container *ngIf="(isMobile || isAdmin) && !isSalesRole">
+        <ng-container *ngIf="(isMobile || isAdmin) && !isSalesRole && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
         <ion-accordion-group *appAcl="{ features: ['SALES'] }">
           <ion-accordion>
             <ion-item slot="header" button>
@@ -132,8 +132,8 @@
         </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== INVENTORY (Desktop only, or for all screens if admin) ===== -->
-        <ng-container *ngIf="isDesktop || isAdmin">
+        <!-- ===== INVENTORY (Desktop only, or for all screens if admin; hidden for distributors/dealers) ===== -->
+        <ng-container *ngIf="(isDesktop || isAdmin) && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
           <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
             <ion-accordion>
               <ion-item slot="header" button>

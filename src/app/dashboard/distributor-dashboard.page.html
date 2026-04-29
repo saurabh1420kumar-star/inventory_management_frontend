@@ -1642,14 +1642,14 @@
             <p class="text-white text-xs font-semibold truncate flex-1">{{ sale.itemName ?? sale.item_name ?? '—' }}</p>
             <!-- qty stepper -->
             <div class="flex items-center flex-shrink-0" style="gap: 0; border: 1px solid rgba(255,255,255,0.1); border-radius: 8px; overflow: hidden;">
-              <button (click)="sale._qty = (sale._qty ?? 1) > 1 ? (sale._qty ?? 1) - 1 : 1"
+              <button (click)="sale._qty = (sale._qty ?? 0) > 0 ? (sale._qty ?? 0) - 1 : 0; sale.amount = (sale._unitPrice ?? 0) * sale._qty"
                       class="w-7 h-7 flex items-center justify-center"
                       style="background: rgba(239,68,68,0.12);">
                 <ion-icon name="remove-outline" style="font-size: 13px; color: #f87171;"></ion-icon>
               </button>
               <span class="w-7 h-7 flex items-center justify-center text-xs font-bold text-white"
-                    style="background: rgba(255,255,255,0.05);">{{ sale._qty ?? 1 }}</span>
-              <button (click)="sale._qty = (sale._qty ?? 1) + 1"
+                    style="background: rgba(255,255,255,0.05);">{{ sale._qty ?? 0 }}</span>
+              <button (click)="sale._qty = (sale._qty ?? 1) + 1; sale.amount = (sale._unitPrice ?? 0) * sale._qty"
                       class="w-7 h-7 flex items-center justify-center"
                       style="background: rgba(56,189,248,0.12);">
                 <ion-icon name="add-outline" style="font-size: 13px; color: #38bdf8;"></ion-icon>

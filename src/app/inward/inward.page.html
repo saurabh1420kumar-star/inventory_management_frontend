@@ -204,21 +204,140 @@
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
               Material Name <span class="text-red-400">*</span>
             </label>
-            <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
-                   style="background:#fff; color:#1e293b;"
-                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all" />
+
+            <!-- Raw material: dropdown from API -->
+            <ng-container *ngIf="selectedType === 'raw_material'">
+              <div class="relative">
+                <select (change)="onRawMaterialSelect($any($event.target).value)"
+                        [disabled]="isLoadingRawMaterials"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
+                  <option value="" disabled selected>
+                    {{ isLoadingRawMaterials ? 'Loading…' : 'Select raw material' }}
+                  </option>
+                  <option *ngFor="let m of rawMaterials" [value]="m.id">
+                    {{ m.name }} ({{ m.materialCode }})
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-spinner *ngIf="isLoadingRawMaterials" name="crescent" style="width:14px;height:14px;color:#6366f1;"></ion-spinner>
+                  <svg *ngIf="!isLoadingRawMaterials" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Scrap material: dropdown from API -->
+            <ng-container *ngIf="selectedType === 'scrap'">
+              <div class="relative">
+                <select (change)="onScrapItemSelect($any($event.target).value)"
+                        [disabled]="isLoadingScrapItems"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
+                  <option value="" disabled selected>
+                    {{ isLoadingScrapItems ? 'Loading…' : 'Select scrap item' }}
+                  </option>
+                  <option *ngFor="let s of scrapItems" [value]="s.id">
+                    {{ s.name }} ({{ s.materialCode }})
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-spinner *ngIf="isLoadingScrapItems" name="crescent" style="width:14px;height:14px;color:#ef4444;"></ion-spinner>
+                  <svg *ngIf="!isLoadingScrapItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Promotional items: dropdown from API -->
+            <ng-container *ngIf="selectedType === 'promotional'">
+              <div class="relative">
+                <select (change)="onPromotionalItemSelect($any($event.target).value)"
+                        [disabled]="isLoadingPromotionalItems"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
+                  <option value="" disabled selected>
+                    {{ isLoadingPromotionalItems ? 'Loading…' : 'Select promotional item' }}
+                  </option>
+                  <option *ngFor="let p of promotionalItems" [value]="p.id">
+                    {{ p.name }} ({{ p.materialCode }})
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-spinner *ngIf="isLoadingPromotionalItems" name="crescent" style="width:14px;height:14px;color:#8b5cf6;"></ion-spinner>
+                  <svg *ngIf="!isLoadingPromotionalItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Machine parts (spare parts): dropdown from API -->
+            <ng-container *ngIf="selectedType === 'spare_parts'">
+              <div class="relative">
+                <select (change)="onMachinePartSelect($any($event.target).value)"
+                        [disabled]="isLoadingMachineParts"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
+                  <option value="" disabled selected>
+                    {{ isLoadingMachineParts ? 'Loading…' : 'Select machine part' }}
+                  </option>
+                  <option *ngFor="let m of machineParts" [value]="m.id">
+                    {{ m.name }} ({{ m.materialCode }})
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-spinner *ngIf="isLoadingMachineParts" name="crescent" style="width:14px;height:14px;color:#f59e0b;"></ion-spinner>
+                  <svg *ngIf="!isLoadingMachineParts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </ng-container>
+
+            <!-- Other types: free-text input -->
+            <ng-container *ngIf="selectedType !== 'raw_material' && selectedType !== 'scrap' && selectedType !== 'promotional' && selectedType !== 'spare_parts' && selectedType !== 'finished_product'">
+              <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all" />
+            </ng-container>
+
+            <!-- Finished product: dropdown from BOM API -->
+            <ng-container *ngIf="selectedType === 'finished_product'">
+              <div class="relative">
+                <select (change)="onFinishedProductSelect($any($event.target).value)"
+                        [disabled]="isLoadingFinishedProducts"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
+                  <option value="" disabled selected>
+                    {{ isLoadingFinishedProducts ? 'Loading…' : 'Select finished product' }}
+                  </option>
+                  <option *ngFor="let fp of finishedProducts" [value]="fp.id">
+                    {{ fp.finishedProductName }}
+                  </option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-spinner *ngIf="isLoadingFinishedProducts" name="crescent" style="width:14px;height:14px;color:#3b82f6;"></ion-spinner>
+                  <svg *ngIf="!isLoadingFinishedProducts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </ng-container>
           </div>
 
-          <!-- Material Code -->
-          <div>
+          <!-- Material Code (hidden for finished product & spare parts) -->
+          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Material Code</label>
             <input [(ngModel)]="form.itemCode" placeholder="e.g. MAT-001"
                    style="background:#fff; color:#1e293b;"
                    class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
           </div>
 
-          <!-- Unit Type picker -->
-          <div>
+          <!-- Unit Type picker (hidden for finished product & spare parts) -->
+          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
               <ion-icon name="layers-outline" class="text-indigo-400 mr-1"></ion-icon> Unit Type
             </label>
@@ -254,7 +373,7 @@
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
                 Quantity <span class="text-red-400">*</span>
-                <span class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
+                <span *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
               </label>
               <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
                      style="background:#fff; color:#1e293b;"
@@ -267,6 +386,97 @@
                      class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
             </div>
           </div>
+
+          <!-- Spare parts extra fields -->
+          <ng-container *ngIf="selectedType === 'spare_parts'">
+
+            <!-- Part Number -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Part Number</label>
+              <input [(ngModel)]="form.partNumber" placeholder="e.g. PN-001"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+            </div>
+
+            <!-- Category + Vendor -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
+                <div class="relative">
+                  <select [(ngModel)]="form.category"
+                          style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-8">
+                    <option value="MACHINE">Machine</option>
+                    <option value="ELECTRICAL">Electrical</option>
+                    <option value="HYDRAULIC">Hydraulic</option>
+                    <option value="PNEUMATIC">Pneumatic</option>
+                    <option value="OTHER">Other</option>
+                  </select>
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                    </svg>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor</label>
+                <input [(ngModel)]="form.vendor" placeholder="e.g. Tata Steel"
+                       style="background:#fff; color:#1e293b;"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+              </div>
+            </div>
+
+            <!-- Purchase Date + Warranty Expiry -->
+            <div class="grid grid-cols-2 gap-3">
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Purchase Date</label>
+                <div class="relative">
+                  <input [(ngModel)]="form.purchaseDate" type="date"
+                         style="background:#fff; color:#1e293b;"
+                         class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
+                  </div>
+                </div>
+              </div>
+              <div>
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Warranty Expiry</label>
+                <div class="relative">
+                  <input [(ngModel)]="form.warrantyExpiryDate" type="date"
+                         style="background:#fff; color:#1e293b;"
+                         class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                    <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- Condition -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Condition</label>
+              <div class="relative">
+                <select [(ngModel)]="form.condition"
+                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-8">
+                  <option value="NEW">New</option>
+                  <option value="USED">Used</option>
+                  <option value="REFURBISHED">Refurbished</option>
+                  <option value="DAMAGED">Damaged</option>
+                </select>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
+                  </svg>
+                </div>
+              </div>
+            </div>
+
+          </ng-container>
+
+          <!-- Divider & Vendor & Logistics (hidden for finished product & spare parts) -->
+          <ng-container *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
 
           <!-- Divider -->
           <div class="flex items-center gap-3">
@@ -329,9 +539,14 @@
             </div>
             <div>
               <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date</label>
-              <input [(ngModel)]="form.date" type="date"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+              <div class="relative">
+                <input [(ngModel)]="form.date" type="date"
+                       style="background:#fff; color:#1e293b;"
+                       class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
+                  <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
+                </div>
+              </div>
             </div>
           </div>
 
@@ -342,6 +557,8 @@
                       style="background:#fff; color:#1e293b;"
                       class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all resize-none"></textarea>
           </div>
+
+          </ng-container> <!-- end *ngIf finished_product hidden block -->
 
         </ng-container>
       </div>

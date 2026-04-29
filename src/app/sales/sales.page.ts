@@ -2,7 +2,7 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormsModule } from '@angular/forms';
-import { RouterModule } from '@angular/router';
+import { Router, RouterModule } from '@angular/router';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { SalesService, PendingOrder } from '../services/sales.service';
 import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
@@ -83,10 +83,16 @@ export class SalesPage implements OnInit {
     private toast: Toast,
     private downloadService: DownloadService,
     private auth: Auth,
-    private hierarchyService: SalesHierarchyService
+    private hierarchyService: SalesHierarchyService,
+    private router: Router
   ) {}
 
   ngOnInit() {
+    const role = this.auth.getRoleType()?.toUpperCase() || '';
+    if (role === 'DISTRIBUTOR' || role === 'DEALER') {
+      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      return;
+    }
     this.loadHierarchy();
     this.loadPendingOrders();
     this.loadApproveCarts();

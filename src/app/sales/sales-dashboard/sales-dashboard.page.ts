@@ -140,6 +140,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   ngOnInit(): void {
+    const role = this.auth.getRoleType()?.toUpperCase() || '';
+    if (role === 'DISTRIBUTOR' || role === 'DEALER') {
+      this.router.navigateByUrl('/dashboard', { replaceUrl: true });
+      return;
+    }
     const id = this.auth.getSalespersonId();
     if (!id) {
       this.showToast('Session expired. Please log in again.', 'danger');
