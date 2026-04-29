@@ -1,0 +1,9 @@
+ion-content {
+  --background: #f8fafc;
+}
+
+// Prevent Ionic dark-mode from making native inputs black
+input, textarea, select {
+  background: #ffffff !important;
+  color: #1e293b !important;
+}

@@ -32,6 +32,11 @@ const routes: Routes = [
     canActivate: [AuthGuard] // Protected route
   },
   {
+    path: 'inward',
+    loadComponent: () => import('./inward/inward.page').then(m => m.InwardPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'unit-master',
     loadChildren: () => import('./unit-master/unit-master.module').then(m => m.UnitMasterPageModule),
     canActivate: [AuthGuard] // Protected route

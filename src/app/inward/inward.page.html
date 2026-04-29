@@ -1,0 +1,371 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-tight text-xl">
+      <span class="text-emerald-400">Inward</span> Entries
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="loadEntries()" style="--color: #ffffff;" class="rounded-full w-10 h-10">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-50">
+
+  <ion-refresher slot="fixed" (ionRefresh)="loadEntries($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-20">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+    <!-- ── Hero Section ── -->
+    <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-3xl shadow-lg shadow-emerald-200/40 overflow-hidden mb-8 relative">
+      <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+      <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-64 h-64 rounded-full bg-blue-500/20 blur-3xl"></div>
+      <div class="relative px-8 py-8">
+        <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+          <div>
+            <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Inward Entries</h1>
+            <p class="text-emerald-50 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1 rounded-full backdrop-blur-sm border border-white/20">
+              <ion-icon name="arrow-down-circle-outline" class="text-lg"></ion-icon>
+              Record incoming stock &amp; materials
+            </p>
+          </div>
+          <div class="flex flex-wrap gap-3">
+            <ion-button
+              (click)="openModal()"
+              class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
+              style="--background: white; --color: #059669; --box-shadow: none;">
+              <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+              Create Entry
+            </ion-button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ── Search + Filter ── -->
+    <div class="mb-4 flex gap-3 items-center">
+      <div class="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5"
+           style="background:#fff; border: 1px solid #e2e8f0; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
+        <ion-icon name="search-outline" style="color:#94a3b8; font-size:16px; flex-shrink:0;"></ion-icon>
+        <input [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()" placeholder="Search item, vendor, invoice…"
+               class="flex-1 text-sm bg-transparent outline-none text-slate-700" />
+      </div>
+    </div>
+
+    <!-- ── Type filter chips ── -->
+    <div class="flex gap-2 mb-5 overflow-x-auto pb-1" style="scrollbar-width:none;">
+      <button (click)="selectedFilter = 'all'; applyFilter()"
+              class="px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all"
+              [style.background]="selectedFilter === 'all' ? '#6366f1' : '#e2e8f0'"
+              [style.color]="selectedFilter === 'all' ? '#fff' : '#64748b'">
+        All
+      </button>
+      <button *ngFor="let t of itemTypes"
+              (click)="selectedFilter = t.type; applyFilter()"
+              class="px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all"
+              [style.background]="selectedFilter === t.type ? t.color : '#e2e8f0'"
+              [style.color]="selectedFilter === t.type ? '#fff' : '#64748b'">
+        {{ t.label }}
+      </button>
+    </div>
+
+    <!-- ── Loading ── -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-3">
+      <ion-spinner name="crescent" style="color:#6366f1; width:40px; height:40px;"></ion-spinner>
+      <p class="text-slate-400 text-sm">Loading entries…</p>
+    </div>
+
+    <!-- ── Empty state ── -->
+    <div *ngIf="!isLoading && filteredEntries.length === 0" class="flex flex-col items-center justify-center py-20 gap-3">
+      <div class="w-16 h-16 rounded-2xl flex items-center justify-center"
+           style="background: rgba(99,102,241,0.08);">
+        <ion-icon name="arrow-down-circle-outline" style="font-size:32px; color:#6366f1;"></ion-icon>
+      </div>
+      <p class="font-semibold text-slate-700">No inward entries found</p>
+      <p class="text-slate-400 text-sm text-center">Click <strong>Create</strong> to record your first inward entry</p>
+    </div>
+
+    <!-- ── Entries list ── -->
+    <div *ngIf="!isLoading && filteredEntries.length > 0" class="flex flex-col gap-3">
+      <div *ngFor="let e of filteredEntries"
+           class="rounded-2xl p-4"
+           style="background:#fff; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+
+        <div class="flex items-start gap-3">
+          <!-- Type badge -->
+          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
+               [style.background]="getTypeConfig(e.itemType).bg">
+            <ion-icon [name]="getTypeConfig(e.itemType).icon"
+                      [style.color]="getTypeConfig(e.itemType).color"
+                      style="font-size:18px;"></ion-icon>
+          </div>
+
+          <div class="flex-1 min-w-0">
+            <div class="flex items-center gap-2 flex-wrap">
+              <p class="font-bold text-slate-800 text-sm truncate">{{ e.itemName }}</p>
+              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
+                    [style.background]="getTypeConfig(e.itemType).bg"
+                    [style.color]="getTypeConfig(e.itemType).color">
+                {{ getTypeConfig(e.itemType).label }}
+              </span>
+            </div>
+            <div class="flex items-center gap-3 mt-1 flex-wrap">
+              <span class="text-xs text-slate-500 font-mono">{{ e.itemCode || '—' }}</span>
+              <span class="text-xs text-slate-400">|</span>
+              <span class="text-xs font-semibold text-indigo-600">{{ e.quantity }} {{ e.unit }}</span>
+              <span *ngIf="e.vendorName" class="text-xs text-slate-500">· {{ e.vendorName }}</span>
+            </div>
+            <div class="flex items-center gap-3 mt-1 flex-wrap">
+              <span *ngIf="e.invoiceNumber" class="text-xs text-slate-400 font-mono">Inv: {{ e.invoiceNumber }}</span>
+              <span class="text-xs text-slate-400">{{ e.date | date:'dd MMM yyyy' }}</span>
+            </div>
+            <p *ngIf="e.remarks" class="text-xs text-slate-400 mt-1 italic">{{ e.remarks }}</p>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════════
+       CREATE INWARD MODAL
+  ════════════════════════════════════════════════ -->
+  <div *ngIf="isModalOpen"
+       class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+       style="background: rgba(0,0,0,0.5); backdrop-filter: blur(4px);">
+
+    <div class="w-full sm:max-w-lg rounded-t-3xl sm:rounded-2xl overflow-hidden flex flex-col"
+         style="background:#fff; max-height: 92vh;">
+
+      <!-- Modal header -->
+      <div class="flex items-center gap-4 p-5"
+           style="background: linear-gradient(135deg,#0ea5e9,#6366f1);">
+        <div class="w-10 h-10 rounded-xl flex items-center justify-center"
+             style="background: rgba(255,255,255,0.2);">
+          <ion-icon name="add-circle-outline" style="font-size:22px; color:#fff;"></ion-icon>
+        </div>
+        <div class="flex-1">
+          <h2 class="text-lg font-bold text-white">Create Inward Entry</h2>
+          <p class="text-xs text-blue-100">Record incoming stock or material</p>
+        </div>
+        <button (click)="closeModal()"
+                class="w-8 h-8 rounded-xl flex items-center justify-center"
+                style="background: rgba(255,255,255,0.2);">
+          <ion-icon name="close-outline" style="font-size:18px; color:#fff;"></ion-icon>
+        </button>
+      </div>
+
+      <!-- Scrollable body -->
+      <div class="overflow-y-auto flex-1 p-5 space-y-5">
+
+        <!-- ── STEP 1: Select item type ── -->
+        <div>
+          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">✨ Select Item Type</p>
+          <div class="grid grid-cols-3 gap-3">
+            <button *ngFor="let t of itemTypes"
+                    type="button"
+                    (click)="selectType(t.type)"
+                    class="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border-2 transition-all"
+                    [style.borderColor]="selectedType === t.type ? t.color : '#e2e8f0'"
+                    [style.background]="selectedType === t.type ? t.bg : '#fafafa'">
+              <ion-icon [name]="t.icon"
+                        style="font-size:26px;"
+                        [style.color]="selectedType === t.type ? t.color : '#94a3b8'"></ion-icon>
+              <span class="text-[11px] font-semibold text-center leading-tight"
+                    [style.color]="selectedType === t.type ? t.color : '#64748b'">{{ t.label }}</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- ── STEP 2: Form (shown after type is picked) ── -->
+        <ng-container *ngIf="selectedType">
+
+          <!-- current type pill -->
+          <div class="flex items-center gap-2 px-3 py-2 rounded-xl"
+               [style.background]="getTypeConfig(selectedType).bg">
+            <ion-icon [name]="getTypeConfig(selectedType).icon"
+                      [style.color]="getTypeConfig(selectedType).color"
+                      style="font-size:15px;"></ion-icon>
+            <span class="text-xs font-bold" [style.color]="getTypeConfig(selectedType).color">
+              {{ getTypeConfig(selectedType).label }}
+            </span>
+          </div>
+
+          <!-- Item Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              Material Name <span class="text-red-400">*</span>
+            </label>
+            <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
+                   style="background:#fff; color:#1e293b;"
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all" />
+          </div>
+
+          <!-- Material Code -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Material Code</label>
+            <input [(ngModel)]="form.itemCode" placeholder="e.g. MAT-001"
+                   style="background:#fff; color:#1e293b;"
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+          </div>
+
+          <!-- Unit Type picker -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              <ion-icon name="layers-outline" class="text-indigo-400 mr-1"></ion-icon> Unit Type
+            </label>
+            <div class="grid grid-cols-2 gap-2">
+              <button *ngFor="let u of unitTypes" type="button" (click)="form.unit = u.value"
+                      class="flex items-center gap-3 px-3 py-3 rounded-xl border-2 transition-all text-left"
+                      [class.border-indigo-400]="form.unit === u.value"
+                      [class.bg-indigo-50]="form.unit === u.value"
+                      [class.border-slate-200]="form.unit !== u.value"
+                      [class.bg-white]="form.unit !== u.value">
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
+                     [class.bg-indigo-100]="form.unit === u.value"
+                     [class.bg-slate-100]="form.unit !== u.value">
+                  <ion-icon [name]="u.icon"
+                            style="font-size:18px;"
+                            [class.text-indigo-500]="form.unit === u.value"
+                            [class.text-slate-400]="form.unit !== u.value"></ion-icon>
+                </div>
+                <div>
+                  <p class="text-sm font-semibold leading-tight"
+                     [class.text-indigo-700]="form.unit === u.value"
+                     [class.text-slate-700]="form.unit !== u.value">{{ u.label }}</p>
+                  <p class="text-[10px] font-bold tracking-widest mt-0.5"
+                     [class.text-indigo-400]="form.unit === u.value"
+                     [class.text-slate-400]="form.unit !== u.value">{{ u.sub }}</p>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Quantity + Min Threshold -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                Quantity <span class="text-red-400">*</span>
+                <span class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
+              </label>
+              <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Min Threshold</label>
+              <input [(ngModel)]="form.minThreshold" type="number" min="0" placeholder="0"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+          </div>
+
+          <!-- Divider -->
+          <div class="flex items-center gap-3">
+            <div class="flex-1 h-px bg-slate-200"></div>
+            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vendor & Logistics</span>
+            <div class="flex-1 h-px bg-slate-200"></div>
+          </div>
+          <!-- Transport Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+              <ion-icon name="car-outline" class="text-blue-400 mr-1"></ion-icon> Transport Name
+            </label>
+            <input [(ngModel)]="form.transportName" placeholder="e.g. Delivery Express Pvt. Ltd."
+                   style="background:#fff; color:#1e293b;"
+                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+          </div>
+
+          <!-- Driver Name + Driver Mobile -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <ion-icon name="person-outline" class="text-blue-400 mr-1"></ion-icon> Driver Name
+              </label>
+              <input [(ngModel)]="form.driverName" placeholder="e.g. Ramesh Singh"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+                <ion-icon name="call-outline" class="text-blue-400 mr-1"></ion-icon> Driver Mobile
+              </label>
+              <input [(ngModel)]="form.driverMobile" placeholder="e.g. 9876543210" type="tel"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+          </div>
+          <!-- Vendor Name + Vendor ID -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor Name</label>
+              <input [(ngModel)]="form.vendorName" placeholder="e.g. Tata Steel Ltd."
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor ID</label>
+              <input [(ngModel)]="form.vendorId" placeholder="e.g. VND-001"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+            </div>
+          </div>
+
+          <!-- Invoice Number + Date -->
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Invoice No.</label>
+              <input [(ngModel)]="form.invoiceNumber" placeholder="e.g. INV-2026-001"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date</label>
+              <input [(ngModel)]="form.date" type="date"
+                     style="background:#fff; color:#1e293b;"
+                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Remarks</label>
+            <textarea [(ngModel)]="form.remarks" rows="2" placeholder="Optional notes…"
+                      style="background:#fff; color:#1e293b;"
+                      class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all resize-none"></textarea>
+          </div>
+
+        </ng-container>
+      </div>
+
+      <!-- Footer actions -->
+      <div class="p-4 flex gap-3" style="border-top: 1px solid #f1f5f9;">
+        <button type="button" (click)="closeModal()"
+                class="flex-1 py-3 rounded-xl text-sm font-semibold text-slate-600"
+                style="background: #f1f5f9;">
+          Cancel
+        </button>
+        <button type="button" (click)="submitEntry()"
+                [disabled]="isSubmitting || !selectedType"
+                class="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2 transition-opacity"
+                style="background: linear-gradient(135deg,#0ea5e9,#6366f1);"
+                [style.opacity]="isSubmitting || !selectedType ? '0.6' : '1'">
+          <ion-spinner *ngIf="isSubmitting" name="crescent" style="width:16px;height:16px;color:#fff;"></ion-spinner>
+          <ion-icon *ngIf="!isSubmitting" name="checkmark-circle-outline" style="font-size:17px;"></ion-icon>
+          {{ isSubmitting ? 'Saving…' : 'Save Entry' }}
+        </button>
+      </div>
+
+    </div>
+  </div>
+  </div>
+
+</ion-content>
