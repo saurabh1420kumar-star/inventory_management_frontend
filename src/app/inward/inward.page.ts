@@ -4,6 +4,7 @@ import { FormsModule } from '@angular/forms';
 import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { Router } from '@angular/router';
 import { ToastController } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import {
   IonHeader, IonToolbar, IonTitle, IonContent, IonButtons, IonMenuButton,
   IonButton, IonIcon, IonSpinner, IonRefresher, IonRefresherContent
@@ -96,18 +97,22 @@ export class InwardPage implements OnInit {
   // Raw materials dropdown
   rawMaterials: any[] = [];
   isLoadingRawMaterials = false;
+  selectedRawMaterialId: number | null = null;
 
   // Scrap items dropdown
   scrapItems: any[] = [];
   isLoadingScrapItems = false;
+  selectedScrapId: number | null = null;
 
   // Promotional items dropdown
   promotionalItems: any[] = [];
   isLoadingPromotionalItems = false;
+  selectedPromotionalItemId: number | null = null;
 
   // Machine parts (spare parts) dropdown
   machineParts: any[] = [];
   isLoadingMachineParts = false;
+  selectedMachinePartId: string | null = null;
 
   // Finished products (BOM) dropdown
   finishedProducts: any[] = [];
@@ -185,9 +190,28 @@ export class InwardPage implements OnInit {
 
   loadEntries(event?: any) {
     this.isLoading = true;
-    this.http.get<any>(`${environment.apiUrl}/inward`, { headers: this.headers() }).subscribe({
+    const headers = this.headers();
+    forkJoin({
+      raw:         this.http.get<any>(`${environment.apiUrl}/products/raw-materials`, { headers }),
+      scrap:       this.http.get<any>(`${environment.apiUrl}/products/scrap-items`, { headers }),
+      machine:     this.http.get<any>(`${environment.apiUrl}/products/machine-parts`, { headers }),
+      promotional: this.http.get<any>(`${environment.apiUrl}/products/promotional-items`, { headers })
+    }).subscribe({
       next: (res) => {
-        this.entries = Array.isArray(res) ? res : (res?.data ?? []);
+        const toArr = (r: any) => Array.isArray(r) ? r : (r?.data ?? []);
+        const rawItems = toArr(res.raw)
+          .filter((i: any) => i.status === 'INWARD')
+          .map((i: any) => ({ itemType: 'raw_material' as InwardItemType, itemName: i.name, itemCode: i.materialCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+        const scrapItems = toArr(res.scrap)
+          .filter((i: any) => i.status === 'INWARD')
+          .map((i: any) => ({ itemType: 'scrap' as InwardItemType, itemName: i.name, itemCode: i.materialCode ?? i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+        const machineItems = toArr(res.machine)
+          .filter((i: any) => i.status === 'INWARD')
+          .map((i: any) => ({ itemType: 'spare_parts' as InwardItemType, itemName: i.name, itemCode: i.partNumber, quantity: i.quantity, unit: '', vendorName: i.vendor, vendorId: '', transportName: '', driverName: '', driverMobile: '', minThreshold: 0, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '', partNumber: i.partNumber, category: i.category, condition: i.condition }));
+        const promoItems = toArr(res.promotional)
+          .filter((i: any) => i.status === 'INWARD')
+          .map((i: any) => ({ itemType: 'promotional' as InwardItemType, itemName: i.name, itemCode: i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+        this.entries = [...rawItems, ...scrapItems, ...machineItems, ...promoItems];
         this.applyFilter();
         this.isLoading = false;
         if (event) event.target.complete();
@@ -225,6 +249,10 @@ export class InwardPage implements OnInit {
   closeModal() {
     this.isModalOpen = false;
     this.selectedType = null;
+    this.selectedRawMaterialId = null;
+    this.selectedPromotionalItemId = null;
+    this.selectedScrapId = null;
+    this.selectedMachinePartId = null;
   }
 
   selectType(type: InwardItemType) {
@@ -232,6 +260,10 @@ export class InwardPage implements OnInit {
     this.form.itemType = type;
     this.form.itemName = '';
     this.form.itemCode = '';
+    this.selectedRawMaterialId = null;
+    this.selectedPromotionalItemId = null;
+    this.selectedScrapId = null;
+    this.selectedMachinePartId = null;
     if (type === 'raw_material') {
       this.loadRawMaterials();
     } else if (type === 'scrap') {
@@ -261,6 +293,7 @@ export class InwardPage implements OnInit {
   onRawMaterialSelect(id: string) {
     const mat = this.rawMaterials.find(m => String(m.id) === id);
     if (mat) {
+      this.selectedRawMaterialId = mat.id ?? null;
       this.form.itemName = mat.name ?? '';
       this.form.itemCode = mat.materialCode ?? '';
       if (mat.unit) {
@@ -286,8 +319,9 @@ export class InwardPage implements OnInit {
   onScrapItemSelect(id: string) {
     const item = this.scrapItems.find(s => String(s.id) === id);
     if (item) {
+      this.selectedScrapId = item.id ?? null;
       this.form.itemName = item.name ?? '';
-      this.form.itemCode = item.materialCode ?? '';
+      this.form.itemCode = item.itemCode ?? '';
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -311,8 +345,9 @@ export class InwardPage implements OnInit {
   onPromotionalItemSelect(id: string) {
     const item = this.promotionalItems.find(p => String(p.id) === id);
     if (item) {
+      this.selectedPromotionalItemId = item.id ?? null;
       this.form.itemName = item.name ?? '';
-      this.form.itemCode = item.materialCode ?? '';
+      this.form.itemCode = item.itemCode ?? '';
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -333,11 +368,18 @@ export class InwardPage implements OnInit {
     });
   }
 
-  onMachinePartSelect(id: string) {
-    const item = this.machineParts.find(m => String(m.id) === id);
+  onMachinePartSelect(partNumber: string) {
+    const item = this.machineParts.find(m => String(m.partNumber) === partNumber);
     if (item) {
+      this.selectedMachinePartId = item.partNumber ?? null;
       this.form.itemName = item.name ?? '';
-      this.form.itemCode = item.materialCode ?? '';
+      this.form.itemCode = item.partNumber ?? '';
+      this.form.partNumber = item.partNumber ?? '';
+      this.form.vendor = item.vendor ?? '';
+      this.form.category = item.category ?? 'MACHINE';
+      this.form.condition = item.condition ?? 'NEW';
+      this.form.purchaseDate = item.purchaseDate ?? '';
+      this.form.warrantyExpiryDate = item.warrantyExpiryDate ?? '';
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -384,6 +426,11 @@ export class InwardPage implements OnInit {
     this.isSubmitting = true;
 
     if (this.selectedType === 'raw_material') {
+      if (!this.selectedRawMaterialId) {
+        this.showToast('Please select a raw material', 'danger');
+        this.isSubmitting = false;
+        return;
+      }
       const payload = {
         name: this.form.itemName,
         materialCode: this.form.itemCode,
@@ -395,18 +442,19 @@ export class InwardPage implements OnInit {
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
         driverName: this.form.driverName,
-        driverMobile: this.form.driverMobile
+        driverMobile: this.form.driverMobile,
+        status: 'INWARD'
       };
-      this.http.post<any>(`${environment.apiUrl}/products/raw-materials`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/raw-materials/${this.selectedRawMaterialId}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();
-          this.showToast('Raw material created successfully', 'success');
+          this.showToast('Raw material updated successfully', 'success');
           this.loadEntries();
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create raw material';
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to update raw material';
           this.showToast(msg, 'danger');
         }
       });
@@ -414,6 +462,11 @@ export class InwardPage implements OnInit {
     }
 
     if (this.selectedType === 'promotional') {
+      if (!this.selectedPromotionalItemId) {
+        this.showToast('Please select a promotional item', 'danger');
+        this.isSubmitting = false;
+        return;
+      }
       const payload = {
         name: this.form.itemName,
         itemCode: this.form.itemCode,
@@ -425,18 +478,19 @@ export class InwardPage implements OnInit {
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
         driverName: this.form.driverName,
-        driverMobile: this.form.driverMobile
+        driverMobile: this.form.driverMobile,
+        status: 'INWARD'
       };
-      this.http.post<any>(`${environment.apiUrl}/products/promotional-items`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/promotional-items/${this.selectedPromotionalItemId}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();
-          this.showToast('Promotional item created successfully', 'success');
+          this.showToast('Promotional item updated successfully', 'success');
           this.loadEntries();
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create promotional item';
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to update promotional item';
           this.showToast(msg, 'danger');
         }
       });
@@ -444,6 +498,11 @@ export class InwardPage implements OnInit {
     }
 
     if (this.selectedType === 'scrap') {
+      if (!this.selectedScrapId) {
+        this.showToast('Please select a scrap item', 'danger');
+        this.isSubmitting = false;
+        return;
+      }
       const payload = {
         name: this.form.itemName,
         itemCode: this.form.itemCode,
@@ -455,18 +514,19 @@ export class InwardPage implements OnInit {
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
         driverName: this.form.driverName,
-        driverMobile: this.form.driverMobile
+        driverMobile: this.form.driverMobile,
+        status: 'INWARD'
       };
-      this.http.post<any>(`${environment.apiUrl}/products/scrap-items`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/scrap-items/sku/${this.selectedScrapId}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();
-          this.showToast('Scrap item created successfully', 'success');
+          this.showToast('Scrap item updated successfully', 'success');
           this.loadEntries();
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create scrap item';
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to update scrap item';
           this.showToast(msg, 'danger');
         }
       });
@@ -474,6 +534,11 @@ export class InwardPage implements OnInit {
     }
 
     if (this.selectedType === 'spare_parts') {
+      if (!this.selectedMachinePartId) {
+        this.showToast('Please select a spare part', 'danger');
+        this.isSubmitting = false;
+        return;
+      }
       const payload = {
         name: this.form.itemName,
         partNumber: this.form.partNumber,
@@ -482,18 +547,19 @@ export class InwardPage implements OnInit {
         purchaseDate: this.form.purchaseDate,
         warrantyExpiryDate: this.form.warrantyExpiryDate || null,
         quantity: this.form.quantity,
-        condition: this.form.condition ?? 'NEW'
+        condition: this.form.condition ?? 'NEW',
+        status: 'INWARD'
       };
-      this.http.post<any>(`${environment.apiUrl}/products/machine-parts`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/machine-parts/sku/${encodeURIComponent(this.selectedMachinePartId)}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();
-          this.showToast('Machine part created successfully', 'success');
+          this.showToast('Machine part updated successfully', 'success');
           this.loadEntries();
         },
         error: (err) => {
           this.isSubmitting = false;
-          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to create machine part';
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to update machine part';
           this.showToast(msg, 'danger');
         }
       });

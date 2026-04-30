@@ -239,7 +239,7 @@
                     {{ isLoadingScrapItems ? 'Loading…' : 'Select scrap item' }}
                   </option>
                   <option *ngFor="let s of scrapItems" [value]="s.id">
-                    {{ s.name }} ({{ s.materialCode }})
+                    {{ s.name }} ({{ s.itemCode }})
                   </option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
@@ -262,7 +262,7 @@
                     {{ isLoadingPromotionalItems ? 'Loading…' : 'Select promotional item' }}
                   </option>
                   <option *ngFor="let p of promotionalItems" [value]="p.id">
-                    {{ p.name }} ({{ p.materialCode }})
+                    {{ p.name }} ({{ p.itemCode }})
                   </option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
@@ -284,8 +284,8 @@
                   <option value="" disabled selected>
                     {{ isLoadingMachineParts ? 'Loading…' : 'Select machine part' }}
                   </option>
-                  <option *ngFor="let m of machineParts" [value]="m.id">
-                    {{ m.name }} ({{ m.materialCode }})
+                  <option *ngFor="let m of machineParts" [value]="m.partNumber">
+                    {{ m.name }} ({{ m.partNumber }})
                   </option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
