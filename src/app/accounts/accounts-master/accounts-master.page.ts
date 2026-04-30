@@ -220,6 +220,11 @@ export class AccountsMasterPage implements OnInit {
   isLoadingJVs: boolean = false;
   selectedJV: any = null;
 
+  // Add Credit Modal state
+  isAddCreditModalOpen: boolean = false;
+  addCreditAmount: string = '';
+  isSubmittingCredit: boolean = false;
+
   paymentMethods = [
     { value: 'rtgs', label: 'RTGS', icon: 'business-outline', color: 'blue' },
     { value: 'neft', label: 'NEFT', icon: 'swap-vertical-outline', color: 'violet' },
@@ -600,6 +605,12 @@ export class AccountsMasterPage implements OnInit {
     const limit = this.selectedAccount?.distributorCreditAmount ?? 0;
     if (limit <= 0) return 0;
     return Math.min(100, Math.round((this.creditUtilized / limit) * 100));
+  }
+
+  get newCreditLimit(): number {
+    const current = this.selectedAccount?.distributorCreditAmount ?? 0;
+    const add = parseFloat(this.addCreditAmount) || 0;
+    return current + add;
   }
 
 
@@ -1155,6 +1166,53 @@ export class AccountsMasterPage implements OnInit {
       this.jvFormData.entries[0].accountNumber = this.selectedAccount.accountCode || '';
       this.jvFormData.entries[0].accountName = this.selectedAccount.accountName || this.selectedAccount.name || '';
     }
+  }
+
+  // ── Add Credit Methods ──────────────────────
+  openAddCreditModal() {
+    if (!this.selectedAccount) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+    this.addCreditAmount = '';
+    this.isAddCreditModalOpen = true;
+  }
+
+  submitAddCredit() {
+    if (!this.selectedAccount || !this.selectedAccount.distributorId) return;
+
+    const amount = parseFloat(this.addCreditAmount);
+    if (!amount || amount <= 0) {
+      this.showToast('Please enter a valid credit amount', 'danger');
+      return;
+    }
+
+    const currentLimit = this.selectedAccount.distributorCreditAmount ?? 0;
+    const newLimit = currentLimit + amount;
+
+    this.isSubmittingCredit = true;
+    this.ledgerService.updateCreditLimit(this.selectedAccount.distributorId, newLimit).subscribe({
+      next: (response: ApiResponse<any>) => {
+        if (response.success !== false) {
+          if (this.selectedAccount) {
+            this.selectedAccount.distributorCreditAmount = newLimit;
+            // Sync the distributor list entry too
+            const dist = this.distributors.find(d => d.id === this.selectedAccount!.distributorId);
+            if (dist) dist.creditAmount = newLimit;
+          }
+          this.showToast(`Credit limit updated to ₹${newLimit.toLocaleString('en-IN')}`, 'success');
+          this.isAddCreditModalOpen = false;
+          this.addCreditAmount = '';
+        } else {
+          this.showToast(response.message || 'Failed to update credit limit', 'danger');
+        }
+        this.isSubmittingCredit = false;
+      },
+      error: (error: any) => {
+        this.showToast(error?.error?.message || 'Error updating credit limit', 'danger');
+        this.isSubmittingCredit = false;
+      }
+    });
   }
 
   closeJVModal() {

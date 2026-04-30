@@ -1,0 +1,105 @@
+/* ═══════════════════════════════════════════════════════════
+   OUTWARD INVENTORY — STYLES
+   Theme: emerald/teal primary, amber/purple/rose for categories
+═══════════════════════════════════════════════════════════ */
+
+/* ── Filter tabs ───────────────────────────────────────────── */
+.filter-tab {
+  @apply bg-white text-slate-500 border-slate-200 hover:border-emerald-300 hover:text-emerald-600 hover:bg-emerald-50;
+}
+.filter-tab--active {
+  @apply bg-emerald-500 text-white border-emerald-500 shadow-sm shadow-emerald-200;
+}
+
+/* ── Section toggle tabs ───────────────────────────────────── */
+.section-tab {
+  @apply bg-white text-slate-500 border-slate-200 hover:border-emerald-300 hover:text-emerald-600;
+}
+.section-tab--active {
+  @apply bg-gradient-to-r from-emerald-500 to-teal-500 text-white border-transparent shadow-sm;
+}
+
+/* ── Form section label ────────────────────────────────────── */
+.form-section-label {
+  @apply flex items-center gap-2 text-sm font-bold text-slate-700 uppercase tracking-wider bg-slate-50 rounded-xl px-4 py-3 border border-slate-100;
+}
+
+/* ── Field group ───────────────────────────────────────────── */
+.field-group {
+  @apply flex flex-col gap-1;
+}
+
+.field-label {
+  @apply text-sm font-semibold text-slate-600;
+}
+
+.field-input {
+  @apply w-full bg-slate-50 hover:bg-white focus:bg-white
+         text-slate-800 placeholder-slate-400
+         border border-slate-200
+         focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50
+         rounded-xl py-3 px-4 outline-none transition-all duration-200
+         text-sm;
+}
+
+.field-input--error {
+  @apply border-rose-400 bg-rose-50/30 focus:border-rose-400 focus:ring-rose-50;
+}
+
+.field-error {
+  @apply text-rose-500 text-xs font-medium;
+}
+
+/* ── Badges ────────────────────────────────────────────────── */
+.badge {
+  @apply inline-flex items-center px-2 py-0.5 rounded-lg text-[10px] font-bold uppercase tracking-wider whitespace-nowrap;
+}
+.badge-amber  { @apply bg-amber-100  text-amber-700;  }
+.badge-purple { @apply bg-purple-100 text-purple-700; }
+.badge-rose   { @apply bg-rose-100   text-rose-700;   }
+.badge-slate  { @apply bg-slate-100  text-slate-600;  }
+
+/* ── Hero button ───────────────────────────────────────────── */
+.hero-btn {
+  --padding-start: 1.25rem;
+  --padding-end: 1.25rem;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+}
+
+/* ── Record card hover shadow ──────────────────────────────── */
+.record-card:hover {
+  box-shadow: 0 8px 24px rgba(16, 185, 129, 0.10);
+}
+
+/* ── Type card hover ───────────────────────────────────────── */
+.type-card:hover {
+  box-shadow: 0 4px 16px rgba(0, 0, 0, 0.06);
+}
+
+/* ── Select field ──────────────────────────────────────────── */
+select.field-input {
+  @apply cursor-pointer;
+}
+
+/* ── Textarea ──────────────────────────────────────────────── */
+textarea.field-input {
+  @apply leading-relaxed;
+}
+
+/* ── Safe area spacer ──────────────────────────────────────── */
+.h-safe-area-bottom {
+  height: env(safe-area-inset-bottom, 0px);
+}
+
+/* ── Scrollbar hide inside modals ──────────────────────────── */
+.overflow-y-auto::-webkit-scrollbar {
+  width: 4px;
+}
+.overflow-y-auto::-webkit-scrollbar-track {
+  background: transparent;
+}
+.overflow-y-auto::-webkit-scrollbar-thumb {
+  background: #e2e8f0;
+  border-radius: 4px;
+}

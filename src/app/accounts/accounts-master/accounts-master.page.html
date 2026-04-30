@@ -284,6 +284,13 @@
               Create JV
             </button>
 
+            <!-- Add Credit Button -->
+            <button *ngIf="selectedAccount" (click)="openAddCreditModal()"
+              class="flex items-center gap-2 px-5 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+              <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
+              Add Credit
+            </button>
+
             <!-- Date Filter -->
             <div class="relative date-filter-wrap">
               <button (click)="isDateDropdownOpen = !isDateDropdownOpen"
@@ -1329,6 +1336,237 @@
             </div>
           </div>
         </ion-content>
+      </div>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══════════════════════════════════════════════════
+       ADD CREDIT MODAL
+       ═══════════════════════════════════════════════════ -->
+  <ion-modal [isOpen]="isAddCreditModalOpen" (didDismiss)="isAddCreditModalOpen = false" class="modal-xl" [backdropDismiss]="false">
+    <ng-template>
+      <div class="txn-modal-wrap bg-white h-full flex flex-col">
+
+        <!-- ── Sticky Header ── -->
+        <div class="txn-modal-header relative overflow-hidden flex-shrink-0">
+          <div class="absolute inset-0 bg-gradient-to-br from-violet-500 via-purple-600 to-indigo-600"></div>
+          <div class="absolute top-0 right-0 -mr-16 -mt-16 w-56 h-56 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+          <div class="absolute bottom-0 left-0 -ml-16 -mb-16 w-48 h-48 rounded-full bg-violet-300/20 blur-3xl pointer-events-none"></div>
+          <div class="absolute top-1/2 right-1/4 w-40 h-40 rounded-full bg-indigo-400/10 blur-2xl pointer-events-none"></div>
+
+          <div class="relative p-6 pb-5">
+            <!-- Title row -->
+            <div class="flex items-center justify-between mb-5">
+              <div class="flex items-center gap-4">
+                <div class="relative flex-shrink-0">
+                  <div class="absolute inset-0 rounded-2xl bg-white/20 blur-md scale-125 pointer-events-none"></div>
+                  <div class="relative w-14 h-14 rounded-2xl bg-white/20 backdrop-blur-sm flex items-center justify-center shadow-xl border border-white/30">
+                    <ion-icon name="trending-up-outline" class="text-white text-3xl"></ion-icon>
+                  </div>
+                </div>
+                <div>
+                  <h2 class="text-2xl font-bold text-white tracking-tight leading-tight">Add Credit</h2>
+                  <p class="text-violet-200 text-sm mt-0.5 font-medium">Increase distributor's credit limit</p>
+                </div>
+              </div>
+              <button (click)="isAddCreditModalOpen = false"
+                class="txn-modal-close-btn w-10 h-10 rounded-full bg-white/25 hover:bg-white/40 flex items-center justify-center transition-all duration-200 shadow-md border border-white/30 backdrop-blur-sm active:scale-95">
+                <ion-icon name="close-outline" class="text-white text-xl"></ion-icon>
+              </button>
+            </div>
+
+            <!-- Account info strip -->
+            <div *ngIf="selectedAccount" class="flex items-center gap-3 p-3 bg-white/10 backdrop-blur-sm rounded-xl border border-white/20">
+              <div class="w-9 h-9 rounded-xl bg-white/20 flex items-center justify-center flex-shrink-0">
+                <ion-icon name="business-outline" class="text-white text-lg"></ion-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <div class="text-white font-bold text-sm truncate">{{ selectedAccount.name }}</div>
+                <div class="text-violet-200 text-xs font-mono">{{ selectedAccount.accountCode }}</div>
+              </div>
+              <div class="flex-shrink-0 text-right">
+                <div class="text-[10px] text-violet-200 uppercase tracking-widest">Current Limit</div>
+                <div class="text-white font-bold text-sm">₹{{ (selectedAccount.distributorCreditAmount || 0) | number:'1.0-0' }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- ── Scrollable Body ── -->
+        <ion-content class="bg-slate-50">
+          <div class="p-6 space-y-6">
+
+            <!-- ─ Credit Stats Cards ─ -->
+            <div>
+              <p class="text-[10px] font-bold text-slate-400 uppercase tracking-widest mb-3">Current Credit Status</p>
+              <div class="grid grid-cols-3 gap-4">
+
+                <div class="bg-white rounded-2xl p-4 border border-violet-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-xl bg-violet-100 flex items-center justify-center">
+                      <ion-icon name="card-outline" class="text-violet-600 text-base"></ion-icon>
+                    </div>
+                    <span class="text-[10px] font-bold text-violet-400 uppercase tracking-widest">Total Limit</span>
+                  </div>
+                  <div class="text-xl font-extrabold text-violet-700">
+                    ₹{{ (selectedAccount?.distributorCreditAmount || 0) | number:'1.0-0' }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-1">Sanctioned credit</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-red-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-xl bg-red-100 flex items-center justify-center">
+                      <ion-icon name="trending-down-outline" class="text-red-500 text-base"></ion-icon>
+                    </div>
+                    <span class="text-[10px] font-bold text-red-400 uppercase tracking-widest">Utilized</span>
+                  </div>
+                  <div class="text-xl font-extrabold text-red-600">
+                    ₹{{ creditUtilized | number:'1.0-0' }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-1">Outstanding balance</div>
+                </div>
+
+                <div class="bg-white rounded-2xl p-4 border border-emerald-100 shadow-sm hover:shadow-md transition-shadow">
+                  <div class="flex items-center gap-2 mb-3">
+                    <div class="w-8 h-8 rounded-xl bg-emerald-100 flex items-center justify-center">
+                      <ion-icon name="wallet-outline" class="text-emerald-600 text-base"></ion-icon>
+                    </div>
+                    <span class="text-[10px] font-bold text-emerald-500 uppercase tracking-widest">Available</span>
+                  </div>
+                  <div class="text-xl font-extrabold text-emerald-600">
+                    ₹{{ creditAvailable | number:'1.0-0' }}
+                  </div>
+                  <div class="text-[10px] text-slate-400 mt-1">Remaining credit</div>
+                </div>
+
+              </div>
+            </div>
+
+            <!-- ─ Utilization Bar ─ -->
+            <div *ngIf="(selectedAccount?.distributorCreditAmount || 0) > 0"
+              class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+              <div class="flex items-center justify-between mb-3">
+                <span class="text-sm font-semibold text-slate-600">Credit Utilization</span>
+                <span class="text-sm font-extrabold px-3 py-1 rounded-full"
+                  [class]="creditUsagePercent > 80 ? 'bg-red-100 text-red-600' : creditUsagePercent > 50 ? 'bg-amber-100 text-amber-600' : 'bg-emerald-100 text-emerald-700'">
+                  {{ creditUsagePercent }}%
+                </span>
+              </div>
+              <div class="h-3 bg-slate-100 rounded-full overflow-hidden">
+                <div class="h-full rounded-full transition-all duration-700"
+                  [style.width.%]="creditUsagePercent"
+                  [class]="creditUsagePercent > 80 ? 'bg-gradient-to-r from-red-400 to-red-500' : creditUsagePercent > 50 ? 'bg-gradient-to-r from-amber-400 to-amber-500' : 'bg-gradient-to-r from-emerald-400 to-emerald-500'">
+                </div>
+              </div>
+              <div class="flex justify-between mt-2 text-[10px] text-slate-400">
+                <span>₹0</span>
+                <span>₹{{ (selectedAccount?.distributorCreditAmount || 0) | number:'1.0-0' }}</span>
+              </div>
+            </div>
+
+            <!-- ─ Amount Input ─ -->
+            <div class="bg-white rounded-2xl p-5 border border-slate-100 shadow-sm">
+              <label class="flex items-center gap-2 text-xs font-bold text-slate-500 uppercase tracking-widest mb-4">
+                <div class="w-5 h-5 rounded-md bg-violet-100 flex items-center justify-center">
+                  <ion-icon name="add-circle-outline" class="text-violet-500 text-xs"></ion-icon>
+                </div>
+                Credit Amount to Add
+                <span class="text-red-400 normal-case font-normal tracking-normal text-xs">(required)</span>
+              </label>
+
+              <div class="relative group">
+                <div class="absolute left-5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-xl select-none pointer-events-none transition-colors group-focus-within:text-violet-500">₹</div>
+                <input
+                  type="number"
+                  [(ngModel)]="addCreditAmount"
+                  min="1"
+                  step="1"
+                  placeholder="0"
+                  class="w-full pl-10 pr-5 py-5 border-2 border-slate-200 hover:border-violet-300 focus:border-violet-500 focus:ring-4 focus:ring-violet-100 rounded-2xl text-slate-800 font-extrabold text-3xl outline-none transition-all duration-200 bg-white placeholder-slate-200"
+                >
+              </div>
+              <p class="text-xs text-slate-400 mt-3 pl-1">This amount will be <strong class="text-slate-500">added</strong> to the existing credit limit — not replace it.</p>
+            </div>
+
+            <!-- ─ New Limit Preview ─ -->
+            <div *ngIf="addCreditAmount && +addCreditAmount > 0"
+              class="bg-gradient-to-br from-violet-50 via-purple-50 to-indigo-50 rounded-2xl p-5 border border-violet-200 shadow-sm">
+              <div class="flex items-center gap-2 mb-4">
+                <div class="w-7 h-7 rounded-xl bg-violet-200 flex items-center justify-center">
+                  <ion-icon name="checkmark-circle-outline" class="text-violet-600"></ion-icon>
+                </div>
+                <span class="text-xs font-bold text-violet-500 uppercase tracking-widest">New Credit Limit Preview</span>
+              </div>
+
+              <div class="flex items-center justify-between gap-2">
+                <!-- Current -->
+                <div class="flex-1 bg-white rounded-xl p-3 border border-violet-100 text-center shadow-sm">
+                  <div class="text-[9px] text-slate-400 uppercase tracking-widest mb-1">Current</div>
+                  <div class="text-base font-bold text-slate-700">₹{{ (selectedAccount?.distributorCreditAmount || 0) | number:'1.0-0' }}</div>
+                </div>
+
+                <!-- Plus -->
+                <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div class="w-8 h-8 rounded-full bg-violet-200 flex items-center justify-center shadow-sm">
+                    <ion-icon name="add-outline" class="text-violet-600 font-bold"></ion-icon>
+                  </div>
+                </div>
+
+                <!-- Adding -->
+                <div class="flex-1 bg-violet-100 rounded-xl p-3 border border-violet-200 text-center shadow-sm">
+                  <div class="text-[9px] text-violet-400 uppercase tracking-widest mb-1">Adding</div>
+                  <div class="text-base font-bold text-violet-700">₹{{ +addCreditAmount | number:'1.0-0' }}</div>
+                </div>
+
+                <!-- Arrow -->
+                <div class="flex flex-col items-center gap-1 flex-shrink-0">
+                  <div class="w-8 h-8 rounded-full bg-emerald-100 flex items-center justify-center shadow-sm">
+                    <ion-icon name="arrow-forward-outline" class="text-emerald-600"></ion-icon>
+                  </div>
+                </div>
+
+                <!-- New Limit -->
+                <div class="flex-1 bg-gradient-to-br from-violet-500 to-indigo-500 rounded-xl p-3 text-center shadow-md">
+                  <div class="text-[9px] text-violet-200 uppercase tracking-widest mb-1">New Limit</div>
+                  <div class="text-lg font-extrabold text-white">₹{{ newCreditLimit | number:'1.0-0' }}</div>
+                </div>
+              </div>
+            </div>
+
+            <!-- ─ Info Callout ─ -->
+            <div class="flex items-start gap-4 p-4 bg-amber-50 rounded-2xl border border-amber-200">
+              <div class="w-9 h-9 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0 mt-0.5">
+                <ion-icon name="information-circle-outline" class="text-amber-500 text-xl"></ion-icon>
+              </div>
+              <div>
+                <p class="text-sm font-semibold text-amber-800 mb-1">Credit Limit Policy</p>
+                <p class="text-xs text-amber-700 leading-relaxed">
+                  Credit limits can only be <strong class="text-amber-900">increased</strong>. The amount you enter will be
+                  <strong class="text-amber-900">added</strong> to the existing credit limit. This change takes effect immediately upon submission.
+                </p>
+              </div>
+            </div>
+
+          </div>
+        </ion-content>
+
+        <!-- ── Sticky Footer ── -->
+        <div class="flex-shrink-0 px-6 py-4 flex items-center gap-3 border-t border-slate-100 bg-white shadow-[0_-4px_16px_rgba(0,0,0,0.06)]">
+          <button (click)="isAddCreditModalOpen = false"
+            class="flex-1 flex items-center justify-center gap-2 px-6 py-3.5 bg-slate-100 hover:bg-slate-200 text-slate-600 rounded-xl text-sm font-semibold transition-all duration-200 border border-slate-200 active:scale-95">
+            <ion-icon name="close-outline" class="text-base"></ion-icon>
+            Cancel
+          </button>
+          <button
+            (click)="submitAddCredit()"
+            [disabled]="isSubmittingCredit || !addCreditAmount || +addCreditAmount <= 0"
+            class="flex-2 flex items-center justify-center gap-2 px-8 py-3.5 bg-gradient-to-r from-violet-500 to-indigo-500 hover:from-violet-600 hover:to-indigo-600 disabled:from-slate-300 disabled:to-slate-300 disabled:cursor-not-allowed text-white rounded-xl text-sm font-bold transition-all duration-200 shadow-lg hover:shadow-violet-200/60 hover:shadow-xl active:scale-95">
+            <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
+            {{ isSubmittingCredit ? 'Updating...' : 'Add Credit' }}
+          </button>
+        </div>
+
       </div>
     </ng-template>
   </ion-modal>

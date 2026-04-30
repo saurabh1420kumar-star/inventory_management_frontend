@@ -68,6 +68,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'outward-inventory',
+    loadComponent: () => import('./outward-inventory/outward-inventory.page').then(m => m.OutwardInventoryPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'hr-department',
     loadChildren: () => import('./hr-department/hr-department.module').then( m => m.HrDepartmentPageModule),
     canActivate: [AuthGuard]

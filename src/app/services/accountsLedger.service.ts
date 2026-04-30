@@ -345,4 +345,20 @@ export class LedgerService {
     //       `${this.baseUrl}/${id}`
     //     );
     //   }
+
+    updateCreditLimit(distributorId: number, newCreditAmount: number): Observable<ApiResponse<any>> {
+        return this.http.put<ApiResponse<any>>(
+            `${this.apiUrl}/distributors/${distributorId}`,
+            { creditAmount: newCreditAmount, creditLimit: true }
+        ).pipe(
+            catchError(error => {
+                console.error('Update Credit Limit Error:', error);
+                return of({
+                    success: false,
+                    message: error?.error?.message || 'Failed to update credit limit',
+                    data: null
+                });
+            })
+        );
+    }
 }

@@ -1,0 +1,697 @@
+﻿<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     OUTWARD INVENTORY PAGE
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+
+<!-- HEADER -->
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-tight text-xl">
+      <span class="text-emerald-400">Outward</span> Inventory
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="manualRefresh()" style="--color: #ffffff;">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<!-- CONTENT -->
+<ion-content>
+  <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
+    <ion-refresher-content></ion-refresher-content>
+  </ion-refresher>
+
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-24">
+    <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
+
+      <!-- â”€â”€ HERO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div class="relative bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 rounded-3xl shadow-xl shadow-emerald-200/50 overflow-hidden mb-8">
+        <div class="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
+        <div class="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none"></div>
+
+        <div class="relative px-8 py-8">
+          <div class="flex flex-col md:flex-row md:items-center md:justify-between gap-6">
+            <div>
+              <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Outward Inventory</h1>
+              <p class="text-emerald-50/90 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20">
+                <ion-icon name="swap-horizontal-outline" class="text-base"></ion-icon>
+                Spare Parts Â· Promotional Items Â· Scrap Material
+              </p>
+            </div>
+            <ion-button
+              (click)="openModal()"
+              class="hero-btn font-bold rounded-xl shadow-lg normal-case tracking-normal h-11"
+              style="--background: white; --color: #059669; --box-shadow: none; --border-radius: 12px;">
+              <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+              Add Item
+            </ion-button>
+          </div>
+        </div>
+      </div>
+
+      <!-- â”€â”€ STAT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8">
+        <div *ngFor="let s of statCards"
+          class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-100 hover:border-emerald-200 transition-all duration-300 group flex items-center gap-3">
+          <div class="w-10 h-10 sm:w-12 sm:h-12 rounded-xl flex items-center justify-center flex-shrink-0 group-hover:scale-110 transition-transform"
+            [ngClass]="s.bg">
+            <ion-icon [name]="s.icon" class="text-xl sm:text-2xl" [ngClass]="s.color"></ion-icon>
+          </div>
+          <div class="min-w-0">
+            <p class="text-xl sm:text-2xl font-extrabold text-slate-800 leading-none mb-0.5">{{ s.value }}</p>
+            <p class="text-slate-500 text-[10px] sm:text-xs font-bold uppercase tracking-wider truncate">{{ s.label }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- â”€â”€ SEARCH + FILTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+        <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+          <div class="flex-1 relative">
+            <ion-icon name="search-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg z-10 pointer-events-none"></ion-icon>
+            <input
+              type="text"
+              [(ngModel)]="searchTerm"
+              (ngModelChange)="applyFilter()"
+              placeholder="Search by material name or code..."
+              class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200"
+            />
+          </div>
+          <div class="flex gap-2 flex-wrap">
+            <button *ngFor="let tab of filterTabs"
+              (click)="setFilter(tab.key)"
+              class="filter-tab px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              [class.filter-tab--active]="activeFilter === tab.key">
+              {{ tab.label }}
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- â”€â”€ LOADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24">
+        <ion-spinner name="crescent" class="text-emerald-500 w-10 h-10"></ion-spinner>
+        <p class="text-slate-500 mt-4 font-medium">Loading records...</p>
+      </div>
+
+      <!-- â”€â”€ EMPTY STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div *ngIf="!isLoading && filteredRecords.length === 0"
+        class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+        <div class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+          <ion-icon name="swap-horizontal-outline" class="text-4xl text-emerald-400"></ion-icon>
+        </div>
+        <h3 class="text-lg font-bold text-slate-700 mb-1">No records yet</h3>
+        <p class="text-slate-400 text-sm mb-6">Click "Add Item" to record your first outward entry.</p>
+        <ion-button (click)="openModal()" style="--background: #10b981; --border-radius: 12px;" class="font-semibold normal-case">
+          <ion-icon slot="start" name="add-outline"></ion-icon>
+          Add First Record
+        </ion-button>
+      </div>
+
+      <!-- â”€â”€ RECORDS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <div *ngIf="!isLoading && filteredRecords.length > 0"
+        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
+        <div *ngFor="let r of filteredRecords; trackBy: trackById"
+          class="record-card bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+
+          <div class="h-1 w-full"
+            [ngClass]="{
+              'bg-gradient-to-r from-amber-400 to-orange-400': r.itemType === 'spare_parts',
+              'bg-gradient-to-r from-purple-400 to-fuchsia-400': r.itemType === 'promotional_items',
+              'bg-gradient-to-r from-rose-400 to-red-400': r.itemType === 'scrap_material'
+            }">
+          </div>
+
+          <div class="p-5">
+            <div class="flex items-start justify-between mb-3 gap-2">
+              <div class="flex-1 min-w-0">
+                <h3 class="font-bold text-slate-800 text-base truncate">{{ r.matName || '-' }}</h3>
+                <p class="text-slate-400 text-xs mt-0.5 font-mono">{{ r.matCode || 'No code' }}</p>
+              </div>
+              <div class="flex flex-col items-end gap-1.5">
+                <span class="badge" [ngClass]="getTypeBadge(r.itemType).cls">
+                  {{ getTypeBadge(r.itemType).label }}
+                </span>
+                <span class="badge badge-slate">{{ getSectionLabel(r.section) }}</span>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-2 mb-3">
+              <div class="bg-slate-50 rounded-xl p-2.5">
+                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quantity</p>
+                <p class="text-slate-700 font-bold text-sm">{{ r.quantity ?? '-' }} <span class="text-slate-400 font-normal text-xs">{{ getUnitLabel(r.unit) }}</span></p>
+              </div>
+              <div *ngIf="r.desiredQuotedPrice" class="bg-emerald-50 rounded-xl p-2.5">
+                <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quoted Price</p>
+                <p class="text-emerald-700 font-bold text-sm">&#8377; {{ r.desiredQuotedPrice }}</p>
+              </div>
+            </div>
+
+            <p *ngIf="r.comments" class="text-slate-500 text-xs italic bg-slate-50 rounded-xl px-3 py-2 line-clamp-2">
+              "{{ r.comments }}"
+            </p>
+
+            <p class="text-slate-300 text-[10px] mt-3 text-right font-medium">
+              {{ r.createdAt | date:'dd MMM yyyy, h:mm a' }}
+            </p>
+          </div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+</ion-content>
+
+<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+     UNIFIED ADD OUTWARD ITEM MODAL  (matches master-inventory style)
+â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+<div *ngIf="isModalOpen"
+  class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+  (click)="closeModal()">
+
+  <!-- backdrop -->
+  <div class="absolute inset-0 bg-black/50 backdrop-blur-sm"></div>
+
+  <!-- modal sheet -->
+  <div class="relative w-full sm:max-w-2xl bg-slate-50 sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col max-h-[92vh]"
+    (click)="$event.stopPropagation()">
+
+    <!-- GRADIENT HEADER (matches master-inventory) -->
+    <div class="sticky top-0 z-10 bg-gradient-to-r from-emerald-500 to-blue-500 px-6 py-6 flex items-center justify-between shadow-lg sm:rounded-t-3xl flex-shrink-0">
+      <div class="flex items-center gap-4">
+        <div class="w-12 h-12 bg-white/20 rounded-xl flex items-center justify-center backdrop-blur-sm border border-white/30">
+          <ion-icon name="add-circle-outline" class="text-2xl text-white"></ion-icon>
+        </div>
+        <div>
+          <h2 class="text-xl font-bold text-white">Add Outward Item</h2>
+          <p class="text-xs text-emerald-50">Record spare parts, promotional items or scrap</p>
+        </div>
+      </div>
+      <button (click)="closeModal()" class="p-2 bg-white/20 rounded-xl hover:bg-white/30 transition-colors backdrop-blur-sm border border-white/30">
+        <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+      </button>
+    </div>
+
+    <!-- SCROLLABLE BODY -->
+    <div class="flex-1 overflow-y-auto">
+      <div class="p-6 pb-4">
+
+        <!-- â”€â”€ TYPE SELECTOR GRID (matches master-inventory) â”€â”€â”€â”€ -->
+        <div class="mb-6">
+          <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 ml-1">Select Item Type</label>
+          <div class="grid grid-cols-12 gap-3">
+
+            <!-- Spare Parts -->
+            <button
+              type="button"
+              (click)="selectType('spare_parts')"
+              class="col-span-4 px-3 py-4 rounded-xl border-2 transition-all font-semibold text-xs flex flex-col items-center gap-2 hover:border-orange-400 hover:shadow-md hover:scale-105"
+              [class.border-orange-500]="selectedItemType === 'spare_parts'"
+              [class.bg-orange-50]="selectedItemType === 'spare_parts'"
+              [class.ring-2]="selectedItemType === 'spare_parts'"
+              [class.ring-orange-200]="selectedItemType === 'spare_parts'"
+              [class.border-slate-200]="selectedItemType !== 'spare_parts'"
+              [class.bg-white]="selectedItemType !== 'spare_parts'">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                [class.bg-orange-500]="selectedItemType === 'spare_parts'"
+                [class.bg-orange-100]="selectedItemType !== 'spare_parts'">
+                <ion-icon name="build-outline" class="text-xl transition-colors"
+                  [class.text-white]="selectedItemType === 'spare_parts'"
+                  [class.text-orange-500]="selectedItemType !== 'spare_parts'"></ion-icon>
+              </div>
+              <span [class.text-orange-700]="selectedItemType === 'spare_parts'" [class.text-slate-700]="selectedItemType !== 'spare_parts'">Spare Parts</span>
+            </button>
+
+            <!-- Promotional Items -->
+            <button
+              type="button"
+              (click)="selectType('promotional_items')"
+              class="col-span-4 px-3 py-4 rounded-xl border-2 transition-all font-semibold text-xs flex flex-col items-center gap-2 hover:border-purple-400 hover:shadow-md hover:scale-105"
+              [class.border-purple-500]="selectedItemType === 'promotional_items'"
+              [class.bg-purple-50]="selectedItemType === 'promotional_items'"
+              [class.ring-2]="selectedItemType === 'promotional_items'"
+              [class.ring-purple-200]="selectedItemType === 'promotional_items'"
+              [class.border-slate-200]="selectedItemType !== 'promotional_items'"
+              [class.bg-white]="selectedItemType !== 'promotional_items'">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                [class.bg-purple-500]="selectedItemType === 'promotional_items'"
+                [class.bg-purple-100]="selectedItemType !== 'promotional_items'">
+                <ion-icon name="gift-outline" class="text-xl transition-colors"
+                  [class.text-white]="selectedItemType === 'promotional_items'"
+                  [class.text-purple-500]="selectedItemType !== 'promotional_items'"></ion-icon>
+              </div>
+              <span [class.text-purple-700]="selectedItemType === 'promotional_items'" [class.text-slate-700]="selectedItemType !== 'promotional_items'">Promotional Items</span>
+            </button>
+
+            <!-- Scrap Material -->
+            <button
+              type="button"
+              (click)="selectType('scrap_material')"
+              class="col-span-4 px-3 py-4 rounded-xl border-2 transition-all font-semibold text-xs flex flex-col items-center gap-2 hover:border-rose-400 hover:shadow-md hover:scale-105"
+              [class.border-rose-500]="selectedItemType === 'scrap_material'"
+              [class.bg-rose-50]="selectedItemType === 'scrap_material'"
+              [class.ring-2]="selectedItemType === 'scrap_material'"
+              [class.ring-rose-200]="selectedItemType === 'scrap_material'"
+              [class.border-slate-200]="selectedItemType !== 'scrap_material'"
+              [class.bg-white]="selectedItemType !== 'scrap_material'">
+              <div class="w-9 h-9 rounded-xl flex items-center justify-center transition-colors"
+                [class.bg-rose-500]="selectedItemType === 'scrap_material'"
+                [class.bg-rose-100]="selectedItemType !== 'scrap_material'">
+                <ion-icon name="trash-outline" class="text-xl transition-colors"
+                  [class.text-white]="selectedItemType === 'scrap_material'"
+                  [class.text-rose-500]="selectedItemType !== 'scrap_material'"></ion-icon>
+              </div>
+              <span [class.text-rose-700]="selectedItemType === 'scrap_material'" [class.text-slate-700]="selectedItemType !== 'scrap_material'">Scrap Material</span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- placeholder when no type selected -->
+        <div *ngIf="!selectedItemType" class="flex flex-col items-center justify-center py-10 text-slate-400 gap-2">
+          <ion-icon name="arrow-up-outline" class="text-3xl"></ion-icon>
+          <p class="text-sm font-medium">Select an item type above to get started</p>
+        </div>
+
+        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+             FORM SECTION â€” only shown when type is selected
+        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+        <div *ngIf="selectedItemType">
+
+          <!-- â”€â”€ SECTION TABS (Spare / Promo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <div *ngIf="selectedItemType === 'spare_parts' || selectedItemType === 'promotional_items'"
+            class="flex gap-2 mb-5">
+            <button
+              (click)="activeSpareSection = 'outward_giving'"
+              class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              [class.section-tab--active]="activeSpareSection === 'outward_giving'">
+              <ion-icon name="arrow-up-circle-outline" class="text-base"></ion-icon>
+              Outward Giving
+            </button>
+            <button
+              (click)="activeSpareSection = 'returned_part'"
+              class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              [class.section-tab--active]="activeSpareSection === 'returned_part'">
+              <ion-icon name="arrow-down-circle-outline" class="text-base"></ion-icon>
+              Returned Part
+            </button>
+          </div>
+
+          <!-- â”€â”€ SECTION TABS (Scrap) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <div *ngIf="selectedItemType === 'scrap_material'"
+            class="flex gap-2 mb-5">
+            <button
+              (click)="activeScrapSection = 'returned_part'"
+              class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              [class.section-tab--active]="activeScrapSection === 'returned_part'">
+              <ion-icon name="return-down-back-outline" class="text-base"></ion-icon>
+              Returned Part
+            </button>
+            <button
+              (click)="activeScrapSection = 'selling_scrap'"
+              class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
+              [class.section-tab--active]="activeScrapSection === 'selling_scrap'">
+              <ion-icon name="cash-outline" class="text-base"></ion-icon>
+              Selling Scrap
+            </button>
+          </div>
+
+          <!-- â•â•â•â• SPARE PARTS â€” OUTWARD GIVING â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'spare_parts' && activeSpareSection === 'outward_giving'">
+            <form [formGroup]="spareOutwardForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <input formControlName="matCode"
+                  (change)="onMatCodeChange(spareOutwardForm.get('matCode')?.value, spareOutwardForm)"
+                  type="text" placeholder="e.g. MAT-001"
+                  class="field-input" [class.field-input--error]="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" />
+                <p *ngIf="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <input formControlName="matName" type="text" placeholder="e.g. Steel Spare Part"
+                  class="field-input" [class.field-input--error]="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" />
+                <p *ngIf="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" class="field-error">Material name is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(spareOutwardForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="spareOutwardForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="spareOutwardForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="spareOutwardForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="spareOutwardForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="spareOutwardForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="spareOutwardForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="spareOutwardForm.get('unit')?.invalid && spareOutwardForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 5"
+                  class="field-input" [class.field-input--error]="spareOutwardForm.get('quantity')?.invalid && spareOutwardForm.get('quantity')?.touched" />
+                <p *ngIf="spareOutwardForm.get('quantity')?.invalid && spareOutwardForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+            </form>
+          </ng-container>
+
+          <!-- â•â•â•â• SPARE PARTS â€” RETURNED PART â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'spare_parts' && activeSpareSection === 'returned_part'">
+            <form [formGroup]="spareReturnedForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <input formControlName="matCode"
+                  (change)="onMatCodeChange(spareReturnedForm.get('matCode')?.value, spareReturnedForm)"
+                  type="text" placeholder="e.g. MAT-004"
+                  class="field-input" [class.field-input--error]="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" />
+                <p *ngIf="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <input formControlName="matName" type="text" placeholder="e.g. Spare Part Name"
+                  class="field-input" [class.field-input--error]="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" />
+                <p *ngIf="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(spareReturnedForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="spareReturnedForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="spareReturnedForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="spareReturnedForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="spareReturnedForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="spareReturnedForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="spareReturnedForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="spareReturnedForm.get('unit')?.invalid && spareReturnedForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
+                  class="field-input" [class.field-input--error]="spareReturnedForm.get('quantity')?.invalid && spareReturnedForm.get('quantity')?.touched" />
+                <p *ngIf="spareReturnedForm.get('quantity')?.invalid && spareReturnedForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Add any notes about the returned part..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
+            </form>
+          </ng-container>
+
+          <!-- â•â•â•â• PROMOTIONAL ITEMS â€” OUTWARD GIVING â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'promotional_items' && activeSpareSection === 'outward_giving'">
+            <form [formGroup]="promoOutwardForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <input formControlName="matCode"
+                  (change)="onMatCodeChange(promoOutwardForm.get('matCode')?.value, promoOutwardForm)"
+                  type="text" placeholder="e.g. PROMO-001"
+                  class="field-input" [class.field-input--error]="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" />
+                <p *ngIf="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <input formControlName="matName" type="text" placeholder="e.g. Company T-Shirt"
+                  class="field-input" [class.field-input--error]="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" />
+                <p *ngIf="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" class="field-error">Material name is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(promoOutwardForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="promoOutwardForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="promoOutwardForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="promoOutwardForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="promoOutwardForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="promoOutwardForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="promoOutwardForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="promoOutwardForm.get('unit')?.invalid && promoOutwardForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
+                  class="field-input" [class.field-input--error]="promoOutwardForm.get('quantity')?.invalid && promoOutwardForm.get('quantity')?.touched" />
+                <p *ngIf="promoOutwardForm.get('quantity')?.invalid && promoOutwardForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+            </form>
+          </ng-container>
+
+          <!-- â•â•â•â• PROMOTIONAL ITEMS â€” RETURNED PART â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'promotional_items' && activeSpareSection === 'returned_part'">
+            <form [formGroup]="promoReturnedForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <input formControlName="matCode"
+                  (change)="onMatCodeChange(promoReturnedForm.get('matCode')?.value, promoReturnedForm)"
+                  type="text" placeholder="e.g. PROMO-RET-01"
+                  class="field-input" [class.field-input--error]="promoReturnedForm.get('matCode')?.invalid && promoReturnedForm.get('matCode')?.touched" />
+                <p *ngIf="promoReturnedForm.get('matCode')?.invalid && promoReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <input formControlName="matName" type="text" placeholder="e.g. Company T-Shirt"
+                  class="field-input" [class.field-input--error]="promoReturnedForm.get('matName')?.invalid && promoReturnedForm.get('matName')?.touched" />
+                <p *ngIf="promoReturnedForm.get('matName')?.invalid && promoReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(promoReturnedForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="promoReturnedForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="promoReturnedForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="promoReturnedForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="promoReturnedForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="promoReturnedForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="promoReturnedForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="promoReturnedForm.get('unit')?.invalid && promoReturnedForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
+                  class="field-input" [class.field-input--error]="promoReturnedForm.get('quantity')?.invalid && promoReturnedForm.get('quantity')?.touched" />
+                <p *ngIf="promoReturnedForm.get('quantity')?.invalid && promoReturnedForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Add any notes about the returned item..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
+            </form>
+          </ng-container>
+
+          <!-- â•â•â•â• SCRAP MATERIAL â€” RETURNED PART â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'scrap_material' && activeScrapSection === 'returned_part'">
+            <form [formGroup]="scrapReturnedForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <input formControlName="matCode"
+                  (change)="onMatCodeChange(scrapReturnedForm.get('matCode')?.value, scrapReturnedForm)"
+                  type="text" placeholder="e.g. SCRP-01"
+                  class="field-input" [class.field-input--error]="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" />
+                <p *ngIf="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <input formControlName="matName" type="text" placeholder="e.g. Scrap Metal"
+                  class="field-input" [class.field-input--error]="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" />
+                <p *ngIf="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(scrapReturnedForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="scrapReturnedForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="scrapReturnedForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="scrapReturnedForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="scrapReturnedForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="scrapReturnedForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="scrapReturnedForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="scrapReturnedForm.get('unit')?.invalid && scrapReturnedForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
+                  class="field-input" [class.field-input--error]="scrapReturnedForm.get('quantity')?.invalid && scrapReturnedForm.get('quantity')?.touched" />
+                <p *ngIf="scrapReturnedForm.get('quantity')?.invalid && scrapReturnedForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Describe the scrap condition or reason for return..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
+            </form>
+          </ng-container>
+
+          <!-- â•â•â•â• SCRAP MATERIAL â€” SELLING SCRAP â•â•â•â• -->
+          <ng-container *ngIf="selectedItemType === 'scrap_material' && activeScrapSection === 'selling_scrap'">
+            <form [formGroup]="scrapSellingForm" class="space-y-4">
+
+              <div class="field-group">
+                <label class="field-label">Select Material Code <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matCode"
+                    (change)="onMatCodeChange(scrapSellingForm.get('matCode')?.value, scrapSellingForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched">
+                    <option value="">Select material code...</option>
+                    <option *ngFor="let item of masterItems"
+                      [value]="item.materialCode || item.itemCode || item.sku || item.partCode">
+                      {{ item.materialCode || item.itemCode || item.sku || item.partCode }} - {{ item.name }}
+                    </option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Select Material Name <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matName"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched">
+                    <option value="">Select material name...</option>
+                    <option *ngFor="let item of masterItems" [value]="item.name">{{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched" class="field-error">Please select a material name</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                <div class="grid grid-cols-4 gap-2">
+                  <button *ngFor="let u of unitOptions" type="button"
+                    (click)="setUnit(scrapSellingForm, u.key)"
+                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                    [class.border-emerald-500]="scrapSellingForm.get('unit')?.value === u.key"
+                    [class.bg-emerald-50]="scrapSellingForm.get('unit')?.value === u.key"
+                    [class.text-emerald-700]="scrapSellingForm.get('unit')?.value === u.key"
+                    [class.border-slate-200]="scrapSellingForm.get('unit')?.value !== u.key"
+                    [class.bg-white]="scrapSellingForm.get('unit')?.value !== u.key"
+                    [class.text-slate-600]="scrapSellingForm.get('unit')?.value !== u.key">
+                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                    {{ u.label }}
+                  </button>
+                </div>
+                <p *ngIf="scrapSellingForm.get('unit')?.invalid && scrapSellingForm.get('unit')?.touched" class="field-error">Please select a unit</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 5"
+                  class="field-input" [class.field-input--error]="scrapSellingForm.get('quantity')?.invalid && scrapSellingForm.get('quantity')?.touched" />
+                <p *ngIf="scrapSellingForm.get('quantity')?.invalid && scrapSellingForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Quoted Selling Price <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <input formControlName="desiredQuotedPrice" type="number" placeholder="&#8377; 0.00"
+                    class="field-input" [class.field-input--error]="scrapSellingForm.get('desiredQuotedPrice')?.invalid && scrapSellingForm.get('desiredQuotedPrice')?.touched" />
+                </div>
+                <p *ngIf="scrapSellingForm.get('desiredQuotedPrice')?.invalid && scrapSellingForm.get('desiredQuotedPrice')?.touched" class="field-error">Please enter a selling price</p>
+              </div>
+
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Any additional notes about this sale..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
+            </form>
+          </ng-container>
+
+        </div>
+        <!-- end *ngIf="selectedItemType" -->
+
+      </div>
+    </div>
+    <!-- end scrollable body -->
+
+    <!-- MODAL FOOTER -->
+    <div class="px-6 py-4 border-t border-slate-100 flex gap-3 flex-shrink-0 bg-white sm:rounded-b-3xl">
+      <button (click)="closeModal()"
+        class="flex-1 py-3 px-4 rounded-xl border-2 border-slate-200 text-slate-600 font-semibold text-sm hover:bg-slate-50 transition-all duration-200">
+        Cancel
+      </button>
+      <button
+        *ngIf="selectedItemType"
+        (click)="submitForm()"
+        [disabled]="isSubmitting"
+        class="flex-1 py-3 px-4 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-semibold text-sm hover:from-emerald-600 hover:to-teal-600 transition-all duration-200 disabled:opacity-50 flex items-center justify-center gap-2 shadow-md shadow-emerald-200">
+        <ion-spinner *ngIf="isSubmitting" name="crescent" class="w-4 h-4"></ion-spinner>
+        <ion-icon *ngIf="!isSubmitting" name="checkmark-circle-outline" class="text-base"></ion-icon>
+        {{ isSubmitting ? 'Saving...' : 'Save Record' }}
+      </button>
+    </div>
+
+  </div>
+</div>
+
