@@ -50,7 +50,7 @@ export class MyPaymentsPage implements OnInit, OnDestroy {
   loadPayments(): void {
     this.isLoading = true;
     this.paymentService
-      .getPendingPayments(this.salespersonId)
+      .getLedgerUpdatedPaymentsBySalesperson(this.salespersonId)
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {

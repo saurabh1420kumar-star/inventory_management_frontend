@@ -688,7 +688,7 @@ export class DistributorDashboardPage implements OnInit {
     console.log('💳 Fetching payment collections for distributorId:', this.distributorId);
     this.isLoadingPaymentCollections = true;
 
-    this.ledgerService.getPaymentsByDistributorAndStatus(this.distributorId, 'LEDGER_UPDATED').subscribe({
+    this.ledgerService.getLedgerUpdatedPaymentsByDistributor(this.distributorId).subscribe({
       next: (response: any) => {
         console.log('✅ Payment Collections Fetched:', response);
         this.paymentCollections = Array.isArray(response) ? response : response?.data || [];

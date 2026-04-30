@@ -73,6 +73,12 @@ export class PaymentService {
     return this.http.get<PaymentResponse>(`${this.apiUrl}/distributor/${distributorId}`);
   }
 
+  getLedgerUpdatedPaymentsBySalesperson(salespersonId: number): Observable<any> {
+    const url = 'https://api.imsnectarorigin.com/api/accounts/ledger-updated-payments';
+    const params = { salespersonId: salespersonId.toString() };
+    return this.http.get<any>(url, { params });
+  }
+
   getPendingPayments(salespersonId: number): Observable<any> {
     const pendingPaymentsUrl = 'https://api.imsnectarorigin.com/api/accounts/pending-payments';
     const params = {

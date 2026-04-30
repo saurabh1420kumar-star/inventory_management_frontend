@@ -220,6 +220,18 @@ export class LedgerService {
         );
     }
 
+    getLedgerUpdatedPaymentsByDistributor(distributorId: number): Observable<any[]> {
+        return this.http.get<any[]>(
+            `${this.apiUrl}/accounts/ledger-updated-payments`,
+            { params: { distributorId: String(distributorId) } }
+        ).pipe(
+            catchError(error => {
+                console.error('❌ API Error Response:', error);
+                return of([]);
+            })
+        );
+    }
+
     getPaymentsByDistributorAndStatus(distributorId: number, status: string): Observable<any[]> {
         console.log('🔄 API Request - GET /api/accounts/payments');
         console.log('📤 DistributorId:', distributorId);
