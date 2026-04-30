@@ -284,7 +284,7 @@
         <div *ngIf="selectedItemType">
 
           <!-- â”€â”€ SECTION TABS (Spare / Promo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-          <div *ngIf="selectedItemType === 'spare_parts' || selectedItemType === 'promotional_items'"
+          <div *ngIf="selectedItemType === 'spare_parts'"
             class="flex gap-2 mb-5">
             <button
               (click)="activeSpareSection = 'outward_giving'"
@@ -475,61 +475,6 @@
             </form>
           </ng-container>
 
-          <!-- â•â•â•â• PROMOTIONAL ITEMS â€” RETURNED PART â•â•â•â• -->
-          <ng-container *ngIf="selectedItemType === 'promotional_items' && activeSpareSection === 'returned_part'">
-            <form [formGroup]="promoReturnedForm" class="space-y-4">
-
-              <div class="field-group">
-                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <input formControlName="matCode"
-                  (change)="onMatCodeChange(promoReturnedForm.get('matCode')?.value, promoReturnedForm)"
-                  type="text" placeholder="e.g. PROMO-RET-01"
-                  class="field-input" [class.field-input--error]="promoReturnedForm.get('matCode')?.invalid && promoReturnedForm.get('matCode')?.touched" />
-                <p *ngIf="promoReturnedForm.get('matCode')?.invalid && promoReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <input formControlName="matName" type="text" placeholder="e.g. Company T-Shirt"
-                  class="field-input" [class.field-input--error]="promoReturnedForm.get('matName')?.invalid && promoReturnedForm.get('matName')?.touched" />
-                <p *ngIf="promoReturnedForm.get('matName')?.invalid && promoReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
-                <div class="grid grid-cols-4 gap-2">
-                  <button *ngFor="let u of unitOptions" type="button"
-                    (click)="setUnit(promoReturnedForm, u.key)"
-                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
-                    [class.border-emerald-500]="promoReturnedForm.get('unit')?.value === u.key"
-                    [class.bg-emerald-50]="promoReturnedForm.get('unit')?.value === u.key"
-                    [class.text-emerald-700]="promoReturnedForm.get('unit')?.value === u.key"
-                    [class.border-slate-200]="promoReturnedForm.get('unit')?.value !== u.key"
-                    [class.bg-white]="promoReturnedForm.get('unit')?.value !== u.key"
-                    [class.text-slate-600]="promoReturnedForm.get('unit')?.value !== u.key">
-                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
-                    {{ u.label }}
-                  </button>
-                </div>
-                <p *ngIf="promoReturnedForm.get('unit')?.invalid && promoReturnedForm.get('unit')?.touched" class="field-error">Please select a unit</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
-                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
-                  class="field-input" [class.field-input--error]="promoReturnedForm.get('quantity')?.invalid && promoReturnedForm.get('quantity')?.touched" />
-                <p *ngIf="promoReturnedForm.get('quantity')?.invalid && promoReturnedForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Comments</label>
-                <textarea formControlName="comments" rows="3"
-                  placeholder="Add any notes about the returned item..."
-                  class="field-input resize-none"></textarea>
-              </div>
-
-            </form>
-          </ng-container>
 
           <!-- â•â•â•â• SCRAP MATERIAL â€” RETURNED PART â•â•â•â• -->
           <ng-container *ngIf="selectedItemType === 'scrap_material' && activeScrapSection === 'returned_part'">

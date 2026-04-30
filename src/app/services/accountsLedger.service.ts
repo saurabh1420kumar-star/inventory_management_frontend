@@ -52,8 +52,8 @@ export interface Distributor {
     IFSC: string;
     createdOn: string;
     updatedOn: string;
-    creditLimit?: boolean;
-    creditAmount?: number;
+    creditLimit?: number;
+    creditBalance?: number;
     bankGuaranteeNumber?: string;
     bgExpiryDate?: string;
 }
@@ -369,6 +369,20 @@ export class LedgerService {
                     success: false,
                     message: error?.error?.message || 'Failed to update credit limit',
                     data: null
+                });
+            })
+        );
+    }
+
+    addCredit(distributorId: number, amount: number, description: string = 'Credit added by accounts team'): Observable<any> {
+        const url = `${this.apiUrl}/accounts/add-credit/${distributorId}?amount=${amount}&description=${encodeURIComponent(description)}`;
+        return this.http.post<any>(url, {}).pipe(
+            catchError(error => {
+                console.error('Add Credit Error:', error);
+                return of({
+                    paymentId: null,
+                    message: error?.error?.message || 'Failed to add credit',
+                    status: 'error'
                 });
             })
         );
