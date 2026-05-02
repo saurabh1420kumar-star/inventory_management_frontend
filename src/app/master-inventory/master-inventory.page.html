@@ -787,6 +787,32 @@
               </div>
             </div>
 
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="document-text-outline" class="text-slate-400"></ion-icon>
+                  HSN
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                  <ion-item lines="none" class="bg-transparent rounded-2xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="hsn" placeholder="e.g. 7208" class="px-4 py-3 text-slate-900 font-medium text-base"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="receipt-outline" class="text-slate-400"></ion-icon>
+                  Tax Rate Code
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                  <ion-item lines="none" class="bg-transparent rounded-2xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" formControlName="taxRateCode" placeholder="e.g. GST18" class="px-4 py-3 text-slate-900 font-medium text-base"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+            </div>
+
             <!-- 3. Unit Type -->
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1">

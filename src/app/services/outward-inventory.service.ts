@@ -17,12 +17,38 @@ export interface OutwardRecord {
   updatedAt?: string;
 }
 
+export interface OutwardGivingPayload {
+  itemType: 'SPARE_PARTS' | 'PROMOTIONAL_ITEMS' | 'SCRAP_MATERIAL';
+  transactionType: 'OUTWARD_GIVING';
+  materialCode: string;
+  materialName: string;
+  unit: 'KILOGRAMS' | 'DOZEN' | 'PIECE' | 'LITER';
+  quantity: number;
+  comments: string;
+  quotedSellingPrice: number;
+}
+
+export interface OutwardItemResponse {
+  id: number;
+  itemType: 'SPARE_PARTS' | 'PROMOTIONAL_ITEMS' | 'SCRAP_MATERIAL';
+  transactionType: 'OUTWARD_GIVING' | 'RETURNED_PART';
+  materialCode: string;
+  materialName: string;
+  unit: 'KILOGRAMS' | 'DOZENS' | 'PIECES' | 'LITRES';
+  quantity: number;
+  comments?: string;
+  quotedSellingPrice?: number;
+  createdAt?: string;
+  updatedAt?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
 export class OutwardInventoryService {
 
   private readonly baseUrl = `${environment.productsUrl}/outward-inventory`;
+  private readonly outwardGivingUrl = `${environment.productsUrl}/outward-items`;
 
   constructor(private http: HttpClient) {}
 
@@ -36,6 +62,18 @@ export class OutwardInventoryService {
 
   create(payload: Partial<OutwardRecord>): Observable<OutwardRecord> {
     return this.http.post<OutwardRecord>(this.baseUrl, payload);
+  }
+
+  createOutwardItem(payload: OutwardGivingPayload): Observable<unknown> {
+    return this.http.post(this.outwardGivingUrl, payload);
+  }
+
+  getOutwardItemsByType(itemType: OutwardGivingPayload['itemType']): Observable<OutwardItemResponse[]> {
+    return this.http.get<OutwardItemResponse[]>(`${this.outwardGivingUrl}/type/${itemType}`);
+  }
+
+  getOutwardScrapItems(): Observable<OutwardItemResponse[]> {
+    return this.http.get<OutwardItemResponse[]>(`${this.outwardGivingUrl}/scrap`);
   }
 
   update(id: number, payload: Partial<OutwardRecord>): Observable<OutwardRecord> {

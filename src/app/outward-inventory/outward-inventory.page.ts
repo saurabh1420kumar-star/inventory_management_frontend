@@ -22,7 +22,12 @@ import {
   IonRefresherContent
 } from '@ionic/angular/standalone';
 
-import { OutwardInventoryService, OutwardRecord } from '../services/outward-inventory.service';
+import {
+  OutwardInventoryService,
+  OutwardRecord,
+  OutwardGivingPayload,
+  OutwardItemResponse
+} from '../services/outward-inventory.service';
 import { InventoryService, InventoryItem } from '../services/inventory';
 import { Toast } from '../services/toast';
 
@@ -30,6 +35,11 @@ export type ModalItemType = 'spare_parts' | 'promotional_items' | 'scrap_materia
 export type SpareSection = 'outward_giving' | 'returned_part';
 export type ScrapSection = 'returned_part' | 'selling_scrap';
 export type UnitType = 'KG' | 'DOZEN' | 'PIECE' | 'LITER';
+
+interface DropdownOption {
+  value: string | number;
+  label: string;
+}
 
 @Component({
   selector: 'app-outward-inventory',
@@ -63,6 +73,18 @@ export class OutwardInventoryPage implements OnInit {
 
   /** master inventory items for select dropdowns */
   masterItems: InventoryItem[] = [];
+
+  /** spare parts dropdown source from /products/machine-parts */
+  sparePartItems: InventoryItem[] = [];
+
+  /** promotional items dropdown source from /products/promotional-items */
+  promotionalItems: InventoryItem[] = [];
+
+  /** scrap items dropdown source from /products/scrap-items */
+  scrapItems: InventoryItem[] = [];
+
+  /** outward-items filtered by item type for scrap selection */
+  scrapOutwardItems: OutwardItemResponse[] = [];
 
   /** all outward records for the list */
   records: OutwardRecord[] = [];
@@ -133,6 +155,16 @@ export class OutwardInventoryPage implements OnInit {
     { key: 'LITER', label: 'Litres',    icon: 'beaker-outline' }
   ];
 
+  readonly quantityOptions: DropdownOption[] = Array.from({ length: 50 }, (_, index) => ({
+    value: index + 1,
+    label: `${index + 1}`
+  }));
+
+  readonly quotedPriceOptions: DropdownOption[] = [0, 100, 250, 500, 1000, 1500, 2000, 5000, 10000].map(value => ({
+    value,
+    label: `Rs. ${value}`
+  }));
+
   readonly filterTabs: { key: 'all' | ModalItemType | 'raw_material' | 'finished_product'; label: string }[] = [
     { key: 'all',               label: 'All' },
     { key: 'raw_material',      label: 'Raw Materials' },
@@ -153,7 +185,8 @@ export class OutwardInventoryPage implements OnInit {
       matCode:  ['', Validators.required],
       matName:  ['', Validators.required],
       unit:     ['', Validators.required],
-      quantity: [null, [Validators.required, Validators.min(1)]]
+      quantity: [null, [Validators.required, Validators.min(1)]],
+      comments: ['']
     });
 
     this.spareReturnedForm = this.fb.group({
@@ -168,7 +201,8 @@ export class OutwardInventoryPage implements OnInit {
       matCode:  ['', Validators.required],
       matName:  ['', Validators.required],
       unit:     ['', Validators.required],
-      quantity: [null, [Validators.required, Validators.min(1)]]
+      quantity: [null, [Validators.required, Validators.min(1)]],
+      comments: ['']
     });
 
     this.promoReturnedForm = this.fb.group({
@@ -252,10 +286,121 @@ export class OutwardInventoryPage implements OnInit {
     this.selectedItemType = type;
     this.activeSpareSection = 'outward_giving';
     this.activeScrapSection = 'returned_part';
+
+    if (type === 'spare_parts') {
+      this.loadSparePartItems();
+    } else if (type === 'promotional_items') {
+      this.loadPromotionalItems();
+    } else if (type === 'scrap_material') {
+      this.loadScrapItems();
+    }
+  }
+
+  private loadSparePartItems(): void {
+    if (this.sparePartItems.length > 0) return;
+
+    this.inventoryService.getMachineParts().subscribe({
+      next: (items) => {
+        this.sparePartItems = items;
+      }
+    });
+  }
+
+  private loadPromotionalItems(): void {
+    if (this.promotionalItems.length > 0) return;
+
+    this.inventoryService.getPromotionalItems().subscribe({
+      next: (items) => {
+        this.promotionalItems = items;
+      }
+    });
+  }
+
+  private loadScrapItems(): void {
+    if (this.scrapOutwardItems.length > 0 || this.scrapItems.length > 0) return;
+
+    this.outwardService.getOutwardScrapItems().subscribe({
+      next: (items) => {
+        this.scrapOutwardItems = items;
+      },
+      error: () => {
+        this.inventoryService.getScrapItems().subscribe({
+          next: (items) => {
+            this.scrapItems = items;
+          }
+        });
+      }
+    });
+  }
+
+  getSparePartOptions(): { code: string; name: string; unit?: UnitType; quantity?: number; price?: number }[] {
+    return this.sparePartItems
+      .filter(item => !!item.name)
+      .map(item => ({
+        code: item.partNumber || item.partCode || item.itemCode || `PART-${item.id}`,
+        name: item.name,
+        unit: this.normalizeUnit(item.unit),
+        quantity: (item as any).quantity
+      }));
+  }
+
+  getPromotionalItemOptions(): { code: string; name: string; unit?: UnitType; quantity?: number; price?: number }[] {
+    return this.promotionalItems
+      .filter(item => item.itemCode && item.name)
+      .map(item => {
+        const rawPrice = (item as any).price;
+        const parsedPrice = typeof rawPrice === 'number' ? rawPrice : Number(rawPrice);
+
+        return {
+          code: item.itemCode!,
+          name: item.name,
+          unit: this.normalizeUnit(item.unit),
+          quantity: (item as any).quantity,
+          price: Number.isFinite(parsedPrice) ? parsedPrice : undefined
+        };
+      });
+  }
+
+  getScrapItemOptions(): { code: string; name: string; unit?: UnitType; quantity?: number; price?: number }[] {
+    if (this.scrapOutwardItems.length) {
+      const preferredScrapItems = this.scrapOutwardItems.filter(item => item.itemType === 'SCRAP_MATERIAL');
+      const outwardSource = preferredScrapItems.length ? preferredScrapItems : this.scrapOutwardItems;
+
+      return outwardSource
+        .filter(item => !!item.materialName)
+        .map(item => ({
+          code: item.materialCode || `SCRAP-${item.id}`,
+          name: item.materialName,
+          unit: this.normalizeUnit(item.unit),
+          quantity: item.quantity,
+          price: typeof item.quotedSellingPrice === 'number' ? item.quotedSellingPrice : undefined
+        }));
+    }
+
+    return this.scrapItems
+      .filter(item => (item.itemCode || item.materialCode || item.sku || item.partCode) && item.name)
+      .map(item => ({
+        code: item.itemCode || item.materialCode || item.sku || item.partCode || '',
+        name: item.name,
+        unit: this.normalizeUnit(item.unit),
+        quantity: (item as any).quantity
+      }));
   }
 
   setUnit(form: FormGroup, unit: UnitType): void {
     form.patchValue({ unit });
+  }
+
+  getMaterialOptions(): { code: string; name: string; unit?: UnitType; quantity?: number; price?: number }[] {
+    return this.masterItems
+      .map(item => ({
+        code: this.getItemCode(item),
+        name: item.name,
+        unit: this.normalizeUnit(item.unit),
+        quantity: (item as any).quantity,
+        price: item.price
+      }))
+      .filter(item => !!item.code && !!item.name);
   }
 
   private resetForms(): void {
@@ -269,12 +414,123 @@ export class OutwardInventoryPage implements OnInit {
 
   // â”€â”€â”€ auto-fill mat name when code typed â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   onMatCodeChange(code: string, form: FormGroup): void {
-    const item = this.masterItems.find(i =>
-      (i.materialCode || i.itemCode || i.sku || i.partCode) === code
-    );
-    if (item) {
-      form.patchValue({ matName: item.name });
+    const sourceOptions = this.selectedItemType === 'spare_parts'
+      ? this.getSparePartOptions()
+      : this.selectedItemType === 'promotional_items'
+        ? this.getPromotionalItemOptions()
+        : this.selectedItemType === 'scrap_material'
+          ? this.getScrapItemOptions()
+          : this.getMaterialOptions();
+    const item = sourceOptions.find(option => option.code === code);
+    if (!item) return;
+
+    const patchValue: {
+      matCode: string;
+      matName: string;
+      unit?: UnitType;
+      quantity?: number;
+      quotedSellingPrice?: number;
+      desiredQuotedPrice?: number;
+    } = {
+      matCode: item.code,
+      matName: item.name
+    };
+
+    if (item.unit) {
+      patchValue.unit = item.unit;
     }
+
+    if (this.selectedItemType === 'spare_parts' && typeof item.quantity === 'number') {
+      patchValue.quantity = item.quantity;
+    }
+
+    if (this.selectedItemType === 'scrap_material' && typeof item.quantity === 'number') {
+      patchValue.quantity = item.quantity;
+    }
+
+    if (this.selectedItemType === 'promotional_items' && typeof item.price === 'number' && form.get('quotedSellingPrice')) {
+      patchValue.quotedSellingPrice = item.price;
+    }
+
+    if (this.selectedItemType === 'scrap_material' && typeof item.price === 'number' && form.get('desiredQuotedPrice')) {
+      patchValue.desiredQuotedPrice = item.price;
+    }
+
+    form.patchValue(patchValue);
+  }
+
+  onMatNameChange(name: string, form: FormGroup): void {
+    const sourceOptions = this.selectedItemType === 'spare_parts'
+      ? this.getSparePartOptions()
+      : this.selectedItemType === 'promotional_items'
+        ? this.getPromotionalItemOptions()
+        : this.selectedItemType === 'scrap_material'
+          ? this.getScrapItemOptions()
+          : this.getMaterialOptions();
+    const item = sourceOptions.find(option => option.name === name);
+    if (!item) return;
+
+    const patchValue: {
+      matCode: string;
+      matName: string;
+      unit?: UnitType;
+      quantity?: number;
+      desiredQuotedPrice?: number;
+    } = {
+      matCode: item.code,
+      matName: item.name
+    };
+
+    if (item.unit) {
+      patchValue.unit = item.unit;
+    }
+
+    if (typeof item.quantity === 'number') {
+      patchValue.quantity = item.quantity;
+    }
+
+    if (this.selectedItemType === 'scrap_material' && typeof item.price === 'number' && form.get('desiredQuotedPrice')) {
+      patchValue.desiredQuotedPrice = item.price;
+    }
+
+    form.patchValue(patchValue);
+  }
+
+  getCommentOptions(itemType: ModalItemType, section: SpareSection | ScrapSection): DropdownOption[] {
+    const defaultOptions: DropdownOption[] = [
+      { value: '', label: 'No comments' }
+    ];
+
+    const key = `${itemType}:${section}`;
+    const map: Record<string, string[]> = {
+      'spare_parts:outward_giving': [
+        'Issued for service work',
+        'Issued for dealer support',
+        'Issued for urgent replacement'
+      ],
+      'spare_parts:returned_part': [
+        'Returned after field use',
+        'Returned in good condition',
+        'Returned for inspection'
+      ],
+      'promotional_items:outward_giving': [
+        'Issued for dealer activation',
+        'Issued for campaign support',
+        'Issued for event distribution'
+      ],
+      'scrap_material:returned_part': [
+        'Returned from production floor',
+        'Returned after quality check',
+        'Collected for scrap processing'
+      ],
+      'scrap_material:selling_scrap': [
+        'Ready for scrap sale',
+        'Approved for disposal',
+        'Quoted to scrap buyer'
+      ]
+    };
+
+    return defaultOptions.concat((map[key] || []).map(value => ({ value, label: value })));
   }
 
   // â”€â”€â”€ submit â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -282,20 +538,16 @@ export class OutwardInventoryPage implements OnInit {
     if (!this.selectedItemType) return;
 
     let form: FormGroup;
-    let section: string;
 
     if (this.selectedItemType === 'spare_parts') {
       form = this.activeSpareSection === 'outward_giving'
         ? this.spareOutwardForm : this.spareReturnedForm;
-      section = this.activeSpareSection;
     } else if (this.selectedItemType === 'promotional_items') {
       form = this.activeSpareSection === 'outward_giving'
         ? this.promoOutwardForm : this.promoReturnedForm;
-      section = this.activeSpareSection;
     } else {
       form = this.activeScrapSection === 'returned_part'
         ? this.scrapReturnedForm : this.scrapSellingForm;
-      section = this.activeScrapSection;
     }
 
     if (form.invalid) {
@@ -304,25 +556,92 @@ export class OutwardInventoryPage implements OnInit {
     }
 
     this.isSubmitting = true;
-    const payload: Partial<OutwardRecord> = {
-      ...form.value,
-      itemType: this.selectedItemType,
-      section
-    };
 
-    this.outwardService.create(payload).subscribe({
-      next: (created) => {
-        this.records.unshift(created);
-        this.applyFilter();
-        this.isSubmitting = false;
-        this.closeModal();
-        this.toast.present('Record saved successfully!', 'success');
+    const payload = this.buildOutwardGivingPayload(form, this.selectedItemType);
+
+    this.outwardService.createOutwardItem(payload).subscribe({
+      next: () => {
+        this.outwardService.getAll().subscribe({
+          next: (data) => {
+            this.records = data;
+            this.applyFilter();
+            this.isSubmitting = false;
+            this.closeModal();
+            this.toast.present('Record saved successfully!', 'success');
+          },
+          error: () => {
+            this.isSubmitting = false;
+            this.closeModal();
+            this.toast.present('Record saved successfully!', 'success');
+          }
+        });
       },
       error: (err) => {
         this.isSubmitting = false;
         this.toast.present(err?.error?.message || 'Failed to save record.', 'danger');
       }
     });
+  }
+
+  private buildOutwardGivingPayload(form: FormGroup, itemType: ModalItemType): OutwardGivingPayload {
+    const formValue = form.getRawValue();
+
+    return {
+      itemType: this.mapItemTypeForApi(itemType),
+      transactionType: 'OUTWARD_GIVING',
+      materialCode: formValue.matCode,
+      materialName: formValue.matName,
+      unit: this.mapUnitForApi(formValue.unit),
+      quantity: Number(formValue.quantity),
+      comments: formValue.comments || '',
+      quotedSellingPrice: Number(formValue.quotedSellingPrice ?? formValue.desiredQuotedPrice ?? 0)
+    };
+  }
+
+  private mapItemTypeForApi(itemType: ModalItemType): OutwardGivingPayload['itemType'] {
+    const map: Record<ModalItemType, OutwardGivingPayload['itemType']> = {
+      spare_parts: 'SPARE_PARTS',
+      promotional_items: 'PROMOTIONAL_ITEMS',
+      scrap_material: 'SCRAP_MATERIAL'
+    };
+    return map[itemType];
+  }
+
+  private mapUnitForApi(unit: UnitType): OutwardGivingPayload['unit'] {
+    const map: Record<UnitType, OutwardGivingPayload['unit']> = {
+      KG: 'KILOGRAMS',
+      DOZEN: 'DOZEN',
+      PIECE: 'PIECE',
+      LITER: 'LITER'
+    };
+    return map[unit];
+  }
+
+  private getItemCode(item: InventoryItem): string {
+    return item.materialCode || item.itemCode || item.sku || item.partCode || '';
+  }
+
+  private normalizeUnit(unit?: string): UnitType | undefined {
+    if (!unit) return undefined;
+
+    const normalized = String(unit).trim().toUpperCase();
+
+    const map: Record<string, UnitType> = {
+      KG: 'KG',
+      KILOGRAM: 'KG',
+      KILOGRAMS: 'KG',
+      DOZENS: 'DOZEN',
+      LITER: 'LITER',
+      LITRE: 'LITER',
+      LITRES: 'LITER',
+      PIECE: 'PIECE',
+      PIECES: 'PIECE',
+      PCS: 'PIECE',
+      PC: 'PIECE',
+      DOZEN: 'DOZEN'
+    };
+
+    return map[normalized] || undefined;
   }
 
   // â”€â”€â”€ pull to refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€

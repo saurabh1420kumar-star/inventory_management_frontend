@@ -191,6 +191,8 @@ export class MasterInventoryPage implements OnInit {
       category: ['', Validators.required],
       name: ['', Validators.required],
       materialCode: [''],
+      hsn: [''],
+      taxRateCode: [''],
       unit: ['KG', Validators.required],
       // kept for reset compatibility
       subUnit: ['KG'],
@@ -211,6 +213,8 @@ export class MasterInventoryPage implements OnInit {
     this.editForm = this.fb.group({
       name: ['', Validators.required],
       materialCode: [''],
+      hsn: [''],
+      taxRateCode: [''],
       unit: ['KG', Validators.required],
       subUnit: ['KG'],
       price: [0, [Validators.min(0)]],
@@ -628,6 +632,8 @@ export class MasterInventoryPage implements OnInit {
       minimumThreshold: 0,
       price: 0,
       weight: 0,
+      hsn: '',
+      taxRateCode: '',
       sku: '',
       description: '',
       vendorId: '',
@@ -643,20 +649,40 @@ export class MasterInventoryPage implements OnInit {
     this.haptic.medium();
     if (this.addForm.invalid || !this.selectedCategory) return;
 
-    const { name, materialCode, unit } = this.addForm.value;
+    const { name, materialCode, unit, hsn, taxRateCode } = this.addForm.value;
     const category = this.selectedCategory;
     let payload: Record<string, any>;
 
+    const commonFields = {
+      hsn: (hsn ?? '').toString().trim(),
+      taxRateCode: (taxRateCode ?? '').toString().trim()
+    };
+
     switch (category) {
       case 'raw_material':
-        payload = { name, materialCode: materialCode || undefined, unit: unit || 'KG' };
+        payload = {
+          name,
+          materialCode: materialCode || undefined,
+          unit: unit || 'KG',
+          ...commonFields
+        };
         break;
       case 'finished_product':
-        payload = { name, sku: materialCode || undefined, unit: unit || 'KG' };
+        payload = {
+          name,
+          sku: materialCode || undefined,
+          unit: unit || 'KG',
+          ...commonFields
+        };
         break;
       default:
         // spare_parts, promotional_items, scrap_material → itemCode
-        payload = { name, itemCode: materialCode || undefined, unit: unit || 'KG' };
+        payload = {
+          name,
+          itemCode: materialCode || undefined,
+          unit: unit || 'KG',
+          ...commonFields
+        };
         break;
     }
 
@@ -697,6 +723,8 @@ export class MasterInventoryPage implements OnInit {
     this.editForm.patchValue({
       name: item.name,
       materialCode: item.materialCode || '',
+      hsn: (item as any).hsn || '',
+      taxRateCode: (item as any).taxRateCode || '',
       unit: item.unit || 'KG',
       subUnit: (item as any).subUnit || 'KG',
       price: item.price || 0,
@@ -717,6 +745,8 @@ export class MasterInventoryPage implements OnInit {
     this.editForm.reset({
       unit: 'KG',
       subUnit: 'KG',
+      hsn: '',
+      taxRateCode: '',
       quantity: 0,
       minimumThreshold: 0
     });
@@ -735,6 +765,8 @@ export class MasterInventoryPage implements OnInit {
         name: formVal.name,
         description: formVal.description || '',
         sku: formVal.sku || '',
+        hsn: formVal.hsn || undefined,
+        taxRateCode: formVal.taxRateCode || undefined,
         price: formVal.price ?? 0,
         unit: formVal.unit || 'KG',
         weight: formVal.weight ?? 0,
@@ -747,6 +779,8 @@ export class MasterInventoryPage implements OnInit {
         category: 'raw_material',
         name: formVal.name,
         materialCode: formVal.materialCode,
+        hsn: formVal.hsn || undefined,
+        taxRateCode: formVal.taxRateCode || undefined,
         unit: formVal.unit,
         subUnit: formVal.subUnit || undefined,
         price: formVal.price ?? 0,

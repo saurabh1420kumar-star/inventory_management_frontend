@@ -7,6 +7,8 @@ import { environment } from '../../environments/environment';
 export interface InventoryItem {
   id: number;
   name: string;
+  hsn?: string;
+  taxRateCode?: string;
 
   /** Raw material only */
   materialCode?: string;
@@ -247,6 +249,34 @@ export class InventoryService {
         items.map(i => ({
           ...i,
           category: 'finished_product' as const
+        }))
+      ),
+      catchError(() => of([]))
+    );
+  }
+
+  getPromotionalItems(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(
+      `${this.promotionalItemsUrl}`
+    ).pipe(
+      map(items =>
+        items.map(i => ({
+          ...i,
+          category: 'promotional_items' as const
+        }))
+      ),
+      catchError(() => of([]))
+    );
+  }
+
+  getScrapItems(): Observable<InventoryItem[]> {
+    return this.http.get<InventoryItem[]>(
+      `${this.scrapItemsUrl}`
+    ).pipe(
+      map(items =>
+        items.map(i => ({
+          ...i,
+          category: 'scrap_material' as const
         }))
       ),
       catchError(() => of([]))

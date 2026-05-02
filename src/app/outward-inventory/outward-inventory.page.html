@@ -143,7 +143,7 @@
             <div class="grid grid-cols-2 gap-2 mb-3">
               <div class="bg-slate-50 rounded-xl p-2.5">
                 <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quantity</p>
-                <p class="text-slate-700 font-bold text-sm">{{ r.quantity ?? '-' }} <span class="text-slate-400 font-normal text-xs">{{ getUnitLabel(r.unit) }}</span></p>
+                <p class="text-slate-700 font-bold text-sm">{{ r.quantity }} <span class="text-slate-400 font-normal text-xs">{{ getUnitLabel(r.unit) }}</span></p>
               </div>
               <div *ngIf="r.desiredQuotedPrice" class="bg-emerald-50 rounded-xl p-2.5">
                 <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quoted Price</p>
@@ -326,19 +326,33 @@
             <form [formGroup]="spareOutwardForm" class="space-y-4">
 
               <div class="field-group">
-                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <input formControlName="matCode"
-                  (change)="onMatCodeChange(spareOutwardForm.get('matCode')?.value, spareOutwardForm)"
-                  type="text" placeholder="e.g. MAT-001"
-                  class="field-input" [class.field-input--error]="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" />
-                <p *ngIf="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matName"
+                    (change)="onMatNameChange(spareOutwardForm.get('matName')?.value, spareOutwardForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched">
+                    <option value="">Select material name...</option>
+                    <option *ngFor="let item of getSparePartOptions()" [value]="item.name">{{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
-                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <input formControlName="matName" type="text" placeholder="e.g. Steel Spare Part"
-                  class="field-input" [class.field-input--error]="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" />
-                <p *ngIf="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" class="field-error">Material name is required</p>
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matCode"
+                    (change)="onMatCodeChange(spareOutwardForm.get('matCode')?.value, spareOutwardForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched">
+                    <option value="">Select material code...</option>
+                    <option *ngFor="let item of getSparePartOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
@@ -367,6 +381,13 @@
                 <p *ngIf="spareOutwardForm.get('quantity')?.invalid && spareOutwardForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
               </div>
 
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Add any notes for outward giving..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
             </form>
           </ng-container>
 
@@ -375,19 +396,33 @@
             <form [formGroup]="spareReturnedForm" class="space-y-4">
 
               <div class="field-group">
-                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <input formControlName="matCode"
-                  (change)="onMatCodeChange(spareReturnedForm.get('matCode')?.value, spareReturnedForm)"
-                  type="text" placeholder="e.g. MAT-004"
-                  class="field-input" [class.field-input--error]="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" />
-                <p *ngIf="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matName"
+                    (change)="onMatNameChange(spareReturnedForm.get('matName')?.value, spareReturnedForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched">
+                    <option value="">Select material name...</option>
+                    <option *ngFor="let item of getSparePartOptions()" [value]="item.name">{{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
-                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <input formControlName="matName" type="text" placeholder="e.g. Spare Part Name"
-                  class="field-input" [class.field-input--error]="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" />
-                <p *ngIf="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
+                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                <div class="relative">
+                  <select formControlName="matCode"
+                    (change)="onMatCodeChange(spareReturnedForm.get('matCode')?.value, spareReturnedForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched">
+                    <option value="">Select material code...</option>
+                    <option *ngFor="let item of getSparePartOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
@@ -432,18 +467,32 @@
 
               <div class="field-group">
                 <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <input formControlName="matCode"
-                  (change)="onMatCodeChange(promoOutwardForm.get('matCode')?.value, promoOutwardForm)"
-                  type="text" placeholder="e.g. PROMO-001"
-                  class="field-input" [class.field-input--error]="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" />
-                <p *ngIf="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+                <div class="relative">
+                  <select formControlName="matCode"
+                    (change)="onMatCodeChange(promoOutwardForm.get('matCode')?.value, promoOutwardForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched">
+                    <option value="">Select material code...</option>
+                    <option *ngFor="let item of getPromotionalItemOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <input formControlName="matName" type="text" placeholder="e.g. Company T-Shirt"
-                  class="field-input" [class.field-input--error]="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" />
-                <p *ngIf="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" class="field-error">Material name is required</p>
+                <div class="relative">
+                  <select formControlName="matName"
+                    (change)="onMatNameChange(promoOutwardForm.get('matName')?.value, promoOutwardForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched">
+                    <option value="">Select material name...</option>
+                    <option *ngFor="let item of getPromotionalItemOptions()" [value]="item.name">{{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
@@ -472,6 +521,13 @@
                 <p *ngIf="promoOutwardForm.get('quantity')?.invalid && promoOutwardForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
               </div>
 
+              <div class="field-group">
+                <label class="field-label">Comments</label>
+                <textarea formControlName="comments" rows="3"
+                  placeholder="Add any notes for outward giving..."
+                  class="field-input resize-none"></textarea>
+              </div>
+
             </form>
           </ng-container>
 
@@ -482,18 +538,32 @@
 
               <div class="field-group">
                 <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <input formControlName="matCode"
-                  (change)="onMatCodeChange(scrapReturnedForm.get('matCode')?.value, scrapReturnedForm)"
-                  type="text" placeholder="e.g. SCRP-01"
-                  class="field-input" [class.field-input--error]="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" />
-                <p *ngIf="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" class="field-error">Material code is required</p>
+                <div class="relative">
+                  <select formControlName="matCode"
+                    (change)="onMatCodeChange(scrapReturnedForm.get('matCode')?.value, scrapReturnedForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched">
+                    <option value="">Select material code...</option>
+                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <input formControlName="matName" type="text" placeholder="e.g. Scrap Metal"
-                  class="field-input" [class.field-input--error]="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" />
-                <p *ngIf="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" class="field-error">Material name is required</p>
+                <div class="relative">
+                  <select formControlName="matName"
+                    (change)="onMatNameChange(scrapReturnedForm.get('matName')?.value, scrapReturnedForm)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched">
+                    <option value="">Select material name...</option>
+                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.name">{{ item.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
@@ -544,9 +614,9 @@
                     class="field-input appearance-none pr-10"
                     [class.field-input--error]="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched">
                     <option value="">Select material code...</option>
-                    <option *ngFor="let item of masterItems"
-                      [value]="item.materialCode || item.itemCode || item.sku || item.partCode">
-                      {{ item.materialCode || item.itemCode || item.sku || item.partCode }} - {{ item.name }}
+                    <option *ngFor="let item of getScrapItemOptions()"
+                      [value]="item.code">
+                      {{ item.code }} - {{ item.name }}
                     </option>
                   </select>
                   <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
@@ -558,10 +628,11 @@
                 <label class="field-label">Select Material Name <span class="text-rose-400">*</span></label>
                 <div class="relative">
                   <select formControlName="matName"
+                    (change)="onMatNameChange(scrapSellingForm.get('matName')?.value, scrapSellingForm)"
                     class="field-input appearance-none pr-10"
                     [class.field-input--error]="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched">
                     <option value="">Select material name...</option>
-                    <option *ngFor="let item of masterItems" [value]="item.name">{{ item.name }}</option>
+                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.name">{{ item.name }}</option>
                   </select>
                   <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
                 </div>
@@ -597,7 +668,7 @@
               <div class="field-group">
                 <label class="field-label">Quoted Selling Price <span class="text-rose-400">*</span></label>
                 <div class="relative">
-                  <input formControlName="desiredQuotedPrice" type="number" placeholder="&#8377; 0.00"
+                  <input formControlName="desiredQuotedPrice" type="number" min="0" placeholder="Rs. 0.00"
                     class="field-input" [class.field-input--error]="scrapSellingForm.get('desiredQuotedPrice')?.invalid && scrapSellingForm.get('desiredQuotedPrice')?.touched" />
                 </div>
                 <p *ngIf="scrapSellingForm.get('desiredQuotedPrice')?.invalid && scrapSellingForm.get('desiredQuotedPrice')?.touched" class="field-error">Please enter a selling price</p>
