@@ -110,6 +110,7 @@ interface LedgerAccount {
   salespersonId?: number;
   distributorCreditLimit?: boolean;
   distributorCreditAmount?: number;
+  distributorCreditBalance?: number;
   distributorBGNumber?: string;
   distributorBGExpiry?: string;
 }
@@ -463,8 +464,9 @@ export class AccountsMasterPage implements OnInit {
       },
       openingBalance: 0,
       transactions: [], // Transactions will be loaded from API when account is selected
-      distributorCreditLimit: distributor.creditLimit || false,
-      distributorCreditAmount: distributor.creditAmount || 0,
+      distributorCreditLimit: (distributor.creditLimit ?? 0) > 0,
+      distributorCreditAmount: distributor.creditLimit || 0,
+      distributorCreditBalance: distributor.creditBalance || 0,
       distributorBGNumber: distributor.bankGuaranteeNumber || '',
       distributorBGExpiry: distributor.bgExpiryDate || ''
     }));
@@ -1187,29 +1189,27 @@ export class AccountsMasterPage implements OnInit {
       return;
     }
 
-    const currentLimit = this.selectedAccount.distributorCreditAmount ?? 0;
-    const newLimit = currentLimit + amount;
-
     this.isSubmittingCredit = true;
-    this.ledgerService.updateCreditLimit(this.selectedAccount.distributorId, newLimit).subscribe({
-      next: (response: ApiResponse<any>) => {
-        if (response.success !== false) {
+    this.ledgerService.addCredit(this.selectedAccount.distributorId, amount).subscribe({
+      next: (response: any) => {
+        if (response?.status !== 'error') {
           if (this.selectedAccount) {
+            const newLimit = (this.selectedAccount.distributorCreditAmount ?? 0) + amount;
             this.selectedAccount.distributorCreditAmount = newLimit;
             // Sync the distributor list entry too
             const dist = this.distributors.find(d => d.id === this.selectedAccount!.distributorId);
-            if (dist) dist.creditAmount = newLimit;
+            if (dist) dist.creditLimit = newLimit;
           }
-          this.showToast(`Credit limit updated to ₹${newLimit.toLocaleString('en-IN')}`, 'success');
+          this.showToast(response?.message || `Credit of ₹${amount.toLocaleString('en-IN')} added successfully`, 'success');
           this.isAddCreditModalOpen = false;
           this.addCreditAmount = '';
         } else {
-          this.showToast(response.message || 'Failed to update credit limit', 'danger');
+          this.showToast(response?.message || 'Failed to add credit', 'danger');
         }
         this.isSubmittingCredit = false;
       },
       error: (error: any) => {
-        this.showToast(error?.error?.message || 'Error updating credit limit', 'danger');
+        this.showToast(error?.error?.message || 'Error adding credit', 'danger');
         this.isSubmittingCredit = false;
       }
     });
