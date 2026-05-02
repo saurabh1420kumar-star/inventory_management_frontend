@@ -69,6 +69,7 @@ export interface ConfirmOrderItem {
 
 export interface Order {
   id: string;
+  cartId: number;
   orderNumber: string;
   distributorName: string;
   distributorId?: number;
@@ -201,6 +202,7 @@ export class OrderDetailsPage implements OnInit {
   private mapApiOrderToOrder(item: OrderTrackingItem, expandFirst: boolean = false): Order {
     return {
       id: String(item.id),
+      cartId: item.cartId,
       orderNumber: item.orderNumber,
       distributorName: item.distributorName,
       distributorId: item.distributorId,
@@ -342,7 +344,7 @@ export class OrderDetailsPage implements OnInit {
   }
 
   onDownloadDocument(step: OrderStep, order: Order) {
-    const orderId = this.extractOrderId(order.orderNumber);
+    const orderId = order.cartId;
     
     console.log(`Downloading ${step.downloadLabel} for order ID: ${orderId}`);
     
@@ -429,10 +431,9 @@ export class OrderDetailsPage implements OnInit {
 
     if (!order.distributorId) return;
     this.isLoadingOrderItems = true;
-    const orderId = this.extractOrderId(order.orderNumber);
     this.distributorService.getDistributorOrders(order.distributorId).subscribe({
       next: (res) => {
-        const matched = (res.data || []).find((o: any) => o.id === orderId);
+        const matched = (res.data || []).find((o: any) => o.id === order.cartId);
         this.confirmOrderItems = (matched?.cartItems || []).map((item: OrderCartItem) => ({
           itemId: item.itemId,
           itemName: item.itemName,
@@ -467,9 +468,8 @@ export class OrderDetailsPage implements OnInit {
   async submitConfirmOrder() {
     if (!this.confirmingOrder || !this.confirmingOrder.distributorId) return;
     this.isConfirming = true;
-    const orderId = this.extractOrderId(this.confirmingOrder.orderNumber);
     const payload = {
-      orderId,
+      orderId: this.confirmingOrder.cartId,
       gdnNumber: '',
       status: this.confirmForm.status,
       overallRating: 1,
@@ -535,7 +535,7 @@ export class OrderDetailsPage implements OnInit {
   }
 
   downloadGdnForOrder(order: Order) {
-    const cartId = this.extractOrderId(order.orderNumber);
+    const cartId = order.cartId;
     this.downloadingGdnOrderId = order.id;
     this.gdnService.downloadGdnPdf(cartId).subscribe({
       next: async (blob) => {
@@ -554,7 +554,7 @@ export class OrderDetailsPage implements OnInit {
   }
 
   downloadInvoiceForOrder(order: Order) {
-    const orderId = this.extractOrderId(order.orderNumber);
+    const orderId = order.cartId;
     this.downloadingInvoiceOrderId = order.id;
     this.invoiceService.downloadInvoicePdf(orderId).subscribe({
       next: async (blob) => {

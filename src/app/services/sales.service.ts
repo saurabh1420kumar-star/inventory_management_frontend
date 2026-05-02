@@ -172,6 +172,7 @@ export interface OrderTrackingStep {
 
 export interface OrderTrackingItem {
   id: number;
+  cartId: number;
   orderNumber: string;
   distributorName: string;
   distributorId: number;

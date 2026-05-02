@@ -1810,13 +1810,19 @@
         <div class="flex items-center px-4 py-3 text-xs font-bold tracking-widest text-slate-500 uppercase"
              style="border-bottom: 1px solid rgba(255,255,255,0.06); background: rgba(255,255,255,0.02);">
           <div style="flex: 5;">Product</div>
-          <div class="text-center" style="flex: 3;">Qty</div>
           <div class="text-right" style="flex: 3;">Price</div>
           <div style="width: 28px; flex-shrink: 0;"></div>
         </div>
 
+        <!-- Loading State -->
+        <div *ngIf="isLoadingDealerProducts[selectedPriceMasterDealer.id]"
+             class="flex items-center justify-center gap-2 py-10 text-slate-500 text-sm">
+          <ion-spinner name="dots" style="width:18px;height:18px;"></ion-spinner>
+          <span>Loading products...</span>
+        </div>
+
         <!-- Empty State -->
-        <div *ngIf="(dealerProducts[selectedPriceMasterDealer.id] || []).length === 0"
+        <div *ngIf="!isLoadingDealerProducts[selectedPriceMasterDealer.id] && (dealerProducts[selectedPriceMasterDealer.id] || []).length === 0"
              class="text-center py-10">
           <ion-icon name="cube-outline" class="text-slate-600 text-4xl mb-2 block"></ion-icon>
           <p class="text-slate-500 text-sm font-semibold">No products yet</p>
@@ -1828,10 +1834,6 @@
              class="flex items-center px-4 py-3"
              [style]="last ? '' : 'border-bottom: 1px solid rgba(255,255,255,0.04);'">
           <p class="text-white font-semibold text-sm truncate" style="flex: 5;">{{ product.productName }}</p>
-          <div class="text-center" style="flex: 3;">
-            <span class="px-2 py-0.5 rounded-full text-xs font-semibold"
-                  style="background: rgba(139,92,246,0.15); color: #a78bfa;">{{ product.quantity }}</span>
-          </div>
           <p class="text-emerald-400 font-bold text-sm text-right" style="flex: 3;">₹{{ product.price | number:'1.0-2' }}</p>
           <div style="width: 28px; flex-shrink: 0;" class="flex justify-end">
             <button (click)="removePriceMasterProduct(selectedPriceMasterDealer.id, product.id)"

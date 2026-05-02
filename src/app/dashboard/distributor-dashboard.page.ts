@@ -243,6 +243,7 @@ export class DistributorDashboardPage implements OnInit {
   // Price Master
   selectedPriceMasterDealer: Dealer | null = null;
   dealerProducts: { [dealerId: number]: PriceMasterProduct[] } = {};
+  isLoadingDealerProducts: { [dealerId: number]: boolean } = {};
   priceMasterRows: { productName: string; sku: string; quantity: number | null; price: number | null }[] = [{ productName: '', sku: '', quantity: null, price: null }];
   finishedProductsList: { id: number; name: string; sku: string }[] = [];
   isLoadingFinishedProducts = false;
@@ -479,6 +480,8 @@ export class DistributorDashboardPage implements OnInit {
       this.loadDealerOrders();
     } else if (view === 'my-stock') {
       this.loadDistributorStock();
+    } else if (view === 'price-master') {
+      this.loadAllDealerProductCounts();
     }
   }
 
@@ -1043,11 +1046,47 @@ export class DistributorDashboardPage implements OnInit {
   selectPriceMasterDealer(dealer: Dealer) {
     this.haptic.light();
     this.selectedPriceMasterDealer = dealer;
-    if (!this.dealerProducts[dealer.id]) {
-      this.dealerProducts[dealer.id] = [];
-    }
+    this.dealerProducts[dealer.id] = [];
     this.priceMasterRows = [{ productName: '', sku: '', quantity: null, price: null }];
     this.loadFinishedProducts();
+    this.loadDealerProducts(dealer.id);
+  }
+
+  loadAllDealerProductCounts() {
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.dealers.forEach(dealer => {
+      if (this.dealerProducts[dealer.id] !== undefined) return; // already loaded
+      this.http.get<any>(`${environment.apiUrl}/dealer-sales/dealer/${dealer.id}`, { headers }).subscribe({
+        next: (res) => {
+          const raw = Array.isArray(res) ? res : (res?.data ?? res?.sales ?? []);
+          this.dealerProducts[dealer.id] = raw.map((s: any) => ({
+            id: s.id,
+            productName: s.itemName ?? s.item_name ?? s.productName ?? '—',
+            quantity: s.quantity ?? 0,
+            price: s.amount ?? s.price ?? 0
+          }));
+        },
+        error: () => { this.dealerProducts[dealer.id] = []; }
+      });
+    });
+  }
+
+  loadDealerProducts(dealerId: number) {
+    this.isLoadingDealerProducts[dealerId] = true;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>(`${environment.apiUrl}/dealer-sales/dealer/${dealerId}`, { headers }).subscribe({
+      next: (res) => {
+        const raw = Array.isArray(res) ? res : (res?.data ?? res?.sales ?? []);
+        this.dealerProducts[dealerId] = raw.map((s: any) => ({
+          id: s.id,
+          productName: s.itemName ?? s.item_name ?? s.productName ?? '—',
+          quantity: s.quantity ?? 0,
+          price: s.amount ?? s.price ?? 0
+        }));
+        this.isLoadingDealerProducts[dealerId] = false;
+      },
+      error: () => { this.isLoadingDealerProducts[dealerId] = false; }
+    });
   }
 
   loadFinishedProducts() {
@@ -1115,11 +1154,12 @@ export class DistributorDashboardPage implements OnInit {
       const failed = results.filter(r => r instanceof Error || r?.status >= 400).length;
       const saved = validRows.length - failed;
       if (saved > 0) {
-        const newProducts: PriceMasterProduct[] = validRows.slice(0, saved).map(r => ({
-          id: Date.now() + Math.random(),
-          productName: r.productName.trim(),
-          quantity: 0,
-          price: r.price!
+        const successResults = results.filter(r => !(r instanceof Error) && r?.status < 400);
+        const newProducts: PriceMasterProduct[] = successResults.map((r: any, i: number) => ({
+          id: r?.id ?? r?.data?.id ?? (Date.now() + i),
+          productName: r?.itemName ?? r?.data?.itemName ?? validRows[i].productName.trim(),
+          quantity: r?.quantity ?? r?.data?.quantity ?? 0,
+          price: r?.amount ?? r?.data?.amount ?? r?.price ?? r?.data?.price ?? validRows[i].price!
         }));
         this.dealerProducts[dealerId] = [...newProducts, ...(this.dealerProducts[dealerId] ?? [])];
         this.priceMasterRows = [{ productName: '', sku: '', quantity: null, price: null }];
@@ -1130,7 +1170,15 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   removePriceMasterProduct(dealerId: number, productId: number) {
-    this.dealerProducts[dealerId] = (this.dealerProducts[dealerId] ?? []).filter(p => p.id !== productId);
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    const params = { distributorId: String(this.distributorId ?? this.auth.getUserId()) };
+    this.http.delete(`${environment.apiUrl}/dealer-sales/${productId}`, { headers, params }).subscribe({
+      next: () => {
+        this.dealerProducts[dealerId] = (this.dealerProducts[dealerId] ?? []).filter(p => p.id !== productId);
+        this.showToast('Product removed', 'success');
+      },
+      error: () => this.showToast('Failed to remove product', 'danger')
+    });
   }
 
   // ── Dealer Ledger ───────────────────────────────────────────────

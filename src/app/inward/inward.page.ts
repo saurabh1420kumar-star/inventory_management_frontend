@@ -117,6 +117,7 @@ export class InwardPage implements OnInit {
   // Finished products (BOM) dropdown
   finishedProducts: any[] = [];
   isLoadingFinishedProducts = false;
+  selectedFinishedProductId: number | null = null;
 
   constructor(
     private http: HttpClient,
@@ -253,6 +254,7 @@ export class InwardPage implements OnInit {
     this.selectedPromotionalItemId = null;
     this.selectedScrapId = null;
     this.selectedMachinePartId = null;
+    this.selectedFinishedProductId = null;
   }
 
   selectType(type: InwardItemType) {
@@ -264,6 +266,7 @@ export class InwardPage implements OnInit {
     this.selectedPromotionalItemId = null;
     this.selectedScrapId = null;
     this.selectedMachinePartId = null;
+    this.selectedFinishedProductId = null;
     if (type === 'raw_material') {
       this.loadRawMaterials();
     } else if (type === 'scrap') {
@@ -403,6 +406,7 @@ export class InwardPage implements OnInit {
   onFinishedProductSelect(id: string) {
     const item = this.finishedProducts.find(p => String(p.id) === id);
     if (item) {
+      this.selectedFinishedProductId = item.id;
       this.form.itemName = item.finishedProductName ?? '';
       this.form.itemCode = item.bomName ?? '';
       this.form.unit = item.outputUnit ?? 'KG';
@@ -527,6 +531,33 @@ export class InwardPage implements OnInit {
         error: (err) => {
           this.isSubmitting = false;
           const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to update scrap item';
+          this.showToast(msg, 'danger');
+        }
+      });
+      return;
+    }
+
+    if (this.selectedType === 'finished_product') {
+      if (!this.selectedFinishedProductId) {
+        this.showToast('Please select a finished product', 'danger');
+        this.isSubmitting = false;
+        return;
+      }
+      const payload = {
+        finishedProductName: this.form.itemName,
+        quantity: this.form.quantity,
+        minimumThreshold: this.form.minThreshold ?? 0
+      };
+      this.http.post<any>(`${environment.apiUrl}/bill-of-materials/produce`, payload, { headers: this.headers() }).subscribe({
+        next: () => {
+          this.isSubmitting = false;
+          this.closeModal();
+          this.showToast('Finished product produced successfully', 'success');
+          this.loadEntries();
+        },
+        error: (err) => {
+          this.isSubmitting = false;
+          const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to produce finished product';
           this.showToast(msg, 'danger');
         }
       });
