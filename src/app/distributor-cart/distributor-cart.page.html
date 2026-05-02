@@ -333,6 +333,10 @@
               <span class="font-semibold text-white">&#8377;{{ item.subtotal | number:'1.2-2' }}</span>
             </div>
           </div>
+          <div *ngIf="totalCartWeightKg != null" class="flex justify-between items-center mb-3">
+            <span class="text-slate-400 text-sm">Total Weight</span>
+            <span class="font-semibold text-slate-300 text-sm">{{ totalCartWeightKg }} kg</span>
+          </div>
           <div class="flex justify-between items-center">
             <span class="font-bold text-white">Total Amount</span>
             <span class="font-bold text-emerald-400">&#8377;{{ cartTotal | number:'1.2-2' }}</span>

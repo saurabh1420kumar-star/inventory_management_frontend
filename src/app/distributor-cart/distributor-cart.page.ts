@@ -52,6 +52,7 @@ export class DistributorCartPage implements OnInit {
 
   cartTotal: number = 0;
   cartCount: number = 0;
+  totalCartWeightKg: number | null = null;
 
   // Distributor ID for API calls (login response userId = distributorId)
   distributorId: string | number | null = null;
@@ -466,6 +467,11 @@ export class DistributorCartPage implements OnInit {
           this.distributorAddress = addr;
           this.orderForm.get('deliveryAddress')?.setValue(addr);
           this.orderForm.get('deliveryAddress')?.disable();
+        }
+
+        // Store total cart weight from API response
+        if (cartData?.totalCartWeightKg != null) {
+          this.totalCartWeightKg = cartData.totalCartWeightKg;
         }
 
         // Sync backend cart item IDs onto local cart items
