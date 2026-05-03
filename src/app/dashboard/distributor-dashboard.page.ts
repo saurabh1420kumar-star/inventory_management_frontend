@@ -837,7 +837,13 @@ export class DistributorDashboardPage implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/dealer-sales/dealer/${dealer.id}`, { headers }).subscribe({
       next: (res) => {
         const raw = Array.isArray(res) ? res : (res?.data ?? res?.sales ?? []);
-        this.dealerSales = raw.map((s: any) => ({ ...s, _qty: 0, _unitPrice: s.amount ?? 0, amount: 0 }));
+        this.dealerSales = raw.map((s: any) => ({
+          ...s,
+          itemId: s.itemId ?? s.item_id ?? s.id ?? 0,
+          _qty: 0,
+          _unitPrice: s.amount ?? 0,
+          amount: 0
+        }));
         this.isLoadingDealerSales = false;
       },
       error: () => { this.isLoadingDealerSales = false; }
@@ -876,7 +882,15 @@ export class DistributorDashboardPage implements OnInit {
     const calls = this.dealerSales.map((s: any) =>
       this.http.post(
         `${environment.apiUrl}/dealer-sales/orders?distributorId=${this.distributorId}`,
-        { dealerId: this.selectedBillingDealer.id, sku: s.sku, itemName: s.itemName ?? s.item_name, quantity: s._qty ?? 0, amount: s.amount, date: today },
+        {
+          dealerId: this.selectedBillingDealer.id,
+          itemId: s.itemId ?? s.item_id ?? s.id ?? 0,
+          sku: s.sku,
+          itemName: s.itemName ?? s.item_name,
+          quantity: s._qty ?? 0,
+          amount: s.amount,
+          date: today
+        },
         { headers }
       )
     );
