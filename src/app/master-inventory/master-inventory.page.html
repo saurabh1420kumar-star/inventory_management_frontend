@@ -1126,7 +1126,7 @@
                     [class.bg-white]="editForm.get('unit')?.value !== 'KG'"
                     class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-2 hover:border-blue-400 hover:shadow-md"
                   >
-                    <ion-icon name="water-outline" class="text-3xl" [class.text-blue-500]="editForm.get('unit')?.value === 'KG'" [class.text-slate-400]="editForm.get('unit')?.value !== 'KG'"></ion-icon>
+                    <ion-icon name="scale-outline" class="text-3xl" [class.text-blue-500]="editForm.get('unit')?.value === 'KG'" [class.text-slate-400]="editForm.get('unit')?.value !== 'KG'"></ion-icon>
                     <span class="font-bold text-base" [class.text-blue-700]="editForm.get('unit')?.value === 'KG'" [class.text-slate-600]="editForm.get('unit')?.value !== 'KG'">KG</span>
                   </button>
                   <button
@@ -1142,6 +1142,34 @@
                   >
                     <ion-icon name="flask-outline" class="text-3xl" [class.text-blue-500]="editForm.get('unit')?.value === 'LITER'" [class.text-slate-400]="editForm.get('unit')?.value !== 'LITER'"></ion-icon>
                     <span class="font-bold text-base" [class.text-blue-700]="editForm.get('unit')?.value === 'LITER'" [class.text-slate-600]="editForm.get('unit')?.value !== 'LITER'">LITER</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="onUnitChange('PIECES', editForm); editForm.patchValue({unit: 'PIECES'})"
+                    [class.border-blue-500]="editForm.get('unit')?.value === 'PIECES'"
+                    [class.bg-blue-50]="editForm.get('unit')?.value === 'PIECES'"
+                    [class.ring-2]="editForm.get('unit')?.value === 'PIECES'"
+                    [class.ring-blue-200]="editForm.get('unit')?.value === 'PIECES'"
+                    [class.border-slate-200]="editForm.get('unit')?.value !== 'PIECES'"
+                    [class.bg-white]="editForm.get('unit')?.value !== 'PIECES'"
+                    class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-2 hover:border-blue-400 hover:shadow-md"
+                  >
+                    <ion-icon name="apps-outline" class="text-3xl" [class.text-blue-500]="editForm.get('unit')?.value === 'PIECES'" [class.text-slate-400]="editForm.get('unit')?.value !== 'PIECES'"></ion-icon>
+                    <span class="font-bold text-base" [class.text-blue-700]="editForm.get('unit')?.value === 'PIECES'" [class.text-slate-600]="editForm.get('unit')?.value !== 'PIECES'">PIECES</span>
+                  </button>
+                  <button
+                    type="button"
+                    (click)="onUnitChange('DOZEN', editForm); editForm.patchValue({unit: 'DOZEN'})"
+                    [class.border-blue-500]="editForm.get('unit')?.value === 'DOZEN'"
+                    [class.bg-blue-50]="editForm.get('unit')?.value === 'DOZEN'"
+                    [class.ring-2]="editForm.get('unit')?.value === 'DOZEN'"
+                    [class.ring-blue-200]="editForm.get('unit')?.value === 'DOZEN'"
+                    [class.border-slate-200]="editForm.get('unit')?.value !== 'DOZEN'"
+                    [class.bg-white]="editForm.get('unit')?.value !== 'DOZEN'"
+                    class="px-4 py-5 rounded-xl border-2 transition-all font-semibold text-sm flex flex-col items-center gap-2 hover:border-blue-400 hover:shadow-md"
+                  >
+                    <ion-icon name="grid-outline" class="text-3xl" [class.text-blue-500]="editForm.get('unit')?.value === 'DOZEN'" [class.text-slate-400]="editForm.get('unit')?.value !== 'DOZEN'"></ion-icon>
+                    <span class="font-bold text-base" [class.text-blue-700]="editForm.get('unit')?.value === 'DOZEN'" [class.text-slate-600]="editForm.get('unit')?.value !== 'DOZEN'">DOZEN</span>
                   </button>
                 </div>
               </div>
