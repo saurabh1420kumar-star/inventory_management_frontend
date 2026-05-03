@@ -539,8 +539,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       .subscribe({
         next: (res) => {
           this.volumeAnalytics = res;
-          this.periodData.volMTD = `${res.monthToDate?.totalQuantity ?? 0} Units`;
-          this.periodData.volYTD = `${res.yearToDate?.totalQuantity ?? 0} Units`;
+          this.periodData.volMTD = `${res.monthToDate?.totalVolumeTons ?? 0} Tons`;
+          this.periodData.volYTD = `${res.yearToDate?.totalVolumeTons ?? 0} Tons`;
           this.periodData.callMTD = `${res.monthToDate?.totalTransactions ?? 0}`;
           this.periodData.callYTD = `${res.yearToDate?.totalTransactions ?? 0}`;
           this.isLoadingVolumeAnalytics = false;

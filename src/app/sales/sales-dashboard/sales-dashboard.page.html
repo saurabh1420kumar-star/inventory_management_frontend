@@ -42,11 +42,11 @@
       <div class="sd-card-row" *ngIf="!isLoadingAnalytics">
         <div class="sd-stat-card sd-stat-card--sky">
           <p class="sd-stat-card__label">Volume MTD</p>
-          <p class="sd-stat-card__value">{{ salesAnalytics?.totalOrders ?? 0 }} MT</p>
+          <p class="sd-stat-card__value">{{ (volumeAnalytics?.monthToDate?.totalVolumeTons ?? 0) | number:'1.0-2' }} Tons</p>
         </div>
         <div class="sd-stat-card sd-stat-card--sky">
           <p class="sd-stat-card__label">Volume YTD</p>
-          <p class="sd-stat-card__value">{{ salesAnalytics?.totalOrders ?? 0 }} MT</p>
+          <p class="sd-stat-card__value">{{ (volumeAnalytics?.yearToDate?.totalVolumeTons ?? 0) | number:'1.0-2' }} Tons</p>
         </div>
       </div>
 
@@ -54,11 +54,11 @@
       <div class="sd-card-row" *ngIf="!isLoadingAnalytics">
         <div class="sd-stat-card sd-stat-card--light">
           <p class="sd-stat-card__label sd-stat-card__label--cyan">Value MTD</p>
-          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ salesAnalytics?.totalAmount ?? 0 | number:'1.0-0' }}</p>
+          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (volumeAnalytics?.totalAmount ?? 0) | number:'1.0-0' }}</p>
         </div>
         <div class="sd-stat-card sd-stat-card--light">
           <p class="sd-stat-card__label sd-stat-card__label--cyan">Value YTD</p>
-          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ salesAnalytics?.totalAmount ?? 0 | number:'1.0-0' }}</p>
+          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (volumeAnalytics?.totalAmount ?? 0) | number:'1.0-0' }}</p>
         </div>
       </div>
 
