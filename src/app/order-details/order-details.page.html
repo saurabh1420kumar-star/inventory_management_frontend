@@ -358,7 +358,8 @@
                   <input type="number" min="0"
                          [(ngModel)]="item.receivedQuantity"
                          [name]="'receivedQty_' + i"
-                         class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-500/40" />
+                         readonly
+                         class="w-full px-3 py-2 bg-slate-700 border border-slate-600 rounded-lg text-slate-100 text-sm opacity-80 cursor-not-allowed focus:outline-none" />
                 </div>
                 <div>
                   <label class="block text-xs font-medium text-slate-400 mb-1">Condition</label>
