@@ -102,7 +102,7 @@ export class InwardPage implements OnInit {
   // Scrap items dropdown
   scrapItems: any[] = [];
   isLoadingScrapItems = false;
-  selectedScrapId: number | null = null;
+  selectedScrapId: string | null = null;
 
   // Promotional items dropdown
   promotionalItems: any[] = [];
@@ -319,12 +319,12 @@ export class InwardPage implements OnInit {
     });
   }
 
-  onScrapItemSelect(id: string) {
-    const item = this.scrapItems.find(s => String(s.id) === id);
+  onScrapItemSelect(itemCode: string) {
+    const item = this.scrapItems.find(s => String(s.materialCode ?? s.itemCode) === itemCode);
     if (item) {
-      this.selectedScrapId = item.id ?? null;
+      this.selectedScrapId = item.materialCode ?? item.itemCode ?? null;
       this.form.itemName = item.name ?? '';
-      this.form.itemCode = item.itemCode ?? '';
+      this.form.itemCode = item.materialCode ?? item.itemCode ?? '';
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -521,7 +521,7 @@ export class InwardPage implements OnInit {
         driverMobile: this.form.driverMobile,
         status: 'INWARD'
       };
-      this.http.put<any>(`${environment.apiUrl}/products/scrap-items/sku/${this.selectedScrapId}`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/scrap-items/sku/${encodeURIComponent(this.selectedScrapId)}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();
@@ -572,7 +572,7 @@ export class InwardPage implements OnInit {
       }
       const payload = {
         name: this.form.itemName,
-        partNumber: this.form.partNumber,
+        itemCode: this.form.itemCode || this.selectedMachinePartId,
         category: this.form.category ?? 'MACHINE',
         vendor: this.form.vendor,
         purchaseDate: this.form.purchaseDate,

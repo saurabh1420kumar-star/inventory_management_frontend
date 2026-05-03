@@ -238,8 +238,8 @@
                   <option value="" disabled selected>
                     {{ isLoadingScrapItems ? 'Loading…' : 'Select scrap item' }}
                   </option>
-                  <option *ngFor="let s of scrapItems" [value]="s.id">
-                    {{ s.name }} ({{ s.itemCode }})
+                  <option *ngFor="let s of scrapItems" [value]="s.materialCode || s.itemCode">
+                    {{ s.name }} ({{ s.materialCode || s.itemCode }})
                   </option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
