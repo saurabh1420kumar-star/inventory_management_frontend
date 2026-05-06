@@ -15,7 +15,8 @@ import {
   bagOutline, constructOutline, pricetagOutline, trashOutline,
   checkmarkCircleOutline, refreshOutline, searchOutline, calendarOutline,
   businessOutline, documentTextOutline, layersOutline, filterOutline,
-  waterOutline, appsOutline, gridOutline, carOutline, personOutline, callOutline
+  waterOutline, appsOutline, gridOutline, carOutline, personOutline, callOutline,
+  chatbubbleEllipsesOutline, timeOutline
 } from 'ionicons/icons';
 import { Auth } from '../services/auth';
 import { environment } from '../../environments/environment';
@@ -92,6 +93,10 @@ export class InwardPage implements OnInit {
   selectedType: InwardItemType | null = null;
   isSubmitting = false;
 
+  // Detail modal state
+  selectedEntry: InwardEntry | null = null;
+  isDetailOpen = false;
+
   form: InwardEntry = this.emptyForm();
 
   // Raw materials dropdown
@@ -147,7 +152,9 @@ export class InwardPage implements OnInit {
       'grid-outline': gridOutline,
       'car-outline': carOutline,
       'person-outline': personOutline,
-      'call-outline': callOutline
+      'call-outline': callOutline,
+      'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
+      'time-outline': timeOutline
     });
   }
 
@@ -416,6 +423,16 @@ export class InwardPage implements OnInit {
 
   getTypeConfig(type: InwardItemType) {
     return this.itemTypes.find(t => t.type === type) ?? this.itemTypes[0];
+  }
+
+  openDetail(entry: InwardEntry) {
+    this.selectedEntry = entry;
+    this.isDetailOpen = true;
+  }
+
+  closeDetail() {
+    this.isDetailOpen = false;
+    this.selectedEntry = null;
   }
 
   getUnitShort(): string {

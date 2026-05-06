@@ -161,6 +161,7 @@ export interface OrderTrackingStep {
   stepSequence: number;
   label: string;
   status: 'completed' | 'in-progress' | 'pending' | 'cancelled';
+  deliveryBy?: string;
   date: string | null;
   remarks: string | null;
   assignedPerson: { name: string; role: string; contact: string; email: string; } | null;
@@ -178,6 +179,7 @@ export interface OrderTrackingItem {
   distributorId: number;
   orderDate: string;
   totalAmount: number;
+  deliveryBy?: string;
   steps: OrderTrackingStep[];
 }
 

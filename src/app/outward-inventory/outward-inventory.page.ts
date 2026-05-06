@@ -1,5 +1,9 @@
 ﻿import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule, NgIf, NgFor, NgClass, DatePipe } from '@angular/common';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
+import { forkJoin } from 'rxjs';
+import { Auth } from '../services/auth';
+import { environment } from '../../environments/environment';
 import {
   FormsModule,
   ReactiveFormsModule,
@@ -29,7 +33,11 @@ import {
   OutwardItemResponse
 } from '../services/outward-inventory.service';
 import { InventoryService, InventoryItem } from '../services/inventory';
+import { UserService } from '../services/user.service';
+import { DistributorDto, DistributorService } from '../services/distributor.service';
+import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
+import { User } from '../models/user.model';
 
 export type ModalItemType = 'spare_parts' | 'promotional_items' | 'scrap_material';
 export type SpareSection = 'outward_giving' | 'returned_part';
@@ -40,6 +48,18 @@ interface DropdownOption {
   value: string | number;
   label: string;
 }
+
+interface PersonOption {
+  id: number;
+  name: string;
+}
+
+interface DistributorOption {
+  id: number;
+  label: string;
+}
+
+type PromoPartyType = 'employee' | 'distributor' | 'salesperson';
 
 @Component({
   selector: 'app-outward-inventory',
@@ -80,6 +100,11 @@ export class OutwardInventoryPage implements OnInit {
   /** promotional items dropdown source from /products/promotional-items */
   promotionalItems: InventoryItem[] = [];
 
+  promotionalEmployees: PersonOption[] = [];
+  promotionalDistributors: DistributorOption[] = [];
+  promotionalSalespersons: PersonOption[] = [];
+  promoPartySelectionError = false;
+
   /** scrap items dropdown source from /products/scrap-items */
   scrapItems: InventoryItem[] = [];
 
@@ -92,6 +117,16 @@ export class OutwardInventoryPage implements OnInit {
   searchTerm = '';
   activeFilter: 'all' | ModalItemType | 'raw_material' | 'finished_product' = 'all';
 
+  // Product catalog cards
+  rawProductCards: any[] = [];
+  finishedProductCards: any[] = [];
+  filteredProductCards: any[] = [];
+  isLoadingProducts = false;
+
+  // Detail modal
+  selectedRecord: any = null;
+  isDetailOpen = false;
+
   // â”€â”€â”€ forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   spareOutwardForm!: FormGroup;
   spareReturnedForm!: FormGroup;
@@ -103,7 +138,12 @@ export class OutwardInventoryPage implements OnInit {
   private fb = inject(FormBuilder);
   private outwardService = inject(OutwardInventoryService);
   private inventoryService = inject(InventoryService);
+  private userService = inject(UserService);
+  private distributorService = inject(DistributorService);
+  private salesHierarchyService = inject(SalesHierarchyService);
   private toast = inject(Toast);
+  private http = inject(HttpClient);
+  private auth = inject(Auth);
 
   // â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly itemTypes = [
@@ -200,6 +240,12 @@ export class OutwardInventoryPage implements OnInit {
     this.promoOutwardForm = this.fb.group({
       matCode:  ['', Validators.required],
       matName:  ['', Validators.required],
+      employeeId: [null],
+      employeeName: [''],
+      distributorId: [null],
+      distributorName: [''],
+      salespersonId: [null],
+      salespersonName: [''],
       unit:     ['', Validators.required],
       quantity: [null, [Validators.required, Validators.min(1)]],
       comments: ['']
@@ -233,9 +279,9 @@ export class OutwardInventoryPage implements OnInit {
 
   private loadData(): void {
     this.isLoading = true;
-    this.outwardService.getAll().subscribe({
+    this.outwardService.getAllOutwardItems().subscribe({
       next: (data) => {
-        this.records = data;
+        this.records = data.map(item => this.mapApiToRecord(item));
         this.applyFilter();
         this.isLoading = false;
       },
@@ -245,12 +291,98 @@ export class OutwardInventoryPage implements OnInit {
     this.inventoryService.getAllItems().subscribe({
       next: (items) => { this.masterItems = items; }
     });
+
+    this.loadProductCards();
+  }
+
+  private loadProductCards(): void {
+    this.isLoadingProducts = true;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    forkJoin({
+      raw: this.http.get<any>(`${environment.apiUrl}/products/raw-materials`, { headers }),
+      finished: this.http.get<any>(`${environment.apiUrl}/products/finished-products`, { headers })
+    }).subscribe({
+      next: (res) => {
+        const toArr = (r: any) => Array.isArray(r) ? r : (r?.data ?? []);
+        this.rawProductCards = toArr(res.raw).map((i: any) => ({
+          _cardType: 'raw_material',
+          id: i.id,
+          name: i.name || i.materialName || '—',
+          code: i.materialCode || i.itemCode || i.code || '—',
+          quantity: i.quantity ?? 0,
+          unit: i.unit || '',
+          vendorName: i.vendorName || '',
+          vendorId: i.vendorId || '',
+          status: i.status || '',
+          minimumThreshold: i.minimumThreshold ?? 0,
+          price: i.price ?? null,
+          transportName: i.transportName || '',
+          driverName: i.driverName || '',
+          driverMobile: i.driverMobile || '',
+          createdAt: i.createdAt || i.updatedAt || '',
+          _raw: i
+        }));
+        this.finishedProductCards = toArr(res.finished).map((i: any) => ({
+          _cardType: 'finished_product',
+          id: i.id,
+          name: i.finishedProductName || i.name || i.productName || '—',
+          code: i.productCode || i.itemCode || i.materialCode || i.code || '—',
+          quantity: i.quantity ?? 0,
+          unit: i.unit || '',
+          description: i.description || '',
+          price: i.price || i.sellingPrice || null,
+          status: i.status || '',
+          minimumThreshold: i.minimumThreshold ?? 0,
+          createdAt: i.createdAt || i.updatedAt || '',
+          _raw: i
+        }));
+        this.isLoadingProducts = false;
+        this.applyFilter();
+      },
+      error: () => { this.isLoadingProducts = false; }
+    });
+  }
+
+  private mapApiToRecord(item: OutwardItemResponse): OutwardRecord {
+    const typeMap: Record<string, 'spare_parts' | 'promotional_items' | 'scrap_material'> = {
+      SPARE_PARTS: 'spare_parts',
+      PROMOTIONAL_ITEMS: 'promotional_items',
+      SCRAP_MATERIAL: 'scrap_material'
+    };
+    const sectionMap: Record<string, 'outward_giving' | 'returned_part' | 'selling_scrap'> = {
+      OUTWARD_GIVING: 'outward_giving',
+      RETURNED_PART: 'returned_part'
+    };
+    const unitMap: Record<string, 'KG' | 'DOZEN' | 'PIECE' | 'LITER'> = {
+      KILOGRAMS: 'KG', KILOGRAM: 'KG', KG: 'KG',
+      DOZENS: 'DOZEN', DOZEN: 'DOZEN',
+      PIECES: 'PIECE', PIECE: 'PIECE',
+      LITRES: 'LITER', LITERS: 'LITER', LITER: 'LITER'
+    };
+    return {
+      id: item.id,
+      itemType: typeMap[item.itemType] ?? 'spare_parts',
+      section: sectionMap[item.transactionType] ?? 'outward_giving',
+      matCode: item.materialCode,
+      matName: item.materialName,
+      unit: unitMap[(item.unit ?? '').toUpperCase()] ?? 'KG',
+      quantity: item.quantity,
+      desiredQuotedPrice: item.quotedSellingPrice,
+      comments: item.comments,
+      createdAt: item.createdAt ?? new Date().toISOString(),
+      updatedAt: item.updatedAt,
+      issuedTo: item.issuedTo ?? undefined,
+      referenceNumber: item.referenceNumber ?? undefined
+    };
   }
 
   // â”€â”€â”€ filter / search â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   applyFilter(): void {
+    // Outward transaction records (spare_parts, promotional_items, scrap_material only)
     let data = [...this.records];
-    if (this.activeFilter !== 'all') {
+    if (this.activeFilter === 'raw_material' || this.activeFilter === 'finished_product') {
+      data = [];
+    } else if (this.activeFilter !== 'all') {
       data = data.filter(r => r.itemType === this.activeFilter);
     }
     if (this.searchTerm.trim()) {
@@ -261,6 +393,34 @@ export class OutwardInventoryPage implements OnInit {
       );
     }
     this.filteredRecords = data;
+
+    // Product catalog cards
+    let products: any[] = [];
+    if (this.activeFilter === 'all') {
+      products = [...this.rawProductCards, ...this.finishedProductCards];
+    } else if (this.activeFilter === 'raw_material') {
+      products = [...this.rawProductCards];
+    } else if (this.activeFilter === 'finished_product') {
+      products = [...this.finishedProductCards];
+    }
+    if (this.searchTerm.trim()) {
+      const term = this.searchTerm.toLowerCase();
+      products = products.filter(p =>
+        p.name?.toLowerCase().includes(term) ||
+        p.code?.toLowerCase().includes(term)
+      );
+    }
+    this.filteredProductCards = products;
+  }
+
+  openDetail(r: any): void {
+    this.selectedRecord = r;
+    this.isDetailOpen = true;
+  }
+
+  closeDetail(): void {
+    this.isDetailOpen = false;
+    this.selectedRecord = null;
   }
 
   setFilter(f: 'all' | ModalItemType | 'raw_material' | 'finished_product'): void {
@@ -279,6 +439,7 @@ export class OutwardInventoryPage implements OnInit {
   closeModal(): void {
     this.isModalOpen = false;
     this.selectedItemType = null;
+    this.promoPartySelectionError = false;
     this.resetForms();
   }
 
@@ -307,13 +468,80 @@ export class OutwardInventoryPage implements OnInit {
   }
 
   private loadPromotionalItems(): void {
-    if (this.promotionalItems.length > 0) return;
+    if (this.promotionalItems.length > 0) {
+      this.loadPromotionalReferenceData();
+      return;
+    }
 
     this.inventoryService.getPromotionalItems().subscribe({
       next: (items) => {
         this.promotionalItems = items;
       }
     });
+
+    this.loadPromotionalReferenceData();
+  }
+
+  private loadPromotionalReferenceData(): void {
+    if (!this.promotionalEmployees.length) {
+      this.userService.getAllUsers().subscribe({
+        next: (users) => {
+          this.promotionalEmployees = (users || [])
+            .filter((user: User) => !!user?.id)
+            .map((user: User) => ({
+              id: user.id,
+              name: `${user.firstName || ''} ${user.lastName || ''}`.trim() || user.username
+            }))
+            .filter((user) => !!user.name)
+            .sort((left, right) => left.name.localeCompare(right.name));
+        }
+      });
+    }
+
+    if (!this.promotionalDistributors.length) {
+      this.distributorService.getAllDistributors().subscribe({
+        next: (response) => {
+          const responseData: any = response;
+          const distributors = Array.isArray(responseData)
+            ? responseData
+            : Array.isArray(responseData?.data)
+              ? responseData.data
+              : Array.isArray(responseData?.data?.content)
+                ? responseData.data.content
+                : [];
+
+          this.promotionalDistributors = (distributors as DistributorDto[])
+            .filter((distributor) => !!distributor?.id)
+            .map((distributor) => ({
+              id: distributor.id,
+              label: `${distributor.firmName || distributor.name || 'Unknown Distributor'} - ${
+                distributor.distributorCode || (distributor as any).code || (distributor as any).distributor_code || 'N/A'
+              }`
+            }))
+            .sort((left, right) => left.label.localeCompare(right.label));
+        }
+      });
+    }
+
+    if (!this.promotionalSalespersons.length) {
+      this.salesHierarchyService.getAllSalesPersons().subscribe({
+        next: (salespersons: any[]) => {
+          const mappedSalespersons = Array.isArray(salespersons)
+            ? salespersons
+            : [];
+
+          this.promotionalSalespersons = mappedSalespersons
+            .filter((person: any) => !!person?.id)
+            .map((person: any) => ({
+              id: Number(person.id),
+              name: `${person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim() || 'Unknown'} - ${
+                person.employeeRollNo || person.employeeCode || person.employeeCodeNo || person.id
+              }`
+            }))
+            .sort((left: PersonOption, right: PersonOption) => left.name.localeCompare(right.name));
+        }
+      });
+    }
   }
 
   private loadScrapItems(): void {
@@ -407,6 +635,7 @@ export class OutwardInventoryPage implements OnInit {
     this.spareOutwardForm.reset();
     this.spareReturnedForm.reset();
     this.promoOutwardForm.reset();
+    this.updatePromotionalPartySelection(null);
     this.promoReturnedForm.reset();
     this.scrapReturnedForm.reset();
     this.scrapSellingForm.reset();
@@ -496,6 +725,120 @@ export class OutwardInventoryPage implements OnInit {
     form.patchValue(patchValue);
   }
 
+  onEmployeeChange(employeeId: string | number): void {
+    const rawValue = String(employeeId ?? '').trim();
+    if (!rawValue || rawValue === 'null') {
+      this.promoOutwardForm.patchValue({ employeeId: null, employeeName: '' });
+      this.updatePromotionalPartySelection(null);
+      return;
+    }
+
+    const selectedId = Number(rawValue);
+    const employee = this.promotionalEmployees.find((option) => option.id === selectedId);
+    this.promoOutwardForm.patchValue({
+      employeeId: Number.isFinite(selectedId) ? selectedId : null,
+      employeeName: employee?.name || ''
+    });
+    this.updatePromotionalPartySelection(Number.isFinite(selectedId) ? 'employee' : null);
+  }
+
+  onDistributorChange(distributorId: string | number): void {
+    const rawValue = String(distributorId ?? '').trim();
+    if (!rawValue || rawValue === 'null') {
+      this.promoOutwardForm.patchValue({ distributorId: null, distributorName: '' });
+      this.updatePromotionalPartySelection(null);
+      return;
+    }
+
+    const selectedId = Number(rawValue);
+    const distributor = this.promotionalDistributors.find((option) => option.id === selectedId);
+    this.promoOutwardForm.patchValue({
+      distributorId: Number.isFinite(selectedId) ? selectedId : null,
+      distributorName: distributor?.label || ''
+    });
+    this.updatePromotionalPartySelection(Number.isFinite(selectedId) ? 'distributor' : null);
+  }
+
+  onSalespersonChange(salespersonId: string | number): void {
+    const rawValue = String(salespersonId ?? '').trim();
+    if (!rawValue || rawValue === 'null') {
+      this.promoOutwardForm.patchValue({ salespersonId: null, salespersonName: '' });
+      this.updatePromotionalPartySelection(null);
+      return;
+    }
+
+    const selectedId = Number(rawValue);
+    const salesperson = this.promotionalSalespersons.find((option) => option.id === selectedId);
+    this.promoOutwardForm.patchValue({
+      salespersonId: Number.isFinite(selectedId) ? selectedId : null,
+      salespersonName: salesperson?.name || ''
+    });
+    this.updatePromotionalPartySelection(Number.isFinite(selectedId) ? 'salesperson' : null);
+  }
+
+  get promoSelectedParty(): PromoPartyType | null {
+    if (this.promoOutwardForm.get('employeeId')?.value) {
+      return 'employee';
+    }
+    if (this.promoOutwardForm.get('distributorId')?.value) {
+      return 'distributor';
+    }
+    if (this.promoOutwardForm.get('salespersonId')?.value) {
+      return 'salesperson';
+    }
+    return null;
+  }
+
+  private updatePromotionalPartySelection(selected: 'employee' | 'distributor' | 'salesperson' | null): void {
+    const employeeIdControl = this.promoOutwardForm.get('employeeId');
+    const employeeNameControl = this.promoOutwardForm.get('employeeName');
+    const distributorIdControl = this.promoOutwardForm.get('distributorId');
+    const distributorNameControl = this.promoOutwardForm.get('distributorName');
+    const salespersonIdControl = this.promoOutwardForm.get('salespersonId');
+    const salespersonNameControl = this.promoOutwardForm.get('salespersonName');
+
+    if (!employeeIdControl || !employeeNameControl || !distributorIdControl || !distributorNameControl || !salespersonIdControl || !salespersonNameControl) {
+      return;
+    }
+
+    employeeIdControl.enable({ emitEvent: false });
+    distributorIdControl.enable({ emitEvent: false });
+    salespersonIdControl.enable({ emitEvent: false });
+
+    if (selected === 'employee') {
+      distributorIdControl.reset(null, { emitEvent: false });
+      distributorNameControl.reset('', { emitEvent: false });
+      salespersonIdControl.reset(null, { emitEvent: false });
+      salespersonNameControl.reset('', { emitEvent: false });
+      distributorIdControl.disable({ emitEvent: false });
+      salespersonIdControl.disable({ emitEvent: false });
+    } else if (selected === 'distributor') {
+      employeeIdControl.reset(null, { emitEvent: false });
+      employeeNameControl.reset('', { emitEvent: false });
+      salespersonIdControl.reset(null, { emitEvent: false });
+      salespersonNameControl.reset('', { emitEvent: false });
+      employeeIdControl.disable({ emitEvent: false });
+      salespersonIdControl.disable({ emitEvent: false });
+    } else if (selected === 'salesperson') {
+      employeeIdControl.reset(null, { emitEvent: false });
+      employeeNameControl.reset('', { emitEvent: false });
+      distributorIdControl.reset(null, { emitEvent: false });
+      distributorNameControl.reset('', { emitEvent: false });
+      employeeIdControl.disable({ emitEvent: false });
+      distributorIdControl.disable({ emitEvent: false });
+    }
+
+    this.promoPartySelectionError = false;
+  }
+
+  private hasPromoPartySelection(): boolean {
+    const selectedEmployee = this.promoOutwardForm.get('employeeId')?.value;
+    const selectedDistributor = this.promoOutwardForm.get('distributorId')?.value;
+    const selectedSalesperson = this.promoOutwardForm.get('salespersonId')?.value;
+
+    return !!selectedEmployee || !!selectedDistributor || !!selectedSalesperson;
+  }
+
   getCommentOptions(itemType: ModalItemType, section: SpareSection | ScrapSection): DropdownOption[] {
     const defaultOptions: DropdownOption[] = [
       { value: '', label: 'No comments' }
@@ -555,15 +898,20 @@ export class OutwardInventoryPage implements OnInit {
       return;
     }
 
+    if (this.selectedItemType === 'promotional_items' && this.activeSpareSection === 'outward_giving' && !this.hasPromoPartySelection()) {
+      this.promoPartySelectionError = true;
+      return;
+    }
+
     this.isSubmitting = true;
 
     const payload = this.buildOutwardGivingPayload(form, this.selectedItemType);
 
     this.outwardService.createOutwardItem(payload).subscribe({
       next: () => {
-        this.outwardService.getAll().subscribe({
+        this.outwardService.getAllOutwardItems().subscribe({
           next: (data) => {
-            this.records = data;
+            this.records = data.map(item => this.mapApiToRecord(item));
             this.applyFilter();
             this.isSubmitting = false;
             this.closeModal();
@@ -586,7 +934,7 @@ export class OutwardInventoryPage implements OnInit {
   private buildOutwardGivingPayload(form: FormGroup, itemType: ModalItemType): OutwardGivingPayload {
     const formValue = form.getRawValue();
 
-    return {
+    const payload: OutwardGivingPayload = {
       itemType: this.mapItemTypeForApi(itemType),
       transactionType: 'OUTWARD_GIVING',
       materialCode: formValue.matCode,
@@ -596,6 +944,23 @@ export class OutwardInventoryPage implements OnInit {
       comments: formValue.comments || '',
       quotedSellingPrice: Number(formValue.quotedSellingPrice ?? formValue.desiredQuotedPrice ?? 0)
     };
+
+    if (itemType === 'promotional_items') {
+      if (formValue.employeeId) {
+        payload.referenceNumber = String(formValue.employeeId);
+        payload.issuedTo = formValue.employeeName || '';
+      } else if (formValue.distributorId) {
+        payload.referenceNumber = String(formValue.distributorId);
+        // label is "firmName - distributorCode"; extract just firmName
+        payload.issuedTo = (formValue.distributorName as string)?.split(' - ')[0]?.trim() || '';
+      } else if (formValue.salespersonId) {
+        payload.referenceNumber = String(formValue.salespersonId);
+        // name is "name - employeeRollNo"; extract just the name
+        payload.issuedTo = (formValue.salespersonName as string)?.split(' - ')[0]?.trim() || '';
+      }
+    }
+
+    return payload;
   }
 
   private mapItemTypeForApi(itemType: ModalItemType): OutwardGivingPayload['itemType'] {
@@ -610,9 +975,9 @@ export class OutwardInventoryPage implements OnInit {
   private mapUnitForApi(unit: UnitType): OutwardGivingPayload['unit'] {
     const map: Record<UnitType, OutwardGivingPayload['unit']> = {
       KG: 'KILOGRAMS',
-      DOZEN: 'DOZEN',
-      PIECE: 'PIECE',
-      LITER: 'LITER'
+      DOZEN: 'DOZENS',
+      PIECE: 'PIECES',
+      LITER: 'LITRES'
     };
     return map[unit];
   }
@@ -646,9 +1011,9 @@ export class OutwardInventoryPage implements OnInit {
 
   // â”€â”€â”€ pull to refresh â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   handlePullRefresh(event: any): void {
-    this.outwardService.getAll().subscribe({
+    this.outwardService.getAllOutwardItems().subscribe({
       next: (data) => {
-        this.records = data;
+        this.records = data.map(item => this.mapApiToRecord(item));
         this.applyFilter();
         event.target.complete();
       },
@@ -658,9 +1023,9 @@ export class OutwardInventoryPage implements OnInit {
 
   manualRefresh(): void {
     this.isLoading = true;
-    this.outwardService.getAll().subscribe({
+    this.outwardService.getAllOutwardItems().subscribe({
       next: (data) => {
-        this.records = data;
+        this.records = data.map(item => this.mapApiToRecord(item));
         this.applyFilter();
         this.isLoading = false;
       },
@@ -725,6 +1090,15 @@ export class OutwardInventoryPage implements OnInit {
       KG: 'Kg', DOZEN: 'Dozen', PIECE: 'Pcs', LITER: 'L'
     };
     return map[unit] || unit;
+  }
+
+  getTransactionTypeLabel(section: string): { label: string; cls: string } {
+    const map: Record<string, { label: string; cls: string }> = {
+      outward_giving: { label: 'Outward Giving', cls: 'bg-emerald-50 text-emerald-700 border-emerald-200' },
+      returned_part:  { label: 'Returned Part',  cls: 'bg-sky-50 text-sky-700 border-sky-200' },
+      selling_scrap:  { label: 'Selling Scrap',  cls: 'bg-rose-50 text-rose-700 border-rose-200' }
+    };
+    return map[section] || { label: section, cls: 'bg-slate-50 text-slate-600 border-slate-200' };
   }
 
   trackById(_: number, r: OutwardRecord) { return r.id; }

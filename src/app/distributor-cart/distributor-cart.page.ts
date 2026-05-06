@@ -15,7 +15,12 @@ import {
   pricetagOutline,
   gridOutline,
   personOutline,
-  appsOutline
+  appsOutline,
+  businessOutline,
+  carOutline,
+  informationCircleOutline,
+  checkmarkCircleOutline,
+  alertCircleOutline
 } from 'ionicons/icons';
 import { CartService, Product, CartItem, CartItemPayload, PlaceOrderRequest } from '../services/cart.service';
 import { Auth } from '../services/auth';
@@ -79,6 +84,9 @@ export class DistributorCartPage implements OnInit {
   // Make Math available in template
   Math = Math;
 
+  // Delivery by selection: 'Company' | 'Distributor' | null
+  selectedDeliveryBy: 'Company' | 'Distributor' | null = null;
+
   private haptic = inject(HapticService);
 
   constructor(
@@ -102,7 +110,12 @@ export class DistributorCartPage implements OnInit {
       'pricetag-outline': pricetagOutline,
       'grid-outline': gridOutline,
       'person-outline': personOutline,
-      'apps-outline': appsOutline
+      'apps-outline': appsOutline,
+      'business-outline': businessOutline,
+      'car-outline': carOutline,
+      'information-circle-outline': informationCircleOutline,
+      'checkmark-circle-outline': checkmarkCircleOutline,
+      'alert-circle-outline': alertCircleOutline
     });
   }
 
@@ -255,6 +268,10 @@ export class DistributorCartPage implements OnInit {
     this.orderForm = this.fb.group({
       deliveryAddress: ['']
     });
+  }
+
+  selectDeliveryBy(option: 'Company' | 'Distributor') {
+    this.selectedDeliveryBy = option;
   }
 
   subscribeToCart() {
@@ -502,6 +519,7 @@ export class DistributorCartPage implements OnInit {
     // Stop auto-refresh of eligibility check
     this.stopEligibilityAutoRefresh();
     this.showCheckoutModal = false;
+    this.selectedDeliveryBy = null;
     this.orderForm.reset();
   }
 
@@ -523,6 +541,11 @@ export class DistributorCartPage implements OnInit {
     // Check eligibility before submitting
     if (!this.isOrderEligible) {
       this.showToast('❌ ' + this.orderEligibilityMessage, 'danger');
+      return;
+    }
+
+    if (!this.selectedDeliveryBy) {
+      this.showToast('Please select who will deliver the order.', 'warning');
       return;
     }
 
@@ -566,7 +589,8 @@ export class DistributorCartPage implements OnInit {
   private placeOrderWithCartId(cartId: number) {
     const orderPayload: PlaceOrderRequest = {
       cartId: cartId,
-      address: this.distributorAddress || ''
+      address: this.distributorAddress || '',
+      deliveryBy: this.selectedDeliveryBy!
     };
 
     console.log('=== PLACE ORDER DEBUG ===');

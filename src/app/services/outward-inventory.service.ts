@@ -15,6 +15,8 @@ export interface OutwardRecord {
   comments?: string;
   createdAt: string;
   updatedAt?: string;
+  issuedTo?: string;
+  referenceNumber?: string;
 }
 
 export interface OutwardGivingPayload {
@@ -22,10 +24,12 @@ export interface OutwardGivingPayload {
   transactionType: 'OUTWARD_GIVING';
   materialCode: string;
   materialName: string;
-  unit: 'KILOGRAMS' | 'DOZEN' | 'PIECE' | 'LITER';
+  unit: 'KILOGRAMS' | 'DOZENS' | 'PIECES' | 'LITRES';
   quantity: number;
   comments: string;
   quotedSellingPrice: number;
+  referenceNumber?: string;
+  issuedTo?: string;
 }
 
 export interface OutwardItemResponse {
@@ -38,6 +42,8 @@ export interface OutwardItemResponse {
   quantity: number;
   comments?: string;
   quotedSellingPrice?: number;
+  issuedTo?: string | null;
+  referenceNumber?: string | null;
   createdAt?: string;
   updatedAt?: string;
 }
@@ -66,6 +72,10 @@ export class OutwardInventoryService {
 
   createOutwardItem(payload: OutwardGivingPayload): Observable<unknown> {
     return this.http.post(this.outwardGivingUrl, payload);
+  }
+
+  getAllOutwardItems(): Observable<OutwardItemResponse[]> {
+    return this.http.get<OutwardItemResponse[]>(this.outwardGivingUrl);
   }
 
   getOutwardItemsByType(itemType: OutwardGivingPayload['itemType']): Observable<OutwardItemResponse[]> {

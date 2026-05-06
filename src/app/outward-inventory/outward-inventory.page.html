@@ -1,6 +1,6 @@
-﻿<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+<!-- ═══════════════════════════════════════════════════════════════
      OUTWARD INVENTORY PAGE
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+═══════════════════════════════════════════════════════════════ -->
 
 <!-- HEADER -->
 <ion-header class="ion-no-border">
@@ -28,7 +28,7 @@
   <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/50 to-emerald-50/30 pb-24">
     <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-8">
 
-      <!-- â”€â”€ HERO BANNER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <!-- ── HERO BANNER ──────────────────────────────────────────── -->
       <div class="relative bg-gradient-to-r from-emerald-500 via-teal-500 to-cyan-600 rounded-3xl shadow-xl shadow-emerald-200/50 overflow-hidden mb-8">
         <div class="absolute -top-16 -right-16 w-72 h-72 rounded-full bg-white/10 blur-3xl pointer-events-none"></div>
         <div class="absolute -bottom-16 -left-16 w-72 h-72 rounded-full bg-cyan-500/20 blur-3xl pointer-events-none"></div>
@@ -39,7 +39,7 @@
               <h1 class="text-3xl font-bold text-white mb-2 tracking-tight">Outward Inventory</h1>
               <p class="text-emerald-50/90 text-sm font-medium flex items-center gap-2 bg-white/10 w-fit px-3 py-1.5 rounded-full backdrop-blur-sm border border-white/20">
                 <ion-icon name="swap-horizontal-outline" class="text-base"></ion-icon>
-                Spare Parts Â· Promotional Items Â· Scrap Material
+                Spare Parts · Promotional Items · Scrap Material
               </p>
             </div>
             <ion-button
@@ -53,7 +53,7 @@
         </div>
       </div>
 
-      <!-- â”€â”€ STAT CARDS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <!-- ── STAT CARDS ───────────────────────────────────────────── -->
       <div class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-5 mb-8">
         <div *ngFor="let s of statCards"
           class="bg-white rounded-2xl p-4 sm:p-5 shadow-sm border-2 border-slate-100 hover:border-emerald-200 transition-all duration-300 group flex items-center gap-3">
@@ -68,7 +68,7 @@
         </div>
       </div>
 
-      <!-- â”€â”€ SEARCH + FILTERS â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <!-- ── SEARCH + FILTERS ─────────────────────────────────────── -->
       <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
         <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
           <div class="flex-1 relative">
@@ -92,14 +92,14 @@
         </div>
       </div>
 
-      <!-- â”€â”€ LOADER â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <!-- ── LOADER ───────────────────────────────────────────────── -->
       <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24">
         <ion-spinner name="crescent" class="text-emerald-500 w-10 h-10"></ion-spinner>
         <p class="text-slate-500 mt-4 font-medium">Loading records...</p>
       </div>
 
-      <!-- â”€â”€ EMPTY STATE â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
-      <div *ngIf="!isLoading && filteredRecords.length === 0"
+      <!-- ── EMPTY STATE ──────────────────────────────────────────── -->
+      <div *ngIf="!isLoading && filteredRecords.length === 0 && activeFilter !== 'raw_material' && activeFilter !== 'finished_product'"
         class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
         <div class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
           <ion-icon name="swap-horizontal-outline" class="text-4xl text-emerald-400"></ion-icon>
@@ -112,54 +112,254 @@
         </ion-button>
       </div>
 
-      <!-- â”€â”€ RECORDS GRID â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+      <!-- ── RECORDS GRID ─────────────────────────────────────────── -->
       <div *ngIf="!isLoading && filteredRecords.length > 0"
-        class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4">
-        <div *ngFor="let r of filteredRecords; trackBy: trackById"
-          class="record-card bg-white rounded-2xl border border-slate-100 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-300 overflow-hidden">
+        class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-          <div class="h-1 w-full"
+        <div *ngFor="let r of filteredRecords; trackBy: trackById"
+          class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
+          (click)="openDetail(r)">
+
+          <!-- -- TOP ACCENT BAR + HEADER -- -->
+          <div class="p-3 pb-2.5"
             [ngClass]="{
-              'bg-gradient-to-r from-amber-400 to-orange-400': r.itemType === 'spare_parts',
-              'bg-gradient-to-r from-purple-400 to-fuchsia-400': r.itemType === 'promotional_items',
-              'bg-gradient-to-r from-rose-400 to-red-400': r.itemType === 'scrap_material'
+              'border-l-4 border-l-orange-400': r.itemType === 'spare_parts',
+              'border-l-4 border-l-violet-500': r.itemType === 'promotional_items',
+              'border-l-4 border-l-rose-500':   r.itemType === 'scrap_material'
             }">
+
+            <!-- Row 1: icon + name + ID -->
+            <div class="flex items-start gap-2 mb-1.5">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                [ngClass]="{
+                  'bg-orange-100': r.itemType === 'spare_parts',
+                  'bg-violet-100': r.itemType === 'promotional_items',
+                  'bg-rose-100':   r.itemType === 'scrap_material'
+                }">
+                <ion-icon
+                  [name]="r.itemType === 'spare_parts' ? 'build-outline' : r.itemType === 'promotional_items' ? 'gift-outline' : 'trash-outline'"
+                  class="text-sm"
+                  [ngClass]="{
+                    'text-orange-500': r.itemType === 'spare_parts',
+                    'text-violet-600': r.itemType === 'promotional_items',
+                    'text-rose-500':   r.itemType === 'scrap_material'
+                  }">
+                </ion-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ r.matName || '�' }}</p>
+                <p class="text-[10px] text-slate-400 font-mono truncate">{{ r.matCode || '�' }}</p>
+              </div>
+              <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ r.id }}</span>
+            </div>
+
+            <!-- Row 2: type badge + transaction badge -->
+            <div class="flex flex-wrap gap-1">
+              <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                [ngClass]="{
+                  'bg-orange-50 text-orange-600': r.itemType === 'spare_parts',
+                  'bg-violet-50 text-violet-600': r.itemType === 'promotional_items',
+                  'bg-rose-50 text-rose-600':     r.itemType === 'scrap_material'
+                }">
+                {{ getTypeBadge(r.itemType).label }}
+              </span>
+              <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                [ngClass]="{
+                  'bg-emerald-50 text-emerald-700': r.section === 'outward_giving',
+                  'bg-sky-50 text-sky-700':         r.section === 'returned_part',
+                  'bg-teal-50 text-teal-700':       r.section === 'selling_scrap'
+                }">
+                <ion-icon
+                  [name]="r.section === 'outward_giving' ? 'arrow-up-circle-outline' : r.section === 'returned_part' ? 'return-up-back-outline' : 'cash-outline'"
+                  class="text-[10px]">
+                </ion-icon>
+                {{ getTransactionTypeLabel(r.section).label }}
+              </span>
+            </div>
           </div>
 
-          <div class="p-5">
-            <div class="flex items-start justify-between mb-3 gap-2">
-              <div class="flex-1 min-w-0">
-                <h3 class="font-bold text-slate-800 text-base truncate">{{ r.matName || '-' }}</h3>
-                <p class="text-slate-400 text-xs mt-0.5 font-mono">{{ r.matCode || 'No code' }}</p>
-              </div>
-              <div class="flex flex-col items-end gap-1.5">
-                <span class="badge" [ngClass]="getTypeBadge(r.itemType).cls">
-                  {{ getTypeBadge(r.itemType).label }}
-                </span>
-                <span class="badge badge-slate">{{ getSectionLabel(r.section) }}</span>
+          <!-- -- DIVIDER -- -->
+          <div class="mx-3 border-t border-slate-100"></div>
+
+          <!-- -- METRICS ROW -- -->
+          <div class="grid grid-cols-2 divide-x divide-slate-100 mx-3 my-2">
+            <div class="pr-2 py-1">
+              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
+              <p class="text-sm font-extrabold text-slate-800 leading-none">
+                {{ r.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(r.unit) }}</span>
+              </p>
+            </div>
+            <div class="pl-2 py-1">
+              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
+              <p class="text-sm font-extrabold leading-none"
+                [ngClass]="(r.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-300'">
+                {{ (r.desiredQuotedPrice ?? 0) > 0 ? ('?' + r.desiredQuotedPrice) : '�' }}
+              </p>
+            </div>
+          </div>
+
+          <!-- -- OPTIONAL DETAILS -- -->
+          <div class="px-3 pb-2.5 space-y-1.5">
+
+            <!-- Issued To -->
+            <div *ngIf="r.issuedTo"
+              class="flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-lg px-2 py-1.5">
+              <ion-icon name="person-outline" class="text-violet-500 text-xs flex-shrink-0"></ion-icon>
+              <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
+                <span class="text-[8px] text-violet-500 font-bold uppercase tracking-wide flex-shrink-0">Issued To</span>
+                <span class="text-[11px] font-bold text-violet-800 truncate text-right">{{ r.issuedTo }}</span>
               </div>
             </div>
 
-            <div class="grid grid-cols-2 gap-2 mb-3">
-              <div class="bg-slate-50 rounded-xl p-2.5">
-                <p class="text-slate-400 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quantity</p>
-                <p class="text-slate-700 font-bold text-sm">{{ r.quantity }} <span class="text-slate-400 font-normal text-xs">{{ getUnitLabel(r.unit) }}</span></p>
-              </div>
-              <div *ngIf="r.desiredQuotedPrice" class="bg-emerald-50 rounded-xl p-2.5">
-                <p class="text-emerald-600 text-[10px] font-bold uppercase tracking-wider mb-0.5">Quoted Price</p>
-                <p class="text-emerald-700 font-bold text-sm">&#8377; {{ r.desiredQuotedPrice }}</p>
+            <!-- Reference Number -->
+            <div *ngIf="r.referenceNumber"
+              class="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-lg px-2 py-1.5">
+              <ion-icon name="bookmark-outline" class="text-sky-500 text-xs flex-shrink-0"></ion-icon>
+              <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
+                <span class="text-[8px] text-sky-500 font-bold uppercase tracking-wide flex-shrink-0">Ref #</span>
+                <span class="text-[11px] font-bold text-sky-800 truncate text-right">{{ r.referenceNumber }}</span>
               </div>
             </div>
 
-            <p *ngIf="r.comments" class="text-slate-500 text-xs italic bg-slate-50 rounded-xl px-3 py-2 line-clamp-2">
-              "{{ r.comments }}"
-            </p>
+            <!-- Comments -->
+            <div *ngIf="r.comments"
+              class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
+              <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
+              <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ r.comments }}"</p>
+            </div>
 
-            <p class="text-slate-300 text-[10px] mt-3 text-right font-medium">
-              {{ r.createdAt | date:'dd MMM yyyy, h:mm a' }}
-            </p>
+            <!-- Timestamp -->
+            <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
+              <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
+              <p class="text-[9px] text-slate-300 font-medium">{{ r.createdAt | date:'dd MMM yy � h:mm a' }}</p>
+            </div>
+
           </div>
         </div>
+      </div>
+
+      <!-- -- PRODUCT CARDS LOADING SPINNER ------------------- -->
+      <div *ngIf="isLoadingProducts && (activeFilter === 'all' || activeFilter === 'raw_material' || activeFilter === 'finished_product')"
+           class="flex justify-center py-6">
+        <ion-spinner name="crescent" style="color: #10b981;"></ion-spinner>
+      </div>
+
+      <!-- -- PRODUCT CARDS GRID ------------------------------- -->
+      <ng-container *ngIf="!isLoadingProducts && filteredProductCards.length > 0">
+
+        <!-- Section header (only on 'all' filter to show context) -->
+        <div *ngIf="activeFilter === 'all'" class="flex items-center gap-2 mt-2 mb-1">
+          <div class="h-px flex-1 bg-slate-200"></div>
+          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Product Catalog</span>
+          <div class="h-px flex-1 bg-slate-200"></div>
+        </div>
+
+        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+          <div *ngFor="let p of filteredProductCards"
+               class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
+               [ngClass]="p._cardType === 'raw_material' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-blue-500'"
+               (click)="openDetail(p)">
+
+            <!-- TOP: icon + name + code + id -->
+            <div class="p-3 pb-2.5">
+              <div class="flex items-start gap-2 mb-1.5">
+                <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                     [ngClass]="p._cardType === 'raw_material' ? 'bg-emerald-100' : 'bg-blue-100'">
+                  <ion-icon [name]="p._cardType === 'raw_material' ? 'cube-outline' : 'bag-outline'"
+                            class="text-sm"
+                            [ngClass]="p._cardType === 'raw_material' ? 'text-emerald-600' : 'text-blue-600'">
+                  </ion-icon>
+                </div>
+                <div class="flex-1 min-w-0">
+                  <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ p.name }}</p>
+                  <p class="text-[10px] text-slate-400 font-mono truncate">{{ p.code || '�' }}</p>
+                </div>
+                <span *ngIf="p.id" class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ p.id }}</span>
+              </div>
+
+              <!-- Type badge + Status badge -->
+              <div class="flex flex-wrap gap-1">
+                <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                      [ngClass]="p._cardType === 'raw_material' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'">
+                  {{ p._cardType === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
+                </span>
+                <span *ngIf="p.status"
+                      class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                      [ngClass]="{
+                        'bg-green-50 text-green-700': p.status === 'INWARD' || p.status === 'ACTIVE',
+                        'bg-red-50 text-red-700': p.status === 'OUTWARD' || p.status === 'INACTIVE',
+                        'bg-slate-100 text-slate-500': p.status !== 'INWARD' && p.status !== 'OUTWARD' && p.status !== 'ACTIVE' && p.status !== 'INACTIVE'
+                      }">
+                  {{ p.status }}
+                </span>
+              </div>
+            </div>
+
+            <!-- DIVIDER -->
+            <div class="mx-3 border-t border-slate-100"></div>
+
+            <!-- METRICS ROW: Qty + Price/Threshold -->
+            <div class="grid grid-cols-2 divide-x divide-slate-100 mx-3 my-2">
+              <div class="pr-2 py-1">
+                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
+                <p class="text-sm font-extrabold text-slate-800 leading-none">
+                  {{ p.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ p.unit }}</span>
+                </p>
+              </div>
+              <div class="pl-2 py-1">
+                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">
+                  {{ p.price != null ? 'Price' : 'Min Stock' }}
+                </p>
+                <p class="text-sm font-extrabold leading-none"
+                   [ngClass]="p.price != null ? 'text-emerald-600' : 'text-slate-400'">
+                  {{ p.price != null ? ('?' + p.price) : (p.minimumThreshold || '�') }}
+                </p>
+              </div>
+            </div>
+
+            <!-- OPTIONAL DETAILS -->
+            <div class="px-3 pb-2.5 space-y-1.5">
+              <!-- Vendor (raw material) -->
+              <div *ngIf="p.vendorName"
+                   class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1.5">
+                <ion-icon name="business-outline" class="text-emerald-500 text-xs flex-shrink-0"></ion-icon>
+                <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
+                  <span class="text-[8px] text-emerald-600 font-bold uppercase tracking-wide flex-shrink-0">Vendor</span>
+                  <span class="text-[11px] font-bold text-emerald-800 truncate text-right">{{ p.vendorName }}</span>
+                </div>
+              </div>
+
+              <!-- Description (finished product) -->
+              <div *ngIf="p.description"
+                   class="flex items-start gap-1.5 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1.5">
+                <ion-icon name="information-circle-outline" class="text-blue-400 text-xs flex-shrink-0 mt-px"></ion-icon>
+                <p class="text-[10px] text-slate-500 line-clamp-1 leading-relaxed">{{ p.description }}</p>
+              </div>
+
+              <!-- Timestamp -->
+              <div *ngIf="p.createdAt" class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
+                <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
+                <p class="text-[9px] text-slate-300 font-medium">{{ p.createdAt | date:'dd MMM yy � h:mm a' }}</p>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- -- PRODUCT CARDS EMPTY STATE -------------------------- -->
+      <div *ngIf="!isLoadingProducts && filteredProductCards.length === 0 && (activeFilter === 'raw_material' || activeFilter === 'finished_product')"
+           class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200 mt-2">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
+             [ngClass]="activeFilter === 'raw_material' ? 'bg-emerald-50' : 'bg-blue-50'">
+          <ion-icon [name]="activeFilter === 'raw_material' ? 'cube-outline' : 'bag-outline'"
+                    class="text-3xl"
+                    [ngClass]="activeFilter === 'raw_material' ? 'text-emerald-400' : 'text-blue-400'">
+          </ion-icon>
+        </div>
+        <h3 class="text-base font-bold text-slate-700 mb-1">
+          No {{ activeFilter === 'raw_material' ? 'raw materials' : 'finished products' }} found
+        </h3>
+        <p class="text-slate-400 text-sm">No items match your search.</p>
       </div>
 
     </div>
@@ -167,9 +367,400 @@
 
 </ion-content>
 
-<!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
+<!-- ------------------------------------------------------------
+     DETAIL VIEW MODAL
+---------------------------------------------------------------- -->
+<div *ngIf="isDetailOpen && selectedRecord"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+     (click)="closeDetail()">
+  <!-- Backdrop -->
+  <div class="absolute inset-0" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);"></div>
+
+  <!-- Sheet -->
+  <div class="relative w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+       style="max-height: 93vh;"
+       (click)="$event.stopPropagation()">
+
+    <!-- ---------- OUTWARD RECORD HEADER ---------- -->
+    <ng-container *ngIf="!selectedRecord._cardType">
+      <!-- Drag pill -->
+      <div class="sm:hidden flex justify-center pt-2.5 absolute top-0 left-0 right-0 z-10">
+        <div class="w-10 h-1 rounded-full bg-white/30"></div>
+      </div>
+
+      <!-- Header gradient -->
+      <div class="relative overflow-hidden px-5 pt-8 pb-5"
+           [ngStyle]="{
+             background: selectedRecord.itemType === 'spare_parts'
+               ? 'linear-gradient(135deg, #ea580c 0%, #f97316 50%, #fb923c 100%)'
+               : selectedRecord.itemType === 'promotional_items'
+               ? 'linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%)'
+               : 'linear-gradient(135deg, #be123c 0%, #e11d48 50%, #fb7185 100%)'
+           }">
+        <!-- Decorative circles -->
+        <div class="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style="background: rgba(255,255,255,0.3);"></div>
+        <div class="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-15" style="background: rgba(255,255,255,0.3);"></div>
+
+        <div class="relative flex items-center justify-between">
+          <div class="flex items-center gap-3.5">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                 style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.3);">
+              <ion-icon [name]="selectedRecord.itemType === 'spare_parts' ? 'build-outline' : selectedRecord.itemType === 'promotional_items' ? 'gift-outline' : 'trash-outline'"
+                        class="text-3xl text-white"></ion-icon>
+            </div>
+            <div>
+              <p class="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">
+                {{ selectedRecord.itemType === 'spare_parts' ? 'Spare Part' : selectedRecord.itemType === 'promotional_items' ? 'Promo Item' : 'Scrap Material' }}
+              </p>
+              <h2 class="text-white font-extrabold text-lg leading-tight">{{ selectedRecord.matName || '�' }}</h2>
+              <p class="text-white/65 text-xs font-mono mt-0.5">
+                {{ selectedRecord.matCode || 'No code' }}
+                <span *ngIf="selectedRecord.id" class="ml-2 bg-white/20 px-1.5 py-0.5 rounded-md text-white/80">#{{ selectedRecord.id }}</span>
+              </p>
+            </div>
+          </div>
+          <button (click)="closeDetail()"
+                  class="w-9 h-9 rounded-xl flex items-center justify-center border-0 outline-none flex-shrink-0"
+                  style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+            <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Transaction type pill -->
+        <div class="relative mt-4 flex items-center gap-2 flex-wrap">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
+                style="background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+            <ion-icon [name]="selectedRecord.section === 'outward_giving' ? 'arrow-up-circle-outline' : selectedRecord.section === 'returned_part' ? 'return-up-back-outline' : 'cash-outline'"
+                      class="text-sm"></ion-icon>
+            {{ getTransactionTypeLabel(selectedRecord.section).label }}
+          </span>
+          <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold"
+                style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9);">
+            {{ getTypeBadge(selectedRecord.itemType).label }}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ---------- PRODUCT CARD HEADER ---------- -->
+    <ng-container *ngIf="selectedRecord._cardType">
+      <div class="sm:hidden flex justify-center pt-2.5 absolute top-0 left-0 right-0 z-10">
+        <div class="w-10 h-1 rounded-full bg-white/30"></div>
+      </div>
+      <div class="relative overflow-hidden px-5 pt-8 pb-5"
+           [ngStyle]="{
+             background: selectedRecord._cardType === 'raw_material'
+               ? 'linear-gradient(135deg, #059669 0%, #10b981 50%, #34d399 100%)'
+               : 'linear-gradient(135deg, #1d4ed8 0%, #3b82f6 50%, #60a5fa 100%)'
+           }">
+        <div class="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style="background: rgba(255,255,255,0.3);"></div>
+        <div class="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-15" style="background: rgba(255,255,255,0.3);"></div>
+
+        <div class="relative flex items-center justify-between">
+          <div class="flex items-center gap-3.5">
+            <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+                 style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.3);">
+              <ion-icon [name]="selectedRecord._cardType === 'raw_material' ? 'cube-outline' : 'bag-outline'"
+                        class="text-3xl text-white"></ion-icon>
+            </div>
+            <div>
+              <p class="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">
+                {{ selectedRecord._cardType === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
+              </p>
+              <h2 class="text-white font-extrabold text-lg leading-tight">{{ selectedRecord.name }}</h2>
+              <p class="text-white/65 text-xs font-mono mt-0.5">
+                {{ selectedRecord.code || 'No code' }}
+                <span *ngIf="selectedRecord.id" class="ml-2 bg-white/20 px-1.5 py-0.5 rounded-md text-white/80">#{{ selectedRecord.id }}</span>
+              </p>
+            </div>
+          </div>
+          <button (click)="closeDetail()"
+                  class="w-9 h-9 rounded-xl flex items-center justify-center border-0 outline-none flex-shrink-0"
+                  style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+            <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+          </button>
+        </div>
+
+        <!-- Status pill -->
+        <div class="relative mt-4 flex items-center gap-2" *ngIf="selectedRecord.status">
+          <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
+                style="background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+            <span class="w-1.5 h-1.5 rounded-full"
+                  [ngClass]="{
+                    'bg-green-300': selectedRecord.status === 'INWARD' || selectedRecord.status === 'ACTIVE',
+                    'bg-red-300': selectedRecord.status === 'OUTWARD' || selectedRecord.status === 'INACTIVE',
+                    'bg-white': selectedRecord.status !== 'INWARD' && selectedRecord.status !== 'OUTWARD' && selectedRecord.status !== 'ACTIVE' && selectedRecord.status !== 'INACTIVE'
+                  }"></span>
+            {{ selectedRecord.status }}
+          </span>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ---------- SCROLLABLE BODY ---------- -->
+    <div class="overflow-y-auto flex-1 px-4 py-4 space-y-3" style="background: #f8fafc;">
+
+      <!-- --- OUTWARD RECORD BODY --- -->
+      <ng-container *ngIf="!selectedRecord._cardType">
+
+        <!-- Key metrics row -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Quantity card -->
+          <div class="rounded-2xl p-4 relative overflow-hidden"
+               [ngStyle]="{
+                 background: selectedRecord.itemType === 'spare_parts'
+                   ? 'linear-gradient(135deg, #fff7ed, #ffedd5)'
+                   : selectedRecord.itemType === 'promotional_items'
+                   ? 'linear-gradient(135deg, #f5f3ff, #ede9fe)'
+                   : 'linear-gradient(135deg, #fff1f2, #ffe4e6)'
+               }"
+               style="border: 1px solid rgba(0,0,0,0.06);">
+            <div class="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center"
+                 [ngClass]="{
+                   'bg-orange-100': selectedRecord.itemType === 'spare_parts',
+                   'bg-violet-100': selectedRecord.itemType === 'promotional_items',
+                   'bg-rose-100':   selectedRecord.itemType === 'scrap_material'
+                 }">
+              <ion-icon name="layers-outline" class="text-sm"
+                        [ngClass]="{
+                          'text-orange-500': selectedRecord.itemType === 'spare_parts',
+                          'text-violet-500': selectedRecord.itemType === 'promotional_items',
+                          'text-rose-500':   selectedRecord.itemType === 'scrap_material'
+                        }"></ion-icon>
+            </div>
+            <p class="text-[9px] font-bold uppercase tracking-widest mb-2"
+               [ngClass]="{
+                 'text-orange-400': selectedRecord.itemType === 'spare_parts',
+                 'text-violet-400': selectedRecord.itemType === 'promotional_items',
+                 'text-rose-400':   selectedRecord.itemType === 'scrap_material'
+               }">Quantity</p>
+            <p class="text-4xl font-black leading-none"
+               [ngClass]="{
+                 'text-orange-700': selectedRecord.itemType === 'spare_parts',
+                 'text-violet-700': selectedRecord.itemType === 'promotional_items',
+                 'text-rose-700':   selectedRecord.itemType === 'scrap_material'
+               }">{{ selectedRecord.quantity }}</p>
+            <p class="text-xs font-semibold mt-1.5"
+               [ngClass]="{
+                 'text-orange-400': selectedRecord.itemType === 'spare_parts',
+                 'text-violet-400': selectedRecord.itemType === 'promotional_items',
+                 'text-rose-400':   selectedRecord.itemType === 'scrap_material'
+               }">{{ getUnitLabel(selectedRecord.unit) }}</p>
+          </div>
+
+          <!-- Price card -->
+          <div class="rounded-2xl p-4 relative overflow-hidden"
+               [ngStyle]="{
+                 background: (selectedRecord.desiredQuotedPrice ?? 0) > 0
+                   ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                   : 'linear-gradient(135deg, #f8fafc, #f1f5f9)'
+               }"
+               style="border: 1px solid rgba(0,0,0,0.06);">
+            <div class="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center"
+                 [ngClass]="(selectedRecord.desiredQuotedPrice ?? 0) > 0 ? 'bg-emerald-100' : 'bg-slate-100'">
+              <ion-icon name="cash-outline" class="text-sm"
+                        [ngClass]="(selectedRecord.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-500' : 'text-slate-400'"></ion-icon>
+            </div>
+            <p class="text-[9px] font-bold uppercase tracking-widest mb-2"
+               [ngClass]="(selectedRecord.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-500' : 'text-slate-400'">Quoted Price</p>
+            <p class="text-4xl font-black leading-none"
+               [ngClass]="(selectedRecord.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-700' : 'text-slate-300'">
+              {{ (selectedRecord.desiredQuotedPrice ?? 0) > 0 ? selectedRecord.desiredQuotedPrice : '�' }}
+            </p>
+            <p *ngIf="(selectedRecord.desiredQuotedPrice ?? 0) > 0"
+               class="text-xs font-semibold mt-1.5 text-emerald-500">Indian Rupees ?</p>
+          </div>
+        </div>
+
+        <!-- Issued To -->
+        <div *ngIf="selectedRecord.issuedTo"
+             class="flex items-center gap-3 rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #ddd6fe;">
+          <div class="w-10 h-10 rounded-xl bg-violet-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ion-icon name="person-outline" class="text-base text-white"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[9px] text-violet-500 font-bold uppercase tracking-widest">Issued To</p>
+            <p class="text-sm font-bold text-violet-800 mt-0.5 truncate">{{ selectedRecord.issuedTo }}</p>
+          </div>
+        </div>
+
+        <!-- Reference Number -->
+        <div *ngIf="selectedRecord.referenceNumber"
+             class="flex items-center gap-3 rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd;">
+          <div class="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ion-icon name="bookmark-outline" class="text-base text-white"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[9px] text-sky-500 font-bold uppercase tracking-widest">Reference Number</p>
+            <p class="text-sm font-bold text-sky-800 font-mono mt-0.5">{{ selectedRecord.referenceNumber }}</p>
+          </div>
+        </div>
+
+        <!-- Comments -->
+        <div *ngIf="selectedRecord.comments"
+             class="rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a;">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <ion-icon name="chatbubble-ellipses-outline" class="text-base text-white"></ion-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[9px] text-amber-600 font-bold uppercase tracking-widest">Comments</p>
+              <p class="text-sm text-amber-900 mt-1 leading-relaxed italic">"{{ selectedRecord.comments }}"</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timestamp footer -->
+        <div *ngIf="selectedRecord.createdAt"
+             class="flex items-center justify-center gap-2 py-2 rounded-xl"
+             style="background: rgba(0,0,0,0.03);">
+          <ion-icon name="time-outline" class="text-slate-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-400 font-medium">Recorded on {{ selectedRecord.createdAt | date:'dd MMM yyyy � h:mm a' }}</p>
+        </div>
+
+      </ng-container>
+
+      <!-- --- PRODUCT CARD BODY --- -->
+      <ng-container *ngIf="selectedRecord._cardType">
+
+        <!-- Key metrics row -->
+        <div class="grid grid-cols-2 gap-3">
+          <!-- Quantity -->
+          <div class="rounded-2xl p-4 relative overflow-hidden"
+               [ngStyle]="{
+                 background: selectedRecord._cardType === 'raw_material'
+                   ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)'
+                   : 'linear-gradient(135deg, #eff6ff, #dbeafe)'
+               }"
+               style="border: 1px solid rgba(0,0,0,0.06);">
+            <div class="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center"
+                 [ngClass]="selectedRecord._cardType === 'raw_material' ? 'bg-emerald-100' : 'bg-blue-100'">
+              <ion-icon name="layers-outline" class="text-sm"
+                        [ngClass]="selectedRecord._cardType === 'raw_material' ? 'text-emerald-500' : 'text-blue-500'"></ion-icon>
+            </div>
+            <p class="text-[9px] font-bold uppercase tracking-widest mb-2"
+               [ngClass]="selectedRecord._cardType === 'raw_material' ? 'text-emerald-500' : 'text-blue-500'">Quantity</p>
+            <p class="text-4xl font-black leading-none"
+               [ngClass]="selectedRecord._cardType === 'raw_material' ? 'text-emerald-700' : 'text-blue-700'">{{ selectedRecord.quantity }}</p>
+            <p class="text-xs font-semibold mt-1.5"
+               [ngClass]="selectedRecord._cardType === 'raw_material' ? 'text-emerald-400' : 'text-blue-400'">{{ selectedRecord.unit || 'units' }}</p>
+          </div>
+
+          <!-- Price / Threshold -->
+          <div class="rounded-2xl p-4 relative overflow-hidden"
+               [ngStyle]="{ background: selectedRecord.price != null ? 'linear-gradient(135deg, #ecfdf5, #d1fae5)' : 'linear-gradient(135deg, #fefce8, #fef9c3)' }"
+               style="border: 1px solid rgba(0,0,0,0.06);">
+            <div class="absolute top-2 right-2 w-8 h-8 rounded-lg flex items-center justify-center"
+                 [ngClass]="selectedRecord.price != null ? 'bg-emerald-100' : 'bg-yellow-100'">
+              <ion-icon [name]="selectedRecord.price != null ? 'cash-outline' : 'alert-circle-outline'"
+                        class="text-sm"
+                        [ngClass]="selectedRecord.price != null ? 'text-emerald-500' : 'text-yellow-500'"></ion-icon>
+            </div>
+            <p class="text-[9px] font-bold uppercase tracking-widest mb-2"
+               [ngClass]="selectedRecord.price != null ? 'text-emerald-500' : 'text-yellow-600'">
+              {{ selectedRecord.price != null ? 'Unit Price' : 'Min Threshold' }}
+            </p>
+            <p class="text-4xl font-black leading-none"
+               [ngClass]="selectedRecord.price != null ? 'text-emerald-700' : 'text-yellow-700'">
+              {{ selectedRecord.price != null ? selectedRecord.price : (selectedRecord.minimumThreshold || '�') }}
+            </p>
+            <p class="text-xs font-semibold mt-1.5"
+               [ngClass]="selectedRecord.price != null ? 'text-emerald-400' : 'text-yellow-500'">
+              {{ selectedRecord.price != null ? 'Indian Rupees ?' : (selectedRecord.minimumThreshold ? selectedRecord.unit : '') }}
+            </p>
+          </div>
+        </div>
+
+        <!-- Min threshold (if price is also shown) -->
+        <div *ngIf="selectedRecord.price != null && selectedRecord.minimumThreshold"
+             class="flex items-center gap-3 rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #fefce8, #fef9c3); border: 1px solid #fde68a;">
+          <div class="w-10 h-10 rounded-xl bg-yellow-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ion-icon name="alert-circle-outline" class="text-base text-white"></ion-icon>
+          </div>
+          <div>
+            <p class="text-[9px] text-yellow-600 font-bold uppercase tracking-widest">Min Stock Threshold</p>
+            <p class="text-sm font-bold text-yellow-800 mt-0.5">{{ selectedRecord.minimumThreshold }} {{ selectedRecord.unit }}</p>
+          </div>
+        </div>
+
+        <!-- Vendor -->
+        <div *ngIf="selectedRecord.vendorName"
+             class="flex items-center gap-3 rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #ecfdf5, #d1fae5); border: 1px solid #a7f3d0;">
+          <div class="w-10 h-10 rounded-xl bg-emerald-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ion-icon name="business-outline" class="text-base text-white"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[9px] text-emerald-600 font-bold uppercase tracking-widest">Vendor</p>
+            <p class="text-sm font-bold text-emerald-800 mt-0.5 truncate">{{ selectedRecord.vendorName }}</p>
+            <p *ngIf="selectedRecord.vendorId" class="text-[10px] text-emerald-500 font-mono">ID: {{ selectedRecord.vendorId }}</p>
+          </div>
+        </div>
+
+        <!-- Transport + Driver side by side if both present -->
+        <div *ngIf="selectedRecord.transportName || selectedRecord.driverName" class="grid gap-3"
+             [ngClass]="(selectedRecord.transportName && selectedRecord.driverName) ? 'grid-cols-2' : 'grid-cols-1'">
+          <div *ngIf="selectedRecord.transportName"
+               class="flex items-center gap-2.5 rounded-2xl p-3.5"
+               style="background: linear-gradient(135deg, #eff6ff, #dbeafe); border: 1px solid #bfdbfe;">
+            <div class="w-9 h-9 rounded-xl bg-blue-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <ion-icon name="car-outline" class="text-sm text-white"></ion-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[9px] text-blue-500 font-bold uppercase tracking-widest">Transport</p>
+              <p class="text-xs font-bold text-blue-800 mt-0.5 truncate">{{ selectedRecord.transportName }}</p>
+            </div>
+          </div>
+          <div *ngIf="selectedRecord.driverName"
+               class="flex items-center gap-2.5 rounded-2xl p-3.5"
+               style="background: linear-gradient(135deg, #f5f3ff, #ede9fe); border: 1px solid #ddd6fe;">
+            <div class="w-9 h-9 rounded-xl bg-violet-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <ion-icon name="person-circle-outline" class="text-sm text-white"></ion-icon>
+            </div>
+            <div class="min-w-0">
+              <p class="text-[9px] text-violet-500 font-bold uppercase tracking-widest">Driver</p>
+              <p class="text-xs font-bold text-violet-800 mt-0.5 truncate">{{ selectedRecord.driverName }}</p>
+              <p *ngIf="selectedRecord.driverMobile" class="text-[9px] text-violet-400 font-mono">{{ selectedRecord.driverMobile }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Description -->
+        <div *ngIf="selectedRecord.description"
+             class="rounded-2xl p-3.5"
+             style="background: linear-gradient(135deg, #f0f9ff, #e0f2fe); border: 1px solid #bae6fd;">
+          <div class="flex items-start gap-3">
+            <div class="w-10 h-10 rounded-xl bg-sky-500 flex items-center justify-center flex-shrink-0 shadow-sm">
+              <ion-icon name="information-circle-outline" class="text-base text-white"></ion-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-[9px] text-sky-500 font-bold uppercase tracking-widest">Description</p>
+              <p class="text-sm text-sky-800 mt-1 leading-relaxed">{{ selectedRecord.description }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Timestamp footer -->
+        <div *ngIf="selectedRecord.createdAt"
+             class="flex items-center justify-center gap-2 py-2 rounded-xl"
+             style="background: rgba(0,0,0,0.03);">
+          <ion-icon name="time-outline" class="text-slate-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-400 font-medium">Last updated {{ selectedRecord.createdAt | date:'dd MMM yyyy � h:mm a' }}</p>
+        </div>
+
+      </ng-container>
+
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
      UNIFIED ADD OUTWARD ITEM MODAL  (matches master-inventory style)
-â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+═══════════════════════════════════════════════════════════════ -->
 <div *ngIf="isModalOpen"
   class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
   (click)="closeModal()">
@@ -201,7 +792,7 @@
     <div class="flex-1 overflow-y-auto">
       <div class="p-6 pb-4">
 
-        <!-- â”€â”€ TYPE SELECTOR GRID (matches master-inventory) â”€â”€â”€â”€ -->
+        <!-- ── TYPE SELECTOR GRID (matches master-inventory) ──── -->
         <div class="mb-6">
           <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-4 ml-1">Select Item Type</label>
           <div class="grid grid-cols-12 gap-3">
@@ -278,12 +869,12 @@
           <p class="text-sm font-medium">Select an item type above to get started</p>
         </div>
 
-        <!-- â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•
-             FORM SECTION â€” only shown when type is selected
-        â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â•â• -->
+        <!-- ══════════════════════════════════════════════════════════
+             FORM SECTION — only shown when type is selected
+        ══════════════════════════════════════════════════════════ -->
         <div *ngIf="selectedItemType">
 
-          <!-- â”€â”€ SECTION TABS (Spare / Promo) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <!-- ── SECTION TABS (Spare / Promo) ──────────────────── -->
           <div *ngIf="selectedItemType === 'spare_parts'"
             class="flex gap-2 mb-5">
             <button
@@ -302,7 +893,7 @@
             </button>
           </div>
 
-          <!-- â”€â”€ SECTION TABS (Scrap) â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€ -->
+          <!-- ── SECTION TABS (Scrap) ───────────────────────────── -->
           <div *ngIf="selectedItemType === 'scrap_material'"
             class="flex gap-2 mb-5">
             <button
@@ -321,7 +912,7 @@
             </button>
           </div>
 
-          <!-- â•â•â•â• SPARE PARTS â€” OUTWARD GIVING â•â•â•â• -->
+          <!-- ════ SPARE PARTS — OUTWARD GIVING ════ -->
           <ng-container *ngIf="selectedItemType === 'spare_parts' && activeSpareSection === 'outward_giving'">
             <form [formGroup]="spareOutwardForm" class="space-y-4">
 
@@ -391,7 +982,7 @@
             </form>
           </ng-container>
 
-          <!-- â•â•â•â• SPARE PARTS â€” RETURNED PART â•â•â•â• -->
+          <!-- ════ SPARE PARTS — RETURNED PART ════ -->
           <ng-container *ngIf="selectedItemType === 'spare_parts' && activeSpareSection === 'returned_part'">
             <form [formGroup]="spareReturnedForm" class="space-y-4">
 
@@ -461,7 +1052,7 @@
             </form>
           </ng-container>
 
-          <!-- â•â•â•â• PROMOTIONAL ITEMS â€” OUTWARD GIVING â•â•â•â• -->
+          <!-- ════ PROMOTIONAL ITEMS — OUTWARD GIVING ════ -->
           <ng-container *ngIf="selectedItemType === 'promotional_items' && activeSpareSection === 'outward_giving'">
             <form [formGroup]="promoOutwardForm" class="space-y-4">
 
@@ -493,6 +1084,49 @@
                   <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
                 </div>
                 <p *ngIf="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" class="field-error">Please select a material name</p>
+              </div>
+
+              <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'employee'">
+                <label class="field-label">Select Employee</label>
+                <div class="relative">
+                  <select formControlName="employeeId"
+                    (change)="onEmployeeChange($any($event.target).value)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="promoPartySelectionError">
+                    <option value="">Select employee...</option>
+                    <option *ngFor="let employee of promotionalEmployees" [value]="employee.id">{{ employee.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+              </div>
+
+              <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'distributor'">
+                <label class="field-label">Select Distributor</label>
+                <div class="relative">
+                  <select formControlName="distributorId"
+                    (change)="onDistributorChange($any($event.target).value)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="promoPartySelectionError">
+                    <option value="">Select distributor...</option>
+                    <option *ngFor="let distributor of promotionalDistributors" [value]="distributor.id">{{ distributor.label }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+              </div>
+
+              <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'salesperson'">
+                <label class="field-label">Select Salesperson</label>
+                <div class="relative">
+                  <select formControlName="salespersonId"
+                    (change)="onSalespersonChange($any($event.target).value)"
+                    class="field-input appearance-none pr-10"
+                    [class.field-input--error]="promoPartySelectionError">
+                    <option value="">Select salesperson...</option>
+                    <option *ngFor="let salesperson of promotionalSalespersons" [value]="salesperson.id">{{ salesperson.name }}</option>
+                  </select>
+                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                </div>
+                <p *ngIf="promoPartySelectionError" class="field-error">Please select any one: employee, distributor, or salesperson</p>
               </div>
 
               <div class="field-group">
@@ -532,7 +1166,7 @@
           </ng-container>
 
 
-          <!-- â•â•â•â• SCRAP MATERIAL â€” RETURNED PART â•â•â•â• -->
+          <!-- ════ SCRAP MATERIAL — RETURNED PART ════ -->
           <ng-container *ngIf="selectedItemType === 'scrap_material' && activeScrapSection === 'returned_part'">
             <form [formGroup]="scrapReturnedForm" class="space-y-4">
 
@@ -602,7 +1236,7 @@
             </form>
           </ng-container>
 
-          <!-- â•â•â•â• SCRAP MATERIAL â€” SELLING SCRAP â•â•â•â• -->
+          <!-- ════ SCRAP MATERIAL — SELLING SCRAP ════ -->
           <ng-container *ngIf="selectedItemType === 'scrap_material' && activeScrapSection === 'selling_scrap'">
             <form [formGroup]="scrapSellingForm" class="space-y-4">
 
@@ -710,4 +1344,3 @@
 
   </div>
 </div>
-

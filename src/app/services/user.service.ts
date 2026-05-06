@@ -23,6 +23,7 @@ export interface UpdateUserRequest {
   country: string;
   zip: string;
   roleType: string;
+  password?: string;
 }
 
 // Update User Response Interface

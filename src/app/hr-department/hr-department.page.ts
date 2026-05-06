@@ -32,6 +32,7 @@ interface Employee {
   bloodGroup?: string | null;
   completeAddress?: string | null;
   createdOn?: string;
+  password?: string | null;
 }
 
 type EmployeeStatus = 'All' | 'Pending' | 'Active' | 'Rejected';
@@ -69,6 +70,7 @@ export class HrDepartmentPage implements OnInit {
   activeModal: ModalType = null;
   selectedEmployee: Employee | null = null;
   employeeForm: FormGroup;
+  showEditPassword = false;
 
   // Available Role Types
   roleTypes: RoleType[] = [
@@ -112,6 +114,20 @@ export class HrDepartmentPage implements OnInit {
     { value: 'INACTIVE', label: 'Inactive' }
   ];
 
+  selectedPeriod: 'week' | 'month' | 'year' = 'month';
+
+  get periods(): { key: 'week' | 'month' | 'year'; label: string }[] {
+    return [
+      { key: 'week', label: 'Week' },
+      { key: 'month', label: 'Month' },
+      { key: 'year', label: 'Year' }
+    ];
+  }
+
+  selectPeriod(p: 'week' | 'month' | 'year') {
+    this.selectedPeriod = p;
+  }
+
   private haptic = inject(HapticService);
   private toast = inject(Toast);
 
@@ -151,6 +167,11 @@ export class HrDepartmentPage implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+  }
+
+  get isAdmin(): boolean {
+    const role = this.auth.getRoleType();
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
   }
 
   /** Close status dropdown when clicking outside */
@@ -193,7 +214,8 @@ export class HrDepartmentPage implements OnInit {
           gender: user.gender,
           bloodGroup: user.bloodGroup,
           completeAddress: user.completeAddress,
-          createdOn: user.createdOn
+          createdOn: user.createdOn,
+          password: user.password || null
         }));
         this.isLoading = false;
       },
@@ -393,12 +415,14 @@ export class HrDepartmentPage implements OnInit {
       zip: employee.zip || '',
       country: employee.country || '',
       dateOfBirth: employee.dateOfBirth || '',
-      gender: employee.gender || '',
+      gender: (employee.gender || '').toUpperCase(),
       bloodGroup: employee.bloodGroup || '',
       roleType: employee.roleType || '',
       completeAddress: employee.completeAddress || '',
-      status: apiStatus
+      status: apiStatus,
+      password: employee.password || ''
     });
+    this.showEditPassword = false;
 
     // Make password optional for edit
     this.employeeForm.get('password')?.clearValidators();
@@ -546,6 +570,12 @@ export class HrDepartmentPage implements OnInit {
         zip: formValue.zip,
         roleType: formValue.roleType
       };
+
+      // Only include password if admin changed it from the original
+      const originalPassword = this.selectedEmployee.password || '';
+      if (this.isAdmin && formValue.password && formValue.password !== originalPassword) {
+        payload.password = formValue.password;
+      }
 
       console.log('Update payload:', payload);
 

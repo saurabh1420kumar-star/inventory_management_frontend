@@ -49,87 +49,143 @@
       </div>
     </div>
 
-    <!-- ── Search + Filter ── -->
-    <div class="mb-4 flex gap-3 items-center">
-      <div class="flex-1 flex items-center gap-2 rounded-xl px-3 py-2.5"
-           style="background:#fff; box-shadow: 0 1px 4px rgba(0,0,0,0.05);">
-        <ion-icon name="search-outline" style="color:#94a3b8; font-size:16px; flex-shrink:0;"></ion-icon>
-        <input [(ngModel)]="searchTerm" (ngModelChange)="applyFilter()" placeholder="Search item, vendor, invoice…"
-               class="flex-1 text-sm bg-transparent outline-none text-slate-700" />
+    <!-- ── Search + Filters ── -->
+    <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-5 mb-6">
+      <div class="flex flex-col sm:flex-row gap-3 items-stretch sm:items-center">
+        <div class="flex-1 relative">
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg z-10 pointer-events-none"></ion-icon>
+          <input
+            type="text"
+            [(ngModel)]="searchTerm"
+            (ngModelChange)="applyFilter()"
+            placeholder="Search item, vendor, invoice..."
+            class="w-full bg-slate-50 hover:bg-white focus:bg-white text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl py-3 pl-11 pr-4 outline-none transition-all duration-200"
+          />
+        </div>
+        <div class="flex gap-2 flex-wrap">
+          <button
+            (click)="selectedFilter = 'all'; applyFilter()"
+            class="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border"
+            [style.background]="selectedFilter === 'all' ? '#10b981' : '#f8fafc'"
+            [style.color]="selectedFilter === 'all' ? '#fff' : '#64748b'"
+            [style.border-color]="selectedFilter === 'all' ? '#10b981' : '#e2e8f0'">
+            All
+          </button>
+          <button *ngFor="let t of itemTypes"
+            (click)="selectedFilter = t.type; applyFilter()"
+            class="px-4 py-2 rounded-xl text-sm font-semibold transition-all duration-200 border"
+            [style.background]="selectedFilter === t.type ? t.color : '#f8fafc'"
+            [style.color]="selectedFilter === t.type ? '#fff' : '#64748b'"
+            [style.border-color]="selectedFilter === t.type ? t.color : '#e2e8f0'">
+            {{ t.label }}
+          </button>
+        </div>
       </div>
-    </div>
-
-    <!-- ── Type filter chips ── -->
-    <div class="flex gap-2 mb-5 overflow-x-auto pb-1" style="scrollbar-width:none;">
-      <button (click)="selectedFilter = 'all'; applyFilter()"
-              class="px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all"
-              [style.background]="selectedFilter === 'all' ? '#6366f1' : '#e2e8f0'"
-              [style.color]="selectedFilter === 'all' ? '#fff' : '#64748b'">
-        All
-      </button>
-      <button *ngFor="let t of itemTypes"
-              (click)="selectedFilter = t.type; applyFilter()"
-              class="px-3 py-1.5 rounded-full text-xs font-semibold flex-shrink-0 transition-all"
-              [style.background]="selectedFilter === t.type ? t.color : '#e2e8f0'"
-              [style.color]="selectedFilter === t.type ? '#fff' : '#64748b'">
-        {{ t.label }}
-      </button>
     </div>
 
     <!-- ── Loading ── -->
-    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20 gap-3">
-      <ion-spinner name="crescent" style="color:#6366f1; width:40px; height:40px;"></ion-spinner>
-      <p class="text-slate-400 text-sm">Loading entries…</p>
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-24">
+      <ion-spinner name="crescent" class="text-emerald-500 w-10 h-10"></ion-spinner>
+      <p class="text-slate-500 mt-4 font-medium">Loading entries...</p>
     </div>
 
     <!-- ── Empty state ── -->
-    <div *ngIf="!isLoading && filteredEntries.length === 0" class="flex flex-col items-center justify-center py-20 gap-3">
-      <div class="w-16 h-16 rounded-2xl flex items-center justify-center"
-           style="background: rgba(99,102,241,0.08);">
-        <ion-icon name="arrow-down-circle-outline" style="font-size:32px; color:#6366f1;"></ion-icon>
+    <div *ngIf="!isLoading && filteredEntries.length === 0"
+         class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+      <div class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
+        <ion-icon name="arrow-down-circle-outline" class="text-4xl text-emerald-400"></ion-icon>
       </div>
-      <p class="font-semibold text-slate-700">No inward inventory found</p>
-      <p class="text-slate-400 text-sm text-center">Click <strong>Create</strong> to record your first inward entry</p>
+      <h3 class="text-lg font-bold text-slate-700 mb-1">No inward entries yet</h3>
+      <p class="text-slate-400 text-sm mb-6">Click "Create Entry" to record your first inward entry.</p>
+      <ion-button (click)="openModal()" style="--background: #10b981; --border-radius: 12px;" class="font-semibold normal-case">
+        <ion-icon slot="start" name="add-circle-outline"></ion-icon>
+        Create Entry
+      </ion-button>
     </div>
 
-    <!-- ── Entries list ── -->
-    <div *ngIf="!isLoading && filteredEntries.length > 0" class="flex flex-col gap-3">
-      <div *ngFor="let e of filteredEntries"
-           class="rounded-2xl p-4"
-           style="background:#fff; border:1px solid #e2e8f0; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+    <!-- ── Entries grid ── -->
+    <div *ngIf="!isLoading && filteredEntries.length > 0"
+         class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-        <div class="flex items-start gap-3">
-          <!-- Type badge -->
-          <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
-               [style.background]="getTypeConfig(e.itemType).bg">
-            <ion-icon [name]="getTypeConfig(e.itemType).icon"
-                      [style.color]="getTypeConfig(e.itemType).color"
-                      style="font-size:18px;"></ion-icon>
+      <div *ngFor="let e of filteredEntries"
+           class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
+           [style.border-left]="'4px solid ' + getTypeConfig(e.itemType).color"
+           (click)="openDetail(e)">
+
+        <!-- ── HEADER: icon + name + code ── -->
+        <div class="p-3 pb-2.5">
+          <div class="flex items-start gap-2 mb-1.5">
+            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
+                 [style.background]="getTypeConfig(e.itemType).bg">
+              <ion-icon [name]="getTypeConfig(e.itemType).icon"
+                        class="text-sm"
+                        [style.color]="getTypeConfig(e.itemType).color"></ion-icon>
+            </div>
+            <div class="flex-1 min-w-0">
+              <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ e.itemName || '—' }}</p>
+              <p class="text-[10px] text-slate-400 font-mono truncate">{{ e.itemCode || '—' }}</p>
+            </div>
+            <span *ngIf="e.id" class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ e.id }}</span>
           </div>
 
-          <div class="flex-1 min-w-0">
-            <div class="flex items-center gap-2 flex-wrap">
-              <p class="font-bold text-slate-800 text-sm truncate">{{ e.itemName }}</p>
-              <span class="px-2 py-0.5 rounded-full text-[10px] font-semibold"
-                    [style.background]="getTypeConfig(e.itemType).bg"
-                    [style.color]="getTypeConfig(e.itemType).color">
-                {{ getTypeConfig(e.itemType).label }}
-              </span>
-            </div>
-            <div class="flex items-center gap-3 mt-1 flex-wrap">
-              <span class="text-xs text-slate-500 font-mono">{{ e.itemCode || '—' }}</span>
-              <span class="text-xs text-slate-400">|</span>
-              <span class="text-xs font-semibold text-indigo-600">{{ e.quantity }} {{ e.unit }}</span>
-              <span *ngIf="e.vendorName" class="text-xs text-slate-500">· {{ e.vendorName }}</span>
-            </div>
-            <div class="flex items-center gap-3 mt-1 flex-wrap">
-              <span *ngIf="e.invoiceNumber" class="text-xs text-slate-400 font-mono">Inv: {{ e.invoiceNumber }}</span>
-              <span class="text-xs text-slate-400">{{ e.date | date:'dd MMM yyyy' }}</span>
-            </div>
-            <p *ngIf="e.remarks" class="text-xs text-slate-400 mt-1 italic">{{ e.remarks }}</p>
+          <!-- Type badge -->
+          <div class="flex flex-wrap gap-1">
+            <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
+                  [style.background]="getTypeConfig(e.itemType).bg"
+                  [style.color]="getTypeConfig(e.itemType).color">
+              {{ getTypeConfig(e.itemType).label }}
+            </span>
           </div>
         </div>
 
+        <!-- ── DIVIDER ── -->
+        <div class="mx-3 border-t border-slate-100"></div>
+
+        <!-- ── METRICS: Qty ── -->
+        <div class="px-3 py-2">
+          <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
+          <p class="text-sm font-extrabold text-slate-800 leading-none">
+            {{ e.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ e.unit }}</span>
+          </p>
+        </div>
+
+        <!-- ── OPTIONAL DETAILS ── -->
+        <div class="px-3 pb-2.5 space-y-1.5">
+
+          <!-- Vendor -->
+          <div *ngIf="e.vendorName"
+               class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1.5">
+            <ion-icon name="business-outline" class="text-emerald-500 text-xs flex-shrink-0"></ion-icon>
+            <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
+              <span class="text-[8px] text-emerald-600 font-bold uppercase tracking-wide flex-shrink-0">Vendor</span>
+              <span class="text-[11px] font-bold text-emerald-800 truncate text-right">{{ e.vendorName }}</span>
+            </div>
+          </div>
+
+          <!-- Invoice -->
+          <div *ngIf="e.invoiceNumber"
+               class="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-lg px-2 py-1.5">
+            <ion-icon name="document-text-outline" class="text-sky-500 text-xs flex-shrink-0"></ion-icon>
+            <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
+              <span class="text-[8px] text-sky-500 font-bold uppercase tracking-wide flex-shrink-0">Inv #</span>
+              <span class="text-[11px] font-bold text-sky-800 truncate text-right">{{ e.invoiceNumber }}</span>
+            </div>
+          </div>
+
+          <!-- Remarks -->
+          <div *ngIf="e.remarks"
+               class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
+            <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
+            <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ e.remarks }}"</p>
+          </div>
+
+          <!-- Timestamp -->
+          <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
+            <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
+            <p class="text-[9px] text-slate-300 font-medium">{{ e.date | date:'dd MMM yy' }}</p>
+          </div>
+
+        </div>
       </div>
     </div>
 
@@ -586,3 +642,182 @@
   </div>
 
 </ion-content>
+
+<!-- ════════════════════════════════════════════════════════════
+     INWARD ENTRY DETAIL MODAL
+════════════════════════════════════════════════════════════════ -->
+<div *ngIf="isDetailOpen && selectedEntry"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+     (click)="closeDetail()">
+
+  <!-- Backdrop -->
+  <div class="absolute inset-0 bg-black/50" style="backdrop-filter: blur(4px);"></div>
+
+  <!-- Sheet -->
+  <div class="relative w-full sm:max-w-xl bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+       style="max-height: 92vh;"
+       (click)="$event.stopPropagation()">
+
+    <!-- Drag handle (mobile) -->
+    <div class="flex justify-center pt-3 pb-1 sm:hidden"
+         [style.background]="'linear-gradient(135deg, ' + getTypeConfig(selectedEntry.itemType).color + ', ' + getTypeConfig(selectedEntry.itemType).color + 'aa)'">
+      <div class="w-12 h-1 bg-white/40 rounded-full"></div>
+    </div>
+
+    <!-- Gradient Header -->
+    <div class="flex items-center justify-between px-5 py-4"
+         [style.background]="'linear-gradient(135deg, ' + getTypeConfig(selectedEntry.itemType).color + ', ' + getTypeConfig(selectedEntry.itemType).color + 'aa)'">
+      <div class="flex items-center gap-3">
+        <div class="w-11 h-11 rounded-2xl flex items-center justify-center flex-shrink-0"
+             style="background: rgba(255,255,255,0.25);">
+          <ion-icon [name]="getTypeConfig(selectedEntry.itemType).icon" class="text-2xl text-white"></ion-icon>
+        </div>
+        <div>
+          <h2 class="text-white font-bold text-base leading-tight">{{ selectedEntry.itemName }}</h2>
+          <p class="text-white/75 text-xs font-mono">{{ selectedEntry.itemCode || 'No code' }}<span *ngIf="selectedEntry.id" class="ml-2 opacity-60">#{{ selectedEntry.id }}</span></p>
+        </div>
+      </div>
+      <button (click)="closeDetail()" class="w-9 h-9 flex items-center justify-center rounded-xl border-0 outline-none" style="background: rgba(255,255,255,0.2);">
+        <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Scrollable Body -->
+    <div class="overflow-y-auto flex-1 px-5 py-4 space-y-4 bg-slate-50">
+
+      <!-- Type + Date badges -->
+      <div class="flex items-center gap-2 flex-wrap">
+        <span class="px-3 py-1 rounded-full text-xs font-bold"
+              [style.background]="getTypeConfig(selectedEntry.itemType).bg"
+              [style.color]="getTypeConfig(selectedEntry.itemType).color">
+          {{ getTypeConfig(selectedEntry.itemType).label }}
+        </span>
+        <span *ngIf="selectedEntry.date" class="px-3 py-1 rounded-full text-xs font-medium bg-white border border-slate-200 text-slate-600">
+          {{ selectedEntry.date | date:'dd MMM yyyy' }}
+        </span>
+      </div>
+
+      <!-- Quantity & Threshold -->
+      <div class="grid grid-cols-2 gap-3">
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Quantity</p>
+          <p class="text-3xl font-extrabold text-slate-800 leading-none">{{ selectedEntry.quantity }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ selectedEntry.unit }}</p>
+        </div>
+        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
+          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Min Threshold</p>
+          <p class="text-3xl font-extrabold text-slate-800 leading-none">{{ selectedEntry.minThreshold || '—' }}</p>
+          <p *ngIf="selectedEntry.minThreshold" class="text-xs text-slate-400 mt-1">{{ selectedEntry.unit }}</p>
+        </div>
+      </div>
+
+      <!-- Vendor & Transport -->
+      <div *ngIf="selectedEntry.vendorName || selectedEntry.transportName || selectedEntry.driverName"
+           class="bg-white rounded-2xl border border-slate-100 shadow-sm overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-slate-100 bg-slate-50">
+          <p class="text-[9px] font-bold text-slate-500 uppercase tracking-widest">Logistics</p>
+        </div>
+        <div class="p-4 space-y-3">
+          <div *ngIf="selectedEntry.vendorName" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-emerald-50 flex items-center justify-center flex-shrink-0">
+              <ion-icon name="business-outline" class="text-emerald-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 leading-none">Vendor</p>
+              <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.vendorName }}</p>
+              <p *ngIf="selectedEntry.vendorId" class="text-[10px] text-slate-400 font-mono">ID: {{ selectedEntry.vendorId }}</p>
+            </div>
+          </div>
+          <div *ngIf="selectedEntry.transportName" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-blue-50 flex items-center justify-center flex-shrink-0">
+              <ion-icon name="car-outline" class="text-blue-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 leading-none">Transport</p>
+              <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.transportName }}</p>
+            </div>
+          </div>
+          <div *ngIf="selectedEntry.driverName" class="flex items-center gap-3">
+            <div class="w-8 h-8 rounded-xl bg-violet-50 flex items-center justify-center flex-shrink-0">
+              <ion-icon name="person-outline" class="text-violet-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <p class="text-[10px] text-slate-400 leading-none">Driver</p>
+              <p class="text-sm font-semibold text-slate-700 mt-0.5">
+                {{ selectedEntry.driverName }}<span *ngIf="selectedEntry.driverMobile" class="text-slate-400 ml-1">· {{ selectedEntry.driverMobile }}</span>
+              </p>
+            </div>
+          </div>
+        </div>
+      </div>
+
+      <!-- Invoice Number -->
+      <div *ngIf="selectedEntry.invoiceNumber"
+           class="flex items-center gap-3 bg-white border border-sky-100 rounded-2xl p-4 shadow-sm">
+        <div class="w-8 h-8 rounded-xl bg-sky-50 flex items-center justify-center flex-shrink-0">
+          <ion-icon name="document-text-outline" class="text-sky-500 text-sm"></ion-icon>
+        </div>
+        <div>
+          <p class="text-[10px] text-slate-400 leading-none">Invoice Number</p>
+          <p class="text-sm font-bold text-sky-700 font-mono mt-0.5">{{ selectedEntry.invoiceNumber }}</p>
+        </div>
+      </div>
+
+      <!-- Spare Parts Specific Fields -->
+      <div *ngIf="selectedEntry.itemType === 'spare_parts'"
+           class="bg-white border border-amber-100 rounded-2xl shadow-sm overflow-hidden">
+        <div class="px-4 py-2.5 border-b border-amber-100 bg-amber-50">
+          <p class="text-[9px] font-bold text-amber-700 uppercase tracking-widest">Spare Part Details</p>
+        </div>
+        <div class="p-4 grid grid-cols-2 gap-3">
+          <div *ngIf="selectedEntry.partNumber">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Part Number</p>
+            <p class="text-sm font-bold text-slate-700 font-mono mt-0.5">{{ selectedEntry.partNumber }}</p>
+          </div>
+          <div *ngIf="selectedEntry.category">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Category</p>
+            <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.category }}</p>
+          </div>
+          <div *ngIf="selectedEntry.condition">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Condition</p>
+            <span class="inline-block mt-0.5 px-2 py-0.5 rounded-full text-xs font-bold"
+                  [ngClass]="selectedEntry.condition === 'NEW' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+              {{ selectedEntry.condition }}
+            </span>
+          </div>
+          <div *ngIf="selectedEntry.vendor">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Vendor</p>
+            <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.vendor }}</p>
+          </div>
+          <div *ngIf="selectedEntry.purchaseDate">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Purchase Date</p>
+            <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.purchaseDate | date:'dd MMM yyyy' }}</p>
+          </div>
+          <div *ngIf="selectedEntry.warrantyExpiryDate">
+            <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wide">Warranty Expires</p>
+            <p class="text-sm font-semibold text-slate-700 mt-0.5">{{ selectedEntry.warrantyExpiryDate | date:'dd MMM yyyy' }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Remarks -->
+      <div *ngIf="selectedEntry.remarks"
+           class="flex items-start gap-3 bg-white border border-amber-100 rounded-2xl p-4 shadow-sm">
+        <div class="w-8 h-8 rounded-xl bg-amber-50 flex items-center justify-center flex-shrink-0 mt-0.5">
+          <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-sm"></ion-icon>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="text-[10px] text-slate-400 font-bold uppercase tracking-wide leading-none">Remarks</p>
+          <p class="text-sm text-slate-600 italic mt-1">"{{ selectedEntry.remarks }}"</p>
+        </div>
+      </div>
+
+      <!-- Created At -->
+      <div *ngIf="selectedEntry.createdAt" class="flex items-center justify-center gap-1.5 py-2">
+        <ion-icon name="time-outline" class="text-slate-300 text-xs"></ion-icon>
+        <p class="text-[11px] text-slate-300">Recorded on {{ selectedEntry.createdAt | date:'dd MMM yyyy · h:mm a' }}</p>
+      </div>
+
+    </div>
+  </div>
+</div>

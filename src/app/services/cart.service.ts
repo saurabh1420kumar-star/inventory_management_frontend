@@ -39,6 +39,7 @@ export interface CartItemPayload {
 export interface PlaceOrderRequest {
   cartId: number;
   address: string;
+  deliveryBy: 'Company' | 'Distributor';
 }
 
 @Injectable({

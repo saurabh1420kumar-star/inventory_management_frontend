@@ -169,8 +169,11 @@
             <div class="info-item">
               <ion-icon name="cash-outline"></ion-icon>
               <span class="amount">₹{{ order.totalAmount | number }}</span>
-            </div>
-            <div class="info-item progress-info">
+            </div>            <div *ngIf="order.deliveryBy" class="info-item delivery-by-pill"
+                 [style.color]="order.deliveryBy === 'Company' ? '#10b981' : '#3b82f6'">
+              <ion-icon [name]="order.deliveryBy === 'Company' ? 'business-outline' : 'car-outline'"></ion-icon>
+              <span>{{ order.deliveryBy }}</span>
+            </div>            <div class="info-item progress-info">
               <div class="mini-progress-bar">
                 <div class="mini-progress-fill" [style.width.%]="getProgressPercentage(order)"
                      [attr.data-status]="getOrderStatus(order)"></div>
@@ -205,6 +208,24 @@
                     <span *ngIf="step.date" class="step-date">{{ step.date }}</span>
                   </div>
                   <p *ngIf="step.remarks" class="step-remarks">{{ step.remarks }}</p>
+
+                  <!-- Delivered By Badge (shown on Order Placed step) -->
+                  <div *ngIf="step.deliveryBy"
+                       class="delivery-by-badge"
+                       [style.background]="step.deliveryBy === 'Company' ? 'rgba(16,185,129,0.1)' : 'rgba(59,130,246,0.1)'"
+                       [style.border]="step.deliveryBy === 'Company' ? '1px solid rgba(16,185,129,0.25)' : '1px solid rgba(59,130,246,0.25)'">
+                    <ion-icon
+                      [name]="step.deliveryBy === 'Company' ? 'business-outline' : 'car-outline'"
+                      [style.color]="step.deliveryBy === 'Company' ? '#10b981' : '#3b82f6'"
+                      class="delivery-by-icon"></ion-icon>
+                    <div class="delivery-by-text">
+                      <span class="delivery-by-label">Delivered by</span>
+                      <span class="delivery-by-value"
+                            [style.color]="step.deliveryBy === 'Company' ? '#10b981' : '#3b82f6'">
+                        {{ step.deliveryBy }}
+                      </span>
+                    </div>
+                  </div>
 
                   <!-- Assigned Person Info (name only – role/contact/email not in API) -->
                   <div *ngIf="step.assignedPerson" class="step-person-info" [attr.data-status]="step.status">

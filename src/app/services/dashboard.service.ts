@@ -10,13 +10,23 @@ export interface TimePeriodMetrics {
   averageOrderValue: number;
 }
 
+export interface UserStats {
+  dealers: number;
+  distributors: number;
+  salespersons: number;
+  totalUsers: number;
+  users: number;
+}
+
 export interface DashboardAnalytics {
   monthToDate: TimePeriodMetrics;
   weekToDate: TimePeriodMetrics;
   yearToDate: TimePeriodMetrics;
   salesByCategory: { [key: string]: number };
   salesByRegion: { [key: string]: number };
-  [key: string]: any;
+  totalAmount: number;
+  totalOrders: number;
+  userStats: UserStats;
 }
 
 @Injectable({

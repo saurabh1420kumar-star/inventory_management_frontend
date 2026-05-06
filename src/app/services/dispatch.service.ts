@@ -32,6 +32,7 @@ export interface DispatchOrder {
   distributorAddress?: string; // alternate field name for distributor address
   deliveryAddress?: string;    // alternate field name for delivery address
   registeredAddress?: string;  // alternate field name for registered address
+  deliveryBy?: string;         // "Distributor" / "Company" etc. from payment-approved API
   // GDN related fields (may come from API or be added locally)
   gdnNumber?: string;
   gdnDate?: string;

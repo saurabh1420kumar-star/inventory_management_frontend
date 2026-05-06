@@ -40,6 +40,7 @@ export interface DispatchOrderDisplay {
   vehicleNumber?: string;
   transporterName?: string;
   shippingAddress?: string;
+  deliveryBy?: string;
   originalOrder?: DispatchOrder;
 }
 
@@ -233,6 +234,7 @@ export class DispatchPage implements OnInit {
       vehicleNumber: order.vehicleNumber,
       transporterName: order.transporterName,
       shippingAddress: order.shippingAddress || order.address || (order as any).distributorAddress || (order as any).deliveryAddress || (order as any).registeredAddress || '',
+      deliveryBy: (order as any).deliveryBy || order.deliveryBy || '',
       originalOrder: order,
     };
     

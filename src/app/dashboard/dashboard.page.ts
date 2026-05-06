@@ -9,7 +9,7 @@ import { Auth } from '../services/auth';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import { HapticService } from '../services/haptic.service';
-import { DashboardService } from '../services/dashboard.service';
+import { DashboardService, DashboardAnalytics } from '../services/dashboard.service';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -19,7 +19,11 @@ import {
   ApexDataLabels,
   ApexGrid,
   ApexFill,
-  ApexTooltip
+  ApexTooltip,
+  ApexNonAxisChartSeries,
+  ApexPlotOptions,
+  ApexLegend,
+  ApexResponsive
 } from 'ng-apexcharts';
 
 export type ChartOptions = {
@@ -35,6 +39,32 @@ export type ChartOptions = {
   tooltip: ApexTooltip;
 };
 
+export type DonutChartOptions = {
+  series: ApexNonAxisChartSeries;
+  chart: ApexChart;
+  labels: string[];
+  colors: string[];
+  legend: ApexLegend;
+  plotOptions: ApexPlotOptions;
+  dataLabels: ApexDataLabels;
+  responsive: ApexResponsive[];
+  tooltip: ApexTooltip;
+};
+
+export type BarChartOptions = {
+  series: ApexAxisChartSeries;
+  chart: ApexChart;
+  xaxis: ApexXAxis;
+  yaxis: ApexYAxis;
+  colors: string[];
+  dataLabels: ApexDataLabels;
+  plotOptions: ApexPlotOptions;
+  grid: ApexGrid;
+  tooltip: ApexTooltip;
+};
+
+export type Period = 'wtd' | 'mtd' | 'ytd';
+
 interface StatsCard {
   label: string;
   value: string;
@@ -44,6 +74,15 @@ interface StatsCard {
   iconClass: string;
   badgeClass: string;
   borderClass: string;
+}
+
+interface UserStatCard {
+  label: string;
+  value: number;
+  icon: string;
+  bgClass: string;
+  iconClass: string;
+  textClass: string;
 }
 
 @Component({
@@ -60,67 +99,82 @@ interface StatsCard {
   ],
 })
 export class DashboardPage implements OnInit {
-  
-  currentUser = {
-    name: 'John Doe'
-  };
 
+  currentUser = { name: 'Admin' };
   isDistributor = false;
   isReady = false;
+  isLoading = true;
 
   currentDate = new Date();
+  selectedPeriod: Period = 'mtd';
 
+  analytics: DashboardAnalytics | null = null;
+
+  // KPI Stats cards (period-aware)
   statsCards: StatsCard[] = [
     {
-      label: 'Total Revenue',
+      label: 'Total Sales',
       value: '₹0',
-      change: '+0%',
+      change: '—',
       icon: 'trending-up',
       bgClass: 'bg-emerald-50',
       iconClass: 'text-emerald-500',
-      badgeClass: 'bg-emerald-50 text-emerald-600',
-      borderClass: 'border border-emerald-100 hover:border-emerald-200'
+      badgeClass: 'bg-emerald-100 text-emerald-700',
+      borderClass: 'border-l-4 border-l-emerald-400'
     },
     {
-      label: 'Active Users',
+      label: 'Transactions',
       value: '0',
-      change: '+0%',
-      icon: 'people-outline',
+      change: '—',
+      icon: 'swap-horizontal-outline',
       bgClass: 'bg-blue-50',
       iconClass: 'text-blue-500',
-      badgeClass: 'bg-blue-50 text-blue-600',
-      borderClass: 'border border-blue-100 hover:border-blue-200'
+      badgeClass: 'bg-blue-100 text-blue-700',
+      borderClass: 'border-l-4 border-l-blue-400'
+    },
+    {
+      label: 'Avg Order Value',
+      value: '₹0',
+      change: '—',
+      icon: 'stats-chart-outline',
+      bgClass: 'bg-violet-50',
+      iconClass: 'text-violet-500',
+      badgeClass: 'bg-violet-100 text-violet-700',
+      borderClass: 'border-l-4 border-l-violet-400'
     },
     {
       label: 'Total Orders',
       value: '0',
-      change: '+0%',
+      change: '—',
       icon: 'cart-outline',
-      bgClass: 'bg-purple-50',
-      iconClass: 'text-purple-500',
-      badgeClass: 'bg-purple-50 text-purple-600',
-      borderClass: 'border border-purple-100 hover:border-purple-200'
-    },
-    {
-      label: 'Conversion Rate',
-      value: '0%',
-      change: '+0%',
-      icon: 'stats-chart-outline',
       bgClass: 'bg-amber-50',
       iconClass: 'text-amber-500',
-      badgeClass: 'bg-amber-50 text-amber-600',
-      borderClass: 'border border-amber-100 hover:border-amber-200'
+      badgeClass: 'bg-amber-100 text-amber-700',
+      borderClass: 'border-l-4 border-l-amber-400'
     }
   ];
 
+  // Period comparison rows
+  periodRows: { label: string; wtd: string; mtd: string; ytd: string }[] = [];
+
+  // User stats cards
+  userStatCards: UserStatCard[] = [];
+
+  // Region chart data
+  regionLabels: string[] = [];
+  regionValues: number[] = [];
+
+  // Chart options
   public chartOptions: Partial<ChartOptions> | undefined;
+  public regionDonutOptions: Partial<DonutChartOptions> | undefined;
+  public regionBarOptions: Partial<BarChartOptions> | undefined;
   selectedChartType: 'line' | 'bar' = 'line';
 
   private haptic = inject(HapticService);
 
   constructor(
-    private auth: Auth, 
-    private router: Router, 
+    private auth: Auth,
+    private router: Router,
     private route: ActivatedRoute,
     private dashboardService: DashboardService
   ) {}
@@ -131,67 +185,138 @@ export class DashboardPage implements OnInit {
     this.loadDashboardAnalytics();
   }
 
-  /**
-   * Load dashboard analytics from API
-   * Maps API response data to stats cards
-   */
+  get periods(): { key: Period; label: string }[] {
+    return [
+      { key: 'wtd', label: 'Week' },
+      { key: 'mtd', label: 'Month' },
+      { key: 'ytd', label: 'Year' }
+    ];
+  }
+
+  selectPeriod(p: Period) {
+    this.selectedPeriod = p;
+    if (this.analytics) {
+      this.updateStatsCards(this.analytics);
+    }
+  }
+
+  formatCurrency(val: number): string {
+    if (val >= 100000) return '₹' + (val / 100000).toFixed(2) + 'L';
+    if (val >= 1000) return '₹' + (val / 1000).toFixed(1) + 'K';
+    return '₹' + val;
+  }
+
+  formatNumber(val: number): string {
+    if (val >= 1000) return (val / 1000).toFixed(1) + 'K';
+    return val.toString();
+  }
+
   loadDashboardAnalytics() {
-    console.log('📊 Loading dashboard analytics...');
+    this.isLoading = true;
     this.dashboardService.getAnalytics().subscribe({
-      next: (analytics: any) => {
-        console.log('✅ Analytics data received:', analytics);
-        
-        if (analytics && Object.keys(analytics).length > 0) {
-          // Extract Month-To-Date metrics
-          const mtd = analytics.monthToDate || {};
-          const ytd = analytics.yearToDate || {};
-          const wtd = analytics.weekToDate || {};
-          
-          // Calculate totals and metrics
-          const totalSales = mtd.totalSales || 0;
-          const transactionCount = mtd.transactionCount || 0;
-          const avgOrderValue = mtd.averageOrderValue || 0;
-          
-          // Get sales by category (sum all categories)
-          const salesByCategory = analytics.salesByCategory || {};
-          const totalCategoryRevenue = Object.values(salesByCategory).reduce((sum: any, val: any) => sum + val, 0);
-          
-          // Get sales by region (sum all regions)
-          const salesByRegion = analytics.salesByRegion || {};
-          const topRegion = Object.entries(salesByRegion).reduce((max: any, [region, amount]: any) => 
-            amount > (max.amount || 0) ? { region, amount } : max, {});
-          
-          // Calculate growth metrics
-          const wtdSales = wtd.totalSales || 0;
-          const ytdSales = ytd.totalSales || 0;
-          const mtdGrowth = wtdSales > 0 ? ((totalSales - wtdSales) / wtdSales * 100).toFixed(1) : 0;
-          
-          // Update stats cards with API data
-          this.statsCards[0].value = `₹${(totalSales / 100000).toFixed(2)}L`;
-          this.statsCards[0].change = `+${mtdGrowth}%`;
-          
-          this.statsCards[1].value = `${transactionCount}`;
-          this.statsCards[1].change = `+${transactionCount > 0 ? '100' : '0'}%`;
-          
-          this.statsCards[2].value = `₹${(avgOrderValue / 1000).toFixed(1)}K`;
-          this.statsCards[2].change = `+${((avgOrderValue / totalSales * 100) || 0).toFixed(1)}%`;
-          
-          this.statsCards[3].value = Object.keys(salesByCategory).length.toString();
-          this.statsCards[3].change = `+${topRegion.region ? '100' : '0'}%`;
-          
-          console.log('📈 Stats Updated:', {
-            totalSales: `₹${(totalSales / 100000).toFixed(2)}L`,
-            transactions: transactionCount,
-            avgOrder: `₹${(avgOrderValue / 1000).toFixed(1)}K`,
-            categories: Object.keys(salesByCategory).length,
-            topRegion: topRegion.region
-          });
+      next: (data: DashboardAnalytics) => {
+        if (data && Object.keys(data).length > 0) {
+          this.analytics = data;
+          this.updateStatsCards(data);
+          this.buildPeriodRows(data);
+          this.buildUserStatCards(data);
+          this.buildRegionCharts(data);
         }
+        this.isLoading = false;
       },
-      error: (err) => {
-        console.error('❌ Failed to load dashboard analytics:', err);
+      error: () => {
+        this.isLoading = false;
       }
     });
+  }
+
+  private updateStatsCards(data: DashboardAnalytics) {
+    const periodMap = {
+      wtd: data.weekToDate,
+      mtd: data.monthToDate,
+      ytd: data.yearToDate
+    };
+    const metrics = periodMap[this.selectedPeriod] || data.monthToDate;
+
+    this.statsCards[0].value = this.formatCurrency(metrics.totalSales || 0);
+    this.statsCards[1].value = (metrics.transactionCount || 0).toString();
+    this.statsCards[2].value = this.formatCurrency(metrics.averageOrderValue || 0);
+    this.statsCards[3].value = (data.totalOrders || 0).toString();
+
+    // change badges: YTD vs MTD comparison for first 3, keep static for orders
+    const mtd = data.monthToDate;
+    const ytd = data.yearToDate;
+    const pctChange = (a: number, b: number) =>
+      b > 0 ? ((a - b) / b * 100).toFixed(1) + '%' : '—';
+
+    this.statsCards[0].change = pctChange(mtd.totalSales, ytd.totalSales);
+    this.statsCards[1].change = pctChange(mtd.transactionCount, ytd.transactionCount);
+    this.statsCards[2].change = pctChange(mtd.averageOrderValue, ytd.averageOrderValue);
+    this.statsCards[3].change = 'All time';
+  }
+
+  private buildPeriodRows(data: DashboardAnalytics) {
+    this.periodRows = [
+      {
+        label: 'Total Sales',
+        wtd: this.formatCurrency(data.weekToDate?.totalSales || 0),
+        mtd: this.formatCurrency(data.monthToDate?.totalSales || 0),
+        ytd: this.formatCurrency(data.yearToDate?.totalSales || 0)
+      },
+      {
+        label: 'Transactions',
+        wtd: (data.weekToDate?.transactionCount || 0).toString(),
+        mtd: (data.monthToDate?.transactionCount || 0).toString(),
+        ytd: (data.yearToDate?.transactionCount || 0).toString()
+      },
+      {
+        label: 'Avg Order Value',
+        wtd: this.formatCurrency(data.weekToDate?.averageOrderValue || 0),
+        mtd: this.formatCurrency(data.monthToDate?.averageOrderValue || 0),
+        ytd: this.formatCurrency(data.yearToDate?.averageOrderValue || 0)
+      }
+    ];
+  }
+
+  private buildUserStatCards(data: DashboardAnalytics) {
+    const us = data.userStats || { dealers: 0, distributors: 0, salespersons: 0, totalUsers: 0, users: 0 };
+    this.userStatCards = [
+      { label: 'Dealers', value: us.dealers, icon: 'storefront-outline', bgClass: 'bg-blue-50', iconClass: 'text-blue-500', textClass: 'text-blue-700' },
+      { label: 'Distributors', value: us.distributors, icon: 'business-outline', bgClass: 'bg-emerald-50', iconClass: 'text-emerald-500', textClass: 'text-emerald-700' },
+      { label: 'Salespersons', value: us.salespersons, icon: 'person-outline', bgClass: 'bg-violet-50', iconClass: 'text-violet-500', textClass: 'text-violet-700' },
+      { label: 'Registered Users', value: us.users, icon: 'people-circle-outline', bgClass: 'bg-amber-50', iconClass: 'text-amber-500', textClass: 'text-amber-700' },
+      { label: 'Total Users', value: us.totalUsers, icon: 'people-outline', bgClass: 'bg-rose-50', iconClass: 'text-rose-500', textClass: 'text-rose-700' }
+    ];
+  }
+
+  private buildRegionCharts(data: DashboardAnalytics) {
+    const region = data.salesByRegion || {};
+    this.regionLabels = Object.keys(region);
+    this.regionValues = Object.values(region);
+
+    this.regionDonutOptions = {
+      series: this.regionValues as ApexNonAxisChartSeries,
+      chart: { type: 'donut', height: 280, fontFamily: 'inherit' },
+      labels: this.regionLabels,
+      colors: ['#10b981', '#3b82f6', '#8b5cf6', '#f59e0b', '#ef4444'],
+      legend: { position: 'bottom', fontSize: '12px', fontFamily: 'inherit', labels: { colors: '#475569' } },
+      plotOptions: { pie: { donut: { size: '65%', labels: { show: true, total: { show: true, label: 'Total', color: '#475569', formatter: (w: any) => this.formatCurrency(w.globals.seriesTotals.reduce((a: number, b: number) => a + b, 0)) } } } } },
+      dataLabels: { enabled: false },
+      responsive: [{ breakpoint: 480, options: { chart: { height: 220 } } }],
+      tooltip: { y: { formatter: (val: number) => this.formatCurrency(val) } }
+    };
+
+    this.regionBarOptions = {
+      series: [{ name: 'Sales', data: this.regionValues }],
+      chart: { type: 'bar', height: 240, toolbar: { show: false }, fontFamily: 'inherit' },
+      xaxis: { categories: this.regionLabels, labels: { style: { colors: '#64748b', fontSize: '11px' } } },
+      yaxis: { labels: { style: { colors: '#64748b', fontSize: '11px' }, formatter: (v: number) => this.formatCurrency(v) } },
+      colors: ['#10b981'],
+      dataLabels: { enabled: false },
+      plotOptions: { bar: { borderRadius: 6, columnWidth: '55%' } },
+      grid: { borderColor: '#f1f5f9', strokeDashArray: 4 },
+      tooltip: { y: { formatter: (val: number) => this.formatCurrency(val) } }
+    };
   }
 
   checkUserRole() {
@@ -200,7 +325,6 @@ export class DashboardPage implements OnInit {
     if (isSalesRole) {
       const fromSales = this.route.snapshot.queryParams['fromSales'];
       if (fromSales) {
-        // Salesperson navigated here for dealer features — show distributor dashboard
         this.isDistributor = true;
         this.isReady = true;
         return;
@@ -215,96 +339,31 @@ export class DashboardPage implements OnInit {
   initializeChart() {
     this.chartOptions = {
       series: [
-        {
-          name: 'Revenue',
-          data: [31000, 40000, 28000, 51000, 42000, 109000, 100000, 85000, 95000, 88000, 92000, 105000]
-        },
-        {
-          name: 'Expenses',
-          data: [11000, 32000, 45000, 32000, 34000, 52000, 41000, 55000, 48000, 52000, 58000, 62000]
-        }
+        { name: 'Revenue', data: [31000, 40000, 28000, 51000, 42000, 109000, 100000, 85000, 95000, 88000, 92000, 105000] },
+        { name: 'Orders', data: [11000, 32000, 45000, 32000, 34000, 52000, 41000, 55000, 48000, 52000, 58000, 62000] }
       ],
-      chart: {
-        height: 350,
-        type: this.selectedChartType,
-        toolbar: {
-          show: false
-        },
-        zoom: {
-          enabled: false
-        },
-        fontFamily: 'inherit'
-      },
-      stroke: {
-        curve: 'smooth',
-        width: 3
-      },
+      chart: { height: 300, type: this.selectedChartType, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'inherit' },
+      stroke: { curve: 'smooth', width: 3 },
       colors: ['#10b981', '#3b82f6'],
-      dataLabels: {
-        enabled: false
-      },
-      grid: {
-        borderColor: '#f1f5f9',
-        strokeDashArray: 5,
-        padding: {
-          top: 0,
-          right: 10,
-          bottom: 0,
-          left: 10
-        }
-      },
+      dataLabels: { enabled: false },
+      grid: { borderColor: '#f1f5f9', strokeDashArray: 5 },
       xaxis: {
         categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
-        labels: {
-          style: {
-            colors: '#64748b',
-            fontSize: '12px',
-            fontWeight: 500
-          }
-        },
-        axisBorder: {
-          show: false
-        },
-        axisTicks: {
-          show: false
-        }
+        labels: { style: { colors: '#64748b', fontSize: '11px' } },
+        axisBorder: { show: false },
+        axisTicks: { show: false }
       },
       yaxis: {
         labels: {
-          style: {
-            colors: '#64748b',
-            fontSize: '12px',
-            fontWeight: 500
-          },
-          formatter: (value) => {
-            return '$' + (value / 1000) + 'k';
-          }
+          style: { colors: '#64748b', fontSize: '11px' },
+          formatter: (value: number) => '₹' + (value / 1000) + 'K'
         }
       },
       fill: {
         type: 'gradient',
-        gradient: {
-          shade: 'light',
-          type: 'vertical',
-          shadeIntensity: 0.3,
-          gradientToColors: ['#34d399', '#60a5fa'],
-          opacityFrom: 0.7,
-          opacityTo: 0.2,
-          stops: [0, 100]
-        }
+        gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.3, gradientToColors: ['#34d399', '#60a5fa'], opacityFrom: 0.6, opacityTo: 0.05, stops: [0, 100] }
       },
-      tooltip: {
-        y: {
-          formatter: (value) => {
-            return '$' + value.toLocaleString();
-          }
-        },
-        theme: 'light',
-        style: {
-          fontSize: '12px',
-          fontFamily: 'inherit'
-        }
-      }
+      tooltip: { y: { formatter: (value: number) => '₹' + value.toLocaleString() } }
     };
   }
 

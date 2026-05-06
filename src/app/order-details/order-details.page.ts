@@ -48,6 +48,7 @@ export interface AssignedPerson {
 export interface OrderStep {
   label: string;
   status: 'completed' | 'pending' | 'cancelled' | 'in-progress';
+  deliveryBy?: string;
   date?: string;
   remarks?: string;
   assignedPerson?: AssignedPerson;
@@ -75,6 +76,7 @@ export interface Order {
   distributorId?: number;
   orderDate: string;
   totalAmount: number;
+  deliveryBy?: string;
   steps: OrderStep[];
   expanded?: boolean;
 }
@@ -200,6 +202,26 @@ export class OrderDetailsPage implements OnInit {
    *   AssignedPerson.email   – API does not return the person's email address
    */
   private mapApiOrderToOrder(item: OrderTrackingItem, expandFirst: boolean = false): Order {
+    const mappedSteps = (item.steps || [])
+      .slice()
+      .sort((a, b) => a.stepSequence - b.stepSequence)
+      .map((s) => ({
+        label: s.label,
+        status: s.status,
+        deliveryBy: s.deliveryBy || undefined,
+        date: s.date || undefined,
+        remarks: s.remarks || undefined,
+        assignedPerson: s.assignedPerson
+          ? { name: s.assignedPerson.name, role: s.assignedPerson.role, contact: s.assignedPerson.contact, email: s.assignedPerson.email }
+          : undefined,
+        hasDownload: s.hasDownload,
+        downloadLabel: s.downloadLabel || undefined,
+        hasAction: s.hasAction,
+        actionResponse: (s.actionResponse as 'yes' | 'no' | null) ?? null,
+      }));
+
+    const orderPlacedStep = mappedSteps.find(s => s.label.toLowerCase().includes('order placed'));
+
     return {
       id: String(item.id),
       cartId: item.cartId,
@@ -208,23 +230,9 @@ export class OrderDetailsPage implements OnInit {
       distributorId: item.distributorId,
       orderDate: item.orderDate,
       totalAmount: item.totalAmount,
+      deliveryBy: orderPlacedStep?.deliveryBy || item.deliveryBy || undefined,
       expanded: expandFirst,
-      steps: (item.steps || [])
-        .slice()
-        .sort((a, b) => a.stepSequence - b.stepSequence)
-        .map((s) => ({
-          label: s.label,
-          status: s.status,
-          date: s.date || undefined,
-          remarks: s.remarks || undefined,
-          assignedPerson: s.assignedPerson
-            ? { name: s.assignedPerson.name, role: s.assignedPerson.role, contact: s.assignedPerson.contact, email: s.assignedPerson.email }
-            : undefined,
-          hasDownload: s.hasDownload,
-          downloadLabel: s.downloadLabel || undefined,
-          hasAction: s.hasAction,
-          actionResponse: (s.actionResponse as 'yes' | 'no' | null) ?? null,
-        })),
+      steps: mappedSteps,
     };
   }
 
