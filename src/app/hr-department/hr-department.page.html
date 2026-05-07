@@ -20,47 +20,30 @@
     <div class="flex-shrink-0 p-4 sm:p-5">
       <div class="max-w-7xl mx-auto">
         <!-- Hero Banner -->
-        <div class="bg-gradient-to-r from-slate-800 via-slate-700 to-emerald-800 rounded-2xl shadow-xl overflow-hidden relative">
-          <div class="absolute inset-0 opacity-20" style="background-image: radial-gradient(circle at 80% 20%, #10b981 0%, transparent 50%), radial-gradient(circle at 10% 80%, #3b82f6 0%, transparent 45%);"></div>
+        <div class="bg-gradient-to-r from-emerald-400 via-teal-400 to-cyan-400 rounded-2xl shadow-lg shadow-emerald-200/40 overflow-hidden relative mb-5">
+          <div class="absolute top-0 right-0 -mr-16 -mt-16 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
           <!-- Top Section: Title and Buttons -->
-          <div class="relative px-6 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
-            <!-- Left: Title with Badge -->
+          <div class="relative px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+            <!-- Left: Title -->
             <div>
-              <p class="text-emerald-400 text-xs font-semibold uppercase tracking-widest mb-1">People Management</p>
-              <h1 class="text-white text-xl sm:text-2xl font-bold tracking-tight leading-tight mb-2">
-                Human Resources <span class="text-emerald-400">Department</span>
+              <h1 class="text-white text-xl sm:text-2xl font-bold tracking-tight leading-tight mb-1">
+                Human Resources <span class="font-extrabold">Department</span>
               </h1>
-              <div class="inline-flex items-center gap-2 px-3 py-1.5 bg-white/10 backdrop-blur-sm rounded-full border border-white/20">
-                <ion-icon class="text-emerald-400 text-sm" name="shield-checkmark-outline"></ion-icon>
-                <span class="text-slate-200 text-xs font-medium">Add · Modify · Delete employees</span>
-              </div>
+              <p class="text-cyan-50 text-sm">Add · Modify · Delete employees</p>
             </div>
-            <!-- Right: Period selector + Add button -->
-            <div class="flex flex-col sm:flex-row items-start sm:items-center gap-3">
-              <!-- Period Toggle -->
-              <div class="flex items-center gap-1 bg-white/10 backdrop-blur-sm border border-white/20 rounded-xl p-1">
-                <button
-                  *ngFor="let p of periods"
-                  (click)="selectPeriod(p.key)"
-                  class="px-4 py-1.5 rounded-lg text-xs font-semibold transition-all duration-200 min-w-[52px]"
-                  [class.bg-white]="selectedPeriod === p.key"
-                  [class.text-slate-800]="selectedPeriod === p.key"
-                  [class.shadow]="selectedPeriod === p.key"
-                  [class.text-slate-300]="selectedPeriod !== p.key"
-                  [class.hover:text-white]="selectedPeriod !== p.key"
-                >{{ p.label }}</button>
-              </div>
+            <!-- Right: Add button -->
+            <div class="flex items-center">
               <!-- New Employee Button -->
               <button (click)="openAddModal()"
-                class="flex items-center gap-2 px-5 py-2.5 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl transition-all font-semibold shadow-lg hover:shadow-emerald-500/30 hover:shadow-xl whitespace-nowrap">
+                class="flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
                 <ion-icon class="text-lg" name="person-add"></ion-icon>
                 <span>New Employee</span>
               </button>
             </div>
           </div>
         </div>
-        <div class="mb-5 mt-4">
-          <div class="flex gap-3 mt-4 mb-4">
+        <div class="mb-5">
+          <div class="flex gap-3 mb-4">
             <!-- Search Input -->
             <div class="flex-1 relative">
               <ion-icon

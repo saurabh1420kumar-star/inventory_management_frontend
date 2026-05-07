@@ -339,8 +339,8 @@ export class DashboardPage implements OnInit {
   initializeChart() {
     this.chartOptions = {
       series: [
-        { name: 'Revenue', data: [31000, 40000, 28000, 51000, 42000, 109000, 100000, 85000, 95000, 88000, 92000, 105000] },
-        { name: 'Orders', data: [11000, 32000, 45000, 32000, 34000, 52000, 41000, 55000, 48000, 52000, 58000, 62000] }
+        { name: 'Revenue', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
+        { name: 'Orders', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
       ],
       chart: { height: 300, type: this.selectedChartType, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'inherit' },
       stroke: { curve: 'smooth', width: 3 },

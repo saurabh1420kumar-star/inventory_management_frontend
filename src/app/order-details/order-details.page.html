@@ -207,7 +207,8 @@
                     </div>
                     <span *ngIf="step.date" class="step-date">{{ step.date }}</span>
                   </div>
-                  <p *ngIf="step.remarks" class="step-remarks">{{ step.remarks }}</p>
+                  <!-- Hide raw remarks for on-the-way steps — driver card shows the parsed info instead -->
+                  <p *ngIf="step.remarks && !step.label.toLowerCase().includes('on the way')" class="step-remarks">{{ step.remarks }}</p>
 
                   <!-- Delivered By Badge (shown on Order Placed step) -->
                   <div *ngIf="step.deliveryBy"
@@ -227,8 +228,8 @@
                     </div>
                   </div>
 
-                  <!-- Assigned Person Info (name only – role/contact/email not in API) -->
-                  <div *ngIf="step.assignedPerson" class="step-person-info" [attr.data-status]="step.status">
+                  <!-- Assigned Person Info (shown for non-OnTheWay steps) -->
+                  <div *ngIf="step.assignedPerson && !step.label.toLowerCase().includes('on the way')" class="step-person-info" [attr.data-status]="step.status">
                     <div class="person-header">
                       <ion-icon name="person-outline" class="person-icon"></ion-icon>
                       <span class="person-label">Assigned To</span>
@@ -248,6 +249,51 @@
                       </div>
                     </div>
                   </div>
+
+                  <!-- Driver Details Card (shown for Order is On the Way step) -->
+                  <ng-container *ngIf="step.label.toLowerCase().includes('on the way') && getOnTheWayDriverInfo(step) as driverDetails">
+                    <div class="driver-info-card" [attr.data-status]="step.status">
+                      <div class="driver-info-header">
+                        <ion-icon name="car-outline" class="driver-info-hdr-icon"></ion-icon>
+                        <span class="driver-info-hdr-label">Driver Details</span>
+                      </div>
+                      <div class="driver-info-row">
+                        <span class="driver-info-row-label">Driver's Name</span>
+                        <span class="driver-info-row-sep">-</span>
+                        <span class="driver-info-row-value">{{ driverDetails.driverName }}</span>
+                      </div>
+                      <div class="driver-info-row">
+                        <span class="driver-info-row-label">Vehicle Number</span>
+                        <span class="driver-info-row-sep">-</span>
+                        <span class="driver-info-row-value">{{ driverDetails.vehicleNumber }}</span>
+                      </div>
+                    </div>
+                    <div class="driver-call-btn-wrap">
+                      <a *ngIf="driverDetails.contact; else callDisabled"
+                         [href]="'tel:' + driverDetails.contact"
+                         class="driver-call-btn-block">
+                        <div class="driver-call-btn-icon">
+                          <ion-icon name="call-outline"></ion-icon>
+                        </div>
+                        <div class="driver-call-btn-text">
+                          <span class="driver-call-btn-label">Call Driver</span>
+                          <span class="driver-call-btn-number">{{ driverDetails.contact }}</span>
+                        </div>
+                        <ion-icon name="chevron-forward-outline" class="driver-call-btn-arrow"></ion-icon>
+                      </a>
+                      <ng-template #callDisabled>
+                        <div class="driver-call-btn-block driver-call-btn-disabled">
+                          <div class="driver-call-btn-icon">
+                            <ion-icon name="call-outline"></ion-icon>
+                          </div>
+                          <div class="driver-call-btn-text">
+                            <span class="driver-call-btn-label">Call Driver</span>
+                            <span class="driver-call-btn-number">Contact not available</span>
+                          </div>
+                        </div>
+                      </ng-template>
+                    </div>
+                  </ng-container>
 
                   <!-- Download GDN Button -->
                   <button *ngIf="step.label === 'GDN Generated' && step.status === 'completed'"

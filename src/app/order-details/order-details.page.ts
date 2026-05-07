@@ -29,7 +29,8 @@ import {
   walletOutline,
   checkboxOutline,
   navigateOutline,
-  refreshOutline
+  refreshOutline,
+  chevronForwardOutline
 } from 'ionicons/icons';
 import { SalesService, OrderTrackingItem, OrderTrackingStep } from '../services/sales.service';
 import { GdnService } from '../services/gdn.service';
@@ -45,6 +46,12 @@ export interface AssignedPerson {
   email?: string;
 }
 
+export interface DriverInfo {
+  driverName: string;
+  vehicleNumber: string;
+  contact: string;
+}
+
 export interface OrderStep {
   label: string;
   status: 'completed' | 'pending' | 'cancelled' | 'in-progress';
@@ -52,6 +59,7 @@ export interface OrderStep {
   date?: string;
   remarks?: string;
   assignedPerson?: AssignedPerson;
+  driverInfo?: DriverInfo;
   hasDownload?: boolean;
   downloadLabel?: string;
   hasAction?: boolean;
@@ -159,6 +167,7 @@ export class OrderDetailsPage implements OnInit {
       'checkbox-outline': checkboxOutline,
       'navigate-outline': navigateOutline,
       'refresh-outline': refreshOutline,
+      'chevron-forward-outline': chevronForwardOutline,
     });
   }
 
@@ -213,6 +222,9 @@ export class OrderDetailsPage implements OnInit {
         remarks: s.remarks || undefined,
         assignedPerson: s.assignedPerson
           ? { name: s.assignedPerson.name, role: s.assignedPerson.role, contact: s.assignedPerson.contact, email: s.assignedPerson.email }
+          : undefined,
+        driverInfo: s.driverInfo
+          ? { driverName: s.driverInfo.driverName, vehicleNumber: s.driverInfo.vehicleNumber, contact: s.driverInfo.contact }
           : undefined,
         hasDownload: s.hasDownload,
         downloadLabel: s.downloadLabel || undefined,
@@ -540,6 +552,25 @@ export class OrderDetailsPage implements OnInit {
   isOnTheWayCompleted(order: Order): boolean {
     const step = order.steps.find(s => s.label.toLowerCase().includes('on the way'));
     return step?.status === 'completed';
+  }
+
+  /**
+   * Returns parsed driver info for an "on the way" step.
+   * Prefers the structured driverInfo field; falls back to parsing remarks.
+   * Remarks format: "Order is on the way via DRIVER_NAME (VEHICLE_NO)"
+   */
+  getOnTheWayDriverInfo(step: OrderStep): { driverName: string; vehicleNumber: string; contact?: string } | null {
+    if (step.driverInfo) {
+      return { driverName: step.driverInfo.driverName, vehicleNumber: step.driverInfo.vehicleNumber, contact: step.driverInfo.contact };
+    }
+    if (!step.remarks) return null;
+    const match = step.remarks.match(/via\s+(.+?)\s*\(([^)]+)\)/i);
+    if (match) {
+      // Pull contact from assignedPerson when role is DRIVER
+      const contact = step.assignedPerson?.contact || undefined;
+      return { driverName: match[1].trim(), vehicleNumber: match[2].trim(), contact };
+    }
+    return null;
   }
 
   downloadGdnForOrder(order: Order) {

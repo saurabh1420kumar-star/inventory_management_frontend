@@ -165,6 +165,7 @@ export interface OrderTrackingStep {
   date: string | null;
   remarks: string | null;
   assignedPerson: { name: string; role: string; contact: string; email: string; } | null;
+  driverInfo: { driverName: string; vehicleNumber: string; contact: string; } | null;
   hasDownload: boolean;
   downloadLabel: string | null;
   hasAction: boolean;

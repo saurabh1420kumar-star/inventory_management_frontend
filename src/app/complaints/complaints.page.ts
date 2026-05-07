@@ -4,6 +4,8 @@ import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } 
 import { IonicModule } from '@ionic/angular';
 import { ComplaintsService } from '../services/complaints.service';
 import { HapticService } from '../services/haptic.service';
+import { Auth } from '../services/auth';
+import { UserService } from '../services/user.service';
 
 @Component({
   selector: 'app-complaints',
@@ -26,7 +28,9 @@ export class ComplaintsPage implements OnInit {
 
   constructor(
     private fb: FormBuilder,
-    private complaintsService: ComplaintsService
+    private complaintsService: ComplaintsService,
+    private auth: Auth,
+    private userService: UserService
   ) {
     this.complaintForm = this.fb.group({
       type: ['COMPLAINT'],
@@ -40,7 +44,28 @@ export class ComplaintsPage implements OnInit {
     });
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.autofillCurrentUser();
+  }
+
+  private autofillCurrentUser() {
+    const currentUserId = this.auth.getUserId();
+    if (!currentUserId) return;
+
+    this.userService.getAllUsers().subscribe({
+      next: (users) => {
+        const currentUser = users.find(u => u.id === currentUserId);
+        if (currentUser) {
+          this.complaintForm.patchValue({
+            fullName: `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim(),
+            emailAddress: currentUser.email || '',
+            phoneNumber: currentUser.contactNo || ''
+          });
+        }
+      },
+      error: () => {}
+    });
+  }
 
   submitComplaint() {
     this.haptic.medium();
