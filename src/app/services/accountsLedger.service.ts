@@ -387,4 +387,17 @@ export class LedgerService {
             })
         );
     }
+
+    downloadDealerLedgerPdf(dealerId: number): Observable<Blob> {
+        return this.http.post(
+            `${this.apiUrl}/dealer-ledger/download-pdf?dealerId=${dealerId}`,
+            {},
+            { responseType: 'blob' }
+        ).pipe(
+            catchError(error => {
+                console.error('Download Dealer Ledger PDF Error:', error);
+                return of(new Blob());
+            })
+        );
+    }
 }

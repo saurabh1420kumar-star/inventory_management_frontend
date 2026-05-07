@@ -1382,34 +1382,20 @@ export class DistributorDashboardPage implements OnInit {
 
   exportDealerLedger() {
     if (!this.selectedLedgerDealer) return;
-    const txns = this.dealerLedgerTxns;
-    const summary = this.dealerLedgerSummary;
-    const headers = ['Date', 'Reference', 'Description', 'Type', 'Debit', 'Credit', 'Balance'];
-    const rows = txns.map(t => [
-      this.formatLedgerDate(t.date),
-      t.reference,
-      t.description,
-      t.type.toUpperCase(),
-      t.debit > 0 ? t.debit.toFixed(2) : '',
-      t.credit > 0 ? t.credit.toFixed(2) : '',
-      t.balance.toFixed(2)
-    ]);
-    const summaryRows = [
-      [],
-      ['', '', '', 'Total Debits', summary.totalDebits.toFixed(2), '', ''],
-      ['', '', '', 'Total Credits', '', summary.totalCredits.toFixed(2), ''],
-      ['', '', '', 'Net Balance', '', '', summary.netBalance.toFixed(2)],
-      ['', '', '', 'Closing Balance', '', '', summary.closingBalance.toFixed(2)]
-    ];
-    const csvContent = [headers, ...rows, ...summaryRows]
-      .map(r => r.map(v => `"${String(v).replace(/"/g, '""')}"`).join(','))
-      .join('\n');
-    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-    const url = URL.createObjectURL(blob);
-    const a = document.createElement('a');
-    a.href = url;
-    a.download = `ledger_${this.selectedLedgerDealer.fullName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0,10)}.csv`;
-    a.click();
-    URL.revokeObjectURL(url);
+    
+    this.ledgerService.downloadDealerLedgerPdf(this.selectedLedgerDealer.id).subscribe({
+      next: (blob) => {
+        const url = URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `ledger_${this.selectedLedgerDealer?.fullName.replace(/\s+/g, '_')}_${new Date().toISOString().slice(0, 10)}.pdf`;
+        a.click();
+        URL.revokeObjectURL(url);
+      },
+      error: (error) => {
+        console.error('Error downloading ledger PDF:', error);
+        this.showToast('Failed to download ledger report', 'danger');
+      }
+    });
   }
 }
