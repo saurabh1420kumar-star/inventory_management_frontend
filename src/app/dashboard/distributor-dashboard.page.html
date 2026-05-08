@@ -348,15 +348,15 @@
     <!-- Dispatch Status Summary -->
     <div class="grid grid-cols-3 gap-3 mb-5">
       <div class="rounded-2xl p-4 text-center" style="background: rgba(245,158,11,0.08); border: 1px solid rgba(245,158,11,0.2);">
-        <p class="text-2xl font-extrabold text-amber-400">{{ pendingOrdersCount }}</p>
+        <p class="text-2xl font-extrabold text-amber-400">{{ dispatchReportCounts?.pending ?? pendingOrdersCount }}</p>
         <p class="text-xs text-slate-500">Pending</p>
       </div>
       <div class="rounded-2xl p-4 text-center" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
-        <p class="text-2xl font-extrabold text-blue-400">{{ dispatchedCount }}</p>
+        <p class="text-2xl font-extrabold text-blue-400">{{ dispatchReportCounts?.dispatched ?? dispatchedCount }}</p>
         <p class="text-xs text-slate-500">Dispatched</p>
       </div>
       <div class="rounded-2xl p-4 text-center" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
-        <p class="text-2xl font-extrabold text-emerald-400">{{ deliveredCount }}</p>
+        <p class="text-2xl font-extrabold text-emerald-400">{{ dispatchReportCounts?.delivered ?? deliveredCount }}</p>
         <p class="text-xs text-slate-500">Delivered</p>
       </div>
     </div>
@@ -1826,7 +1826,6 @@
             <div class="rounded-xl p-2.5 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
               <p class="text-xs" style="color: #475569;">Quantity</p>
               <p class="text-white font-semibold text-sm mt-0.5">{{ item.totalQuantity }}</p>
-              <p class="text-xs" style="color: #475569;">{{ item.unitType }}</p>
             </div>
             <div class="rounded-xl p-2.5 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.06);">
               <p class="text-xs" style="color: #475569;">Unit Price</p>
@@ -1906,24 +1905,24 @@
         <div class="dd-info-row">
           <div class="dd-info-cell">
             <p class="dd-info-cell__label">Total O/S</p>
-            <p class="dd-info-cell__value">{{ distributorAnalytics ? '₹' + (distributorAnalytics.totalAmount | number:'1.0-0') : '₹0' }}</p>
+            <p class="dd-info-cell__value" style="white-space: nowrap;">{{ formatOutstandingAmount(totalOutstanding) }}</p>
           </div>
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll MTD</p>
-            <p class="dd-info-cell__value">₹{{ totalCollectionAmount | number:'1.0-0' }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionMonthly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 
         <div class="dd-info-row">
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--rose">Total OD</p>
-            <p class="dd-info-cell__value">{{ distributorAnalytics ? distributorAnalytics.totalOrders : 0 }}</p>
+            <p class="dd-info-cell__value">{{ volumeAnalytics?.totalOrders ?? distributorAnalytics?.totalOrders ?? 0 }}</p>
           </div>
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll YTD</p>
-            <p class="dd-info-cell__value">₹{{ totalCollectionAmount | number:'1.0-0' }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionYearly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 

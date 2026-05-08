@@ -58,6 +58,11 @@ interface VolumeAnalytics {
   totalVolumeTons?: number;
   totalOrders?: number;
   totalAmount?: number;
+  totalAmountMonthly?: number;
+  totalAmountYearly?: number;
+  collectionMonthly?: number;
+  collectionYearly?: number;
+  totalOutstanding?: number;
   period?: string;
 }
 
@@ -217,12 +222,14 @@ export class DistributorDashboardPage implements OnInit {
   pendingOrdersCount = 0;
   dispatchedCount = 0;
   deliveredCount = 0;
+  dispatchReportCounts: { pending: number; dispatched: number; delivered: number } | null = null;
 
   // Analytics
   selectedPeriod: 'today' | 'month' | 'year' = 'month';
   isLoadingAnalytics = false;
   isLoadingVolumeAnalytics = false;
-  distributorAnalytics: { totalOrders: number; totalAmount: number } | null = null;
+  distributorAnalytics: { totalOrders: number; totalAmount: number; totalOutstanding?: number } | null = null;
+  totalOutstanding = 0;
   volumeAnalytics: VolumeAnalytics | null = null;
 
   // Payment Collections
@@ -365,6 +372,7 @@ export class DistributorDashboardPage implements OnInit {
     this.loadDealers();
     this.loadDistributorAnalytics();
     this.loadVolumeAnalytics();
+    this.loadDispatchReport();
     const view = this.route.snapshot.queryParams['view'];
     if (view) {
       setTimeout(() => {
@@ -488,11 +496,35 @@ export class DistributorDashboardPage implements OnInit {
       this.loadDistributorStock();
     } else if (view === 'price-master') {
       this.loadAllDealerProductCounts();
+    } else if (view === 'dispatch-report') {
+      this.loadDispatchReport();
     }
+  }
+
+  loadDispatchReport() {
+    if (!this.distributorId) return;
+
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    const url = `${environment.apiUrl}/distributors/${this.distributorId}/dispatch-report`;
+
+    this.http.get<any>(url, { headers }).subscribe({
+      next: (res) => {
+        const data = res?.data ?? res ?? {};
+        this.dispatchReportCounts = {
+          pending: Number(data.pending ?? 0),
+          dispatched: Number(data.dispatched ?? 0),
+          delivered: Number(data.delivered ?? 0)
+        };
+      },
+      error: (err) => {
+        console.error('Error loading dispatch report:', err);
+      }
+    });
   }
 
   openAddPaymentModal() {
     this.haptic.medium();
+    this.paymentForm.date = new Date().toISOString().split('T')[0];
     this.generatePaymentReference();
     this.showAddPaymentModal = true;
   }
@@ -638,6 +670,9 @@ export class DistributorDashboardPage implements OnInit {
         this.distributorAnalytics = data;
         if (data) {
           this.periodData.totalOrders = `${data.totalOrders ?? 0}`;
+          if (typeof data.totalOutstanding === 'number') {
+            this.totalOutstanding = data.totalOutstanding;
+          }
           if (this.selectedPeriod === 'month') {
             this.periodData.valueMTD = `Rs ${((data.totalAmount ?? 0) / 100000).toFixed(2)} L`;
           }
@@ -677,11 +712,15 @@ export class DistributorDashboardPage implements OnInit {
     const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
     this.http.get<VolumeAnalytics>(url, { headers }).subscribe({
       next: (res) => {
-        this.volumeAnalytics = res;
-        this.periodData.volMTD = `${res.monthToDate?.totalVolumeTons ?? 0} Tons`;
-        this.periodData.volYTD = `${res.yearToDate?.totalVolumeTons ?? 0} Tons`;
-        this.periodData.callMTD = `${res.monthToDate?.totalTransactions ?? 0}`;
-        this.periodData.callYTD = `${res.yearToDate?.totalTransactions ?? 0}`;
+        const data = (res as any)?.data ?? res;
+        this.volumeAnalytics = data;
+        this.periodData.volMTD = `${data.monthToDate?.totalVolumeTons ?? 0} Tons`;
+        this.periodData.volYTD = `${data.yearToDate?.totalVolumeTons ?? 0} Tons`;
+        this.periodData.callMTD = `${data.monthToDate?.totalTransactions ?? 0}`;
+        this.periodData.callYTD = `${data.yearToDate?.totalTransactions ?? 0}`;
+        if (typeof data.totalOutstanding === 'number') {
+          this.totalOutstanding = data.totalOutstanding;
+        }
         this.isLoadingVolumeAnalytics = false;
       },
       error: () => { this.isLoadingVolumeAnalytics = false; }
@@ -753,6 +792,12 @@ export class DistributorDashboardPage implements OnInit {
       style: 'currency',
       currency: 'INR'
     }).format(amount);
+  }
+
+  formatOutstandingAmount(amount: number): string {
+    const numericAmount = Number(amount) || 0;
+    const absoluteAmount = Math.round(Math.abs(numericAmount));
+    return numericAmount < 0 ? `₹-${absoluteAmount}` : `₹${absoluteAmount}`;
   }
 
   async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {

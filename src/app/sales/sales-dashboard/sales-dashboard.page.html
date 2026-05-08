@@ -69,12 +69,12 @@
       <div class="sd-info-row">
         <div class="sd-info-cell">
           <p class="sd-info-cell__label">No Of Pending Order</p>
-          <p class="sd-info-cell__value">{{ pendingPayments.length }}</p>
+          <p class="sd-info-cell__value">{{ salesPendingOrdersCount }}</p>
         </div>
         <div class="sd-info-divider"></div>
         <div class="sd-info-cell">
           <p class="sd-info-cell__label sd-info-cell__label--rose">No of Process Orders</p>
-          <p class="sd-info-cell__value">{{ salesAnalytics?.totalOrders ?? 0 }}</p>
+          <p class="sd-info-cell__value">{{ salesOrdersCount }}</p>
         </div>
       </div>
 
@@ -85,12 +85,12 @@
       <div class="sd-info-row">
         <div class="sd-info-cell">
           <p class="sd-info-cell__label sd-info-cell__label--teal">Active Distributors</p>
-          <p class="sd-info-cell__value">{{ distributors.length }}</p>
+          <p class="sd-info-cell__value">{{ activeDistributorsCount }}</p>
         </div>
         <div class="sd-info-divider"></div>
         <div class="sd-info-cell">
           <p class="sd-info-cell__label sd-info-cell__label--rose">Inactive Distributors</p>
-          <p class="sd-info-cell__value">0</p>
+          <p class="sd-info-cell__value">{{ inactiveDistributorsCount }}</p>
         </div>
       </div>
 

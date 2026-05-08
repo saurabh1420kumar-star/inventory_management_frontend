@@ -60,6 +60,30 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     callMTD: '0',
     callYTD: '0'
   };
+
+  get salesPendingOrdersCount(): number {
+    const apiValue = this.volumeAnalytics?.salesPendingOrders;
+    if (typeof apiValue === 'number') return apiValue;
+    return this.pendingPayments.length;
+  }
+
+  get salesOrdersCount(): number {
+    const apiValue = this.volumeAnalytics?.salesOrders;
+    if (typeof apiValue === 'number') return apiValue;
+    return this.salesAnalytics?.totalOrders ?? 0;
+  }
+
+  get activeDistributorsCount(): number {
+    const apiValue = this.volumeAnalytics?.activeDistributors;
+    if (typeof apiValue === 'number') return apiValue;
+    return this.distributors.length;
+  }
+
+  get inactiveDistributorsCount(): number {
+    const apiValue = this.volumeAnalytics?.inactiveDistributors;
+    if (typeof apiValue === 'number') return apiValue;
+    return 0;
+  }
   selectedMonth: number = new Date().getMonth() + 1;
   selectedYear: number = new Date().getFullYear();
   selectedTab: 'dashboard' | 'operations' = 'dashboard';
@@ -102,7 +126,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   
   paymentForm: PaymentForm = {
     balanceType: '',
-    date: null,
+    date: new Date().toISOString().split('T')[0],
     amount: 0,
     reference: '',
     description: '',
@@ -505,7 +529,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   private resetPaymentForm(): void {
     this.paymentForm = {
       balanceType: '',
-      date: null,
+      date: new Date().toISOString().split('T')[0],
       amount: 0,
       reference: '',
       description: '',
@@ -538,11 +562,12 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          this.volumeAnalytics = res;
-          this.periodData.volMTD = `${res.monthToDate?.totalVolumeTons ?? 0} Tons`;
-          this.periodData.volYTD = `${res.yearToDate?.totalVolumeTons ?? 0} Tons`;
-          this.periodData.callMTD = `${res.monthToDate?.totalTransactions ?? 0}`;
-          this.periodData.callYTD = `${res.yearToDate?.totalTransactions ?? 0}`;
+          const data = res?.data ?? res;
+          this.volumeAnalytics = data;
+          this.periodData.volMTD = `${data.monthToDate?.totalVolumeTons ?? 0} Tons`;
+          this.periodData.volYTD = `${data.yearToDate?.totalVolumeTons ?? 0} Tons`;
+          this.periodData.callMTD = `${data.monthToDate?.totalTransactions ?? 0}`;
+          this.periodData.callYTD = `${data.yearToDate?.totalTransactions ?? 0}`;
           this.isLoadingVolumeAnalytics = false;
         },
         error: () => { this.isLoadingVolumeAnalytics = false; }

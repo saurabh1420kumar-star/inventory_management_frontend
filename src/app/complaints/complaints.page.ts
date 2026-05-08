@@ -2,10 +2,12 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { ComplaintsService } from '../services/complaints.service';
 import { HapticService } from '../services/haptic.service';
 import { Auth } from '../services/auth';
 import { UserService } from '../services/user.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-complaints',
@@ -20,6 +22,7 @@ export class ComplaintsPage implements OnInit {
   successMessage = '';
   errorMessage = '';
   showSuccess = false;
+  complaintDate = new Date().toISOString().split('T')[0];
 
   categories = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
   priorityLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
@@ -30,7 +33,8 @@ export class ComplaintsPage implements OnInit {
     private fb: FormBuilder,
     private complaintsService: ComplaintsService,
     private auth: Auth,
-    private userService: UserService
+    private userService: UserService,
+    private http: HttpClient
   ) {
     this.complaintForm = this.fb.group({
       type: ['COMPLAINT'],
@@ -50,20 +54,64 @@ export class ComplaintsPage implements OnInit {
 
   private autofillCurrentUser() {
     const currentUserId = this.auth.getUserId();
-    if (!currentUserId) return;
+    if (!currentUserId) {
+      this.fillFromAuthDefaults();
+      return;
+    }
 
     this.userService.getAllUsers().subscribe({
       next: (users) => {
-        const currentUser = users.find(u => u.id === currentUserId);
+        const currentUser = users.find((u: any) => Number(u.id) === Number(currentUserId));
         if (currentUser) {
-          this.complaintForm.patchValue({
+          this.patchComplaintUser({
             fullName: `${currentUser.firstName || ''} ${currentUser.lastName || ''}`.trim(),
             emailAddress: currentUser.email || '',
             phoneNumber: currentUser.contactNo || ''
           });
+          return;
         }
+        this.autofillFromProfileApi(currentUserId);
       },
-      error: () => {}
+      error: () => {
+        this.autofillFromProfileApi(currentUserId);
+      }
+    });
+  }
+
+  private autofillFromProfileApi(userId: number) {
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { Authorization: `Bearer ${token}` } : {})
+    });
+
+    this.http.get<any>(`${environment.apiUrl}/distributors/${userId}`, { headers }).subscribe({
+      next: (res) => {
+        const profile = res?.data ?? res ?? {};
+        this.patchComplaintUser({
+          fullName: profile.distributorName || profile.name || this.auth.getUsername() || '',
+          emailAddress: profile.contactEmail || profile.email || '',
+          phoneNumber: profile.phoneNumber || profile.mobileNumber || profile.phone || profile.contactNo || ''
+        });
+      },
+      error: () => {
+        this.fillFromAuthDefaults();
+      }
+    });
+  }
+
+  private patchComplaintUser(data: { fullName?: string; emailAddress?: string; phoneNumber?: string }) {
+    this.complaintForm.patchValue({
+      fullName: (data.fullName || '').trim(),
+      emailAddress: data.emailAddress || '',
+      phoneNumber: data.phoneNumber || ''
+    });
+  }
+
+  private fillFromAuthDefaults() {
+    this.patchComplaintUser({
+      fullName: this.auth.getUsername() || '',
+      emailAddress: '',
+      phoneNumber: ''
     });
   }
 
@@ -128,6 +176,7 @@ export class ComplaintsPage implements OnInit {
   }
 
   resetForm() {
+    this.complaintDate = new Date().toISOString().split('T')[0];
     this.complaintForm.reset({
       type: 'COMPLAINT',
       category: 'PAYMENT',
