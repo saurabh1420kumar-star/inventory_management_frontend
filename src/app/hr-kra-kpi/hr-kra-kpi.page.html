@@ -1,0 +1,283 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000; --border-width: 0;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-tight text-xl">
+      <span class="text-emerald-400">KRA</span> Management
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="ion-padding">
+  <div class="min-h-full bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/25 pb-10">
+    <div class="max-w-7xl mx-auto">
+      <div class="hero-card rounded-2xl shadow-lg overflow-hidden mb-5 relative">
+        <div class="absolute top-0 right-0 -mr-20 -mt-20 w-64 h-64 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="relative px-6 py-6 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+          <div>
+            <h1 class="text-white text-2xl font-bold tracking-tight mb-1">KRA Management</h1>
+            <p class="text-cyan-50 text-sm">Define and track Key Result Areas for strategic alignment.</p>
+          </div>
+          <div class="flex items-center gap-2 flex-wrap">
+            <button
+              (click)="openCreateKraForm()"
+              class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
+              <ion-icon class="text-lg" name="add-circle-outline"></ion-icon>
+              <span>Create KRA</span>
+            </button>
+            <button
+              (click)="openAssignKraForm()"
+              class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-cyan-400 text-slate-900 hover:bg-cyan-300 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
+              <ion-icon class="text-lg" name="link-outline"></ion-icon>
+              <span>Assign KRA</span>
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
+        <div class="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-slate-100 bg-slate-50/70">
+          <h2 class="text-sm font-bold text-teal-700">Active KRA List</h2>
+          <div class="flex items-center gap-2 text-slate-500">
+            <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Filter">
+              <ion-icon name="funnel-outline"></ion-icon>
+            </button>
+            <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Download">
+              <ion-icon name="download-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="overflow-x-auto">
+          <table class="w-full min-w-[680px]">
+            <thead>
+              <tr class="text-left text-[11px] uppercase tracking-wider text-teal-700 bg-slate-100/70">
+                <th class="px-4 sm:px-5 py-3 font-bold">KRA</th>
+                <th class="px-4 sm:px-5 py-3 font-bold">Sales Person</th>
+                <th class="px-4 sm:px-5 py-3 font-bold">Target</th>
+                <th class="px-4 sm:px-5 py-3 font-bold">Status</th>
+                <th class="px-4 sm:px-5 py-3 font-bold text-right">Actions</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let entry of paginatedEntries" class="border-b border-slate-100 hover:bg-emerald-50/30 transition-colors">
+                <td class="px-4 sm:px-5 py-3.5">
+                  <div class="font-bold text-teal-700 uppercase text-sm">{{ entry.kraName }}</div>
+                </td>
+                <td class="px-4 sm:px-5 py-3.5">
+                  <div class="font-semibold text-slate-700 text-sm">{{ getSalesPersonName(entry.description) }}</div>
+                </td>
+                <td class="px-4 sm:px-5 py-3.5">
+                  <div class="font-extrabold text-teal-700 text-2xl tracking-tight">{{ entry.targetValue }}</div>
+                </td>
+                <td class="px-4 sm:px-5 py-3.5">
+                  <span
+                    class="px-2.5 py-1 rounded-full text-[10px] font-extrabold tracking-wide"
+                    [ngClass]="entry.status === 'ACTIVE' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">
+                    {{ entry.status }}
+                  </span>
+                </td>
+                <td class="px-4 sm:px-5 py-3.5">
+                  <div class="flex items-center justify-end gap-1.5 text-slate-500">
+                    <button (click)="editEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Edit">
+                      <ion-icon name="create-outline"></ion-icon>
+                    </button>
+                    <button (click)="deleteEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-500 transition-colors" aria-label="Delete">
+                      <ion-icon name="trash-outline"></ion-icon>
+                    </button>
+                  </div>
+                </td>
+              </tr>
+              <tr *ngIf="!kraEntries.length">
+                <td colspan="5" class="px-5 py-8 text-center text-slate-500 font-medium">No KRA records found.</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-4 bg-slate-50/70">
+          <p class="text-xs text-slate-500 font-medium">
+            Showing {{ startRecord }} to {{ endRecord }} of {{ kraEntries.length }} Performance Indicators
+          </p>
+
+          <div class="flex items-center gap-2">
+            <button
+              (click)="previousPage()"
+              [disabled]="currentPage === 1"
+              class="px-3 py-1.5 rounded-lg border border-slate-300 bg-white text-slate-600 text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-slate-100 transition-colors">
+              Previous
+            </button>
+            <button
+              (click)="nextPage()"
+              [disabled]="currentPage === totalPages"
+              class="px-3 py-1.5 rounded-lg bg-emerald-700 text-white text-xs font-semibold disabled:opacity-40 disabled:cursor-not-allowed hover:bg-emerald-800 transition-colors">
+              Next
+            </button>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Create KRA Modal -->
+  <div *ngIf="showCreateKraForm" class="kra-modal-backdrop" (click)="closeCreateKraForm()">
+    <div class="kra-modal-card" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-teal-700 font-extrabold text-sm flex items-center gap-2 uppercase tracking-wide">
+          <ion-icon name="add-circle-outline" class="text-base"></ion-icon>
+          Create New KRA
+        </div>
+        <button (click)="closeCreateKraForm()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close modal">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">KRA Name</label>
+          <input
+            [(ngModel)]="kraNameInput"
+            placeholder="Enter KRA name"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+        </div>
+
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">KRA Weight ({{ measurementUnitInput }})</label>
+          <input
+            type="number"
+            [(ngModel)]="kraWeightInput"
+            placeholder="Enter weight percentage (max 100)"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+          <div *ngIf="kraWeightInput && kraWeightInput > 100" class="mt-2 text-xs text-red-600 font-semibold">
+            Default weightage cannot exceed 100
+          </div>
+        </div>
+
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Measurement Unit</label>
+          <select
+            [(ngModel)]="measurementUnitInput"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+            <option *ngFor="let unit of measurementUnits" [value]="unit">{{ unit }}</option>
+          </select>
+        </div>
+
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Frequency</label>
+          <select
+            [(ngModel)]="frequencyInput"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+            <option *ngFor="let freq of frequencies" [value]="freq">{{ freq }}</option>
+          </select>
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            (click)="createKra()"
+            [disabled]="!canCreateKra || isLoadingCreateKra"
+            class="h-[42px] px-5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+            <ion-icon [name]="isLoadingCreateKra ? 'hourglass-outline' : 'save-outline'" class="text-base"></ion-icon>
+            {{ isLoadingCreateKra ? 'Saving...' : 'Save KRA' }}
+          </button>
+          <button
+            (click)="closeCreateKraForm()"
+            class="h-[42px] px-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+            <ion-icon name="close-outline" class="text-base"></ion-icon>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Assign KRA Modal -->
+  <div *ngIf="showAssignKraForm" class="kra-modal-backdrop" (click)="closeAssignKraForm()">
+    <div class="kra-modal-card" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <div class="text-teal-700 font-extrabold text-sm flex items-center gap-2 uppercase tracking-wide">
+          <ion-icon [name]="isEditingAssignment ? 'create-outline' : 'link-outline'" class="text-base"></ion-icon>
+          {{ isEditingAssignment ? 'Update KRA Assignment' : 'Assign KRA to Salesperson' }}
+        </div>
+        <button (click)="closeAssignKraForm()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close modal">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3">
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Sales Person</label>
+          <select
+            [(ngModel)]="selectedSalesPersonDisplay"
+            (change)="onSalesPersonChange($event)"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+            <option value="">Select sales person</option>
+            <option *ngFor="let person of salesPersons" [value]="person.name">{{ person.name }}</option>
+          </select>
+        </div>
+
+        <div class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Select KRA</label>
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-2">
+            <label *ngFor="let option of kraOptions" class="flex items-center gap-2 px-3 py-2 rounded-lg border border-slate-200 bg-white text-sm text-slate-700">
+              <input
+                type="checkbox"
+                [checked]="isKraSelected(option)"
+                (change)="onKraToggle(option, $any($event.target).checked)"
+                class="accent-emerald-600" />
+              <span>{{ option }}</span>
+            </label>
+          </div>
+        </div>
+
+        <div *ngFor="let selectedKra of selectedKras" class="p-3 border border-slate-100 rounded-xl bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Target Value - {{ selectedKra }}</label>
+          <input
+            type="number"
+            [(ngModel)]="kraTargets[selectedKra]"
+            placeholder="Enter target for selected KRA"
+            class="w-full px-4 py-3 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+        </div>
+
+        <div class="flex flex-wrap items-center gap-2 pt-1">
+          <button
+            (click)="assignKraEntries()"
+            [disabled]="!canAssignKra || isLoadingAssignKra"
+            class="h-[42px] px-5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+            <ion-icon [name]="isLoadingAssignKra ? 'hourglass-outline' : 'save-outline'" class="text-base"></ion-icon>
+            {{ isLoadingAssignKra ? (isEditingAssignment ? 'Updating...' : 'Assigning...') : (isEditingAssignment ? 'Update KRA' : 'Assign KRA') }}
+          </button>
+          <button
+            (click)="closeAssignKraForm()"
+            class="h-[42px] px-5 rounded-lg bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap">
+            <ion-icon name="close-outline" class="text-base"></ion-icon>
+            Cancel
+          </button>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Success/Error Modal -->
+  <div *ngIf="showSuccessModal" class="kra-modal-backdrop" (click)="closeSuccessModal()">
+    <div class="kra-modal-card" (click)="$event.stopPropagation()" style="max-width: 400px;">
+      <div class="flex flex-col items-center justify-center gap-4 py-6">
+        <ion-icon
+          [name]="isSuccessModal ? 'checkmark-circle' : 'alert-circle'"
+          [class]="isSuccessModal ? 'text-6xl text-emerald-600' : 'text-6xl text-red-600'"></ion-icon>
+        <div class="text-center">
+          <h2 [class]="isSuccessModal ? 'text-lg font-bold text-teal-700 mb-2' : 'text-lg font-bold text-red-700 mb-2'">
+            {{ isSuccessModal ? 'Success' : 'Error' }}
+          </h2>
+          <p class="text-sm text-slate-600">{{ successMessage }}</p>
+        </div>
+        <button
+          (click)="closeSuccessModal()"
+          [class]="isSuccessModal ? 'h-[42px] px-6 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap' : 'h-[42px] px-6 rounded-lg bg-red-700 hover:bg-red-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap'">
+          <ion-icon [name]="isSuccessModal ? 'checkmark-outline' : 'close-outline'" class="text-base"></ion-icon>
+          {{ isSuccessModal ? 'OK' : 'Close' }}
+        </button>
+      </div>
+    </div>
+  </div>
+</ion-content>

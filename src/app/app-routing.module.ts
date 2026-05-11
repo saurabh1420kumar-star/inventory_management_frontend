@@ -78,6 +78,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'hr-kra-kpi',
+    loadComponent: () => import('./hr-kra-kpi/hr-kra-kpi.page').then(m => m.HrKraKpiPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'distributor',
     loadChildren: () => import('./distributor/distributor.module').then( m => m.DistributorPageModule),
     canActivate: [AuthGuard]

@@ -1,0 +1,68 @@
+:host {
+  display: block;
+}
+
+.hero-card {
+  background: linear-gradient(135deg, #34d399 0%, #2dd4bf 55%, #22d3ee 100%);
+}
+
+button {
+  transition: all 150ms ease;
+}
+
+button:not(:disabled):hover {
+  transform: translateY(-1px);
+}
+
+button:not(:disabled):active {
+  transform: translateY(0);
+}
+
+.hr-create-btn:disabled {
+  box-shadow: none;
+}
+
+.kra-modal-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(2, 6, 23, 0.45);
+  backdrop-filter: blur(2px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 16px;
+}
+
+.kra-modal-card {
+  width: min(1080px, 100%);
+  max-height: calc(100vh - 32px);
+  overflow-y: auto;
+  background: #ffffff;
+  border-radius: 16px;
+  border: 1px solid #e2e8f0;
+  box-shadow: 0 24px 60px rgba(15, 23, 42, 0.22);
+  padding: 20px;
+}
+
+@media (max-width: 640px) {
+  ion-content.ion-padding {
+    --padding-start: 8px;
+    --padding-end: 8px;
+    --padding-top: 8px;
+  }
+
+  .hero-card {
+    border-radius: 16px;
+  }
+
+  .hr-create-btn {
+    width: 100%;
+    justify-content: center;
+  }
+
+  .kra-modal-card {
+    padding: 14px;
+    border-radius: 14px;
+  }
+}

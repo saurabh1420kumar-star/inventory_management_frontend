@@ -78,6 +78,10 @@
                   <ion-icon name="business-outline" slot="start"></ion-icon>
                   <ion-label>Department Master</ion-label>
                 </ion-item>
+                <ion-item *appAcl="'HR'" routerLink="/hr-kra-kpi" routerLinkActive="active" (click)="onMenuItemClick()">
+                  <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
+                  <ion-label>KRA/KPI Master</ion-label>
+                </ion-item>
                 <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="ribbon-outline" slot="start"></ion-icon>
                   <ion-label>Designation Master</ion-label>
