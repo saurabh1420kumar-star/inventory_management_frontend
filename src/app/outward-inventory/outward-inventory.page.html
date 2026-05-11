@@ -189,11 +189,19 @@
                 {{ r.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(r.unit) }}</span>
               </p>
             </div>
-            <div class="pl-2 py-1">
+            <!-- Price: scrap only -->
+            <div *ngIf="r.itemType === 'scrap_material'" class="pl-2 py-1">
               <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
               <p class="text-sm font-extrabold leading-none"
                 [ngClass]="(r.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-300'">
-                {{ (r.desiredQuotedPrice ?? 0) > 0 ? ('?' + r.desiredQuotedPrice) : '�' }}
+                {{ (r.desiredQuotedPrice ?? 0) > 0 ? ('₹' + r.desiredQuotedPrice) : '—' }}
+              </p>
+            </div>
+            <!-- Unit: spare_parts / promotional_items -->
+            <div *ngIf="r.itemType !== 'scrap_material'" class="pl-2 py-1">
+              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Unit</p>
+              <p class="text-sm font-extrabold leading-none text-slate-700">
+                {{ getUnitLabel(r.unit) }}
               </p>
             </div>
           </div>
