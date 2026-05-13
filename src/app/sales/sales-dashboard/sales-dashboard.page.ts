@@ -36,6 +36,20 @@ interface PaymentMethod {
   icon: string;
 }
 
+interface KpiResultApiItem {
+  kpiName: string;
+  achievedValue: number;
+  targetValue: number;
+  grade: string;
+}
+
+interface KpiTableRow {
+  kpiName: string;
+  achievedValue: number;
+  targetValue: number;
+  grade: string;
+}
+
 @Component({
   selector: 'app-sales-dashboard',
   standalone: true,
@@ -53,7 +67,9 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   salesAnalytics: SalesAnalyticsData | null = null;
   selectedPeriod: 'today' | 'month' | 'year' = 'today';
   isLoadingVolumeAnalytics = false;
+  isLoadingKpiResults = false;
   volumeAnalytics: any = null;
+  kpiRows: KpiTableRow[] = [];
   periodData = {
     volMTD: '0 Units',
     volYTD: '0 Units',
@@ -182,6 +198,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.loadMyDealers();
     this.loadDealersBySalesperson();
     this.loadVolumeAnalytics();
+    this.loadKpiResults();
   }
 
   loadMyDealers(): void {
@@ -270,7 +287,47 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
 
   handlePullRefresh(event: any) {
     this.loadDistributors();
+    this.loadKpiResults();
     setTimeout(() => event.target.complete(), 1500);
+  }
+
+  loadKpiResults(): void {
+    if (!this.salespersonId) return;
+    this.isLoadingKpiResults = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      'accept': '*/*',
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+    const url = `${environment.apiUrl}/employee/kra-kpi/results-with-grades/${this.salespersonId}`;
+
+    this.http.get<any>(url, { headers })
+      .pipe(takeUntil(this.destroy$))
+      .subscribe({
+        next: (response) => {
+          const items: KpiResultApiItem[] = Array.isArray(response) ? response : (response?.data ?? []);
+          this.kpiRows = items.map((item) => ({
+            kpiName: item.kpiName ?? '-',
+            achievedValue: Number(item.achievedValue ?? 0),
+            targetValue: Number(item.targetValue ?? 0),
+            grade: (item.grade ?? '-').toString().trim() || '-'
+          }));
+          this.isLoadingKpiResults = false;
+        },
+        error: () => {
+          this.kpiRows = [];
+          this.isLoadingKpiResults = false;
+        }
+      });
+  }
+
+  getGradeClass(grade: string): string {
+    const normalized = (grade || '').toUpperCase();
+    if (normalized === 'A' || normalized === 'A+' || normalized === 'A-') return 'sd-grade-chip--a';
+    if (normalized === 'B' || normalized === 'B+' || normalized === 'B-') return 'sd-grade-chip--b';
+    if (normalized === 'C' || normalized === 'C+' || normalized === 'C-') return 'sd-grade-chip--c';
+    if (normalized === 'D' || normalized === 'D+' || normalized === 'D-') return 'sd-grade-chip--d';
+    return 'sd-grade-chip--f';
   }
 
   loadPendingPayments(): void {

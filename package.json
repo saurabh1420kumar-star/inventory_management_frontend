@@ -32,9 +32,12 @@
     "angular-cli-ghpages": "^3.0.2",
     "apexcharts": "^5.3.6",
     "ionicons": "^7.0.0",
+    "jspdf": "^4.2.1",
+    "jspdf-autotable": "^5.0.7",
     "ng-apexcharts": "^2.0.4",
     "rxjs": "~7.8.0",
     "tslib": "^2.3.0",
+    "xlsx": "^0.18.5",
     "zone.js": "~0.15.0"
   },
   "devDependencies": {

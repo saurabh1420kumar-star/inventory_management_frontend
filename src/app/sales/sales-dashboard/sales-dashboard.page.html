@@ -94,6 +94,48 @@
         </div>
       </div>
 
+      <!-- Divider -->
+      <div class="sd-divider"></div>
+
+      <!-- KPI Results Table -->
+      <section class="sd-kpi-panel">
+        <div class="sd-kpi-panel__title-wrap">
+          <p class="sd-kpi-panel__eyebrow">Performance Matrix</p>
+          <h3 class="sd-kpi-panel__title">KPI Target Summary</h3>
+        </div>
+
+        <div *ngIf="isLoadingKpiResults" class="sd-loading sd-kpi-panel__loading">
+          <ion-spinner name="crescent" style="color: #22d3ee; width: 24px; height: 24px;"></ion-spinner>
+          <span>Loading KPI grades...</span>
+        </div>
+
+        <div *ngIf="!isLoadingKpiResults && kpiRows.length > 0" class="sd-kpi-table">
+          <div class="sd-kpi-table__head">
+            <span>KPI</span>
+            <span>Target Summary</span>
+            <span>Grade</span>
+          </div>
+
+          <div class="sd-kpi-table__body">
+            <div class="sd-kpi-table__row" *ngFor="let row of kpiRows">
+              <div class="sd-kpi-table__kpi">{{ row.kpiName }}</div>
+              <div class="sd-kpi-table__summary" [title]="(row.achievedValue | number:'1.0-2') + ' / ' + (row.targetValue | number:'1.0-2')">
+                <span class="sd-kpi-table__summary-achieved">{{ row.achievedValue | number:'1.0-2' }}</span>
+                <span class="sd-kpi-table__summary-separator">/</span>
+                <span class="sd-kpi-table__summary-target">{{ row.targetValue | number:'1.0-2' }}</span>
+              </div>
+              <div class="sd-kpi-table__grade">
+                <span class="sd-grade-chip" [ngClass]="getGradeClass(row.grade)">{{ row.grade }}</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div *ngIf="!isLoadingKpiResults && kpiRows.length === 0" class="sd-kpi-empty">
+          No KPI results found
+        </div>
+      </section>
+
     </div>
 
     <!-- ══════ OPERATIONS TAB ══════ -->

@@ -3,6 +3,9 @@ import { Component, OnInit } from '@angular/core';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { HttpClient, HttpClientModule } from '@angular/common/http';
+import * as XLSX from 'xlsx';
+import jsPDF from 'jspdf';
+import autoTable from 'jspdf-autotable';
 
 interface KraEntry {
   id: number;
@@ -10,7 +13,10 @@ interface KraEntry {
   kraName: string;
   kraWeight: number;
   targetValue: number;
+  achievedValue?: number;
   description: string;
+  salesPersonName?: string;
+  salesPersonId?: number;
   status: 'ACTIVE' | 'PENDING';
 }
 
@@ -24,9 +30,17 @@ interface AssignmentResponse {
   kpiCode: string;
   kpiName: string;
   targetValue?: number;
+  achievedValue?: number;
   weightage?: number;
+  scorePercentage?: number;
+  weightedScore?: number;
   startDate?: string;
   endDate?: string;
+  status?: string;
+  remarks?: string;
+  assignedBy?: number;
+  createdAt?: string;
+  updatedAt?: string;
   kpiMaster?: {
     id: number;
     kpiCode: string;
@@ -144,6 +158,25 @@ export class HrKraKpiPage implements OnInit {
 
   currentPage = 1;
   itemsPerPage = 5;
+  salesPersonSearchQuery = '';
+  selectedListSalesPerson: SalesPerson | null = null;
+  showSalesPersonSearchDropdown = false;
+
+  // Multi-select state
+  selectedListSalesPersons: SalesPerson[] = [];
+  isMouseOverDropdown = false;
+
+  // Filter state
+  showFiltersModal = false;
+  kraListFilters = {
+    kraQuery: '',
+    status: 'ALL' as 'ALL' | 'ACTIVE' | 'PENDING',
+    targetMin: null as number | null,
+    targetMax: null as number | null,
+  };
+
+  // Export state
+  showExportModal = false;
 
   kraEntries: KraEntry[] = [];
 
@@ -200,9 +233,13 @@ export class HrKraKpiPage implements OnInit {
             kraName: assignment.kpiName,
             kraWeight: assignment.kpiMaster?.defaultWeightage || assignment.weightage || 0,
             targetValue: assignment.targetValue || 0,
+            achievedValue: assignment.achievedValue || 0,
             description: `Assigned to: ${assignment.employeeName}`,
+            salesPersonName: assignment.employeeName,
+            salesPersonId: assignment.employeeId,
             status: 'ACTIVE',
           }));
+          this.currentPage = 1;
         }
       },
       error: (error) => {
@@ -211,24 +248,88 @@ export class HrKraKpiPage implements OnInit {
     });
   }
 
+  get filteredKraEntries(): KraEntry[] {
+    return this.kraEntries.filter((entry) => {
+      const name = (entry.salesPersonName || this.getSalesPersonName(entry.description) || '').toLowerCase();
+
+      // Multi-select filter: if salespersons are selected, filter by them
+      if (this.selectedListSalesPersons.length > 0) {
+        const isSelectedPerson = this.selectedListSalesPersons.some((person) => name === person.name.toLowerCase());
+        if (!isSelectedPerson) {
+          return false;
+        }
+      }
+
+      // Single search filter (legacy, fallback if no multi-select)
+      if (this.selectedListSalesPerson && this.selectedListSalesPersons.length === 0) {
+        return name === this.selectedListSalesPerson.name.trim().toLowerCase();
+      }
+
+      // Status filter
+      if (this.kraListFilters.status !== 'ALL' && entry.status !== this.kraListFilters.status) {
+        return false;
+      }
+
+      // Target range filter
+      if (this.kraListFilters.targetMin !== null && entry.targetValue < this.kraListFilters.targetMin) {
+        return false;
+      }
+      if (this.kraListFilters.targetMax !== null && entry.targetValue > this.kraListFilters.targetMax) {
+        return false;
+      }
+
+      // KRA query filter
+      if (this.kraListFilters.kraQuery.trim().length > 0) {
+        const kraQuery = this.kraListFilters.kraQuery.trim().toLowerCase();
+        if (!entry.kraName.toLowerCase().includes(kraQuery)) {
+          return false;
+        }
+      }
+
+      return true;
+    });
+  }
+
+  get filteredSalesPersons(): SalesPerson[] {
+    const query = this.salesPersonSearchQuery.trim().toLowerCase();
+    let result = this.salesPersons;
+
+    // Exclude already-selected salespersons
+    result = result.filter((person) => !this.selectedListSalesPersons.some((sp) => sp.id === person.id));
+
+    if (!query) {
+      return result.slice(0, 8);
+    }
+    return result.filter((person) => person.name.toLowerCase().includes(query)).slice(0, 8);
+  }
+
+  get activeFilterCount(): number {
+    let count = 0;
+    if (this.kraListFilters.kraQuery.trim().length > 0) count++;
+    if (this.kraListFilters.status !== 'ALL') count++;
+    if (this.kraListFilters.targetMin !== null) count++;
+    if (this.kraListFilters.targetMax !== null) count++;
+    return count;
+  }
+
   get paginatedEntries(): KraEntry[] {
     const start = (this.currentPage - 1) * this.itemsPerPage;
-    return this.kraEntries.slice(start, start + this.itemsPerPage);
+    return this.filteredKraEntries.slice(start, start + this.itemsPerPage);
   }
 
   get totalPages(): number {
-    return Math.max(1, Math.ceil(this.kraEntries.length / this.itemsPerPage));
+    return Math.max(1, Math.ceil(this.filteredKraEntries.length / this.itemsPerPage));
   }
 
   get startRecord(): number {
-    if (!this.kraEntries.length) {
+    if (!this.filteredKraEntries.length) {
       return 0;
     }
     return (this.currentPage - 1) * this.itemsPerPage + 1;
   }
 
   get endRecord(): number {
-    return Math.min(this.currentPage * this.itemsPerPage, this.kraEntries.length);
+    return Math.min(this.currentPage * this.itemsPerPage, this.filteredKraEntries.length);
   }
 
   get kraOptions(): string[] {
@@ -432,6 +533,8 @@ export class HrKraKpiPage implements OnInit {
               ...this.kraEntries[existingIndex],
               targetValue,
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
+              salesPersonName: this.selectedSalesPerson?.name,
+              salesPersonId: this.selectedSalesPerson?.id,
               status: 'ACTIVE',
             };
           } else {
@@ -441,6 +544,8 @@ export class HrKraKpiPage implements OnInit {
               kraWeight: 0,
               targetValue,
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
+              salesPersonName: this.selectedSalesPerson?.name,
+              salesPersonId: this.selectedSalesPerson?.id,
               status: 'ACTIVE',
             });
           }
@@ -515,6 +620,8 @@ export class HrKraKpiPage implements OnInit {
               targetValue,
               kraWeight: weightage,
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
+              salesPersonName: this.selectedSalesPerson?.name,
+              salesPersonId: this.selectedSalesPerson?.id,
               status: 'ACTIVE',
             };
           }
@@ -621,6 +728,193 @@ export class HrKraKpiPage implements OnInit {
         this.showSuccessModal = true;
       },
     });
+  }
+
+  onSalesPersonSearchInput(): void {
+    this.selectedListSalesPerson = null;
+    this.showSalesPersonSearchDropdown = true;
+    this.currentPage = 1;
+  }
+
+  onSalesPersonSearchFocus(): void {
+    this.showSalesPersonSearchDropdown = true;
+  }
+
+  onSalesPersonSearchBlur(): void {
+    if (!this.isMouseOverDropdown) {
+      setTimeout(() => {
+        if (!this.isMouseOverDropdown) {
+          this.showSalesPersonSearchDropdown = false;
+        }
+      }, 150);
+    }
+  }
+
+  selectListSalesPerson(person: SalesPerson): void {
+    this.selectedListSalesPerson = person;
+    this.salesPersonSearchQuery = person.name;
+    this.showSalesPersonSearchDropdown = false;
+    this.currentPage = 1;
+  }
+
+  clearSalesPersonSearch(): void {
+    this.salesPersonSearchQuery = '';
+    this.selectedListSalesPerson = null;
+    this.showSalesPersonSearchDropdown = false;
+    this.currentPage = 1;
+  }
+
+  // Multi-select methods
+  onDropdownMouseEnter(): void {
+    this.isMouseOverDropdown = true;
+  }
+
+  onDropdownMouseLeave(): void {
+    this.isMouseOverDropdown = false;
+  }
+
+  selectListSalesPersonMulti(person: SalesPerson): void {
+    if (!this.selectedListSalesPersons.some((p) => p.id === person.id)) {
+      this.selectedListSalesPersons = [...this.selectedListSalesPersons, person];
+    }
+    this.salesPersonSearchQuery = '';
+    this.isMouseOverDropdown = false;
+    this.showSalesPersonSearchDropdown = false;
+    this.currentPage = 1;
+  }
+
+  removeSelectedSalesPerson(personId: number): void {
+    this.selectedListSalesPersons = this.selectedListSalesPersons.filter((p) => p.id !== personId);
+    this.currentPage = 1;
+  }
+
+  // Filter methods
+  openFiltersModal(): void {
+    this.showFiltersModal = true;
+  }
+
+  closeFiltersModal(): void {
+    this.showFiltersModal = false;
+  }
+
+  applyKraFilters(): void {
+    this.currentPage = 1;
+    this.closeFiltersModal();
+  }
+
+  resetKraFilters(): void {
+    this.kraListFilters = {
+      kraQuery: '',
+      status: 'ALL',
+      targetMin: null,
+      targetMax: null,
+    };
+    this.currentPage = 1;
+  }
+
+  // Export methods
+  openExportModal(): void {
+    this.showExportModal = true;
+  }
+
+  closeExportModal(): void {
+    this.showExportModal = false;
+  }
+
+  exportAsExcel(): void {
+    try {
+      const rows = this.filteredKraEntries.map((entry) => ({
+        KRA: entry.kraName,
+        'Sales Person': entry.salesPersonName || this.getSalesPersonName(entry.description),
+        'Achieved': entry.achievedValue || 0,
+        'Target': entry.targetValue,
+        'Target Summary': `${entry.achievedValue || 0} / ${entry.targetValue}`,
+        Status: entry.status,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'KRA List');
+
+      // Add column widths for better formatting
+      const colWidths = [
+        { wch: 25 }, // KRA
+        { wch: 20 }, // Sales Person
+        { wch: 12 }, // Achieved
+        { wch: 12 }, // Target
+        { wch: 15 }, // Target Summary
+        { wch: 12 }, // Status
+      ];
+      worksheet['!cols'] = colWidths;
+
+      const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      this.downloadBlob(blob, `kra-management-${this.getDownloadStamp()}.xlsx`);
+      this.showExportModal = false;
+    } catch (error) {
+      console.error('Error exporting Excel:', error);
+    }
+  }
+
+  exportAsPdf(): void {
+    try {
+      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+      const rows = this.filteredKraEntries.map((entry) => [
+        entry.kraName,
+        entry.salesPersonName || this.getSalesPersonName(entry.description),
+        String(entry.achievedValue || 0),
+        String(entry.targetValue),
+        `${entry.achievedValue || 0} / ${entry.targetValue}`,
+        entry.status,
+      ]);
+
+      doc.setFontSize(16);
+      doc.setTextColor(15, 118, 110);
+      doc.text('KRA Management Report', 14, 16);
+
+      autoTable(doc, {
+        startY: 28,
+        head: [['KRA', 'Sales Person', 'Achieved', 'Target', 'Target Summary', 'Status']],
+        body: rows,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [15, 118, 110],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center',
+        },
+        bodyStyles: {
+          textColor: [50, 50, 50],
+        },
+        alternateRowStyles: {
+          fillColor: [240, 248, 255],
+        },
+        margin: { top: 28, right: 14, bottom: 14, left: 14 },
+      });
+
+      doc.save(`kra-management-${this.getDownloadStamp()}.pdf`);
+      this.showExportModal = false;
+    } catch (error) {
+      console.error('Error exporting PDF:', error);
+    }
+  }
+
+  private downloadBlob(blob: Blob, filename: string): void {
+    const url = window.URL.createObjectURL(blob);
+    const link = document.createElement('a');
+    link.href = url;
+    link.download = filename;
+    document.body.appendChild(link);
+    link.click();
+    window.URL.revokeObjectURL(url);
+    document.body.removeChild(link);
+  }
+
+  private getDownloadStamp(): string {
+    const now = new Date();
+    return now.toISOString().slice(0, 19).replace(/:/g, '-');
   }
 
   previousPage(): void {

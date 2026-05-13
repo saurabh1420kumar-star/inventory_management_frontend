@@ -28,7 +28,7 @@
             </button>
             <button
               (click)="openAssignKraForm()"
-              class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-cyan-400 text-slate-900 hover:bg-cyan-300 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
+              class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-cyan-300 border border-cyan-300/40 hover:bg-slate-900 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
               <ion-icon class="text-lg" name="link-outline"></ion-icon>
               <span>Assign KRA</span>
             </button>
@@ -37,15 +37,70 @@
       </div>
 
       <div class="bg-white rounded-xl border border-slate-200 shadow-sm overflow-hidden">
-        <div class="flex items-center justify-between px-4 sm:px-5 py-4 border-b border-slate-100 bg-slate-50/70">
-          <h2 class="text-sm font-bold text-teal-700">Active KRA List</h2>
-          <div class="flex items-center gap-2 text-slate-500">
-            <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Filter">
-              <ion-icon name="funnel-outline"></ion-icon>
-            </button>
-            <button class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Download">
-              <ion-icon name="download-outline"></ion-icon>
-            </button>
+        <div class="flex flex-col gap-4 px-4 sm:px-5 py-4 border-b border-slate-100 bg-slate-50/70">
+          <!-- Multi-select chips -->
+          <div *ngIf="selectedListSalesPersons.length > 0" class="flex flex-wrap gap-2">
+            <div *ngFor="let person of selectedListSalesPersons" class="kra-chip">
+              <span>{{ person.name }}</span>
+              <button (click)="removeSelectedSalesPerson(person.id)" type="button" class="kra-chip__close">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+
+          <!-- Toolbar with search, filters, and export -->
+          <div class="flex items-center justify-between gap-3 flex-wrap">
+            <div class="kra-search-wrap flex-1" style="min-width: 320px;">
+              <ion-icon name="search-outline" class="kra-search-wrap__icon"></ion-icon>
+              <input
+                [(ngModel)]="salesPersonSearchQuery"
+                (input)="onSalesPersonSearchInput()"
+                (focus)="onSalesPersonSearchFocus()"
+                (blur)="onSalesPersonSearchBlur()"
+                type="text"
+                placeholder="Search salesperson to filter KRA list"
+                class="kra-search-wrap__input" />
+              <button
+                *ngIf="salesPersonSearchQuery"
+                (click)="clearSalesPersonSearch()"
+                type="button"
+                class="kra-search-wrap__clear"
+                aria-label="Clear salesperson search">
+                <ion-icon name="close-outline"></ion-icon>
+              </button>
+
+              <div *ngIf="showSalesPersonSearchDropdown && filteredSalesPersons.length > 0" class="kra-search-dropdown" (mouseenter)="onDropdownMouseEnter()" (mouseleave)="onDropdownMouseLeave()">
+                <button
+                  *ngFor="let person of filteredSalesPersons"
+                  (mousedown)="selectListSalesPersonMulti(person)"
+                  type="button"
+                  class="kra-search-dropdown__item">
+                  <span class="kra-search-dropdown__name">{{ person.name }}</span>
+                  <span class="kra-search-dropdown__meta">{{ person.designation || 'Sales Person' }}</span>
+                </button>
+              </div>
+            </div>
+
+            <!-- Action buttons -->
+            <div class="flex items-center gap-2">
+              <button
+                (click)="openFiltersModal()"
+                type="button"
+                class="kra-action-btn kra-action-btn--ghost"
+                aria-label="More filters">
+                <ion-icon name="funnel-outline"></ion-icon>
+                <span>Filters</span>
+                <span *ngIf="activeFilterCount > 0" class="kra-action-btn__badge">{{ activeFilterCount }}</span>
+              </button>
+              <button
+                (click)="openExportModal()"
+                type="button"
+                class="kra-action-btn kra-action-btn--solid"
+                aria-label="Export data">
+                <ion-icon name="download-outline"></ion-icon>
+                <span>Export</span>
+              </button>
+            </div>
           </div>
         </div>
 
@@ -55,7 +110,7 @@
               <tr class="text-left text-[11px] uppercase tracking-wider text-teal-700 bg-slate-100/70">
                 <th class="px-4 sm:px-5 py-3 font-bold">KRA</th>
                 <th class="px-4 sm:px-5 py-3 font-bold">Sales Person</th>
-                <th class="px-4 sm:px-5 py-3 font-bold">Target</th>
+                <th class="px-4 sm:px-5 py-3 font-bold">Target Summary</th>
                 <th class="px-4 sm:px-5 py-3 font-bold">Status</th>
                 <th class="px-4 sm:px-5 py-3 font-bold text-right">Actions</th>
               </tr>
@@ -66,10 +121,12 @@
                   <div class="font-bold text-teal-700 uppercase text-sm">{{ entry.kraName }}</div>
                 </td>
                 <td class="px-4 sm:px-5 py-3.5">
-                  <div class="font-semibold text-slate-700 text-sm">{{ getSalesPersonName(entry.description) }}</div>
+                  <div class="font-semibold text-slate-700 text-sm">{{ entry.salesPersonName || getSalesPersonName(entry.description) }}</div>
                 </td>
                 <td class="px-4 sm:px-5 py-3.5">
-                  <div class="font-extrabold text-teal-700 text-2xl tracking-tight">{{ entry.targetValue }}</div>
+                  <div class="font-semibold text-teal-700 text-[13px] leading-tight">
+                    {{ entry.achievedValue | number:'1.0-2' }} / {{ entry.targetValue | number:'1.0-2' }}
+                  </div>
                 </td>
                 <td class="px-4 sm:px-5 py-3.5">
                   <span
@@ -89,7 +146,7 @@
                   </div>
                 </td>
               </tr>
-              <tr *ngIf="!kraEntries.length">
+              <tr *ngIf="!filteredKraEntries.length">
                 <td colspan="5" class="px-5 py-8 text-center text-slate-500 font-medium">No KRA records found.</td>
               </tr>
             </tbody>
@@ -98,7 +155,7 @@
 
         <div class="flex items-center justify-between gap-3 px-4 sm:px-5 py-4 bg-slate-50/70">
           <p class="text-xs text-slate-500 font-medium">
-            Showing {{ startRecord }} to {{ endRecord }} of {{ kraEntries.length }} Performance Indicators
+            Showing {{ startRecord }} to {{ endRecord }} of {{ filteredKraEntries.length }} Performance Indicators
           </p>
 
           <div class="flex items-center gap-2">
@@ -278,6 +335,127 @@
           {{ isSuccessModal ? 'OK' : 'Close' }}
         </button>
       </div>
+    </div>
+  </div>
+
+  <!-- Filters Modal -->
+  <div *ngIf="showFiltersModal" class="kra-modal-backdrop" (click)="closeFiltersModal()">
+    <div class="kra-modal-card--compact" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-teal-700 font-extrabold text-sm flex items-center gap-2 uppercase tracking-wide">
+          <ion-icon name="funnel-outline" class="text-base"></ion-icon>
+          Advanced Filters
+        </h2>
+        <button (click)="closeFiltersModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <div class="space-y-3 max-h-[60vh] overflow-y-auto">
+        <!-- KRA Query Filter -->
+        <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Search KRA</label>
+          <input
+            [(ngModel)]="kraListFilters.kraQuery"
+            placeholder="Search by KRA name..."
+            type="text"
+            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+        </div>
+
+        <!-- Status Filter -->
+        <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Status</label>
+          <select
+            [(ngModel)]="kraListFilters.status"
+            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+            <option value="ALL">All Statuses</option>
+            <option value="ACTIVE">Active</option>
+            <option value="PENDING">Pending</option>
+          </select>
+        </div>
+
+        <!-- Target Range Filter -->
+        <div class="grid grid-cols-2 gap-2">
+          <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Min Target</label>
+            <input
+              [(ngModel)]="kraListFilters.targetMin"
+              type="number"
+              placeholder="Min"
+              class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+          </div>
+          <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Max Target</label>
+            <input
+              [(ngModel)]="kraListFilters.targetMax"
+              type="number"
+              placeholder="Max"
+              class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400" />
+          </div>
+        </div>
+      </div>
+
+      <!-- Filter Actions -->
+      <div class="flex items-center gap-2 mt-4 pt-3 border-t border-slate-200">
+        <button
+          (click)="resetKraFilters()"
+          type="button"
+          class="flex-1 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+          Reset
+        </button>
+        <button
+          (click)="applyKraFilters()"
+          type="button"
+          class="flex-1 px-3 py-2 rounded-lg bg-teal-700 hover:bg-teal-800 text-white text-sm font-semibold transition-colors">
+          Apply Filters
+        </button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Export Modal -->
+  <div *ngIf="showExportModal" class="kra-modal-backdrop" (click)="closeExportModal()">
+    <div class="kra-modal-card--compact" (click)="$event.stopPropagation()">
+      <div class="flex items-center justify-between mb-4">
+        <h2 class="text-teal-700 font-extrabold text-sm flex items-center gap-2 uppercase tracking-wide">
+          <ion-icon name="download-outline" class="text-base"></ion-icon>
+          Export Data
+        </h2>
+        <button (click)="closeExportModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+
+      <p class="text-sm text-slate-600 mb-4">Export {{ filteredKraEntries.length }} KRA records as:</p>
+
+      <div class="grid grid-cols-2 gap-3">
+        <!-- Excel Export -->
+        <button
+          (click)="exportAsExcel()"
+          type="button"
+          class="kra-export-card kra-export-card--excel">
+          <ion-icon name="document-outline" class="text-3xl"></ion-icon>
+          <span class="font-semibold text-sm">Excel</span>
+          <span class="text-xs text-slate-500">.xlsx file</span>
+        </button>
+
+        <!-- PDF Export -->
+        <button
+          (click)="exportAsPdf()"
+          type="button"
+          class="kra-export-card kra-export-card--pdf">
+          <ion-icon name="document-text-outline" class="text-3xl"></ion-icon>
+          <span class="font-semibold text-sm">PDF</span>
+          <span class="text-xs text-slate-500">.pdf file</span>
+        </button>
+      </div>
+
+      <button
+        (click)="closeExportModal()"
+        type="button"
+        class="w-full mt-4 px-3 py-2 rounded-lg border border-slate-300 bg-white text-slate-700 text-sm font-semibold hover:bg-slate-50 transition-colors">
+        Cancel
+      </button>
     </div>
   </div>
 </ion-content>
