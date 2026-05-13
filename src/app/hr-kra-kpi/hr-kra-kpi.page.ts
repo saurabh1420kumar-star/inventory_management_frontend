@@ -179,6 +179,7 @@ export class HrKraKpiPage implements OnInit {
   showExportModal = false;
 
   kraEntries: KraEntry[] = [];
+  kraMasterList: KraMasterResponse[] = [];
 
   constructor(private http: HttpClient) {}
 
@@ -205,16 +206,7 @@ export class HrKraKpiPage implements OnInit {
     this.http.get<KraMasterResponse[]>('https://api.imsnectarorigin.com/api/admin/kra-kpi/master').subscribe({
       next: (response: KraMasterResponse[]) => {
         if (response && Array.isArray(response)) {
-          this.kraEntries = response
-            .filter((kra) => kra.isActive)
-            .map((kra) => ({
-              id: kra.id,
-              kraName: kra.kpiName,
-              kraWeight: kra.defaultWeightage,
-              targetValue: 0,
-              description: kra.description || `${kra.measurementUnit} - ${kra.frequency}`,
-              status: 'ACTIVE' as const,
-            }));
+          this.kraMasterList = response.filter((kra) => kra.isActive);
         }
       },
       error: (error) => {
@@ -333,7 +325,7 @@ export class HrKraKpiPage implements OnInit {
   }
 
   get kraOptions(): string[] {
-    return Array.from(new Set(this.kraEntries.map((entry) => entry.kraName.trim()).filter((name) => name.length > 0)));
+    return Array.from(new Set(this.kraMasterList.map((kra) => kra.kpiName.trim()).filter((name) => name.length > 0)));
   }
 
   getSalesPersonName(description: string): string {
@@ -494,14 +486,14 @@ export class HrKraKpiPage implements OnInit {
       return;
     }
 
-    // Build assignments array with kpiIds from kraEntries
+    // Build assignments array with kpiIds from kraMasterList
     const assignments = this.selectedKras
       .map((kraName) => {
-        const kra = this.kraEntries.find((entry) => entry.kraName === kraName);
+        const kra = this.kraMasterList.find((entry) => entry.kpiName === kraName);
         return {
           kpiId: kra?.id || 0,
           targetValue: this.kraTargets[kraName] || 0,
-          weightage: kra?.kraWeight || 0,
+          weightage: kra?.defaultWeightage || 0,
         };
       })
       .filter((assignment) => assignment.kpiId > 0);

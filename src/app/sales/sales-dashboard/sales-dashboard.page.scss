@@ -343,6 +343,16 @@ ion-content {
   color: #22c55e;
 }
 
+.sd-below-target {
+  color: #ef4444 !important; /* Red for below target */
+  font-weight: 900;
+}
+
+.sd-met-target {
+  color: #86efac !important; /* Mild green for met/exceeded target */
+  font-weight: 700;
+}
+
 .sd-kpi-table__summary-separator {
   color: rgba(148, 163, 184, 0.9);
   font-weight: 800;

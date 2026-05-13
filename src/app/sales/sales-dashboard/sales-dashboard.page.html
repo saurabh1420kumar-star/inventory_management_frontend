@@ -120,7 +120,9 @@
             <div class="sd-kpi-table__row" *ngFor="let row of kpiRows">
               <div class="sd-kpi-table__kpi">{{ row.kpiName }}</div>
               <div class="sd-kpi-table__summary" [title]="(row.achievedValue | number:'1.0-2') + ' / ' + (row.targetValue | number:'1.0-2')">
-                <span class="sd-kpi-table__summary-achieved">{{ row.achievedValue | number:'1.0-2' }}</span>
+                <span class="sd-kpi-table__summary-achieved" [ngClass]="row.achievedValue < row.targetValue ? 'sd-below-target' : 'sd-met-target'">
+                  {{ row.achievedValue | number:'1.0-2' }}
+                </span>
                 <span class="sd-kpi-table__summary-separator">/</span>
                 <span class="sd-kpi-table__summary-target">{{ row.targetValue | number:'1.0-2' }}</span>
               </div>
