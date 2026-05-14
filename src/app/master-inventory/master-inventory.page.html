@@ -787,6 +787,39 @@
               </div>
             </div>
 
+            <!-- Product Image Upload: raw material and finished product only -->
+            <div *ngIf="selectedCategory === 'raw_material' || selectedCategory === 'finished_product'" class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="image-outline" class="text-slate-400"></ion-icon>
+                Product Image
+              </label>
+              <label class="relative flex flex-col items-center justify-center min-h-[150px] rounded-2xl border-2 border-dashed border-slate-200 bg-white hover:border-emerald-300 hover:bg-emerald-50/30 transition-all cursor-pointer overflow-hidden">
+                <input type="file" accept="image/*" (change)="onImageSelected($event)" class="absolute inset-0 opacity-0 cursor-pointer" />
+
+                <img *ngIf="previewImage" [src]="previewImage" alt="Selected product image" class="absolute inset-0 w-full h-full object-cover" />
+                <div *ngIf="previewImage" class="absolute inset-0 bg-black/20"></div>
+
+                <div class="relative z-10 flex flex-col items-center gap-2 px-4 py-6 text-center">
+                  <div class="w-12 h-12 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center">
+                    <ion-icon [name]="previewImage ? 'image-outline' : 'cloud-upload-outline'" class="text-2xl text-emerald-500"></ion-icon>
+                  </div>
+                  <p class="text-sm font-bold" [class.text-white]="previewImage" [class.text-slate-700]="!previewImage">
+                    {{ selectedImageFile ? selectedImageFile.name : 'Tap to upload product image' }}
+                  </p>
+                  <p class="text-xs font-medium" [class.text-white]="previewImage" [class.text-slate-400]="!previewImage">
+                    JPG, PNG or WEBP
+                  </p>
+                </div>
+              </label>
+              <button
+                *ngIf="selectedImageFile"
+                type="button"
+                (click)="removeSelectedImage()"
+                class="mt-2 px-3 py-1.5 rounded-lg bg-rose-50 text-rose-600 text-xs font-bold border border-rose-100 hover:bg-rose-100 transition-colors">
+                Remove image
+              </button>
+            </div>
+
             <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">

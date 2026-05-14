@@ -364,7 +364,7 @@ export class MasterInventoryPage implements OnInit {
       minimumThreshold,
       price: item.price,  // <— Explicitly preserve price from API
       perItemPrice: item.perItemPrice,  // <— Preserve perItemPrice for BOM
-      imageUrl: this.getImageUrlForItem(item.name, category)
+      imageUrl: (item as any).imageUrl || (item as any).image || this.getImageUrlForItem(item.name, category)
     };
   }
 
@@ -465,11 +465,21 @@ export class MasterInventoryPage implements OnInit {
     const file = event.target.files?.[0];
     if (!file) return;
 
+    if (!file.type.startsWith('image/')) {
+      this.showMessage('error', 'Please upload a valid image file.');
+      return;
+    }
+
     this.selectedImageFile = file;
 
     const reader = new FileReader();
     reader.onload = () => (this.previewImage = reader.result);
     reader.readAsDataURL(file);
+  }
+
+  removeSelectedImage(): void {
+    this.previewImage = null;
+    this.selectedImageFile = null;
   }
 
   /* ---------- MODAL ---------- */
@@ -481,6 +491,9 @@ export class MasterInventoryPage implements OnInit {
   onCategoryChange(category: ItemCategory) {
     this.selectedCategory = category;
     this.addForm.patchValue({ category });
+    if (category !== 'raw_material' && category !== 'finished_product') {
+      this.removeSelectedImage();
+    }
     // All fields optional — only name and unit are required
     this.addForm.get('materialCode')!.clearValidators();
     this.addForm.get('materialCode')!.updateValueAndValidity();
@@ -686,7 +699,11 @@ export class MasterInventoryPage implements OnInit {
         break;
     }
 
-    this.inventoryService.createItem({ category, ...payload } as any).subscribe({
+    const request$ = this.selectedImageFile && (category === 'raw_material' || category === 'finished_product')
+      ? this.inventoryService.createItemWithImage(category, { category, ...payload } as any, this.selectedImageFile)
+      : this.inventoryService.createItem({ category, ...payload } as any);
+
+    request$.subscribe({
       next: () => {
         this.loadInventory();
         this.resetPagination();

@@ -9,6 +9,7 @@ export interface InventoryItem {
   name: string;
   hsn?: string;
   taxRateCode?: string;
+  imageUrl?: string;
 
   /** Raw material only */
   materialCode?: string;
@@ -177,6 +178,38 @@ export class InventoryService {
 
     // Fallback → machine parts
     return this.http.post<InventoryItem>(this.machinePartsUrl, payload);
+  }
+
+  createItemWithImage(
+    category: InventoryItem['category'],
+    item: Partial<InventoryItem>,
+    imageFile: File
+  ): Observable<InventoryItem> {
+    const formData = new FormData();
+    
+    // Build the request payload object
+    const requestPayload: any = {};
+    Object.entries(item).forEach(([key, value]) => {
+      if (key !== 'category' && value !== undefined && value !== null && value !== '') {
+        requestPayload[key] = value;
+      }
+    });
+    
+    // Append the request field as JSON Blob with proper MIME type
+    const requestBlob = new Blob([JSON.stringify(requestPayload)], { type: 'application/json' });
+    formData.append('request', requestBlob);
+    
+    // Append the image file
+    formData.append('image', imageFile);
+
+    if (category === 'raw_material') {
+      return this.http.post<InventoryItem>(this.rawMaterialsUrl, formData);
+    }
+    if (category === 'finished_product') {
+      return this.http.post<InventoryItem>(this.finishedProductsCrudUrl, formData);
+    }
+
+    return this.createItem({ category, ...item });
   }
 
   // =======================================
