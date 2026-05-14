@@ -484,6 +484,7 @@ interface Distributor {
   name: string;
   companyName?: string;
   assignedPerson: string;
+  keyPersonName?: string;
   salesPersonRoleType?: string;
   salespersonId?: number;
   distributorType: string;
@@ -751,6 +752,7 @@ export class DistributorPage implements OnInit {
       name: dto.name || (dto.firmName || '') || '',
       companyName: dto.companyName || dto.name || (dto.firmName || '') || '',
       assignedPerson: dto.assignedPerson || '',
+      keyPersonName: dto.keyperson || dto.keyPersonName || '',
       salesPersonRoleType: dto.salesPersonRoleType || '',
       salespersonId: dto.salespersonId,
       distributorType: dto.distributorType,
@@ -789,9 +791,7 @@ export class DistributorPage implements OnInit {
     const salesPersonRoleType = formData.assignedPerson || '';
 
     // Get the key person's actual name
-    const assignedPersonName = selectedKeyPerson
-      ? (selectedKeyPerson.firstName + ' ' + selectedKeyPerson.lastName).trim()
-      : '';
+    const assignedPersonName = selectedKeyPerson ? this.getPersonDisplayName(selectedKeyPerson) : '';
 
     const payload = {
       companyName: formData.companyName || '',
@@ -821,7 +821,8 @@ export class DistributorPage implements OnInit {
       password: formData.password || '',
       accountNumber: formData.accountNumber || '',
       ifsc: (formData.ifsc || '').toUpperCase(),
-      accountName: formData.accountName || ''
+      accountName: formData.accountName || '',
+      keyperson: formData.keyPersonName || ''
     };
 
     console.log('Final payload after mapping:', payload);
@@ -833,7 +834,24 @@ export class DistributorPage implements OnInit {
     const keyPersonId = this.distributorForm.get('keyPerson')?.value;
     if (!keyPersonId) return '';
     const keyPerson = this.keyPersonsList.find(person => person.id === keyPersonId);
-    return keyPerson ? (keyPerson.firstName + ' ' + keyPerson.lastName).trim() : '';
+    return keyPerson ? this.getPersonDisplayName(keyPerson) : '';
+  }
+
+  getDistributorKeyPersonName(distributor: Distributor | null): string {
+    if (!distributor) return 'N/A';
+    // Prioritize keyPersonName (the actual key person name from form/API)
+    if (distributor.keyPersonName && distributor.keyPersonName.trim()) {
+      return distributor.keyPersonName;
+    }
+    // Fallback to assignedPerson only if keyPersonName is not available
+    return distributor.assignedPerson || 'N/A';
+  }
+
+  private getPersonDisplayName(person: any): string {
+    if (!person) return '';
+    if (typeof person === 'string') return person.trim();
+    if (person.name) return String(person.name).trim();
+    return `${person.firstName || ''} ${person.lastName || ''}`.trim();
   }
 
   // Fetch Sales Persons for dropdown
@@ -1007,6 +1025,7 @@ export class DistributorPage implements OnInit {
         this.distributorForm.patchValue({
           companyName: dist.companyName || dist.name || '',
           assignedPerson: dist.salesPersonRoleType || '',
+          keyPersonName: dist.keyPersonName || dist.assignedPerson || '',
           distributorType: dist.distributorType,
           companyType: dist.companyType,
           email: dist.email,

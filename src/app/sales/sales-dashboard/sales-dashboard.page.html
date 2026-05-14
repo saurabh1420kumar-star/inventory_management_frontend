@@ -99,21 +99,45 @@
 
       <!-- KPI Results Table -->
       <section class="sd-kpi-panel">
-        <div class="sd-kpi-panel__title-wrap">
-          <p class="sd-kpi-panel__eyebrow">Performance Matrix</p>
-          <h3 class="sd-kpi-panel__title">KPI Target Summary</h3>
-        </div>
-
         <div *ngIf="isLoadingKpiResults" class="sd-loading sd-kpi-panel__loading">
           <ion-spinner name="crescent" style="color: #22d3ee; width: 24px; height: 24px;"></ion-spinner>
           <span>Loading KPI grades...</span>
         </div>
 
-        <div *ngIf="!isLoadingKpiResults && kpiRows.length > 0" class="sd-kpi-table">
+        <div *ngIf="!isLoadingKpiResults" class="sd-performance-cards">
+          <button type="button" class="sd-performance-card sd-performance-card--mtd" (click)="openMtdPerformanceTable()">
+            <div class="sd-performance-card__top">
+              <div>
+                <h4>Performance MTD</h4>
+              </div>
+              <span class="sd-grade-chip" [ngClass]="getGradeClass(getPerformanceGrade('MTD'))">
+                {{ getPerformanceGrade('MTD') }}
+              </span>
+            </div>
+            <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('MTD') }}</p>
+            <p class="sd-performance-card__score">Score {{ getPerformanceScore('MTD') | number:'1.0-2' }}</p>
+          </button>
+
+          <div class="sd-performance-card sd-performance-card--ytd sd-performance-card--readonly">
+            <div class="sd-performance-card__top">
+              <div>
+                <h4>Performance YTD</h4>
+              </div>
+              <span class="sd-grade-chip" [ngClass]="getGradeClass(getPerformanceGrade('YTD'))">
+                {{ getPerformanceGrade('YTD') }}
+              </span>
+            </div>
+            <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('YTD') }}</p>
+            <p class="sd-performance-card__score">Score {{ getPerformanceScore('YTD') | number:'1.0-2' }}</p>
+          </div>
+        </div>
+
+        <div *ngIf="showKpiTargetTable && !isLoadingKpiResults && kpiRows.length > 0" class="sd-kpi-table">
           <div class="sd-kpi-table__head">
             <span>KPI</span>
             <span>Target Summary</span>
             <span>Grade</span>
+            <span>Meaning</span>
           </div>
 
           <div class="sd-kpi-table__body">
@@ -129,11 +153,12 @@
               <div class="sd-kpi-table__grade">
                 <span class="sd-grade-chip" [ngClass]="getGradeClass(row.grade)">{{ row.grade }}</span>
               </div>
+              <div class="sd-kpi-table__meaning">{{ row.gradeMeaning }}</div>
             </div>
           </div>
         </div>
 
-        <div *ngIf="!isLoadingKpiResults && kpiRows.length === 0" class="sd-kpi-empty">
+        <div *ngIf="showKpiTargetTable && !isLoadingKpiResults && kpiRows.length === 0" class="sd-kpi-empty">
           No KPI results found
         </div>
       </section>
@@ -235,6 +260,13 @@
 
       </div>
     </div>
+
+    <footer class="sd-legal-footer">
+      © 2026 Nectar Origin Private Limited. All Rights Reserved. |
+      <a href="assets/privacy-policy.pdf" target="_blank" rel="noopener">Privacy policy</a>
+      |
+      <a href="assets/terms-and-conditions.pdf" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+    </footer>
 
   </div>
 </ion-content>

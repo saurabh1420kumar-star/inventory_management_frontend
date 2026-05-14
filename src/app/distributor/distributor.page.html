@@ -126,7 +126,7 @@
             <div class="p-3 sm:p-4 space-y-2 sm:space-y-3">
               <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
                 <ion-icon name="person-outline" class="text-emerald-500 text-sm sm:text-base"></ion-icon>
-                <span class="truncate">{{ distributor.assignedPerson }}</span>
+                <span class="truncate">{{ getDistributorKeyPersonName(distributor) }}</span>
               </div>
               
               <div class="flex items-center gap-2 text-xs sm:text-sm text-gray-600">
@@ -703,7 +703,7 @@
                 <ion-icon name="person-outline" class="text-emerald-500"></ion-icon>
                 <span>Key Person Name</span>
               </div>
-              <p class="detail-field-value">{{ selectedDistributor.assignedPerson || 'N/A' }}</p>
+              <p class="detail-field-value">{{ getDistributorKeyPersonName(selectedDistributor) }}</p>
             </div>
 
             <div class="detail-field">

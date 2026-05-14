@@ -587,3 +587,16 @@ ion-spinner { --color: #10b981; }
   line-height: 1.4;
   margin: 0;
 }
+
+.dist-legal-footer {
+  padding: 18px 12px 14px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+
+  a {
+    color: #0ea5e9;
+    text-decoration: underline;
+  }
+}

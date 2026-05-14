@@ -41,6 +41,10 @@ interface KpiResultApiItem {
   achievedValue: number;
   targetValue: number;
   grade: string;
+  gradeMeaning?: string;
+  weightage?: number;
+  weightedScore?: number;
+  scorePercentage?: number;
 }
 
 interface KpiTableRow {
@@ -48,6 +52,21 @@ interface KpiTableRow {
   achievedValue: number;
   targetValue: number;
   grade: string;
+  gradeMeaning: string;
+  weightage: number;
+  weightedScore: number;
+  scorePercentage: number;
+}
+
+interface PerformanceSummary {
+  month?: number;
+  year?: number;
+  totalScore: number;
+  totalWeightedScore: number;
+  overallGrade: string;
+  overallGradeMeaning: string;
+  finalGrade: string;
+  finalGradeMeaning: string;
 }
 
 @Component({
@@ -70,6 +89,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isLoadingKpiResults = false;
   volumeAnalytics: any = null;
   kpiRows: KpiTableRow[] = [];
+  performanceSummary: PerformanceSummary | null = null;
+  showKpiTargetTable = false;
   periodData = {
     volMTD: '0 Units',
     volYTD: '0 Units',
@@ -288,6 +309,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   handlePullRefresh(event: any) {
     this.loadDistributors();
     this.loadKpiResults();
+    this.loadVolumeAnalytics();
     setTimeout(() => event.target.complete(), 1500);
   }
 
@@ -305,20 +327,58 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (response) => {
-          const items: KpiResultApiItem[] = Array.isArray(response) ? response : (response?.data ?? []);
+          const data = response?.data ?? response;
+          const items: KpiResultApiItem[] = Array.isArray(data) ? data : (data?.kpis ?? []);
+          this.performanceSummary = Array.isArray(data)
+            ? null
+            : {
+                month: data?.month,
+                year: data?.year,
+                totalScore: Number(data?.totalScore ?? 0),
+                totalWeightedScore: Number(data?.totalWeightedScore ?? data?.totalScore ?? 0),
+                overallGrade: (data?.overallGrade ?? '-').toString().trim() || '-',
+                overallGradeMeaning: (data?.overallGradeMeaning ?? 'N/A').toString().trim() || 'N/A',
+                finalGrade: (data?.finalGrade ?? '-').toString().trim() || '-',
+                finalGradeMeaning: (data?.finalGradeMeaning ?? 'N/A').toString().trim() || 'N/A',
+              };
           this.kpiRows = items.map((item) => ({
             kpiName: item.kpiName ?? '-',
             achievedValue: Number(item.achievedValue ?? 0),
             targetValue: Number(item.targetValue ?? 0),
-            grade: (item.grade ?? '-').toString().trim() || '-'
+            grade: (item.grade ?? '-').toString().trim() || '-',
+            gradeMeaning: (item.gradeMeaning ?? '-').toString().trim() || '-',
+            weightage: Number(item.weightage ?? 0),
+            weightedScore: Number(item.weightedScore ?? 0),
+            scorePercentage: Number(item.scorePercentage ?? 0)
           }));
           this.isLoadingKpiResults = false;
         },
         error: () => {
           this.kpiRows = [];
+          this.performanceSummary = null;
           this.isLoadingKpiResults = false;
         }
       });
+  }
+
+  openMtdPerformanceTable(): void {
+    this.haptic.medium();
+    this.showKpiTargetTable = !this.showKpiTargetTable;
+  }
+
+  getPerformanceGrade(period: 'MTD' | 'YTD'): string {
+    if (!this.performanceSummary) return '-';
+    return period === 'MTD' ? this.performanceSummary.overallGrade : this.performanceSummary.finalGrade;
+  }
+
+  getPerformanceMeaning(period: 'MTD' | 'YTD'): string {
+    if (!this.performanceSummary) return 'N/A';
+    return period === 'MTD' ? this.performanceSummary.overallGradeMeaning : this.performanceSummary.finalGradeMeaning;
+  }
+
+  getPerformanceScore(period: 'MTD' | 'YTD'): number {
+    if (!this.performanceSummary) return 0;
+    return period === 'MTD' ? this.performanceSummary.totalWeightedScore : this.performanceSummary.totalScore;
   }
 
   getGradeClass(grade: string): string {

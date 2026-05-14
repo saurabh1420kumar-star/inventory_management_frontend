@@ -12,6 +12,7 @@ interface KraEntry {
   assignmentId?: number;
   kraName: string;
   kraWeight: number;
+  frequency?: string;
   targetValue: number;
   achievedValue?: number;
   description: string;
@@ -76,6 +77,7 @@ interface KraAssignmentRequest {
     kpiId: number;
     targetValue: number;
     weightage: number;
+    frequency?: string;
   }>;
   startDate: string;
   endDate: string;
@@ -90,6 +92,7 @@ interface KraAssignmentUpdateRequest {
   kpiId: number;
   targetValue: number;
   weightage: number;
+  frequency?: string;
   startDate: string;
   endDate: string;
   remarks?: string;
@@ -132,7 +135,7 @@ export class HrKraKpiPage implements OnInit {
   kraNameInput = '';
   kraWeightInput: number | null = null;
   measurementUnitInput = 'AMOUNT';
-  frequencyInput = 'WEEKLY';
+  frequencyInput = 'MONTHLY';
   isLoadingCreateKra = false;
   showSuccessModal = false;
   successMessage = '';
@@ -145,6 +148,7 @@ export class HrKraKpiPage implements OnInit {
   selectedKras: string[] = [];
   kraTargets: Record<string, number | null> = {};
   kraWeightages: Record<string, number | null> = {};
+  kraFrequencies: Record<string, string> = {};
   assignmentStartDate = this.getTodayDate();
   assignmentEndDate = this.get90DaysFromToday();
   isLoadingAssignKra = false;
@@ -154,7 +158,7 @@ export class HrKraKpiPage implements OnInit {
 
   salesPersons: SalesPerson[] = [];
   measurementUnits: string[] = ['AMOUNT', 'PERCENTAGE', 'COUNT', 'HOURS', 'DAYS'];
-  frequencies: string[] = ['DAILY', 'WEEKLY', 'MONTHLY', 'QUARTERLY', 'YEARLY'];
+  frequencies: string[] = ['MONTHLY'];
 
   currentPage = 1;
   itemsPerPage = 5;
@@ -224,6 +228,7 @@ export class HrKraKpiPage implements OnInit {
             assignmentId: assignment.id,
             kraName: assignment.kpiName,
             kraWeight: assignment.kpiMaster?.defaultWeightage || assignment.weightage || 0,
+            frequency: 'MONTHLY',
             targetValue: assignment.targetValue || 0,
             achievedValue: assignment.achievedValue || 0,
             description: `Assigned to: ${assignment.employeeName}`,
@@ -371,7 +376,7 @@ export class HrKraKpiPage implements OnInit {
     this.kraNameInput = '';
     this.kraWeightInput = null;
     this.measurementUnitInput = 'AMOUNT';
-    this.frequencyInput = 'WEEKLY';
+    this.frequencyInput = 'MONTHLY';
   }
 
   closeCreateKraForm(): void {
@@ -379,7 +384,7 @@ export class HrKraKpiPage implements OnInit {
     this.kraNameInput = '';
     this.kraWeightInput = null;
     this.measurementUnitInput = 'AMOUNT';
-    this.frequencyInput = 'WEEKLY';
+    this.frequencyInput = 'MONTHLY';
   }
 
   openAssignKraForm(): void {
@@ -416,6 +421,7 @@ export class HrKraKpiPage implements OnInit {
           id: response.id || Date.now(),
           kraName: this.kraNameInput.trim(),
           kraWeight: this.kraWeightInput as number,
+          frequency: this.frequencyInput,
           targetValue: 0,
           description: `${this.measurementUnitInput} - Master KRA`,
           status: 'ACTIVE',
@@ -462,11 +468,16 @@ export class HrKraKpiPage implements OnInit {
       if (this.kraTargets[kra] === undefined) {
         this.kraTargets[kra] = null;
       }
+      if (!this.kraFrequencies[kra]) {
+        const masterKra = this.kraMasterList.find((entry) => entry.kpiName === kra);
+        this.kraFrequencies[kra] = 'MONTHLY';
+      }
       return;
     }
 
     this.selectedKras = this.selectedKras.filter((name) => name !== kra);
     delete this.kraTargets[kra];
+    delete this.kraFrequencies[kra];
   }
 
   isKraSelected(kra: string): boolean {
@@ -494,6 +505,7 @@ export class HrKraKpiPage implements OnInit {
           kpiId: kra?.id || 0,
           targetValue: this.kraTargets[kraName] || 0,
           weightage: kra?.defaultWeightage || 0,
+          frequency: 'MONTHLY',
         };
       })
       .filter((assignment) => assignment.kpiId > 0);
@@ -524,6 +536,7 @@ export class HrKraKpiPage implements OnInit {
             this.kraEntries[existingIndex] = {
               ...this.kraEntries[existingIndex],
               targetValue,
+              frequency: 'MONTHLY',
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
               salesPersonName: this.selectedSalesPerson?.name,
               salesPersonId: this.selectedSalesPerson?.id,
@@ -534,6 +547,7 @@ export class HrKraKpiPage implements OnInit {
               id: Date.now() + index,
               kraName,
               kraWeight: 0,
+              frequency: 'MONTHLY',
               targetValue,
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
               salesPersonName: this.selectedSalesPerson?.name,
@@ -582,6 +596,7 @@ export class HrKraKpiPage implements OnInit {
     const kraName = this.selectedKras[0];
     const targetValue = this.kraTargets[kraName] || 0;
     const weightage = this.kraWeightages[kraName] || 0;
+    const frequency = 'MONTHLY';
 
     const payload: KraAssignmentUpdateRequest = {
       employeeName: this.selectedSalesPerson.name,
@@ -591,6 +606,7 @@ export class HrKraKpiPage implements OnInit {
       kpiId: this.editingAssignmentKpiId,
       targetValue,
       weightage,
+      frequency,
       startDate: this.assignmentStartDate,
       endDate: this.assignmentEndDate,
       remarks: '',
@@ -611,6 +627,7 @@ export class HrKraKpiPage implements OnInit {
               ...this.kraEntries[existingIndex],
               targetValue,
               kraWeight: weightage,
+              frequency,
               description: `Assigned to: ${this.selectedSalesPerson?.name}`,
               salesPersonName: this.selectedSalesPerson?.name,
               salesPersonId: this.selectedSalesPerson?.id,
@@ -659,6 +676,9 @@ export class HrKraKpiPage implements OnInit {
     };
     this.kraWeightages = {
       [entry.kraName]: entry.kraWeight,
+    };
+    this.kraFrequencies = {
+      [entry.kraName]: 'MONTHLY',
     };
 
     // Set editing mode if this is an assignment
@@ -927,6 +947,7 @@ export class HrKraKpiPage implements OnInit {
     this.selectedKras = [];
     this.kraTargets = {};
     this.kraWeightages = {};
+    this.kraFrequencies = {};
     this.assignmentStartDate = this.getTodayDate();
     this.assignmentEndDate = this.get90DaysFromToday();
     this.isEditingAssignment = false;

@@ -29,6 +29,20 @@ ion-content {
   min-height: 100%;
 }
 
+.sd-legal-footer {
+  margin: auto 0 6px;
+  padding: 18px 12px 4px;
+  color: #64748b;
+  font-size: 10px;
+  line-height: 1.4;
+  text-align: center;
+
+  a {
+    color: #0ea5e9;
+    text-decoration: underline;
+  }
+}
+
 /* ─── Header Bar ─── */
 
 .sd-header {
@@ -248,28 +262,6 @@ ion-content {
   overflow: hidden;
 }
 
-.sd-kpi-panel__title-wrap {
-  padding: 14px 14px 10px;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-}
-
-.sd-kpi-panel__eyebrow {
-  font-size: 10px;
-  font-weight: 700;
-  letter-spacing: 0.14em;
-  text-transform: uppercase;
-  color: rgba(34, 211, 238, 0.8);
-  margin: 0 0 4px;
-}
-
-.sd-kpi-panel__title {
-  margin: 0;
-  font-size: 16px;
-  font-weight: 800;
-  color: #f8fafc;
-  letter-spacing: 0.01em;
-}
-
 .sd-kpi-panel__loading {
   padding: 20px 14px;
 }
@@ -281,7 +273,7 @@ ion-content {
 .sd-kpi-table__head,
 .sd-kpi-table__row {
   display: grid;
-  grid-template-columns: minmax(0, 1.4fr) minmax(0, 1fr) auto;
+  grid-template-columns: minmax(0, 1.3fr) minmax(0, 1fr) auto minmax(0, 0.9fr);
   gap: 8px;
   align-items: center;
 }
@@ -302,7 +294,7 @@ ion-content {
   }
 
   span:last-child {
-    text-align: center;
+    text-align: left;
   }
 }
 
@@ -367,6 +359,86 @@ ion-content {
   justify-content: center;
 }
 
+.sd-kpi-table__meaning {
+  min-width: 0;
+  font-size: 11px;
+  font-weight: 700;
+  color: #94a3b8;
+  line-height: 1.25;
+}
+
+.sd-performance-cards {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 10px;
+  padding: 12px 10px 2px;
+}
+
+.sd-performance-card {
+  width: 100%;
+  border: 1.5px solid rgba(255, 255, 255, 0.08);
+  border-radius: 16px;
+  padding: 14px;
+  text-align: left;
+  background: rgba(255, 255, 255, 0.04);
+  cursor: pointer;
+  transition: transform 0.16s ease, border-color 0.16s ease, box-shadow 0.16s ease;
+
+  &:active {
+    transform: scale(0.98);
+  }
+
+  &--mtd {
+    background: linear-gradient(150deg, rgba(16, 185, 129, 0.14), rgba(16, 185, 129, 0.04));
+    border-color: rgba(16, 185, 129, 0.28);
+  }
+
+  &--ytd {
+    background: linear-gradient(150deg, rgba(56, 189, 248, 0.14), rgba(56, 189, 248, 0.04));
+    border-color: rgba(56, 189, 248, 0.28);
+  }
+
+  &--readonly {
+    cursor: default;
+
+    &:active {
+      transform: none;
+    }
+  }
+
+  &__top {
+    display: flex;
+    align-items: flex-start;
+    justify-content: space-between;
+    gap: 10px;
+    margin-bottom: 10px;
+
+    h4 {
+      margin: 2px 0 0;
+      color: #f8fafc;
+      font-size: 14px;
+      font-weight: 800;
+      line-height: 1.15;
+    }
+  }
+
+  &__meaning {
+    min-height: 30px;
+    margin: 0 0 8px;
+    color: #cbd5e1;
+    font-size: 12px;
+    font-weight: 700;
+    line-height: 1.25;
+  }
+
+  &__score {
+    margin: 0;
+    color: #94a3b8;
+    font-size: 11px;
+    font-weight: 700;
+  }
+}
+
 .sd-grade-chip {
   min-width: 36px;
   text-align: center;
@@ -412,9 +484,18 @@ ion-content {
 }
 
 @media (max-width: 420px) {
+  .sd-performance-cards {
+    grid-template-columns: 1fr;
+  }
+
   .sd-kpi-table__head,
   .sd-kpi-table__row {
-    grid-template-columns: minmax(0, 1.25fr) minmax(0, 0.95fr) auto;
+    grid-template-columns: minmax(0, 1.15fr) minmax(0, 0.9fr) auto;
+  }
+
+  .sd-kpi-table__meaning,
+  .sd-kpi-table__head span:last-child {
+    display: none;
   }
 
   .sd-kpi-table__summary {

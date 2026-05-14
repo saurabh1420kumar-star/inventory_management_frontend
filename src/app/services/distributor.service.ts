@@ -12,6 +12,8 @@ export interface DistributorDto {
   firmName?: string;
   lastName?: string;
   assignedPerson?: string;
+  keyperson?: string;
+  keyPersonName?: string;
   salesPersonRoleType?: string;
   salespersonId?: number;
   distributorType: string;
