@@ -185,6 +185,18 @@ export class OrderDetailsPage implements OnInit {
         this.orders = (response.orders || []).map((item: OrderTrackingItem, index: number) =>
           this.mapApiOrderToOrder(item, index === 0)
         );
+        
+        // Sort all orders by date in descending order (newest first)
+        this.orders.sort((a, b) => {
+          try {
+            const dateA = new Date(a.orderDate).getTime();
+            const dateB = new Date(b.orderDate).getTime();
+            return dateB - dateA; // Descending order
+          } catch {
+            return 0;
+          }
+        });
+        
         this.filteredOrders = [...this.orders];
         this.updateStats();
         this.isLoading = false;
@@ -287,6 +299,17 @@ export class OrderDetailsPage implements OnInit {
       });
     }
 
+    // Sort pending/not arrived orders in descending order by date
+    filtered.sort((a, b) => {
+      try {
+        const dateA = new Date(a.orderDate).getTime();
+        const dateB = new Date(b.orderDate).getTime();
+        return dateB - dateA; // Descending order (newest first)
+      } catch {
+        return 0;
+      }
+    });
+
     this.filteredOrders = filtered;
   }
 
@@ -300,6 +323,22 @@ export class OrderDetailsPage implements OnInit {
     const inProgress = order.steps.find(s => s.status === 'in-progress');
     if (inProgress) return inProgress.label;
     return 'Pending';
+  }
+
+  /**
+   * Check if an order hasn't arrived yet (not in final step "Order Received" with completed status)
+   */
+  isOrderNotArrived(order: Order): boolean {
+    const lastStep = order.steps[order.steps.length - 1];
+    if (!lastStep) return true;
+    return lastStep.status !== 'completed' || !lastStep.label.toLowerCase().includes('order received');
+  }
+
+  /**
+   * Get all orders that haven't arrived yet, sorted in descending order by date
+   */
+  getPendingOrders(): Order[] {
+    return this.filteredOrders.filter(o => this.isOrderNotArrived(o));
   }
 
   getShortStatus(order: Order): string {
