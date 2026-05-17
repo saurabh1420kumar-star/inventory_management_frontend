@@ -1,6 +1,7 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { IonicModule, ToastController } from '@ionic/angular';
@@ -90,7 +91,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   volumeAnalytics: any = null;
   kpiRows: KpiTableRow[] = [];
   performanceSummary: PerformanceSummary | null = null;
-  showKpiTargetTable = false;
+  activePerformancePeriod: 'MTD' | 'YTD' | null = null;
+
+  get showKpiTargetTable(): boolean {
+    return this.activePerformancePeriod !== null;
+  }
   periodData = {
     volMTD: '0 Units',
     volYTD: '0 Units',
@@ -154,6 +159,9 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   distributorBalance: number | null = null;
   isLoadingBalance = false;
   showBalanceModal = false;
+  showPdfModal = false;
+  pdfModalTitle = '';
+  pdfModalSrc: SafeResourceUrl | null = null;
 
   distributors: Distributor[] = [];
   dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
@@ -195,7 +203,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private toastController: ToastController,
     private auth: Auth,
     private router: Router,
-    private http: HttpClient
+    private http: HttpClient,
+    private readonly sanitizer: DomSanitizer
   ) {
     addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline });
   }
@@ -361,9 +370,9 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       });
   }
 
-  openMtdPerformanceTable(): void {
+  togglePerformancePeriod(period: 'MTD' | 'YTD'): void {
     this.haptic.medium();
-    this.showKpiTargetTable = !this.showKpiTargetTable;
+    this.activePerformancePeriod = this.activePerformancePeriod === period ? null : period;
   }
 
   getPerformanceGrade(period: 'MTD' | 'YTD'): string {
@@ -382,8 +391,9 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   }
 
   getGradeClass(grade: string): string {
-    const normalized = (grade || '').toUpperCase();
-    if (normalized === 'A' || normalized === 'A+' || normalized === 'A-') return 'sd-grade-chip--a';
+    const normalized = (grade || '').toUpperCase().trim();
+    if (normalized === 'A+') return 'sd-grade-chip--a-plus';
+    if (normalized === 'A' || normalized === 'A-') return 'sd-grade-chip--a';
     if (normalized === 'B' || normalized === 'B+' || normalized === 'B-') return 'sd-grade-chip--b';
     if (normalized === 'C' || normalized === 'C+' || normalized === 'C-') return 'sd-grade-chip--c';
     if (normalized === 'D' || normalized === 'D+' || normalized === 'D-') return 'sd-grade-chip--d';
@@ -463,6 +473,17 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   closeBalanceModal(): void {
     this.haptic.light();
     this.showBalanceModal = false;
+  }
+
+  openPdfModal(src: string, title: string): void {
+    this.pdfModalTitle = title;
+    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
+    this.showPdfModal = true;
+  }
+
+  closePdfModal(): void {
+    this.showPdfModal = false;
+    this.pdfModalSrc = null;
   }
 
   closeAddDealerModal(): void {

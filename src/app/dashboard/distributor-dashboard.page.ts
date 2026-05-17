@@ -1,5 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ToastController } from '@ionic/angular';
@@ -290,6 +291,10 @@ export class DistributorDashboardPage implements OnInit {
   distributorStock: DistributorStock | null = null;
   isLoadingStock = false;
 
+  showPdfModal = false;
+  pdfModalTitle = '';
+  pdfModalSrc: SafeResourceUrl | null = null;
+
   constructor(
     private router: Router,
     private route: ActivatedRoute,
@@ -297,7 +302,8 @@ export class DistributorDashboardPage implements OnInit {
     private auth: Auth,
     private ledgerService: LedgerService,
     private toastController: ToastController,
-    private http: HttpClient
+    private http: HttpClient,
+    private readonly sanitizer: DomSanitizer
   ) {
     addIcons({
       'add-outline': addOutline,
@@ -362,6 +368,17 @@ export class DistributorDashboardPage implements OnInit {
       'home-outline': homeOutline,
       'layers-outline': layersOutline
     });
+  }
+
+  openPdfModal(src: string, title: string): void {
+    this.pdfModalTitle = title;
+    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
+    this.showPdfModal = true;
+  }
+
+  closePdfModal(): void {
+    this.showPdfModal = false;
+    this.pdfModalSrc = null;
   }
 
   ngOnInit() {

@@ -2,6 +2,7 @@
 
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
+import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
@@ -170,14 +171,30 @@ export class DashboardPage implements OnInit {
   public regionBarOptions: Partial<BarChartOptions> | undefined;
   selectedChartType: 'line' | 'bar' = 'line';
 
+  showPdfModal = false;
+  pdfModalTitle = '';
+  pdfModalSrc: SafeResourceUrl | null = null;
+
   private haptic = inject(HapticService);
 
   constructor(
     private auth: Auth,
     private router: Router,
     private route: ActivatedRoute,
-    private dashboardService: DashboardService
+    private dashboardService: DashboardService,
+    private readonly sanitizer: DomSanitizer
   ) {}
+
+  openPdfModal(src: string, title: string): void {
+    this.pdfModalTitle = title;
+    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
+    this.showPdfModal = true;
+  }
+
+  closePdfModal(): void {
+    this.showPdfModal = false;
+    this.pdfModalSrc = null;
+  }
 
   ngOnInit() {
     this.checkUserRole();

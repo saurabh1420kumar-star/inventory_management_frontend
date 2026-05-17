@@ -2435,9 +2435,9 @@
 
   <footer class="dist-legal-footer">
     © 2026 Nectar Origin Private Limited. All Rights Reserved. |
-    <a href="assets/privacy-policy.pdf" target="_blank" rel="noopener">Privacy policy</a>
+    <button class="dist-legal-link" (click)="openPdfModal('assets/privacy-policy.pdf', 'Privacy Policy')">Privacy Policy</button>
     |
-    <a href="assets/terms-and-conditions.pdf" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+    <button class="dist-legal-link" (click)="openPdfModal('assets/terms-and-conditions.pdf', 'Terms &amp; Conditions')">Terms &amp; Conditions</button>
   </footer>
 
   </div>
@@ -2465,3 +2465,25 @@
     </button>
   </div>
 </ion-footer>
+
+<!-- ==================== PDF VIEWER MODAL ==================== -->
+<ion-modal [isOpen]="showPdfModal" (didDismiss)="closePdfModal()" [backdropDismiss]="true" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+  <ng-template>
+    <div class="pdf-modal-shell">
+      <div class="pdf-modal-header">
+        <span class="pdf-modal-title">{{ pdfModalTitle }}</span>
+        <button class="pdf-modal-close" (click)="closePdfModal()">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="pdf-modal-body" (contextmenu)="$event.preventDefault()">
+        <div class="pdf-iframe-wrap">
+          @if (pdfModalSrc) {
+            <iframe [src]="pdfModalSrc" [title]="pdfModalTitle" width="100%" height="100%" style="border:none;display:block;"></iframe>
+          }
+          <div class="pdf-iframe-overlay" (contextmenu)="$event.preventDefault()"></div>
+        </div>
+      </div>
+    </div>
+  </ng-template>
+</ion-modal>

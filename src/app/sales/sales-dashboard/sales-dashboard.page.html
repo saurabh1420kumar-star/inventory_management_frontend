@@ -97,69 +97,94 @@
       <!-- Divider -->
       <div class="sd-divider"></div>
 
-      <!-- KPI Results Table -->
+      <!-- KPI Results / Productivity Score -->
       <section class="sd-kpi-panel">
         <div *ngIf="isLoadingKpiResults" class="sd-loading sd-kpi-panel__loading">
           <ion-spinner name="crescent" style="color: #22d3ee; width: 24px; height: 24px;"></ion-spinner>
           <span>Loading KPI grades...</span>
         </div>
 
-        <div *ngIf="!isLoadingKpiResults" class="sd-performance-cards">
-          <button type="button" class="sd-performance-card sd-performance-card--mtd" (click)="openMtdPerformanceTable()">
-            <div class="sd-performance-card__top">
-              <div>
-                <h4>Performance MTD</h4>
+        <div *ngIf="!isLoadingKpiResults">
+          <p class="sd-productivity-title">Productivity Score</p>
+
+          <div class="sd-performance-cards">
+            <!-- MTD Card -->
+            <button type="button"
+                    class="sd-performance-card sd-performance-card--mtd"
+                    [class.sd-performance-card--active]="activePerformancePeriod === 'MTD'"
+                    (click)="togglePerformancePeriod('MTD')">
+              <div class="sd-performance-card__top-row">
+                <span class="sd-performance-card__period-badge">MTD</span>
+                <ion-icon [name]="activePerformancePeriod === 'MTD' ? 'chevron-up-outline' : 'chevron-down-outline'"
+                          class="sd-performance-card__chevron"></ion-icon>
               </div>
-              <span class="sd-grade-chip" [ngClass]="getGradeClass(getPerformanceGrade('MTD'))">
-                {{ getPerformanceGrade('MTD') }}
-              </span>
-            </div>
-            <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('MTD') }}</p>
-            <p class="sd-performance-card__score">Score {{ getPerformanceScore('MTD') | number:'1.0-2' }}</p>
-          </button>
-
-          <div class="sd-performance-card sd-performance-card--ytd sd-performance-card--readonly">
-            <div class="sd-performance-card__top">
-              <div>
-                <h4>Performance YTD</h4>
-              </div>
-              <span class="sd-grade-chip" [ngClass]="getGradeClass(getPerformanceGrade('YTD'))">
-                {{ getPerformanceGrade('YTD') }}
-              </span>
-            </div>
-            <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('YTD') }}</p>
-            <p class="sd-performance-card__score">Score {{ getPerformanceScore('YTD') | number:'1.0-2' }}</p>
-          </div>
-        </div>
-
-        <div *ngIf="showKpiTargetTable && !isLoadingKpiResults && kpiRows.length > 0" class="sd-kpi-table">
-          <div class="sd-kpi-table__head">
-            <span>KPI</span>
-            <span>Target Summary</span>
-            <span>Grade</span>
-            <span>Meaning</span>
-          </div>
-
-          <div class="sd-kpi-table__body">
-            <div class="sd-kpi-table__row" *ngFor="let row of kpiRows">
-              <div class="sd-kpi-table__kpi">{{ row.kpiName }}</div>
-              <div class="sd-kpi-table__summary" [title]="(row.achievedValue | number:'1.0-2') + ' / ' + (row.targetValue | number:'1.0-2')">
-                <span class="sd-kpi-table__summary-achieved" [ngClass]="row.achievedValue < row.targetValue ? 'sd-below-target' : 'sd-met-target'">
-                  {{ row.achievedValue | number:'1.0-2' }}
+              <div class="sd-performance-card__grade-focal">
+                <span class="sd-grade-chip sd-grade-chip--focal" [ngClass]="getGradeClass(getPerformanceGrade('MTD'))">
+                  {{ getPerformanceGrade('MTD') }}
                 </span>
-                <span class="sd-kpi-table__summary-separator">/</span>
-                <span class="sd-kpi-table__summary-target">{{ row.targetValue | number:'1.0-2' }}</span>
               </div>
-              <div class="sd-kpi-table__grade">
-                <span class="sd-grade-chip" [ngClass]="getGradeClass(row.grade)">{{ row.grade }}</span>
+              <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('MTD') }}</p>
+              <div class="sd-performance-card__score-badge">
+                <span class="sd-performance-card__score-label">Score</span>
+                <span class="sd-performance-card__score-value">{{ getPerformanceScore('MTD') | number:'1.0-2' }}</span>
               </div>
-              <div class="sd-kpi-table__meaning">{{ row.gradeMeaning }}</div>
+            </button>
+
+            <!-- YTD Card -->
+            <button type="button"
+                    class="sd-performance-card sd-performance-card--ytd"
+                    [class.sd-performance-card--active]="activePerformancePeriod === 'YTD'"
+                    (click)="togglePerformancePeriod('YTD')">
+              <div class="sd-performance-card__top-row">
+                <span class="sd-performance-card__period-badge">YTD</span>
+                <ion-icon [name]="activePerformancePeriod === 'YTD' ? 'chevron-up-outline' : 'chevron-down-outline'"
+                          class="sd-performance-card__chevron"></ion-icon>
+              </div>
+              <div class="sd-performance-card__grade-focal">
+                <span class="sd-grade-chip sd-grade-chip--focal" [ngClass]="getGradeClass(getPerformanceGrade('YTD'))">
+                  {{ getPerformanceGrade('YTD') }}
+                </span>
+              </div>
+              <p class="sd-performance-card__meaning">{{ getPerformanceMeaning('YTD') }}</p>
+              <div class="sd-performance-card__score-badge">
+                <span class="sd-performance-card__score-label">Score</span>
+                <span class="sd-performance-card__score-value">{{ getPerformanceScore('YTD') | number:'1.0-2' }}</span>
+              </div>
+            </button>
+          </div>
+
+          <!-- Expanded KPI Detail Table -->
+          <div *ngIf="showKpiTargetTable && kpiRows.length > 0" class="sd-kpi-table">
+            <div class="sd-kpi-table__period-badge">
+              {{ activePerformancePeriod }} — KPI Breakdown
+            </div>
+            <div class="sd-kpi-table__head">
+              <span>KPI</span>
+              <span>Target Summary</span>
+              <span>Grade</span>
+              <span>Meaning</span>
+            </div>
+            <div class="sd-kpi-table__body">
+              <div class="sd-kpi-table__row" *ngFor="let row of kpiRows">
+                <div class="sd-kpi-table__kpi">{{ row.kpiName }}</div>
+                <div class="sd-kpi-table__summary" [title]="(row.achievedValue | number:'1.0-2') + ' / ' + (row.targetValue | number:'1.0-2')">
+                  <span class="sd-kpi-table__summary-achieved" [ngClass]="row.achievedValue < row.targetValue ? 'sd-below-target' : 'sd-met-target'">
+                    {{ row.achievedValue | number:'1.0-2' }}
+                  </span>
+                  <span class="sd-kpi-table__summary-separator">/</span>
+                  <span class="sd-kpi-table__summary-target">{{ row.targetValue | number:'1.0-2' }}</span>
+                </div>
+                <div class="sd-kpi-table__grade">
+                  <span class="sd-grade-chip" [ngClass]="getGradeClass(row.grade)">{{ row.grade }}</span>
+                </div>
+                <div class="sd-kpi-table__meaning">{{ row.gradeMeaning }}</div>
+              </div>
             </div>
           </div>
-        </div>
 
-        <div *ngIf="showKpiTargetTable && !isLoadingKpiResults && kpiRows.length === 0" class="sd-kpi-empty">
-          No KPI results found
+          <div *ngIf="showKpiTargetTable && kpiRows.length === 0" class="sd-kpi-empty">
+            No KPI results found
+          </div>
         </div>
       </section>
 
@@ -263,9 +288,9 @@
 
     <footer class="sd-legal-footer">
       © 2026 Nectar Origin Private Limited. All Rights Reserved. |
-      <a href="assets/privacy-policy.pdf" target="_blank" rel="noopener">Privacy policy</a>
+      <button class="sd-legal-link" (click)="openPdfModal('assets/privacy-policy.pdf', 'Privacy Policy')">Privacy Policy</button>
       |
-      <a href="assets/terms-and-conditions.pdf" target="_blank" rel="noopener">Terms &amp; Conditions</a>
+      <button class="sd-legal-link" (click)="openPdfModal('assets/terms-and-conditions.pdf', 'Terms &amp; Conditions')">Terms &amp; Conditions</button>
     </footer>
 
   </div>
@@ -694,6 +719,26 @@
         </button>
       </div>
 
+    </div>
+  </ng-template>
+</ion-modal>
+
+<!-- ==================== PDF VIEWER MODAL ==================== -->
+<ion-modal [isOpen]="showPdfModal" (didDismiss)="closePdfModal()" [backdropDismiss]="true" [breakpoints]="[0, 1]" [initialBreakpoint]="1">
+  <ng-template>
+    <div class="pdf-modal-shell">
+      <div class="pdf-modal-header">
+        <span class="pdf-modal-title">{{ pdfModalTitle }}</span>
+        <button class="pdf-modal-close" (click)="closePdfModal()">
+          <ion-icon name="close-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="pdf-modal-body" (contextmenu)="$event.preventDefault()">
+        <div class="pdf-iframe-wrap">
+          <iframe *ngIf="pdfModalSrc" [src]="pdfModalSrc" [title]="pdfModalTitle" width="100%" height="100%" style="border:none;display:block;"></iframe>
+          <div class="pdf-iframe-overlay" (contextmenu)="$event.preventDefault()"></div>
+        </div>
+      </div>
     </div>
   </ng-template>
 </ion-modal>
