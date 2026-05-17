@@ -186,16 +186,8 @@ export class OrderDetailsPage implements OnInit {
           this.mapApiOrderToOrder(item, index === 0)
         );
         
-        // Sort all orders by date in descending order (newest first)
-        this.orders.sort((a, b) => {
-          try {
-            const dateA = new Date(a.orderDate).getTime();
-            const dateB = new Date(b.orderDate).getTime();
-            return dateB - dateA; // Descending order
-          } catch {
-            return 0;
-          }
-        });
+        // Sort by cartId descending so newest order always appears first
+        this.orders.sort((a, b) => b.cartId - a.cartId);
         
         this.filteredOrders = [...this.orders];
         this.updateStats();
@@ -299,16 +291,8 @@ export class OrderDetailsPage implements OnInit {
       });
     }
 
-    // Sort pending/not arrived orders in descending order by date
-    filtered.sort((a, b) => {
-      try {
-        const dateA = new Date(a.orderDate).getTime();
-        const dateB = new Date(b.orderDate).getTime();
-        return dateB - dateA; // Descending order (newest first)
-      } catch {
-        return 0;
-      }
-    });
+    // Sort by cartId descending so newest order always appears first
+    filtered.sort((a, b) => b.cartId - a.cartId);
 
     this.filteredOrders = filtered;
   }
