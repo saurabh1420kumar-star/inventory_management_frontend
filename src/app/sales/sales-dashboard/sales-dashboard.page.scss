@@ -21,6 +21,20 @@ ion-content {
   --background: var(--sd-bg);
 }
 
+/* Force white placeholder + override browser autofill background in the create-distributor modal */
+ion-modal input::placeholder,
+ion-modal textarea::placeholder {
+  color: rgba(255, 255, 255, 0.4) !important;
+}
+
+ion-modal input:-webkit-autofill,
+ion-modal input:-webkit-autofill:hover,
+ion-modal input:-webkit-autofill:focus {
+  -webkit-text-fill-color: white !important;
+  -webkit-box-shadow: 0 0 0 1000px rgba(255, 255, 255, 0.06) inset !important;
+  transition: background-color 5000s ease-in-out 0s;
+}
+
 /* ─── Shell Layout ─── */
 
 .sales-dashboard-shell {
@@ -650,58 +664,22 @@ ion-content {
 
 /* ─── PDF Viewer Modal ─── */
 
-.pdf-modal-shell {
-  display: flex;
-  flex-direction: column;
-  height: 100%;
-  background: #0a1628;
+ion-header.pdf-modal-hdr ion-toolbar {
+  --background: #0d1117;
+  --color: #ffffff;
+  --border-color: rgba(255, 255, 255, 0.06);
 }
 
-.pdf-modal-header {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  padding: 14px 16px;
-  background: #0d1117;
-  border-bottom: 1px solid rgba(255, 255, 255, 0.06);
-  flex-shrink: 0;
-}
-
-.pdf-modal-title {
-  font-size: 15px;
-  font-weight: 700;
-  color: #ffffff;
-  letter-spacing: 0.02em;
-}
-
-.pdf-modal-close {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: 50%;
-  background: #1e293b;
-  border: none;
-  cursor: pointer;
-  color: #ffffff;
-  font-size: 18px;
-
-  &:active {
-    background: #334155;
-  }
-}
-
-.pdf-modal-body {
-  flex: 1;
-  min-height: 0;
-  overflow: hidden;
+ion-header.pdf-modal-hdr ion-button {
+  --color: rgba(255, 255, 255, 0.85);
+  --padding-start: 4px;
+  --padding-end: 4px;
 }
 
 .pdf-iframe-wrap {
   position: relative;
   width: 100%;
-  height: 100%;
+  height: calc(100vh - 56px);
 
   iframe {
     width: 100%;
@@ -709,15 +687,6 @@ ion-content {
     border: none;
     display: block;
   }
-}
-
-.pdf-iframe-overlay {
-  position: absolute;
-  inset: 0;
-  z-index: 10;
-  cursor: default;
-  user-select: none;
-  -webkit-user-select: none;
 }
 
 @media (max-width: 420px) {
@@ -928,12 +897,6 @@ ion-content {
   background: linear-gradient(160deg, rgba(20, 184, 166, 0.10) 0%, rgba(20, 184, 166, 0.03) 100%);
   border-color: rgba(20, 184, 166, 0.18);
   &:active, &:hover { border-color: rgba(20, 184, 166, 0.4); box-shadow: 0 0 24px rgba(20, 184, 166, 0.12); }
-}
-
-.ops-card--sky {
-  background: linear-gradient(160deg, rgba(56, 189, 248, 0.10) 0%, rgba(56, 189, 248, 0.03) 100%);
-  border-color: rgba(56, 189, 248, 0.18);
-  &:active, &:hover { border-color: rgba(56, 189, 248, 0.4); box-shadow: 0 0 24px rgba(56, 189, 248, 0.12); }
 }
 
 .ops-card--sky {

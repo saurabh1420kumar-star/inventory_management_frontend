@@ -530,6 +530,7 @@ export class DistributorPage implements OnInit {
   distributors: Distributor[] = [];
   filteredDistributors: Distributor[] = [];
   searchQuery: string = '';
+  statusFilter: 'ALL' | 'ACTIVE' | 'INACTIVE' = 'ALL';
   salesPersons: any[] = [];
   roles = [
     { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager' },
@@ -891,7 +892,7 @@ export class DistributorPage implements OnInit {
       next: (response) => {
         if (response.success && Array.isArray(response.data)) {
           this.distributors = response.data.map(dto => this.mapDtoToDistributor(dto));
-          this.filteredDistributors = [...this.distributors];
+          this.applyFilters();
           this.calculateStats();
         } else {
           console.error('Invalid response format', response);
@@ -924,18 +925,31 @@ export class DistributorPage implements OnInit {
 
   onSearchChange(event: any) {
     this.searchQuery = event.detail.value?.toLowerCase() || '';
+    this.applyFilters();
+  }
 
-    if (!this.searchQuery) {
-      this.filteredDistributors = [...this.distributors];
-      return;
+  setStatusFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE') {
+    this.statusFilter = filter;
+    this.applyFilters();
+  }
+
+  private applyFilters() {
+    let result = [...this.distributors];
+
+    if (this.statusFilter !== 'ALL') {
+      result = result.filter(d => (d.status || '').toUpperCase() === this.statusFilter);
     }
 
-    this.filteredDistributors = this.distributors.filter(distributor =>
-      distributor.name.toLowerCase().includes(this.searchQuery) ||
-      distributor.assignedPerson.toLowerCase().includes(this.searchQuery) ||
-      distributor.contact.includes(this.searchQuery) ||
-      distributor.address.toLowerCase().includes(this.searchQuery)
-    );
+    if (this.searchQuery) {
+      result = result.filter(d =>
+        d.name.toLowerCase().includes(this.searchQuery) ||
+        d.assignedPerson.toLowerCase().includes(this.searchQuery) ||
+        d.contact.includes(this.searchQuery) ||
+        d.address.toLowerCase().includes(this.searchQuery)
+      );
+    }
+
+    this.filteredDistributors = result;
   }
 
   openAddModal() {

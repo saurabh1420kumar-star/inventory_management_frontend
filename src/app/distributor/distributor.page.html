@@ -45,18 +45,46 @@
 
         <!-- Search and Stats Section -->
         <div class="mb-8">
-          <div class="animate-search flex gap-3 sm:gap-4 mt-4 sm:mt-6 mb-4 sm:mb-6">
+          <div class="animate-search flex gap-3 sm:gap-4 mt-4 sm:mt-6 mb-3 sm:mb-4">
             <!-- Search Input -->
             <div class="flex-1 relative">
               <ion-icon class="absolute left-3 sm:left-4 top-1/2 transform -translate-y-1/2 text-gray-400 text-lg sm:text-xl pointer-events-none z-10" name="search-outline"></ion-icon>
-              <input 
-                (input)="onSearchChange($event)" 
-                [value]="searchQuery" 
-                class="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium text-sm sm:text-base" 
-                placeholder="Search distributors..." 
+              <input
+                (input)="onSearchChange($event)"
+                [value]="searchQuery"
+                class="w-full pl-10 sm:pl-12 pr-3 sm:pr-4 py-3 sm:py-3.5 bg-white/95 backdrop-blur-sm border-0 rounded-xl focus:outline-none focus:ring-2 focus:ring-emerald-500/50 shadow-md placeholder:text-gray-400 text-gray-700 font-medium text-sm sm:text-base"
+                placeholder="Search distributors..."
                 type="text"
               />
             </div>
+          </div>
+
+          <!-- Status Filter Tabs -->
+          <div class="flex gap-2 mb-4 sm:mb-6">
+            <button (click)="setStatusFilter('ALL')"
+              [class.bg-emerald-500]="statusFilter === 'ALL'"
+              [class.text-white]="statusFilter === 'ALL'"
+              [class.bg-white]="statusFilter !== 'ALL'"
+              [class.text-slate-600]="statusFilter !== 'ALL'"
+              class="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border border-slate-200 transition-all">
+              All
+            </button>
+            <button (click)="setStatusFilter('ACTIVE')"
+              [class.bg-emerald-500]="statusFilter === 'ACTIVE'"
+              [class.text-white]="statusFilter === 'ACTIVE'"
+              [class.bg-white]="statusFilter !== 'ACTIVE'"
+              [class.text-slate-600]="statusFilter !== 'ACTIVE'"
+              class="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border border-slate-200 transition-all">
+              Active
+            </button>
+            <button (click)="setStatusFilter('INACTIVE')"
+              [class.bg-red-500]="statusFilter === 'INACTIVE'"
+              [class.text-white]="statusFilter === 'INACTIVE'"
+              [class.bg-white]="statusFilter !== 'INACTIVE'"
+              [class.text-slate-600]="statusFilter !== 'INACTIVE'"
+              class="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border border-slate-200 transition-all">
+              Inactive
+            </button>
           </div>
 
           <!-- Stats Cards -->
@@ -155,9 +183,9 @@
             <ion-icon name="business-outline" class="text-3xl sm:text-4xl text-slate-400"></ion-icon>
           </div>
           <p class="text-slate-500 mb-4">
-            {{ searchQuery ? 'No distributors found. Try adjusting your search query' : 'No distributors found' }}
+            {{ searchQuery ? 'No distributors match your search' : statusFilter !== 'ALL' ? 'No ' + statusFilter.toLowerCase() + ' distributors found' : 'No distributors found' }}
           </p>
-          <button *ngIf="!searchQuery" (click)="openAddModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold">
+          <button *ngIf="!searchQuery && statusFilter === 'ALL'" (click)="openAddModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold">
             <ion-icon name="add-outline"></ion-icon>
             Add Distributor
           </button>

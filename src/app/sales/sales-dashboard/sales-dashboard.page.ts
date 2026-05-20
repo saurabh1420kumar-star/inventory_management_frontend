@@ -1,6 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { FormsModule } from '@angular/forms';
+import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
 import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
@@ -14,7 +14,7 @@ import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HapticService } from '../../services/haptic.service';
 import { addIcons } from 'ionicons';
-import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline } from 'ionicons/icons';
+import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, arrowBackOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline } from 'ionicons/icons';
 
 interface PaymentForm {
   balanceType: 'credit' | 'debit' | '';
@@ -76,6 +76,7 @@ interface PerformanceSummary {
   imports: [
     CommonModule,
     FormsModule,
+    ReactiveFormsModule,
     HttpClientModule,
     IonicModule,
     RouterModule
@@ -151,6 +152,11 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isSubmittingDealer = false;
   dealerForm = { fullName: '', phone: '', address: '', selectedDistributorId: null as number | null };
 
+  showAddDistributorModal = false;
+  isSubmittingDistributor = false;
+  distributorCreateForm!: FormGroup;
+  private fb = inject(FormBuilder);
+
   myDealers: any[] = [];
   isLoadingMyDealers = false;
   showMyDealersModal = false;
@@ -201,12 +207,12 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private paymentService: PaymentService,
     private distributorService: DistributorService,
     private toastController: ToastController,
-    private auth: Auth,
+    protected auth: Auth,
     private router: Router,
     private http: HttpClient,
     private readonly sanitizer: DomSanitizer
   ) {
-    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline });
+    addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, arrowBackOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline });
   }
 
   ngOnInit(): void {
@@ -222,6 +228,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       return;
     }
     this.salespersonId = id;
+    this.initDistributorForm();
     this.loadAnalytics();
     this.loadDistributors();
     this.loadPendingPayments();
@@ -265,6 +272,113 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   ngOnDestroy(): void {
     this.destroy$.next();
     this.destroy$.complete();
+  }
+
+  initDistributorForm(): void {
+    this.distributorCreateForm = this.fb.group({
+      companyName:      ['', [Validators.required]],
+      keyPersonName:    ['', [Validators.required]],
+      distributorType:  ['', [Validators.required]],
+      companyType:      ['', [Validators.required]],
+      email:            ['', [Validators.required, Validators.email]],
+      contact:          ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
+      alternateContact: [''],
+      address:          ['', [Validators.required]],
+      state:            [''],
+      district:         [''],
+      pincode:          [''],
+      aadhaarNumber:    ['', [Validators.required, Validators.minLength(12), Validators.maxLength(12)]],
+      panNumber:        ['', [Validators.required, Validators.minLength(10), Validators.maxLength(10)]],
+      gstNumber:        ['', [Validators.minLength(15), Validators.maxLength(15)]],
+      username:         ['', [Validators.required]],
+      password:         ['', [Validators.required]],
+      accountNumber:    [''],
+      accountName:      [''],
+      ifsc:             [''],
+      creditLimit:      [false],
+      creditAmount:     [''],
+    });
+  }
+
+  openAddDistributorModal(): void {
+    this.haptic.medium();
+    this.distributorCreateForm.reset({ creditLimit: false });
+    this.showAddDistributorModal = true;
+  }
+
+  closeAddDistributorModal(): void {
+    this.haptic.light();
+    this.showAddDistributorModal = false;
+  }
+
+  submitDistributor(): void {
+    this.haptic.heavy();
+    if (this.distributorCreateForm.invalid) {
+      Object.keys(this.distributorCreateForm.controls).forEach(key => {
+        this.distributorCreateForm.get(key)?.markAsTouched();
+      });
+      this.showToast('Please fill all required fields correctly', 'warning');
+      return;
+    }
+
+    const f = this.distributorCreateForm.value;
+    const payload = {
+      companyName:       f.companyName,
+      firmName:          f.companyName,
+      name:              f.companyName,
+      keyPersonName:     f.keyPersonName,
+      keyperson:         f.keyPersonName,
+      distributorType:   f.distributorType,
+      companyType:       f.companyType,
+      contactEmail:      f.email,
+      phoneNumber:       f.contact,
+      alternateContact:  f.alternateContact || '',
+      address:           f.address,
+      state:             f.state || '',
+      district:          f.district || '',
+      pinCode:           f.pincode || '',
+      aadhaarNumber:     f.aadhaarNumber,
+      panNumber:         f.panNumber,
+      gstNumber:         f.gstNumber || '',
+      username:          f.username,
+      password:          f.password,
+      accountNumber:     f.accountNumber || '',
+      accountName:       f.accountName || '',
+      ifsc:              (f.ifsc || '').toUpperCase(),
+      creditLimit:       f.creditLimit || false,
+      creditAmount:      f.creditAmount || 0,
+      bankGuaranteeNumber: '',
+      bgExpiryDate:      '',
+      status:            'INACTIVE',
+      salesPersonRoleType: this.auth.getRoleType() ?? '',
+      salespersonId:     this.salespersonId,
+      assignedPerson:    this.auth.getUsername() ?? '',
+    };
+
+    this.isSubmittingDistributor = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({
+      ...(token ? { 'Authorization': `Bearer ${token}` } : {})
+    });
+
+    this.http.post<any>(
+      `${environment.apiUrl}/distributors/create-distributor`,
+      payload,
+      { headers }
+    ).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: () => {
+        this.isSubmittingDistributor = false;
+        this.showToast('Distributor created and pending admin approval', 'success');
+        this.closeAddDistributorModal();
+        this.loadDistributors();
+      },
+      error: (err) => {
+        const msg = err?.error?.error ?? err?.error?.message ?? 'Failed to create distributor. Please try again.';
+        this.showToast(msg, 'danger');
+        this.isSubmittingDistributor = false;
+      }
+    });
   }
 
   onPeriodChange(period: 'today' | 'month' | 'year'): void {
