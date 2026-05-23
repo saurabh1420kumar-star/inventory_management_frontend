@@ -54,13 +54,17 @@ export class PaymentService {
     const transactionType = paymentData.balanceType === 'credit' ? 'CREDIT' : 'DEBIT';
     const description = paymentData.description || 'Payment';
 
-    const params = {
+    const params: any = {
       distributorId: distributorId.toString(),
       salespersonId: salespersonId.toString(),
       amount: paymentData.amount.toString(),
       transactionType: transactionType,
       description: description
     };
+
+    if (paymentData.date) {
+      params['date'] = paymentData.date;
+    }
 
     return this.http.post<PaymentResponse>(this.apiUrl, {}, { params });
   }

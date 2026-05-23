@@ -178,7 +178,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   
   paymentForm: PaymentForm = {
     balanceType: '',
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
     amount: 0,
     reference: '',
     description: '',
@@ -739,7 +739,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
       method: this.paymentForm.paymentMethod || this.paymentForm.balanceType,
       reference: this.paymentForm.reference,
       balanceType: this.paymentForm.balanceType as 'credit' | 'debit',
-      date: this.paymentForm.date ? new Date(this.paymentForm.date).toISOString() : '',
+      date: this.paymentForm.date ? `${this.paymentForm.date}T00:00:00` : '',
       description: this.paymentForm.description,
       paymentMethod: this.paymentForm.paymentMethod,
       utrNumber: this.paymentForm.utrNumber,
@@ -798,7 +798,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   private resetPaymentForm(): void {
     this.paymentForm = {
       balanceType: '',
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
       amount: 0,
       reference: '',
       description: '',

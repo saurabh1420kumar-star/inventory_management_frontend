@@ -207,7 +207,8 @@ export class MasterInventoryPage implements OnInit {
       weight: [0],
       active: [true],
       quantity: [0],
-      minimumThreshold: [0]
+      minimumThreshold: [0],
+      cgstSgst: [null]
     });
 
     this.editForm = this.fb.group({
@@ -643,6 +644,7 @@ export class MasterInventoryPage implements OnInit {
       subUnit: 'KG',
       quantity: 0,
       minimumThreshold: 0,
+      cgstSgst: null,
       price: 0,
       weight: 0,
       hsn: '',
@@ -662,14 +664,18 @@ export class MasterInventoryPage implements OnInit {
     this.haptic.medium();
     if (this.addForm.invalid || !this.selectedCategory) return;
 
-    const { name, materialCode, unit, hsn, taxRateCode } = this.addForm.value;
+    const { name, materialCode, unit, hsn, taxRateCode, minimumThreshold, cgstSgst } = this.addForm.value;
     const category = this.selectedCategory;
     let payload: Record<string, any>;
 
-    const commonFields = {
+    const commonFields: Record<string, any> = {
       hsn: (hsn ?? '').toString().trim(),
-      taxRateCode: (taxRateCode ?? '').toString().trim()
+      taxRateCode: (taxRateCode ?? '').toString().trim(),
+      minimumThreshold: minimumThreshold ?? 0
     };
+    if (cgstSgst !== null && cgstSgst !== undefined && cgstSgst !== '') {
+      commonFields['taxRate'] = Number(cgstSgst);
+    }
 
     switch (category) {
       case 'raw_material':

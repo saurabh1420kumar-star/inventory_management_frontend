@@ -16,7 +16,8 @@ import {
   checkmarkCircleOutline, refreshOutline, searchOutline, calendarOutline,
   businessOutline, documentTextOutline, layersOutline, filterOutline,
   waterOutline, appsOutline, gridOutline, carOutline, personOutline, callOutline,
-  chatbubbleEllipsesOutline, timeOutline
+  chatbubbleEllipsesOutline, timeOutline, barcodeOutline, buildOutline,
+  shieldCheckmarkOutline, calculatorOutline
 } from 'ionicons/icons';
 import { Auth } from '../services/auth';
 import { environment } from '../../environments/environment';
@@ -29,7 +30,8 @@ export interface InwardEntry {
   itemName: string;
   itemCode: string;
   quantity: number;
-  minThreshold: number;
+  rate: number;
+  grossAmount: number;
   unit: string;
   vendorName: string;
   vendorId: string;
@@ -154,7 +156,11 @@ export class InwardPage implements OnInit {
       'person-outline': personOutline,
       'call-outline': callOutline,
       'chatbubble-ellipses-outline': chatbubbleEllipsesOutline,
-      'time-outline': timeOutline
+      'time-outline': timeOutline,
+      'barcode-outline': barcodeOutline,
+      'build-outline': buildOutline,
+      'shield-checkmark-outline': shieldCheckmarkOutline,
+      'calculator-outline': calculatorOutline
     });
   }
 
@@ -171,29 +177,39 @@ export class InwardPage implements OnInit {
     return new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
   }
 
+  private localDateStr(): string {
+    return new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
+  }
+
   private emptyForm(): InwardEntry {
+    const today = this.localDateStr();
     return {
       itemType: 'raw_material',
       itemName: '',
       itemCode: '',
       quantity: 0,
-      minThreshold: 0,
-      unit: 'KG',  // default unit
+      rate: 0,
+      grossAmount: 0,
+      unit: 'KG',
       vendorName: '',
       vendorId: '',
       transportName: '',
       driverName: '',
       driverMobile: '',
       invoiceNumber: '',
-      date: new Date().toISOString().split('T')[0],
+      date: today,
       remarks: '',
       partNumber: '',
       category: 'MACHINE',
       vendor: '',
-      purchaseDate: new Date().toISOString().split('T')[0],
+      purchaseDate: today,
       warrantyExpiryDate: '',
       condition: 'NEW'
     };
+  }
+
+  updateGrossAmount(): void {
+    this.form.grossAmount = parseFloat(((this.form.quantity || 0) * (this.form.rate || 0)).toFixed(2));
   }
 
   loadEntries(event?: any) {
@@ -207,18 +223,19 @@ export class InwardPage implements OnInit {
     }).subscribe({
       next: (res) => {
         const toArr = (r: any) => Array.isArray(r) ? r : (r?.data ?? []);
+        const calcGross = (qty: number, price: number) => parseFloat(((qty || 0) * (price || 0)).toFixed(2));
         const rawItems = toArr(res.raw)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => ({ itemType: 'raw_material' as InwardItemType, itemName: i.name, itemCode: i.materialCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'raw_material' as InwardItemType, itemName: i.name, itemCode: i.materialCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
         const scrapItems = toArr(res.scrap)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => ({ itemType: 'scrap' as InwardItemType, itemName: i.name, itemCode: i.materialCode ?? i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'scrap' as InwardItemType, itemName: i.name, itemCode: i.materialCode ?? i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
         const machineItems = toArr(res.machine)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => ({ itemType: 'spare_parts' as InwardItemType, itemName: i.name, itemCode: i.partNumber, quantity: i.quantity, unit: '', vendorName: i.vendor, vendorId: '', transportName: '', driverName: '', driverMobile: '', minThreshold: 0, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '', partNumber: i.partNumber, category: i.category, condition: i.condition }));
+          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'spare_parts' as InwardItemType, itemName: i.name, itemCode: i.partNumber, quantity: i.quantity, unit: '', vendorName: i.vendor, vendorId: '', transportName: '', driverName: '', driverMobile: '', rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '', partNumber: i.partNumber, category: i.category, condition: i.condition }; });
         const promoItems = toArr(res.promotional)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => ({ itemType: 'promotional' as InwardItemType, itemName: i.name, itemCode: i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, minThreshold: i.minimumThreshold, date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'promotional' as InwardItemType, itemName: i.name, itemCode: i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
         this.entries = [...rawItems, ...scrapItems, ...machineItems, ...promoItems];
         this.applyFilter();
         this.isLoading = false;
@@ -439,6 +456,10 @@ export class InwardPage implements OnInit {
     return this.unitTypes.find(u => u.value === this.form.unit)?.short ?? this.form.unit;
   }
 
+  private toDateTimeStr(d: string): string {
+    return d ? `${d}T00:00:00` : '';
+  }
+
   submitEntry() {
     if (!this.selectedType) { this.showToast('Please select an item type', 'warning'); return; }
     if (!this.form.itemName.trim()) { this.showToast('Item name is required', 'warning'); return; }
@@ -456,9 +477,11 @@ export class InwardPage implements OnInit {
         name: this.form.itemName,
         materialCode: this.form.itemCode,
         unit: this.form.unit,
-        price: 0,
+        price: this.form.rate ?? 0,
         quantity: this.form.quantity,
-        minimumThreshold: this.form.minThreshold ?? 0,
+        minimumThreshold: 0,
+        rate: this.form.rate ?? 0,
+        grossAmount: this.form.grossAmount ?? 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -492,9 +515,11 @@ export class InwardPage implements OnInit {
         name: this.form.itemName,
         itemCode: this.form.itemCode,
         unit: this.form.unit,
-        price: 0,
+        price: this.form.rate ?? 0,
         quantity: this.form.quantity,
-        minimumThreshold: this.form.minThreshold ?? 0,
+        minimumThreshold: 0,
+        rate: this.form.rate ?? 0,
+        grossAmount: this.form.grossAmount ?? 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -528,9 +553,11 @@ export class InwardPage implements OnInit {
         name: this.form.itemName,
         itemCode: this.form.itemCode,
         unit: this.form.unit,
-        price: 0,
+        price: this.form.rate ?? 0,
         quantity: this.form.quantity,
-        minimumThreshold: this.form.minThreshold ?? 0,
+        minimumThreshold: 0,
+        rate: this.form.rate ?? 0,
+        grossAmount: this.form.grossAmount ?? 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -563,7 +590,9 @@ export class InwardPage implements OnInit {
       const payload = {
         finishedProductName: this.form.itemName,
         quantity: this.form.quantity,
-        minimumThreshold: this.form.minThreshold ?? 0
+        minimumThreshold: 0,
+        rate: this.form.rate ?? 0,
+        grossAmount: this.form.grossAmount ?? 0
       };
       this.http.post<any>(`${environment.apiUrl}/bill-of-materials/produce`, payload, { headers: this.headers() }).subscribe({
         next: () => {
@@ -592,8 +621,8 @@ export class InwardPage implements OnInit {
         itemCode: this.form.itemCode || this.selectedMachinePartId,
         category: this.form.category ?? 'MACHINE',
         vendor: this.form.vendor,
-        purchaseDate: this.form.purchaseDate,
-        warrantyExpiryDate: this.form.warrantyExpiryDate || null,
+        purchaseDate: this.toDateTimeStr(this.form.purchaseDate ?? ''),
+        warrantyExpiryDate: this.form.warrantyExpiryDate ? this.toDateTimeStr(this.form.warrantyExpiryDate) : null,
         quantity: this.form.quantity,
         condition: this.form.condition ?? 'NEW',
         status: 'INWARD'

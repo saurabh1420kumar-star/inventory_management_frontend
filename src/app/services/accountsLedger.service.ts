@@ -90,11 +90,15 @@ export class LedgerService {
         distributorId: number,
         amount: number,
         description: string,
-        transactionType?: string
+        transactionType?: string,
+        date?: string
     ): Observable<ApiResponse<any>> {
         let url = `${this.apiUrl}/accounts/update-balance-accounts?distributorId=${distributorId}&amount=${amount}&description=${encodeURIComponent(description)}`;
         if (transactionType) {
             url += `&transactionType=${transactionType}`;
+        }
+        if (date) {
+            url += `&date=${encodeURIComponent(date)}`;
         }
         return this.http.post<ApiResponse<any>>(url, {}).pipe(
             catchError(error => {
@@ -113,11 +117,15 @@ export class LedgerService {
         distributorId: number,
         amount: number,
         description: string,
-        transactionType?: string
+        transactionType?: string,
+        date?: string
     ): Observable<ApiResponse<any>> {
         let url = `${this.apiUrl}/accounts/update-balance?distributorId=${distributorId}&amount=${amount}&description=${encodeURIComponent(description)}`;
         if (transactionType) {
             url += `&transactionType=${transactionType}`;
+        }
+        if (date) {
+            url += `&date=${encodeURIComponent(date)}`;
         }
         return this.http.post<ApiResponse<any>>(url, {}).pipe(
             catchError(error => {

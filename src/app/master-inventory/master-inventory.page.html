@@ -180,95 +180,102 @@
       </div>
 
       <!-- INVENTORY LIST -->
-      <div *ngIf="activeTab !== 'bom' && filteredInventory.length > 0" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
-        <div *ngFor="let item of paginatedInventory" class="bg-white rounded-2xl shadow-[0_4px_20px_rgb(0,0,0,0.03)] border border-slate-100 hover:shadow-xl hover:border-emerald-200 transition-all duration-300 overflow-hidden group">
-          
-          <!-- Image -->
-          <div class="relative overflow-hidden bg-slate-100 h-48">
-            <img [src]="item.imageUrl" class="w-full h-full object-cover group-hover:scale-110 transition-transform duration-300" />
-            <div class="absolute top-3 right-3">
-              <span 
-                class="px-3 py-1 rounded-full text-xs font-bold uppercase tracking-wide"
+      <div *ngIf="activeTab !== 'bom' && filteredInventory.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+        <div *ngFor="let item of paginatedInventory"
+          class="bg-white rounded-3xl shadow-md overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 flex flex-col"
+          style="height: 400px">
+
+          <!-- IMAGE — 60% of card -->
+          <div class="relative overflow-hidden flex-shrink-0" style="height: 60%">
+            <img [src]="item.imageUrl" alt="{{ item.name }}"
+              class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-700" />
+            <!-- dark gradient overlay -->
+            <div class="absolute inset-0 bg-gradient-to-t from-slate-900/75 via-slate-900/15 to-transparent"></div>
+
+            <!-- Top-left: stock status chip -->
+            <div class="absolute top-3 left-3">
+              <span class="flex items-center gap-1 px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/20"
                 [ngClass]="{
-                  'bg-blue-500 text-white': item.category === 'raw_material',
-                  'bg-purple-500 text-white': item.category === 'finished_product'
-                }"
-              >
-                {{ item.category === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
+                  'bg-emerald-500/90 text-white': item.status === 'in_stock',
+                  'bg-amber-500/90 text-white': item.status === 'low_stock',
+                  'bg-rose-600/90 text-white': item.status === 'out_of_stock'
+                }">
+                <span class="w-1.5 h-1.5 rounded-full bg-white/80"></span>
+                {{ item.status === 'in_stock' ? 'In Stock' : item.status === 'low_stock' ? 'Low Stock' : 'Out of Stock' }}
               </span>
+            </div>
+
+            <!-- Top-right: category chip -->
+            <div class="absolute top-3 right-3">
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide backdrop-blur-md border border-white/20"
+                [ngClass]="{
+                  'bg-blue-500/90 text-white': item.category === 'raw_material',
+                  'bg-purple-600/90 text-white': item.category === 'finished_product',
+                  'bg-orange-500/90 text-white': item.category === 'spare_parts',
+                  'bg-pink-500/90 text-white': item.category === 'promotional_items',
+                  'bg-slate-600/90 text-white': item.category === 'scrap_material'
+                }">
+                {{ item.category === 'raw_material' ? 'Raw Material' :
+                   item.category === 'finished_product' ? 'Finished' :
+                   item.category === 'spare_parts' ? 'Spare Part' :
+                   item.category === 'promotional_items' ? 'Promo' : 'Scrap' }}
+              </span>
+            </div>
+
+            <!-- Bottom overlay: item name + code -->
+            <div class="absolute bottom-0 left-0 right-0 px-4 pb-3.5 pt-8">
+              <h3 class="text-white font-bold text-base leading-tight drop-shadow-sm truncate">{{ item.name }}</h3>
+              <p class="text-white/55 text-[11px] font-mono mt-0.5 truncate">{{ item.materialCode || '—' }}</p>
             </div>
           </div>
 
-          <!-- Content -->
-          <div class="p-6">
-            <div class="mb-4">
-              <h3 class="text-lg font-bold text-slate-800 mb-1">{{ item.name }}</h3>
-              <p class="text-xs font-mono text-slate-500 bg-slate-50 px-2 py-1 rounded inline-block border border-slate-200">
-                Code: {{ item.materialCode }}
-              </p>
-            </div>
-
-            <div class="grid grid-cols-2 gap-3 mb-4">
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Unit</p>
-                <p class="text-lg font-bold text-slate-800">{{ item.unit }}</p>
+          <!-- CONTENT — 40% of card -->
+          <div class="flex-1 flex flex-col px-4 pt-3 pb-3.5 min-h-0">
+            <!-- Stats row -->
+            <div class="grid grid-cols-3 flex-1 min-h-0 mb-3">
+              <div class="flex flex-col items-center justify-center border-r border-slate-100 pr-2">
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Unit</p>
+                <p class="text-sm font-extrabold text-slate-800 leading-none">{{ item.unit }}</p>
               </div>
-              <div class="bg-slate-50 rounded-lg p-3 border border-slate-100">
-                <p class="text-xs text-slate-500 font-bold uppercase mb-1">Quantity</p>
-                <p class="text-lg font-bold text-slate-800">{{ item.quantity }}</p>
+              <div class="flex flex-col items-center justify-center border-r border-slate-100 px-2">
+                <p class="text-[9px] text-slate-400 font-bold uppercase tracking-wider mb-0.5">Quantity</p>
+                <p class="text-sm font-extrabold text-slate-800 leading-none">{{ item.quantity }}</p>
+              </div>
+              <div class="flex flex-col items-center justify-center pl-2">
+                <p class="text-[9px] text-amber-500 font-bold uppercase tracking-wider mb-0.5">Threshold</p>
+                <p class="text-sm font-extrabold text-amber-600 leading-none">{{ item.minimumThreshold }}</p>
               </div>
             </div>
 
-            <div class="bg-amber-50 rounded-lg p-3 border border-amber-100 mb-4">
-              <p class="text-xs text-amber-600 font-bold uppercase mb-1">Min Threshold</p>
-              <p class="text-lg font-bold text-amber-700">{{ item.minimumThreshold }}</p>
-            </div>
-
-            <!-- Status Badges -->
-            <div class="flex flex-wrap gap-2 mb-4">
-              <span 
-                class="px-3 py-1 rounded-lg text-xs font-bold"
-                [ngClass]="{
-                  'bg-emerald-50 text-emerald-700 border border-emerald-200': item.status === 'in_stock',
-                  'bg-amber-50 text-amber-700 border border-amber-200': item.status === 'low_stock',
-                  'bg-rose-50 text-rose-700 border border-rose-200': item.status === 'out_of_stock'
-                }"
-              >
-                {{ item.status.replace('_', ' ') | uppercase }}
-              </span>
-              <span *ngIf="item.lowStock" class="px-3 py-1 rounded-lg text-xs font-bold bg-amber-50 text-amber-700 border border-amber-200 flex items-center gap-1">
-                <ion-icon name="warning-outline"></ion-icon>
+            <!-- Low stock / active badges -->
+            <div class="flex flex-wrap gap-1.5 mb-3 min-h-0">
+              <span *ngIf="item.lowStock" class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold bg-amber-50 text-amber-700 border border-amber-200">
+                <ion-icon name="warning-outline" class="text-xs"></ion-icon>
                 Low Stock Alert
               </span>
               <span *ngIf="item.category === 'finished_product'"
-                class="px-3 py-1 rounded-lg text-xs font-bold flex items-center gap-1"
-                [ngClass]="item.active !== false ? 'bg-emerald-50 text-emerald-700 border border-emerald-200' : 'bg-red-50 text-red-600 border border-red-200'">
-                <ion-icon [name]="item.active !== false ? 'checkmark-circle-outline' : 'close-circle-outline'"></ion-icon>
+                class="inline-flex items-center gap-1 px-2 py-0.5 rounded-lg text-[10px] font-bold border"
+                [ngClass]="item.active !== false ? 'bg-emerald-50 text-emerald-700 border-emerald-200' : 'bg-rose-50 text-rose-600 border-rose-200'">
+                <ion-icon [name]="item.active !== false ? 'checkmark-circle-outline' : 'close-circle-outline'" class="text-xs"></ion-icon>
                 {{ item.active !== false ? 'Active' : 'Inactive' }}
               </span>
             </div>
 
             <!-- Actions -->
-            <div class="flex gap-2">
-              <button 
-                (click)="viewItem(item)"
-                class="flex-1 px-4 py-2 bg-slate-100 hover:bg-slate-200 text-slate-700 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <ion-icon name="eye-outline"></ion-icon>
+            <div class="flex gap-2 pt-2 border-t border-slate-50">
+              <button (click)="viewItem(item)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-slate-50 hover:bg-slate-100 text-slate-600 font-semibold rounded-xl transition-colors text-xs">
+                <ion-icon name="eye-outline" class="text-sm"></ion-icon>
                 View
               </button>
-              <button 
-                (click)="editItem(item)"
-                class="flex-1 px-4 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <ion-icon name="create-outline"></ion-icon>
+              <button (click)="editItem(item)"
+                class="flex-1 flex items-center justify-center gap-1.5 py-2 bg-blue-50 hover:bg-blue-100 text-blue-600 font-semibold rounded-xl transition-colors text-xs">
+                <ion-icon name="create-outline" class="text-sm"></ion-icon>
                 Edit
               </button>
-              <button 
-                (click)="deleteItem(item.id, item.category)"
-                class="px-4 py-2 bg-rose-50 hover:bg-rose-100 text-rose-600 font-semibold rounded-lg transition-colors flex items-center justify-center gap-2"
-              >
-                <ion-icon name="trash-outline"></ion-icon>
+              <button (click)="deleteItem(item.id, item.category)"
+                class="flex items-center justify-center px-3 py-2 bg-rose-50 hover:bg-rose-100 text-rose-500 rounded-xl transition-colors">
+                <ion-icon name="trash-outline" class="text-sm"></ion-icon>
               </button>
             </div>
           </div>
@@ -784,6 +791,34 @@
                     [placeholder]="selectedCategory === 'raw_material' ? 'e.g. MAT-001' : selectedCategory === 'finished_product' ? 'e.g. FP-001' : 'e.g. SC-001'"
                     class="px-4 py-3 text-slate-900 font-mono font-semibold text-base"></ion-input>
                 </ion-item>
+              </div>
+            </div>
+
+            <!-- 3. Min Threshold + SGST/CGST -->
+            <div class="grid grid-cols-2 gap-4">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="warning-outline" class="text-amber-400"></ion-icon>
+                  Min Threshold
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                  <ion-item lines="none" class="bg-transparent rounded-2xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="minimumThreshold" placeholder="0" class="px-4 py-3 text-slate-900 font-medium text-base"></ion-input>
+                  </ion-item>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1 ml-1">Alert when stock falls below</p>
+              </div>
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="receipt-outline" class="text-violet-400"></ion-icon>
+                  SGST/CGST (%)
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-50 transition-all shadow-sm">
+                  <ion-item lines="none" class="bg-transparent rounded-2xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="number" formControlName="cgstSgst" placeholder="e.g. 9" min="0" max="100" step="0.5" class="px-4 py-3 text-slate-900 font-medium text-base"></ion-input>
+                  </ion-item>
+                </div>
+                <p class="text-[10px] text-slate-400 mt-1 ml-1">GST rate per component</p>
               </div>
             </div>
 

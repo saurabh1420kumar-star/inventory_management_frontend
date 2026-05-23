@@ -192,7 +192,7 @@ export class AccountsMasterPage implements OnInit {
 
   // Form data for new transaction (Update Balance)
   formData = {
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
     balanceType: 'credit' as 'credit' | 'debit' | 'jv',
     description: '',
     reference: '',
@@ -835,7 +835,8 @@ export class AccountsMasterPage implements OnInit {
       this.selectedAccount.distributorId,
       parsedAmount,
       description,
-      transactionType
+      transactionType,
+      date ? `${date}T00:00:00` : undefined
     ).subscribe({
       next: (response: ApiResponse<any>) => {
         
@@ -1091,7 +1092,7 @@ export class AccountsMasterPage implements OnInit {
 
   resetForm() {
     this.formData = {
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
       balanceType: 'credit',
       description: '',
       reference: '',

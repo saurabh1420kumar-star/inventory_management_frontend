@@ -220,22 +220,26 @@
       </div>
 
       <!-- Scrollable body -->
-      <div class="overflow-y-auto flex-1 p-5 space-y-5">
+      <div class="overflow-y-auto flex-1 p-5 space-y-6">
 
         <!-- ── STEP 1: Select item type ── -->
         <div>
-          <p class="text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">✨ Select Item Type</p>
-          <div class="grid grid-cols-3 gap-3">
+          <p class="text-[11px] font-bold text-slate-400 uppercase tracking-widest mb-3">✨ Select Item Type</p>
+          <div class="grid grid-cols-3 sm:grid-cols-5 gap-2.5">
             <button *ngFor="let t of itemTypes"
                     type="button"
                     (click)="selectType(t.type)"
-                    class="flex flex-col items-center gap-1.5 py-4 px-2 rounded-2xl border-2 transition-all"
+                    class="flex flex-col items-center gap-2 py-4 px-2 rounded-2xl border-2 transition-all duration-200 hover:shadow-lg hover:scale-105"
                     [style.borderColor]="selectedType === t.type ? t.color : '#e2e8f0'"
-                    [style.background]="selectedType === t.type ? t.bg : '#fafafa'">
-              <ion-icon [name]="t.icon"
-                        style="font-size:26px;"
-                        [style.color]="selectedType === t.type ? t.color : '#94a3b8'"></ion-icon>
-              <span class="text-[11px] font-semibold text-center leading-tight"
+                    [style.background]="selectedType === t.type ? t.bg : '#ffffff'"
+                    [style.box-shadow]="selectedType === t.type ? ('0 6px 20px ' + t.color + '30') : ''">
+              <div class="w-11 h-11 rounded-2xl flex items-center justify-center transition-all duration-200 flex-shrink-0"
+                   [style.background]="selectedType === t.type ? t.color : t.bg">
+                <ion-icon [name]="t.icon"
+                          style="font-size:22px;"
+                          [style.color]="selectedType === t.type ? '#ffffff' : t.color"></ion-icon>
+              </div>
+              <span class="text-[10px] font-bold text-center leading-tight"
                     [style.color]="selectedType === t.type ? t.color : '#64748b'">{{ t.label }}</span>
             </button>
           </div>
@@ -244,176 +248,156 @@
         <!-- ── STEP 2: Form (shown after type is picked) ── -->
         <ng-container *ngIf="selectedType">
 
-          <!-- current type pill -->
-          <div class="flex items-center gap-2 px-3 py-2 rounded-xl"
-               [style.background]="getTypeConfig(selectedType).bg">
+          <!-- Selected type pill -->
+          <div class="flex items-center gap-2.5 px-4 py-2.5 rounded-2xl w-fit shadow-sm border"
+               [style.background]="getTypeConfig(selectedType).bg"
+               [style.borderColor]="getTypeConfig(selectedType).color + '40'">
             <ion-icon [name]="getTypeConfig(selectedType).icon"
                       [style.color]="getTypeConfig(selectedType).color"
-                      style="font-size:15px;"></ion-icon>
+                      style="font-size:16px;"></ion-icon>
             <span class="text-xs font-bold" [style.color]="getTypeConfig(selectedType).color">
               {{ getTypeConfig(selectedType).label }}
             </span>
           </div>
 
           <!-- Item Name -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+          <div class="group">
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+              <ion-icon name="cube-outline" class="text-slate-400"></ion-icon>
               Material Name <span class="text-red-400">*</span>
             </label>
 
             <!-- Raw material: dropdown from API -->
             <ng-container *ngIf="selectedType === 'raw_material'">
-              <div class="relative">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
                 <select (change)="onRawMaterialSelect($any($event.target).value)"
                         [disabled]="isLoadingRawMaterials"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
-                  <option value="" disabled selected>
-                    {{ isLoadingRawMaterials ? 'Loading…' : 'Select raw material' }}
-                  </option>
-                  <option *ngFor="let m of rawMaterials" [value]="m.id">
-                    {{ m.name }} ({{ m.materialCode }})
-                  </option>
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
+                  <option value="" disabled selected>{{ isLoadingRawMaterials ? 'Loading…' : 'Select raw material' }}</option>
+                  <option *ngFor="let m of rawMaterials" [value]="m.id">{{ m.name }} ({{ m.materialCode }})</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <ion-spinner *ngIf="isLoadingRawMaterials" name="crescent" style="width:14px;height:14px;color:#6366f1;"></ion-spinner>
-                  <svg *ngIf="!isLoadingRawMaterials" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <ion-spinner *ngIf="isLoadingRawMaterials" name="crescent" style="width:14px;height:14px;color:#10b981;"></ion-spinner>
+                  <svg *ngIf="!isLoadingRawMaterials" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
             </ng-container>
 
-            <!-- Scrap material: dropdown from API -->
+            <!-- Scrap material -->
             <ng-container *ngIf="selectedType === 'scrap'">
-              <div class="relative">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-50 transition-all shadow-sm">
                 <select (change)="onScrapItemSelect($any($event.target).value)"
                         [disabled]="isLoadingScrapItems"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
-                  <option value="" disabled selected>
-                    {{ isLoadingScrapItems ? 'Loading…' : 'Select scrap item' }}
-                  </option>
-                  <option *ngFor="let s of scrapItems" [value]="s.materialCode || s.itemCode">
-                    {{ s.name }} ({{ s.materialCode || s.itemCode }})
-                  </option>
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
+                  <option value="" disabled selected>{{ isLoadingScrapItems ? 'Loading…' : 'Select scrap item' }}</option>
+                  <option *ngFor="let s of scrapItems" [value]="s.materialCode || s.itemCode">{{ s.name }} ({{ s.materialCode || s.itemCode }})</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingScrapItems" name="crescent" style="width:14px;height:14px;color:#ef4444;"></ion-spinner>
-                  <svg *ngIf="!isLoadingScrapItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <svg *ngIf="!isLoadingScrapItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
             </ng-container>
 
-            <!-- Promotional items: dropdown from API -->
+            <!-- Promotional items -->
             <ng-container *ngIf="selectedType === 'promotional'">
-              <div class="relative">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-50 transition-all shadow-sm">
                 <select (change)="onPromotionalItemSelect($any($event.target).value)"
                         [disabled]="isLoadingPromotionalItems"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
-                  <option value="" disabled selected>
-                    {{ isLoadingPromotionalItems ? 'Loading…' : 'Select promotional item' }}
-                  </option>
-                  <option *ngFor="let p of promotionalItems" [value]="p.id">
-                    {{ p.name }} ({{ p.itemCode }})
-                  </option>
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
+                  <option value="" disabled selected>{{ isLoadingPromotionalItems ? 'Loading…' : 'Select promotional item' }}</option>
+                  <option *ngFor="let p of promotionalItems" [value]="p.id">{{ p.name }} ({{ p.itemCode }})</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingPromotionalItems" name="crescent" style="width:14px;height:14px;color:#8b5cf6;"></ion-spinner>
-                  <svg *ngIf="!isLoadingPromotionalItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <svg *ngIf="!isLoadingPromotionalItems" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
             </ng-container>
 
-            <!-- Machine parts (spare parts): dropdown from API -->
+            <!-- Spare parts -->
             <ng-container *ngIf="selectedType === 'spare_parts'">
-              <div class="relative">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
                 <select (change)="onMachinePartSelect($any($event.target).value)"
                         [disabled]="isLoadingMachineParts"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
-                  <option value="" disabled selected>
-                    {{ isLoadingMachineParts ? 'Loading…' : 'Select machine part' }}
-                  </option>
-                  <option *ngFor="let m of machineParts" [value]="m.partNumber">
-                    {{ m.name }} ({{ m.partNumber }})
-                  </option>
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
+                  <option value="" disabled selected>{{ isLoadingMachineParts ? 'Loading…' : 'Select machine part' }}</option>
+                  <option *ngFor="let m of machineParts" [value]="m.partNumber">{{ m.name }} ({{ m.partNumber }})</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingMachineParts" name="crescent" style="width:14px;height:14px;color:#f59e0b;"></ion-spinner>
-                  <svg *ngIf="!isLoadingMachineParts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <svg *ngIf="!isLoadingMachineParts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
               </div>
             </ng-container>
 
-            <!-- Other types: free-text input -->
-            <ng-container *ngIf="selectedType !== 'raw_material' && selectedType !== 'scrap' && selectedType !== 'promotional' && selectedType !== 'spare_parts' && selectedType !== 'finished_product'">
-              <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all" />
-            </ng-container>
-
-            <!-- Finished product: dropdown from BOM API -->
+            <!-- Finished product -->
             <ng-container *ngIf="selectedType === 'finished_product'">
-              <div class="relative">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
                 <select (change)="onFinishedProductSelect($any($event.target).value)"
                         [disabled]="isLoadingFinishedProducts"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-10">
-                  <option value="" disabled selected>
-                    {{ isLoadingFinishedProducts ? 'Loading…' : 'Select finished product' }}
-                  </option>
-                  <option *ngFor="let fp of finishedProducts" [value]="fp.id">
-                    {{ fp.finishedProductName }}
-                  </option>
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
+                  <option value="" disabled selected>{{ isLoadingFinishedProducts ? 'Loading…' : 'Select finished product' }}</option>
+                  <option *ngFor="let fp of finishedProducts" [value]="fp.id">{{ fp.finishedProductName }}</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingFinishedProducts" name="crescent" style="width:14px;height:14px;color:#3b82f6;"></ion-spinner>
-                  <svg *ngIf="!isLoadingFinishedProducts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                  <svg *ngIf="!isLoadingFinishedProducts" class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg>
                 </div>
+              </div>
+            </ng-container>
+
+            <!-- Free-text fallback -->
+            <ng-container *ngIf="selectedType !== 'raw_material' && selectedType !== 'scrap' && selectedType !== 'promotional' && selectedType !== 'spare_parts' && selectedType !== 'finished_product'">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none" />
               </div>
             </ng-container>
           </div>
 
           <!-- Material Code (hidden for finished product & spare parts) -->
-          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Material Code</label>
-            <input [(ngModel)]="form.itemCode" placeholder="e.g. MAT-001"
-                   style="background:#fff; color:#1e293b;"
-                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+              <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
+              Material Code
+            </label>
+            <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+              <input [(ngModel)]="form.itemCode" placeholder="e.g. MAT-001"
+                     style="background:transparent; color:#1e293b;"
+                     class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
+            </div>
           </div>
 
           <!-- Unit Type picker (hidden for finished product & spare parts) -->
-          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
-              <ion-icon name="layers-outline" class="text-indigo-400 mr-1"></ion-icon> Unit Type
+          <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1">
+              <ion-icon name="layers-outline" class="text-indigo-400"></ion-icon>
+              Unit Type
             </label>
-            <div class="grid grid-cols-2 gap-2">
+            <div class="grid grid-cols-2 gap-2.5">
               <button *ngFor="let u of unitTypes" type="button" (click)="form.unit = u.value"
-                      class="flex items-center gap-3 px-3 py-3 rounded-xl border-2 transition-all text-left"
-                      [class.border-indigo-400]="form.unit === u.value"
+                      class="flex items-center gap-3 px-4 py-3.5 rounded-2xl border-2 transition-all duration-200 hover:border-indigo-300 hover:shadow-sm text-left"
+                      [class.border-indigo-500]="form.unit === u.value"
                       [class.bg-indigo-50]="form.unit === u.value"
+                      [class.shadow-md]="form.unit === u.value"
                       [class.border-slate-200]="form.unit !== u.value"
                       [class.bg-white]="form.unit !== u.value">
-                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0"
-                     [class.bg-indigo-100]="form.unit === u.value"
+                <div class="w-9 h-9 rounded-xl flex items-center justify-center flex-shrink-0 transition-colors"
+                     [class.bg-indigo-500]="form.unit === u.value"
                      [class.bg-slate-100]="form.unit !== u.value">
-                  <ion-icon [name]="u.icon"
-                            style="font-size:18px;"
-                            [class.text-indigo-500]="form.unit === u.value"
+                  <ion-icon [name]="u.icon" style="font-size:18px;"
+                            [class.text-white]="form.unit === u.value"
                             [class.text-slate-400]="form.unit !== u.value"></ion-icon>
                 </div>
                 <div>
-                  <p class="text-sm font-semibold leading-tight"
+                  <p class="text-sm font-bold leading-tight"
                      [class.text-indigo-700]="form.unit === u.value"
                      [class.text-slate-700]="form.unit !== u.value">{{ u.label }}</p>
                   <p class="text-[10px] font-bold tracking-widest mt-0.5"
@@ -424,197 +408,255 @@
             </div>
           </div>
 
-          <!-- Quantity + Min Threshold -->
+          <!-- Quantity + Rate -->
           <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="layers-outline" class="text-slate-400"></ion-icon>
                 Quantity <span class="text-red-400">*</span>
                 <span *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
               </label>
-              <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
+                       (ngModelChange)="updateGrossAmount()"
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
+              </div>
             </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Min Threshold</label>
-              <input [(ngModel)]="form.minThreshold" type="number" min="0" placeholder="0"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="pricetag-outline" class="text-slate-400"></ion-icon>
+                Rate (₹)
+              </label>
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">₹</span>
+                <input [(ngModel)]="form.rate" type="number" min="0" step="0.01" placeholder="0.00"
+                       (ngModelChange)="updateGrossAmount()"
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full pl-8 pr-4 py-3.5 rounded-2xl text-sm outline-none" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Gross Amount (auto-calculated, full width) -->
+          <div>
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+              <ion-icon name="calculator-outline" class="text-indigo-400"></ion-icon>
+              Gross Amount
+            </label>
+            <div class="flex items-center gap-3 rounded-2xl border-2 border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3.5 shadow-sm">
+              <span class="text-indigo-500 font-extrabold text-xl leading-none">₹</span>
+              <span class="text-2xl font-extrabold text-indigo-700 flex-1 leading-none">{{ form.grossAmount | number:'1.2-2' }}</span>
+              <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest bg-indigo-100 px-2 py-1 rounded-full">Auto</span>
             </div>
           </div>
 
           <!-- Spare parts extra fields -->
           <ng-container *ngIf="selectedType === 'spare_parts'">
-
-            <!-- Part Number -->
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Part Number</label>
-              <input [(ngModel)]="form.partNumber" placeholder="e.g. PN-001"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
+                Part Number
+              </label>
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.partNumber" placeholder="e.g. PN-001"
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
+              </div>
             </div>
 
-            <!-- Category + Vendor -->
             <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Category</label>
-                <div class="relative">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="build-outline" class="text-slate-400"></ion-icon>
+                  Category
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
                   <select [(ngModel)]="form.category"
-                          style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                          class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-8">
+                          style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                          class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-8">
                     <option value="MACHINE">Machine</option>
                     <option value="ELECTRICAL">Electrical</option>
                     <option value="HYDRAULIC">Hydraulic</option>
                     <option value="PNEUMATIC">Pneumatic</option>
                     <option value="OTHER">Other</option>
                   </select>
-                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                      <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                    </svg>
-                  </div>
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center"><svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
                 </div>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor</label>
-                <input [(ngModel)]="form.vendor" placeholder="e.g. Tata Steel"
-                       style="background:#fff; color:#1e293b;"
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="business-outline" class="text-slate-400"></ion-icon>
+                  Vendor
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.vendor" placeholder="e.g. Tata Steel"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
+                </div>
               </div>
             </div>
 
-            <!-- Purchase Date + Warranty Expiry -->
             <div class="grid grid-cols-2 gap-3">
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Purchase Date</label>
-                <div class="relative">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="calendar-outline" class="text-slate-400"></ion-icon>
+                  Purchase Date
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
                   <input [(ngModel)]="form.purchaseDate" type="date"
-                         style="background:#fff; color:#1e293b;"
-                         class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
-                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
-                  </div>
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center"><ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon></div>
                 </div>
               </div>
-              <div>
-                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Warranty Expiry</label>
-                <div class="relative">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="shield-checkmark-outline" class="text-slate-400"></ion-icon>
+                  Warranty Expiry
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
                   <input [(ngModel)]="form.warrantyExpiryDate" type="date"
-                         style="background:#fff; color:#1e293b;"
-                         class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
-                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                    <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
-                  </div>
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center"><ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon></div>
                 </div>
               </div>
             </div>
 
-            <!-- Condition -->
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Condition</label>
-              <div class="relative">
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="checkmark-circle-outline" class="text-slate-400"></ion-icon>
+                Condition
+              </label>
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
                 <select [(ngModel)]="form.condition"
-                        style="background:#fff; color:#1e293b; appearance:none; -webkit-appearance:none;"
-                        class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-medium outline-none focus:border-indigo-400 transition-all pr-8">
+                        style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
+                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-8">
                   <option value="NEW">New</option>
                   <option value="USED">Used</option>
                   <option value="REFURBISHED">Refurbished</option>
                   <option value="DAMAGED">Damaged</option>
                 </select>
-                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path>
-                  </svg>
+                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center"><svg class="w-4 h-4 text-slate-400" fill="none" stroke="currentColor" viewBox="0 0 24 24"><path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M19 9l-7 7-7-7"></path></svg></div>
+              </div>
+            </div>
+          </ng-container>
+
+          <!-- Vendor & Logistics section (hidden for finished_product & spare_parts) -->
+          <ng-container *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
+
+            <!-- Section header -->
+            <div class="flex items-center gap-3 pt-1">
+              <div class="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+              <div class="flex items-center gap-2 px-3 py-1.5 rounded-full bg-slate-100 border border-slate-200">
+                <ion-icon name="car-outline" class="text-slate-500 text-xs"></ion-icon>
+                <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest">Vendor &amp; Logistics</span>
+              </div>
+              <div class="flex-1 h-px bg-gradient-to-r from-transparent via-slate-200 to-transparent"></div>
+            </div>
+
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="car-outline" class="text-blue-400"></ion-icon>
+                Transport Name
+              </label>
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.transportName" placeholder="e.g. Delivery Express Pvt. Ltd."
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="person-outline" class="text-blue-400"></ion-icon>
+                  Driver Name
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.driverName" placeholder="e.g. Ramesh Singh"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
                 </div>
+              </div>
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="call-outline" class="text-blue-400"></ion-icon>
+                  Driver Mobile
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.driverMobile" placeholder="9876543210" type="tel"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="business-outline" class="text-emerald-500"></ion-icon>
+                  Vendor Name
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.vendorName" placeholder="e.g. Tata Steel Ltd."
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
+                </div>
+              </div>
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="barcode-outline" class="text-emerald-500"></ion-icon>
+                  Vendor ID
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.vendorId" placeholder="e.g. VND-001"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
+                </div>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-3">
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="document-text-outline" class="text-sky-400"></ion-icon>
+                  Invoice No.
+                </label>
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.invoiceNumber" placeholder="INV-2026-001"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
+                </div>
+              </div>
+              <div class="group">
+                <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                  <ion-icon name="calendar-outline" class="text-sky-400"></ion-icon>
+                  Date
+                </label>
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm">
+                  <input [(ngModel)]="form.date" type="date"
+                         style="background:transparent; color:#1e293b;"
+                         class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
+                  <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center"><ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon></div>
+                </div>
+              </div>
+            </div>
+
+            <div class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400"></ion-icon>
+                Remarks
+              </label>
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <textarea [(ngModel)]="form.remarks" rows="2" placeholder="Optional notes…"
+                          style="background:transparent; color:#1e293b;"
+                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none resize-none"></textarea>
               </div>
             </div>
 
           </ng-container>
-
-          <!-- Divider & Vendor & Logistics (hidden for finished product & spare parts) -->
-          <ng-container *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
-
-          <!-- Divider -->
-          <div class="flex items-center gap-3">
-            <div class="flex-1 h-px bg-slate-200"></div>
-            <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest">Vendor & Logistics</span>
-            <div class="flex-1 h-px bg-slate-200"></div>
-          </div>
-          <!-- Transport Name -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-              <ion-icon name="car-outline" class="text-blue-400 mr-1"></ion-icon> Transport Name
-            </label>
-            <input [(ngModel)]="form.transportName" placeholder="e.g. Delivery Express Pvt. Ltd."
-                   style="background:#fff; color:#1e293b;"
-                   class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
-          </div>
-
-          <!-- Driver Name + Driver Mobile -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                <ion-icon name="person-outline" class="text-blue-400 mr-1"></ion-icon> Driver Name
-              </label>
-              <input [(ngModel)]="form.driverName" placeholder="e.g. Ramesh Singh"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">
-                <ion-icon name="call-outline" class="text-blue-400 mr-1"></ion-icon> Driver Mobile
-              </label>
-              <input [(ngModel)]="form.driverMobile" placeholder="e.g. 9876543210" type="tel"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
-            </div>
-          </div>
-          <!-- Vendor Name + Vendor ID -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor Name</label>
-              <input [(ngModel)]="form.vendorName" placeholder="e.g. Tata Steel Ltd."
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Vendor ID</label>
-              <input [(ngModel)]="form.vendorId" placeholder="e.g. VND-001"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
-            </div>
-          </div>
-
-          <!-- Invoice Number + Date -->
-          <div class="grid grid-cols-2 gap-3">
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Invoice No.</label>
-              <input [(ngModel)]="form.invoiceNumber" placeholder="e.g. INV-2026-001"
-                     style="background:#fff; color:#1e293b;"
-                     class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm font-mono outline-none focus:border-indigo-400 transition-all" />
-            </div>
-            <div>
-              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Date</label>
-              <div class="relative">
-                <input [(ngModel)]="form.date" type="date"
-                       style="background:#fff; color:#1e293b;"
-                       class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all pr-10" />
-                <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
-                  <ion-icon name="calendar-outline" style="font-size:16px; color:#94a3b8;"></ion-icon>
-                </div>
-              </div>
-            </div>
-          </div>
-
-          <!-- Remarks -->
-          <div>
-            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-1.5">Remarks</label>
-            <textarea [(ngModel)]="form.remarks" rows="2" placeholder="Optional notes…"
-                      style="background:#fff; color:#1e293b;"
-                      class="w-full px-4 py-3 rounded-xl border border-slate-200 text-sm outline-none focus:border-indigo-400 transition-all resize-none"></textarea>
-          </div>
-
-          </ng-container> <!-- end *ngIf finished_product hidden block -->
 
         </ng-container>
       </div>
@@ -697,17 +739,22 @@
         </span>
       </div>
 
-      <!-- Quantity & Threshold -->
-      <div class="grid grid-cols-2 gap-3">
+      <!-- Quantity, Rate & Gross Amount -->
+      <div class="grid grid-cols-3 gap-3">
         <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
           <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Quantity</p>
-          <p class="text-3xl font-extrabold text-slate-800 leading-none">{{ selectedEntry.quantity }}</p>
-          <p class="text-xs text-slate-400 mt-1">{{ selectedEntry.unit }}</p>
+          <p class="text-2xl font-extrabold text-slate-800 leading-none">{{ selectedEntry.quantity }}</p>
+          <p class="text-xs text-slate-400 mt-1">{{ selectedEntry.unit || 'units' }}</p>
         </div>
-        <div class="bg-white rounded-2xl p-4 shadow-sm border border-slate-100">
-          <p class="text-[9px] text-slate-400 font-bold uppercase tracking-widest mb-1">Min Threshold</p>
-          <p class="text-3xl font-extrabold text-slate-800 leading-none">{{ selectedEntry.minThreshold || '—' }}</p>
-          <p *ngIf="selectedEntry.minThreshold" class="text-xs text-slate-400 mt-1">{{ selectedEntry.unit }}</p>
+        <div class="bg-emerald-50 rounded-2xl p-4 shadow-sm border border-emerald-100">
+          <p class="text-[9px] text-emerald-500 font-bold uppercase tracking-widest mb-1">Rate</p>
+          <p class="text-2xl font-extrabold text-emerald-700 leading-none">₹{{ (selectedEntry.rate || 0) | number:'1.2-2' }}</p>
+          <p class="text-xs text-emerald-400 mt-1">per unit</p>
+        </div>
+        <div class="bg-indigo-50 rounded-2xl p-4 shadow-sm border border-indigo-100">
+          <p class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest mb-1">Gross Amount</p>
+          <p class="text-xl font-extrabold text-indigo-700 leading-none">₹{{ (selectedEntry.grossAmount || 0) | number:'1.2-2' }}</p>
+          <p class="text-xs text-indigo-400 mt-1">qty × rate</p>
         </div>
       </div>
 

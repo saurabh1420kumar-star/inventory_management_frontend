@@ -196,7 +196,7 @@ export class DistributorDashboardPage implements OnInit {
   receiptFile: File | null = null;
   receiptFileName = '';
   paymentForm = {
-    date: new Date().toISOString().split('T')[0],
+    date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
     balanceType: 'credit' as 'credit' | 'debit',
     reference: '',
     amount: '',
@@ -541,7 +541,7 @@ export class DistributorDashboardPage implements OnInit {
 
   openAddPaymentModal() {
     this.haptic.medium();
-    this.paymentForm.date = new Date().toISOString().split('T')[0];
+    this.paymentForm.date = new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0];
     this.generatePaymentReference();
     this.showAddPaymentModal = true;
   }
@@ -611,7 +611,8 @@ export class DistributorDashboardPage implements OnInit {
       this.distributorId,
       parsedAmount,
       description,
-      balanceType.toUpperCase()
+      balanceType.toUpperCase(),
+      date ? `${date}T00:00:00` : undefined
     ).subscribe({
       next: (response) => {
         this.transactions.unshift({
@@ -642,7 +643,7 @@ export class DistributorDashboardPage implements OnInit {
 
   resetPaymentForm() {
     this.paymentForm = {
-      date: new Date().toISOString().split('T')[0],
+      date: new Date(Date.now() - new Date().getTimezoneOffset() * 60000).toISOString().split('T')[0],
       balanceType: 'credit',
       reference: '',
       amount: '',

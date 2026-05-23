@@ -1,255 +1,280 @@
-# Frontend Scope Audit — Inventory Management System
-**Project:** Nayla Inventory Tool (`nayla-inventory-tool`)  
-**Framework:** Angular 20 + Ionic 8 + Capacitor 7 (iOS/Android)  
-**Audit Date:** April 29, 2026  
-**Audited By:** GitHub Copilot (automated static analysis)
+﻿# Frontend Scope Audit — Inventory Management System
+**Project:** IMS Nectar Origin (Angular 20 + Ionic 8 + Capacitor 7)
+**Audit Date:** 2026-05-22
+**Audited By:** Kumar Kautuk
+**API Base:** https://api.imsnectarorigin.com/api
 
 ---
 
-## Executive Summary
+## Original Proposed Scope (Reference Baseline)
 
-| Metric | Count |
-|--------|-------|
-| **Total distinct routes / screens** | 29 |
-| **Embedded sub-components (non-routed screens)** | 2 |
-| **Total pages / screens audited** | **31** |
-| **IN SCOPE** | 17 |
-| **OUT OF SCOPE (extra work delivered)** | **14** |
-| **Out-of-scope services / utilities** | **7** |
-| **Out-of-scope third-party libraries** | **7** |
-
----
-
-## Section 1 — Complete Page & Route Inventory
-
-### 1.1 Authentication & Access
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 1 | `/login` | `LoginPage` | ✅ IN SCOPE | Standard credential-based login |
-| 2 | `/signup` | `SignupPage` | ❌ OUT OF SCOPE | Self-service multi-field registration with 20+ role options — proposal specifies Super Admin creates users |
-| 3 | `/forgot-password` | `ForgotPasswordPage` | ❌ OUT OF SCOPE | 3-step self-service password reset with real-time strength meter and confirm-password validation |
-| 4 | `/user-right` | `UserRightPage` | ✅ IN SCOPE | Role-based feature access control; however the granular per-feature CRUD matrix (canCreate / canRead / canUpdate / canDelete) is an expansion beyond basic role assignment |
-
-### 1.2 Dashboard
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 5 | `/dashboard` | `DashboardPage` | ✅ IN SCOPE | Admin analytics dashboard with MTD/YTD metrics |
-| 6 | `/dashboard` (embedded) | `DistributorDashboardPage` | ✅ IN SCOPE | Distributor-specific analytics view, lazy-loaded inside the same route |
-
-### 1.3 Inventory
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 7 | `/master-inventory` | `MasterInventoryPage` | ❌ OUT OF SCOPE | Full inventory with raw materials, finished products, scrap, promotional items, **and a built-in Bill of Materials (BOM) builder with component linking and additional cost tracking** — far beyond a basic product catalog |
-| 8 | `/unit-master` | `UnitMasterPage` | ❌ OUT OF SCOPE | Dedicated module for measurement units, raw material definitions, and finished product definitions — not mentioned in the original proposal |
-| 9 | `/machine-inventory` | `MachineInventoryPage` | ❌ OUT OF SCOPE | Entirely new category: machine parts, spare parts, and tools inventory with CRUD, category filters (TOOL / SPARE_PART / MACHINE), vendor tracking, warranty expiry, and purchase dates |
-
-### 1.4 Distributor & Cart
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 10 | `/distributor` | `DistributorPage` | ✅ IN SCOPE | Create distributors, assign sales employees, manage credit limits and bank guarantees. Includes full India state/district/pincode dropdown dataset (all 36 states/UTs) |
-| 11 | `/distributor-cart` | `DistributorCartPage` | ✅ IN SCOPE | Distributor mobile app product catalog, add-to-cart, and order placement workflow |
-| 12 | `/sales-distributor` | `SalesDistributorPage` | ❌ OUT OF SCOPE | Empty placeholder page with no implemented functionality — was scaffolded but not removed |
-
-### 1.5 Sales Team
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 13 | `/sales` | `SalesPage` | ✅ IN SCOPE | Sales management root — order approval, PI-ready invoices, GDN handling |
-| 14 | `/sales/salesperson-onboarding` | `SalespersonOnboardingPage` | ✅ IN SCOPE | Hierarchy manager: NSM → SSM → ZSM → RSM → ASM → SO → SE with CRUD and org-chart display |
-| 15 | `/sales/hierarchy-orders` | `HierarchyOrdersPage` | ✅ IN SCOPE | Orders grouped by Zone → RSM → ASM → SE with expand/collapse and totals |
-| 16 | `/sales/sales-dashboard` | `SalesDashboardPage` | ❌ OUT OF SCOPE | Dedicated dark-themed analytics dashboard for individual sales reps: Today/Month/Year period filters, volume analytics (MTD/WTD/YTD), payment & collections section, add-dealer workflow, payment form with RTGS/NEFT/IMPS/UPI/CHEQUE modes |
-| 17 | `/sales/my-payments` | `MyPaymentsPage` | ❌ OUT OF SCOPE | Individual salesperson payment tracking screen showing pending payments per salesperson ID — not in original hierarchy-orders scope |
-| — | (reusable component) | `HierarchyMapComponent` | ❌ OUT OF SCOPE | Visual interactive org-chart / hierarchy map component used inside salesperson-onboarding and hierarchy-orders — beyond the text/tabular hierarchy originally described |
-
-### 1.6 Accounts
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 18 | `/accounts-master` | `AccountsMasterPage` | ✅ IN SCOPE | Accounts ledger, distributor credit tracking, transaction history |
-| 19 | `/payment-request` | `PaymentRequestPage` | ✅ IN SCOPE | Payment verification, approve/reject workflows with UTR/cheque/bank details |
-| 20 | `/proforma-invoice` | `ProformaInvoicePage` | ✅ IN SCOPE | Proforma invoices with PDF preview/download and dispatch modal |
-| 21 | `/pi-update` | `PiUpdatePage` | ✅ IN SCOPE | PI approval against ledger balance, credit-based approval, rejection workflow |
-
-### 1.7 Operations & Dispatch
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 22 | `/dispatch` | `DispatchPage` | ✅ IN SCOPE | Dispatch confirmation; protected by ACL feature gate (`DISPATCH`) |
-| 23 | `/gdn` | `GdnPage` | ✅ IN SCOPE | Goods Dispatch Note listing, PDF download/preview with cross-platform (web/Android) handling |
-| 24 | `/order-details` | `OrderDetailsPage` | ✅ IN SCOPE | Order tracking dashboard for pending/approved orders |
-| 25 | `/logistics` | `LogisticsPage` | ❌ OUT OF SCOPE | Full logistics module: shipment tracking with transport modes (road / rail / air / sea), vehicle/driver details, multi-step timeline visualization, contact cards, origin-to-destination mapping — entirely beyond "logistics entry" mentioned in the proposal |
-
-### 1.8 HR
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 26 | `/hr-department` | `HrDepartmentPage` | ❌ OUT OF SCOPE | Complete HR Department management system: employee CRUD with status lifecycle (Pending → Active / Rejected), demographic fields (DOB, gender, blood group, address), pagination, search/filter, and separate role type management — not mentioned anywhere in the original proposal |
-
-### 1.9 Complaints & Feedback
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 27 | `/complaints` | `ComplaintsPage` | ❌ OUT OF SCOPE | Customer-facing complaint submission form with categories (PAYMENT / ACCOUNT / TECHNICAL / DELIVERY / OTHER) and 4-level priority system (LOW / MEDIUM / HIGH / CRITICAL) |
-| 28 | `/complaints-management` | `ComplaintsManagementPage` | ❌ OUT OF SCOPE | Admin-side complaints dashboard: paginated complaint list, status workflow (OPEN → IN_PROGRESS → RESOLVED → CLOSED), category/status filters, detail modal — a full customer support ticketing UI |
-| 29 | `/feedback` | `FeedbackPage` | ❌ OUT OF SCOPE | Separate feedback form (partially overlaps with complaints) — standalone page without backend integration (uses `setTimeout` stub) |
-
-### 1.10 Utility
-
-| # | Route | Component | Scope | Notes |
-|---|-------|-----------|-------|-------|
-| 30 | `/not-found` | `NotFoundPage` | ✅ IN SCOPE | Standard 404 catch-all route |
+| # | Feature Area | Description |
+|---|---|---|
+| 1 | User Management | Role-based access; Super Admin creates users |
+| 2 | Admin Portal | Create distributors, assign sales employees |
+| 3 | Distributor Mobile App | Product catalog, order placement, goods receipt, retailer/dealer creation |
+| 4 | Sales Team Module | Hierarchical order approval |
+| 5 | Accounts Module | Proforma Invoice, payment verification, approval, final invoice |
+| 6 | Operations & Dispatch | Dispatch confirmation, GDN generation, logistics entry |
+| 7 | Reporting & Dashboards | MTD/YTD sales, party-wise tracking, compliance reports |
+| 8 | Notification System | SMS alerts at key stages |
+| 9 | Credit Limit Handling | Payment terms per distributor |
+| 10 | Core Data Views | Users, orders, invoices, payments, dispatch notes |
 
 ---
 
-## Section 2 — Out-of-Scope Items Detail
+## Section 1 — Complete Route & Page Inventory
 
-### 2.1 Out-of-Scope Pages / Screens (14 items)
+### 1.1 Route Table (28 defined routes)
 
-| # | Page / Screen | What It Does |
-|---|--------------|--------------|
-| 1 | **Signup Page** (`/signup`) | Self-service account creation with 20 role types, country, gender, DOB fields. Bypasses the "Super Admin creates users" model from the proposal. |
-| 2 | **Forgot Password** (`/forgot-password`) | 3-step self-service reset: enter username → set new password (with strength score 0–4, visual bar, and confirm field) → success screen. |
-| 3 | **Master Inventory** (`/master-inventory`) | Advanced inventory with separate tabs for raw materials, finished products, scrap, and promotional items. Includes a full **Bill of Materials (BOM) builder** allowing products to be composed of raw material components with quantities and additional cost entries. |
-| 4 | **Unit Master** (`/unit-master`) | Dedicated module for defining measurement units (KG/LITER/PIECE/METER), managing raw material base records, and finished product specifications. Entirely separate concern from the product catalog. |
-| 5 | **Machine Inventory** (`/machine-inventory`) | Machine parts/spare parts/tools tracking with part codes, part numbers, vendor, condition ratings, purchase dates, and warranty expiry tracking — an industrial asset management feature. |
-| 6 | **HR Department** (`/hr-department`) | Complete HRMS: create/edit/delete employees, status lifecycle, role type assignment, search & filter by status, pagination, and demographic data (blood group, DOB, gender, address). No mention of this in the original proposal. |
-| 7 | **Sales Dashboard** (`/sales/sales-dashboard`) | Dark-themed analytics cockpit for individual sales reps with today/month/year period toggles, volume analytics (MTD/WTD/YTD), and a built-in payment-entry form (6 payment methods). |
-| 8 | **My Payments** (`/sales/my-payments`) | Per-salesperson payment record viewer showing pending payments pulled by salesperson ID. |
-| 9 | **Sales Distributor** (`/sales-distributor`) | Empty scaffold page with no content or API calls — dead route that should be removed. |
-| 10 | **Logistics** (`/logistics`) | Full shipment tracking system with transport mode icons (road/rail/air/sea), step-by-step timeline per shipment, vehicle number, driver phone, total weight/packages, origin/destination — a logistics visibility platform, not just "logistics entry". |
-| 11 | **Complaints Submission** (`/complaints`) | Customer-facing form to lodge complaints with subject, category, priority, full description, and contact details submitted to a dedicated `/api/complaints/create` endpoint. |
-| 12 | **Complaints Management** (`/complaints-management`) | Admin ticketing dashboard: full paginated list with search, category and status filters, status-update modal, per-complaint detail drawer, and priority badges. |
-| 13 | **Feedback Page** (`/feedback`) | Second feedback form (separate from complaints), currently not wired to a real API (uses a 1-second `setTimeout` stub). Duplicate of complaints intent. |
-| 14 | **Hierarchy Map Component** (embedded) | Interactive visual org-chart component rendering the NSM→SSM→ZSM→RSM→ASM→SO→SE tree — richer than a text-based list. |
+| # | Route Path | Component | Scope | Notes |
+|---|---|---|---|---|
+| 1 | /login | LoginPage | IN SCOPE | User Management |
+| 2 | /signup | SignupPage | IN SCOPE | User Management |
+| 3 | /forgot-password | ForgotPasswordPage | IN SCOPE | User Management |
+| 4 | /dashboard | DashboardPage | IN SCOPE | Reporting & Dashboards |
+| 5 | /master-inventory | MasterInventoryPage | IN SCOPE | Product catalog; core data |
+| 6 | /inward | InwardPage | OUT OF SCOPE | Internal warehouse inbound stock tracking |
+| 7 | /unit-master | UnitMasterPage | OUT OF SCOPE | Unit-of-measure configuration (kg, liter, piece) |
+| 8 | /accounts-master | AccountsMasterPage | IN SCOPE | Accounts Module — ledger master |
+| 9 | /payment-request | PaymentRequestPage | IN SCOPE | Accounts Module — payment verification queue |
+| 10 | /feedback | FeedbackPage | OUT OF SCOPE | Dead-code scaffold; setTimeout stub, no real API |
+| 11 | /user-right | UserRightPage | IN SCOPE | User Management — role-based ACL editor |
+| 12 | /machine-inventory | MachineInventoryPage | OUT OF SCOPE | Machines, tools, spare parts inventory |
+| 13 | /outward-inventory | OutwardInventoryPage | OUT OF SCOPE | Non-order outward stock movements (giving/scrap) |
+| 14 | /hr-department | HrDepartmentPage | OUT OF SCOPE | HR department master configuration |
+| 15 | /hr-kra-kpi | HrKraKpiPage | OUT OF SCOPE | Employee KRA/KPI performance management |
+| 16 | /distributor | DistributorPage | IN SCOPE | Admin Portal — distributor master CRUD |
+| 17 | /order-details | OrderDetailsPage | IN SCOPE | Core Data Views — order tracking |
+| 18 | /sales | SalesPage | IN SCOPE | Sales Team Module — approval pipeline |
+| 19 | /sales-distributor | SalesDistributorPage | OUT OF SCOPE | Empty scaffold — dead code |
+| 20 | /distributor-cart | DistributorCartPage | IN SCOPE | Distributor Mobile App — cart & order placement |
+| 21 | /logistics | LogisticsPage | IN SCOPE | Operations & Dispatch — logistics entry |
+| 22 | /dispatch | DispatchPage | IN SCOPE | Operations & Dispatch — GDN generation |
+| 23 | /complaints | ComplaintsPage | OUT OF SCOPE | Complaint creation & tracking |
+| 24 | /complaints-management | ComplaintsManagementPage | OUT OF SCOPE | Admin complaint resolution dashboard |
+| 25 | /proforma-invoice | ProformaInvoicePage | IN SCOPE | Accounts Module — PI viewing & approval |
+| 26 | /gdn | GdnPage | IN SCOPE | Operations & Dispatch — GDN document viewer |
+| 27 | /pi-update | PiUpdatePage | IN SCOPE | Accounts Module — PI amendment workflow |
+| 28 | ** (catch-all) | NotFoundPage | — | Infrastructure 404 |
 
----
+### 1.2 Sub-Screens & Nested Pages
 
-### 2.2 Out-of-Scope Services & Utilities (7 items)
-
-| # | Service / Utility | What It Does |
-|---|------------------|--------------|
-| 1 | `complaints.service.ts` | Full CRUD + status-update API layer for a complaints/ticketing system (`/api/complaints`). |
-| 2 | `haptic.service.ts` | Native haptic feedback wrapper (Capacitor Haptics API) — light/medium/heavy impact, success/warning/error notifications, vibrate — mobile UX enhancement not in scope. |
-| 3 | `download.service.ts` | Cross-platform PDF download service: triggers browser download on web, writes to `Documents` folder via Capacitor Filesystem on Android. |
-| 4 | `distributor-profile.service.ts` | Reactive global state (BehaviorSubject) holding the logged-in distributor's full profile across the app — a state management pattern not required by the original spec. |
-| 5 | `dashboard.service.ts` (multi-role analytics) | Provides role-specific analytics endpoints: `getDistributorAnalytics(id)` and `getSalespersonAnalytics(id)` in addition to generic `getAnalytics()` — extra reporting surface. |
-| 6 | `sales-analytics.service.ts` (inside sales-dashboard) | Separate analytics service specifically for sales reps: volume analytics by period, call metrics, additional KPIs not in the base reporting scope. |
-| 7 | `acl.directive.ts` (ACL Directive) | Structural directive enabling template-level feature-gate rendering (`*aclCan="'FEATURE_NAME'"`) — advanced permission system beyond role-based routing. |
-
----
-
-## Section 3 — Third-Party Integrations
-
-### 3.1 IN SCOPE (justified by requirements)
-
-| Library | Version | Purpose |
-|---------|---------|---------|
-| `@ionic/angular` | ^8.0.0 | UI component framework for mobile-first app |
-| `@angular/core` et al. | ^20.0.0 | Core application framework |
-| `rxjs` | ~7.8.0 | Reactive data streams |
-| `ionicons` | ^7.0.0 | Icon set used throughout the app |
-
-### 3.2 OUT OF SCOPE (added beyond basic requirements)
-
-| Library | Version | What It Adds | Why Out of Scope |
-|---------|---------|--------------|-----------------|
-| **`ng-apexcharts` + `apexcharts`** | ^2.0.4 / ^5.3.6 | Interactive animated charts (area, bar, line with tooltips, zoom, animations) | Original spec says "Reporting & Dashboards" but basic bar/line charts could be native Ionic or CSS-only. A full ApexCharts integration is an upgraded delivery. |
-| **`@capacitor/android`** | 7.4.4 | Packages the web app as a native Android APK | While a distributor mobile app was mentioned, the full Capacitor/native build pipeline goes beyond a web-responsive page. |
-| **`@capacitor/filesystem`** | ^7.1.8 | Writes files to the native Android `Documents` folder | Required to support the out-of-scope PDF native download feature. |
-| **`@capacitor/haptics`** | 7.0.2 | Vibration feedback on device | Enhances UX on mobile — not in any functional requirement. |
-| **`@capacitor/keyboard`** + **`@capacitor/status-bar`** | 7.0.3 | Native keyboard/status bar management on Android/iOS | Native mobile polish, not listed in requirements. |
-| **`tailwindcss`** (+ `postcss`, `autoprefixer`) | (latest) | Utility-first CSS for all custom layouts and styling | A deliberate design-system choice enhancing the frontend aesthetics beyond basic Ionic styling. |
-| **`angular-cli-ghpages`** | ^3.0.2 | Automated GitHub Pages deployment tooling | CI/CD deployment utility — not required by the project spec. |
+| # | Screen | Parent Route | Scope | Notes |
+|---|---|---|---|---|
+| 29 | Distributor Dashboard | /dashboard | IN SCOPE | Reporting — distributor MTD/YTD metrics |
+| 30 | Sales Dashboard | /dashboard (sales role) | IN SCOPE | Reporting — salesperson analytics |
+| 31 | Salesperson Onboarding | /sales/salesperson-onboarding | IN SCOPE | Admin Portal — create/assign sales employees |
+| 32 | Hierarchy Orders | /sales/hierarchy-orders | IN SCOPE | Sales Team Module — zone/role filtered orders |
+| 33 | My Payments | /sales/my-payments | OUT OF SCOPE | Salesperson personal payment history ledger |
+| 34 | Hierarchy Map Org-Chart | Component inside Hierarchy Orders | OUT OF SCOPE | Interactive visual org-chart of sales tree |
+| 35 | Home Page | /home | — | Redirect placeholder (no content) |
 
 ---
 
-## Section 4 — API Endpoints Beyond Original Scope
+## Section 2 — Out-of-Scope Features: Detailed Descriptions
 
-The `environment.ts` reveals backend base URLs that correspond to features outside the original proposal:
+1. INWARD INVENTORY (/inward)
+   Full internal warehouse inbound stock receipt workflow. Records item, quantity, source, and date for stock arriving into the company warehouse. Completely separate from distributor goods receipt. Has its own API endpoints at /api/products/inward-inventory.
+   Complexity: Medium
 
-| API Base | Used By | Scope Status |
-|----------|---------|-------------|
-| `https://api.imsnectarorigin.com/api` | All core features | ✅ IN SCOPE |
-| `/api/hr` | HR Department module | ❌ OUT OF SCOPE |
-| `/api/dealers` | Dealer management (separate entity from distributors) | ❌ OUT OF SCOPE |
-| `/api/dealer-ledger` | Dealer-specific ledger tracking | ❌ OUT OF SCOPE |
-| `/api/complaints` | Complaints ticketing system | ❌ OUT OF SCOPE |
-| `/api/dashboard/analytics?salespersonId=` | Role-specific analytics per salesperson | ❌ OUT OF SCOPE (expanded from basic dashboard) |
-| `/api/dashboard/analytics?distributorId=` | Role-specific analytics per distributor | ❌ OUT OF SCOPE (expanded) |
-| `/api/role-feature-permissions` | Per-feature CRUD permission matrix | ❌ OUT OF SCOPE (expanded beyond basic role assignment) |
+2. UNIT MASTER (/unit-master)
+   CRUD management for units of measurement (KG, LITER, PIECE, METER, DOZEN, etc.) with toggle-status and pagination. Feeds every inventory form across the app as a shared dropdown dependency.
+   Complexity: Low-Medium
+
+3. MACHINE INVENTORY (/machine-inventory)
+   Dedicated inventory module for machines, tools, spare parts, and promotional items — entirely separate from the sales product catalog. Includes image upload, category filtering (TOOL, SPARE_PART, MACHINE), and outward movement tracking of these assets.
+   Complexity: Medium-High
+
+4. OUTWARD INVENTORY (/outward-inventory)
+   Non-sales stock movement tracking: items given as samples/promotional, returned parts, and scrap disposals. Two transaction types (OUTWARD_GIVING, RETURNED_PART) with separate endpoints for spare parts, promotional, and scrap sub-types.
+   Complexity: Medium
+
+5. HR DEPARTMENT (/hr-department)
+   HR master for creating and managing internal company departments with full CRUD and toggle-status. Entirely unrelated to sales, inventory, or distribution.
+   Complexity: Low
+
+6. HR KRA/KPI (/hr-kra-kpi)
+   Employee performance management: set KRAs and KPIs, track scores, and export reports to both PDF (via jsPDF) and Excel (via xlsx). Includes date-range filtering and employee-wise breakdowns. This module drove two additional third-party library integrations.
+   Complexity: High
+
+7. FEEDBACK PAGE (/feedback)
+   User feedback form wired to a setTimeout stub — does not call any real API endpoint. Confirmed dead code in project documentation.
+   Complexity: Negligible (stub only)
+
+8. SALES DISTRIBUTOR (/sales-distributor)
+   Route and module defined but the page is an empty scaffold with zero implementation.
+   Complexity: Negligible (stub only)
+
+9. COMPLAINTS (/complaints)
+   Full complaint management: create with category (PAYMENT, ACCOUNT, TECHNICAL, DELIVERY, OTHER), priority (LOW, MEDIUM, HIGH, CRITICAL), paginated list with filters, and status lifecycle (OPEN > IN_PROGRESS > RESOLVED > CLOSED).
+   Complexity: Medium
+
+10. COMPLAINTS MANAGEMENT (/complaints-management)
+    Admin/manager view for resolving complaints — view all tickets, update statuses, and close issues. Separate from the user-facing complaints page.
+    Complexity: Medium
+
+11. MY PAYMENTS (/sales/my-payments)
+    Personal payment history screen for sales representatives. Shows their order-linked payment transactions. Not the Accounts approval workflow but a personal ledger view for sales staff.
+    Complexity: Low-Medium
+
+12. HIERARCHY MAP ORG-CHART (component)
+    Interactive visual org-chart rendering the entire sales hierarchy tree (NSM > SSM > ZSM > RSM > ASM > SO > SE) as a node graph. Custom component with dedicated node renderer — far beyond a standard tabular list.
+    Complexity: Medium-High
+
+13. HAPTIC FEEDBACK SYSTEM (HapticService)
+    Dedicated service wiring Capacitor Haptics into toasts, button interactions, and UI events across the whole app. Provides 6 vibration patterns (light, medium, heavy, success, warning, error) on Android devices.
+    Complexity: Low
+
+14. BILL OF MATERIALS (within Master Inventory)
+    Full BOM management embedded in the Master Inventory page: create, update, delete, and paginate BOM records linking raw materials to finished products with quantities, plus a BOM summary statistics panel.
+    Complexity: Medium-High
+
+15. GOODS RECEIPT WITH SATISFACTION RATING (within Distributor flow)
+    The distributor order confirmation includes a satisfaction rating score in addition to basic receipt acknowledgement. The proposal requires receipt only — rating is an extra UX feature.
+    Complexity: Low
+
+16. JOURNAL VOUCHER (within Accounts Master)
+    Create and list Journal Vouchers per distributor (POST /api/accounts/journal-voucher, GET /api/accounts/jv-by-distributor/{id}). A double-entry accounting JV system beyond basic payment approval.
+    Complexity: Medium
+
+17. CREDIT-PATH PI APPROVAL (within Accounts flow)
+    Separate PI approval pathway using available credit (POST /api/accounts/approve-PI-using-credit/{cartId}). While credit limit handling is in scope, this distinct approval flow is an added financial workflow.
+    Complexity: Low-Medium
+
+18. DEALER LEDGER PDF DOWNLOAD (within Accounts)
+    Integration of POST /api/dealer-ledger/download-pdf?dealerId=X for dealer-specific ledger PDFs — a sub-feature not in the original proposal.
+    Complexity: Low
+
+19. DARK MODE / ROLE-AWARE THEME SYSTEM
+    Role-aware theming: SALES and DISTRIBUTOR roles automatically get a dark theme applied at the document root. Admin/desktop roles get light theme. Fully implemented with Ionic CSS variable bridging.
+    Complexity: Low-Medium
+
+20. GRANULAR 4-PERMISSION ACL MATRIX (User Rights page)
+    Beyond basic RBAC, a full UI for setting canCreate, canRead, canUpdate, canDelete per feature per role — a complete permission matrix editor. The proposal specifies role-based access, not a dynamic 4-dimension permission matrix.
+    Complexity: Medium-High
 
 ---
 
-## Section 5 — Feature Flag / Permission-Gated Sections
+## Section 3 — Third-Party Integrations Audit
 
-The application implements a **two-layer access control system**:
+### NPM Library Verdict
 
-1. **`AuthGuard`** — standard JWT-based route guard (all protected routes use this)  
-2. **`AclGuard`** + **`Acl` service** + **`AclDirective`** — feature-name-based CRUD permission matrix stored per role in the backend (`/api/role-feature-permissions`). Each feature can independently grant/deny `canCreate`, `canRead`, `canUpdate`, `canDelete`.
+| Library | Version | Purpose | Verdict |
+|---|---|---|---|
+| apexcharts + ng-apexcharts | ^5.3.6 / ^2.0.4 | Dashboard charts (bar, line, donut, area) | IN SCOPE — dashboards are required |
+| jspdf + jspdf-autotable | ^4.2.1 / ^5.0.7 | Client-side PDF for GDN, PI, invoices | IN SCOPE — PDF export is required |
+| xlsx | ^0.18.5 | Excel export for KRA/KPI reports | OUT OF SCOPE — added for out-of-scope HR KPI module |
+| @capacitor/haptics | 7.x | Android vibration/haptic feedback | OUT OF SCOPE — UX enhancement only |
+| @capacitor/filesystem | 7.x | Save PDFs to Android Downloads folder | IN SCOPE — required for Android PDF downloads |
+| angular-cli-ghpages | ^3.0.2 | GitHub Pages deployment | Dev/deployment tool only |
 
-Currently only the `/dispatch` route uses `AclGuard` with `data: { feature: 'DISPATCH' }`, but the full infrastructure exists to gate any route or template element by feature name.
+### API Domain Breakdown
 
-> **Note:** The full granular ACL system (per-feature CRUD matrix) is an **out-of-scope expansion** of the basic role-based access described in the proposal.
-
----
-
-## Section 6 — Summary Counts
-
-### Pages / Screens
-
-| Category | IN SCOPE | OUT OF SCOPE |
-|----------|---------|-------------|
-| Authentication | 1 (login) | 2 (signup, forgot-password) |
-| Dashboard | 2 | 0 |
-| Inventory | 0 | 3 (master-inventory, unit-master, machine-inventory) |
-| Distributor & Cart | 2 | 1 (sales-distributor placeholder) |
-| Sales Team | 3 | 3 (sales-dashboard, my-payments, hierarchy-map component) |
-| Accounts | 4 | 0 |
-| Operations & Dispatch | 3 | 1 (logistics) |
-| HR | 0 | 1 (hr-department) |
-| Complaints & Feedback | 0 | 3 (complaints, complaints-management, feedback) |
-| Utility | 1 (not-found) | 0 |
-| **TOTAL** | **16 routes + 2 embedded = 17** | **12 routes + 2 components = 14** |
-
-### Services
-
-| Category | IN SCOPE | OUT OF SCOPE |
-|----------|---------|-------------|
-| Core services (auth, sales, dispatch, distributor, accounts, invoice, gdn, user, inventory, unit, cart, proforma-invoice) | 12 | 0 |
-| Extra services | 0 | 7 |
-
-### Third-Party Libraries
-
-| Category | IN SCOPE | OUT OF SCOPE |
-|----------|---------|-------------|
-| Framework & essentials | 4 | 0 |
-| Extra integrations | 0 | 7 |
+| Domain | Base Path | Verdict |
+|---|---|---|
+| Auth & Users | /api/auth, /api/createUsers | IN SCOPE |
+| Products (finished, raw materials) | /api/products/finished-products, /api/products/raw-materials | IN SCOPE |
+| Machine Parts, Scrap, Outward Items | /api/products/machine-parts, /api/products/outward-items | OUT OF SCOPE |
+| Bill of Materials | /api/bill-of-materials/* | OUT OF SCOPE |
+| Orders & Cart | /api/cart/*, /api/order/* | IN SCOPE |
+| Distributors | /api/distributors/* | IN SCOPE |
+| Sales Hierarchy | /api/sales-hierarchy/* | IN SCOPE |
+| Accounts & Payments (core) | /api/accounts/* (approvals, payments) | IN SCOPE |
+| Journal Voucher, Add-Credit | /api/accounts/journal-voucher, /api/accounts/add-credit | OUT OF SCOPE |
+| Dispatch & GDN | /api/dispatch/* | IN SCOPE |
+| Ledger | /api/ledger/* | IN SCOPE |
+| Dashboard Analytics | /api/dashboard/* | IN SCOPE |
+| HR Master & KRA | /api/hr/*, /api/hrmaster/* | OUT OF SCOPE |
+| Units | /api/units/* | OUT OF SCOPE |
+| Role-Feature Permission Matrix | /api/role-feature-permissions/* | OUT OF SCOPE |
+| Complaints | /api/complaints/* | OUT OF SCOPE |
+| Dealer Ledger | /api/dealer-ledger/* | OUT OF SCOPE |
+| Dealers | /api/dealers/* | OUT OF SCOPE |
 
 ---
 
-## Section 7 — Change-Request Value Items
+## Section 4 — In-Scope Gaps (Proposed but Not Delivered)
 
-The following represent billable additional work delivered beyond the agreed proposal scope:
+1. COMPLIANCE REPORTS
+   No dedicated compliance report screen found. The dashboard covers MTD/YTD sales analytics but a distinct compliance reporting view is absent.
 
-1. **HR Department Module** — Full employee management HRMS (`/hr-department` + API integration)
-2. **Complaints & Ticketing System** — Submission form + admin management dashboard + backend API (`/complaints`, `/complaints-management`)
-3. **Logistics Tracking Module** — Multi-transport-mode shipment visibility system (`/logistics`)
-4. **Machine / Spare Parts Inventory** — Asset management for tools, spare parts, and machinery (`/machine-inventory`)
-5. **Master Inventory with BOM Builder** — Full inventory management with Bill of Materials (`/master-inventory`)
-6. **Unit Master Module** — Raw material and finished product definitions (`/unit-master`)
-7. **Sales Analytics Dashboard** — Dedicated salesperson cockpit with period-based KPIs (`/sales/sales-dashboard`)
-8. **Self-Service Auth** — Signup and forgot-password flows (`/signup`, `/forgot-password`)
-9. **Advanced ACL / Feature-Permission System** — Per-feature CRUD matrix beyond role-based access
-10. **Capacitor Native Mobile Build** — Android APK packaging, haptics, filesystem, status bar
-11. **ApexCharts Integration** — Advanced interactive charting library
-12. **Feedback Page** — Standalone form (even though currently stubbed)
-13. **My Payments Screen** — Individual salesperson payment tracker
-14. **Hierarchy Map Visual Component** — Interactive org-chart visualization
+2. RETAILER / DEALER CREATION UI
+   The dealersUrl environment variable and /api/dealers path exist, but no dedicated dealer or retailer creation page appears in the route table or component tree. The Distributor Mobile App scope explicitly listed retailer/dealer creation.
+
+3. NOTIFICATION / SMS ALERT FRONTEND
+   No SMS alert management, notification history, or alert configuration screen is present. If the notification system was meant to have any frontend component, it was not built.
 
 ---
 
-*This document was generated by static codebase analysis. For the unified full-stack change-request document, merge with the backend scope audit report.*
+## Section 5 — Scope Matrix (All Proposed Features vs Delivered)
+
+| Proposed Feature | Built? | Verdict |
+|---|---|---|
+| Login / Signup / Forgot Password | Yes | IN SCOPE |
+| Role-based access control (guards + directives) | Yes | IN SCOPE |
+| Dynamic 4-permission matrix editor | Yes | OUT OF SCOPE |
+| Super Admin creates users | Yes | IN SCOPE |
+| Admin creates distributors | Yes | IN SCOPE |
+| Admin assigns sales employees | Yes | IN SCOPE |
+| Distributor product catalog | Yes | IN SCOPE |
+| Distributor order placement (cart) | Yes | IN SCOPE |
+| Distributor goods receipt confirmation | Yes | IN SCOPE |
+| Goods receipt with satisfaction rating | Yes | OUT OF SCOPE — rating is extra |
+| Retailer/Dealer creation UI | No | GAP — not built |
+| Sales hierarchical order approval | Yes | IN SCOPE |
+| Sales org-chart visualization | Yes | OUT OF SCOPE |
+| Salesperson My Payments history | Yes | OUT OF SCOPE |
+| Proforma Invoice viewing | Yes | IN SCOPE |
+| PI amendment workflow | Yes | IN SCOPE |
+| Payment verification & approval queue | Yes | IN SCOPE |
+| Final invoice download | Yes | IN SCOPE |
+| Journal Voucher creation | Yes | OUT OF SCOPE |
+| Credit-path PI approval | Yes | OUT OF SCOPE |
+| Dispatch confirmation | Yes | IN SCOPE |
+| GDN generation | Yes | IN SCOPE |
+| GDN document viewer | Yes | IN SCOPE |
+| Logistics entry | Yes | IN SCOPE |
+| MTD/YTD dashboards (all roles) | Yes | IN SCOPE |
+| Party-wise order tracking | Yes | IN SCOPE |
+| Compliance reports | No | GAP — not built |
+| SMS notification UI | No | GAP (possibly backend-only) |
+| Credit limit per distributor | Yes | IN SCOPE |
+| Bill of Materials (BOM) | Yes | OUT OF SCOPE |
+| Internal Inward Inventory | Yes | OUT OF SCOPE |
+| Machine / Tools / Spare Parts Inventory | Yes | OUT OF SCOPE |
+| Outward / Scrap Movements | Yes | OUT OF SCOPE |
+| Unit Master configuration | Yes | OUT OF SCOPE |
+| HR Department master | Yes | OUT OF SCOPE |
+| HR KRA/KPI with PDF & Excel export | Yes | OUT OF SCOPE |
+| Complaint creation & tracking | Yes | OUT OF SCOPE |
+| Admin complaint management | Yes | OUT OF SCOPE |
+| Dealer Ledger PDF | Yes | OUT OF SCOPE |
+| Dark Mode theme system | Yes | OUT OF SCOPE |
+| Haptic feedback (Android) | Yes | OUT OF SCOPE |
+| Excel export (xlsx) | Yes | OUT OF SCOPE |
+
+---
+
+## Section 6 — Final Count Summary
+
+| Metric | Value |
+|---|---|
+| Total routes defined in router | 28 |
+| Total page files (.page.ts) | 35 |
+| Total screens audited (routes + sub-screens) | 35 |
+| IN SCOPE screens | 20 (57%) |
+| OUT OF SCOPE screens | 15 (43%) |
+| Dead-code / stub screens | 2 (Feedback, Sales Distributor) |
+| In-scope gaps (not delivered) | 3 |
+| Third-party libraries beyond requirements | 2 (xlsx, @capacitor/haptics) |
+| Out-of-scope API domains integrated | 7 |
+| Total distinct API endpoints called | 100+ |
+| Estimated endpoints for out-of-scope features | ~40 |
+
+---
+
+*Generated by automated source analysis of the Angular/Ionic frontend repository.
+All routes, components, API endpoints, and third-party dependencies were verified
+directly from source files: app-routing.module.ts, package.json, src/app/services/*,
+src/environments/environment.ts, and all .page.ts / .component.ts files.*
