@@ -892,26 +892,27 @@
               <p *ngIf="distributorCreateForm.get('address')?.invalid && distributorCreateForm.get('address')?.touched"
                  class="text-xs mt-1" style="color: #f87171;">Address is required</p>
             </div>
+            <div>
+              <p class="text-[10px] font-bold tracking-widest mb-2" style="color: rgba(255,255,255,0.55);">PINCODE</p>
+              <input type="text" formControlName="pincode" placeholder="6-digit pincode"
+                     maxlength="6" inputmode="numeric"
+                     (input)="onPincodeInput($event)"
+                     class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
+                     style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
+            </div>
             <div class="grid grid-cols-2 gap-3">
               <div>
                 <p class="text-[10px] font-bold tracking-widest mb-2" style="color: rgba(255,255,255,0.55);">STATE</p>
-                <input type="text" formControlName="state" placeholder="State"
+                <input type="text" formControlName="state" placeholder="Auto-filled from pincode"
                        class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                        style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
               </div>
               <div>
                 <p class="text-[10px] font-bold tracking-widest mb-2" style="color: rgba(255,255,255,0.55);">DISTRICT</p>
-                <input type="text" formControlName="district" placeholder="District"
+                <input type="text" formControlName="district" placeholder="Auto-filled from pincode"
                        class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
                        style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
               </div>
-            </div>
-            <div>
-              <p class="text-[10px] font-bold tracking-widest mb-2" style="color: rgba(255,255,255,0.55);">PINCODE</p>
-              <input type="text" formControlName="pincode" placeholder="6-digit pincode"
-                     maxlength="6" inputmode="numeric"
-                     class="w-full px-4 py-3 rounded-2xl font-medium text-sm placeholder:text-white/40 focus:outline-none focus:ring-2 focus:ring-indigo-500/30"
-                     style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white;" />
             </div>
           </div>
         </div>

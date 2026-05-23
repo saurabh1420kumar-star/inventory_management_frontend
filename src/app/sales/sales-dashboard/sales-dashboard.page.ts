@@ -13,6 +13,7 @@ import { Auth } from '../../services/auth';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HapticService } from '../../services/haptic.service';
+import { findLocationByPincode } from '../../services/india-location.data';
 import { addIcons } from 'ionicons';
 import { menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, arrowBackOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline } from 'ionicons/icons';
 
@@ -309,6 +310,22 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   closeAddDistributorModal(): void {
     this.haptic.light();
     this.showAddDistributorModal = false;
+  }
+
+  onPincodeInput(event: Event): void {
+    const value = (event.target as HTMLInputElement).value.replace(/\D/g, '');
+    if (value.length !== 6) {
+      if (value.length === 0) {
+        this.distributorCreateForm.patchValue({ state: '', district: '' }, { emitEvent: false });
+      }
+      return;
+    }
+    const result = findLocationByPincode(value);
+    if (result) {
+      this.distributorCreateForm.patchValue({ state: result.state, district: result.district }, { emitEvent: false });
+    } else {
+      this.showToast('Pincode not found. Please enter state/district manually.', 'warning');
+    }
   }
 
   submitDistributor(): void {
