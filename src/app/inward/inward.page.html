@@ -438,16 +438,55 @@
             </div>
           </div>
 
-          <!-- Gross Amount (auto-calculated, full width) -->
+          <!-- Gross Amount with Taxes (auto-calculated) -->
           <div>
-            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1">
               <ion-icon name="calculator-outline" class="text-indigo-400"></ion-icon>
-              Gross Amount
+              Gross Amount with Taxes (SGST + CGST)
             </label>
-            <div class="flex items-center gap-3 rounded-2xl border-2 border-indigo-100 bg-gradient-to-r from-indigo-50 to-blue-50 px-5 py-3.5 shadow-sm">
-              <span class="text-indigo-500 font-extrabold text-xl leading-none">₹</span>
-              <span class="text-2xl font-extrabold text-indigo-700 flex-1 leading-none">{{ form.grossAmount | number:'1.2-2' }}</span>
-              <span class="text-[9px] text-indigo-400 font-bold uppercase tracking-widest bg-indigo-100 px-2 py-1 rounded-full">Auto</span>
+
+            <!-- Tax breakdown rows -->
+            <div class="rounded-2xl border border-indigo-100 overflow-hidden shadow-sm">
+
+              <!-- Base amount row -->
+              <div class="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-slate-300"></div>
+                  <span class="text-xs text-slate-500 font-medium">Base Amount (Qty × Rate)</span>
+                </div>
+                <span class="text-sm font-bold text-slate-700">₹ {{ baseAmount | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- CGST row -->
+              <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50/60 border-b border-blue-100">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-blue-400"></div>
+                  <span class="text-xs text-blue-600 font-medium">CGST</span>
+                  <span *ngIf="currentTaxRate" class="text-[10px] text-blue-400 bg-blue-100 px-1.5 py-0.5 rounded-full font-bold">{{ currentTaxRate }}%</span>
+                </div>
+                <span class="text-sm font-bold text-blue-700">₹ {{ cgstAmount | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- SGST row -->
+              <div class="flex items-center justify-between px-4 py-2.5 bg-violet-50/60 border-b border-violet-100">
+                <div class="flex items-center gap-2">
+                  <div class="w-2 h-2 rounded-full bg-violet-400"></div>
+                  <span class="text-xs text-violet-600 font-medium">SGST</span>
+                  <span *ngIf="currentTaxRate" class="text-[10px] text-violet-400 bg-violet-100 px-1.5 py-0.5 rounded-full font-bold">{{ currentTaxRate }}%</span>
+                </div>
+                <span class="text-sm font-bold text-violet-700">₹ {{ sgstAmount | number:'1.2-2' }}</span>
+              </div>
+
+              <!-- Total gross amount -->
+              <div class="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-blue-600">
+                <div class="flex items-center gap-2">
+                  <ion-icon name="checkmark-circle-outline" style="color:rgba(255,255,255,0.85); font-size:16px;"></ion-icon>
+                  <span class="text-xs font-bold text-white/90 uppercase tracking-wider">Total Gross Amount</span>
+                  <span class="text-[9px] text-indigo-200 bg-white/20 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Auto</span>
+                </div>
+                <span class="text-xl font-extrabold text-white">₹ {{ form.grossAmount | number:'1.2-2' }}</span>
+              </div>
+
             </div>
           </div>
 

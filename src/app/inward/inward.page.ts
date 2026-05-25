@@ -126,6 +126,22 @@ export class InwardPage implements OnInit {
   isLoadingFinishedProducts = false;
   selectedFinishedProductId: number | null = null;
 
+  // Tax rate from selected item (used for CGST + SGST calculation)
+  currentTaxRate = 0;
+
+  get cgstAmount(): number {
+    const base = (this.form.quantity || 0) * (this.form.rate || 0);
+    return parseFloat((base * this.currentTaxRate / 100).toFixed(2));
+  }
+
+  get sgstAmount(): number {
+    return this.cgstAmount;
+  }
+
+  get baseAmount(): number {
+    return parseFloat(((this.form.quantity || 0) * (this.form.rate || 0)).toFixed(2));
+  }
+
   constructor(
     private http: HttpClient,
     private auth: Auth,
@@ -209,7 +225,9 @@ export class InwardPage implements OnInit {
   }
 
   updateGrossAmount(): void {
-    this.form.grossAmount = parseFloat(((this.form.quantity || 0) * (this.form.rate || 0)).toFixed(2));
+    const base = (this.form.quantity || 0) * (this.form.rate || 0);
+    const cgst = base * this.currentTaxRate / 100;
+    this.form.grossAmount = parseFloat((base + cgst + cgst).toFixed(2));
   }
 
   loadEntries(event?: any) {
@@ -286,6 +304,8 @@ export class InwardPage implements OnInit {
     this.form.itemType = type;
     this.form.itemName = '';
     this.form.itemCode = '';
+    this.currentTaxRate = 0;
+    this.form.grossAmount = 0;
     this.selectedRawMaterialId = null;
     this.selectedPromotionalItemId = null;
     this.selectedScrapId = null;
@@ -323,10 +343,12 @@ export class InwardPage implements OnInit {
       this.selectedRawMaterialId = mat.id ?? null;
       this.form.itemName = mat.name ?? '';
       this.form.itemCode = mat.materialCode ?? '';
+      this.currentTaxRate = mat.taxRate ?? 0;
       if (mat.unit) {
         const matched = this.unitTypes.find(u => u.value === mat.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
       }
+      this.updateGrossAmount();
     }
   }
 
@@ -349,10 +371,12 @@ export class InwardPage implements OnInit {
       this.selectedScrapId = item.materialCode ?? item.itemCode ?? null;
       this.form.itemName = item.name ?? '';
       this.form.itemCode = item.materialCode ?? item.itemCode ?? '';
+      this.currentTaxRate = item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
       }
+      this.updateGrossAmount();
     }
   }
 
@@ -375,10 +399,12 @@ export class InwardPage implements OnInit {
       this.selectedPromotionalItemId = item.id ?? null;
       this.form.itemName = item.name ?? '';
       this.form.itemCode = item.itemCode ?? '';
+      this.currentTaxRate = item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
       }
+      this.updateGrossAmount();
     }
   }
 
@@ -407,10 +433,12 @@ export class InwardPage implements OnInit {
       this.form.condition = item.condition ?? 'NEW';
       this.form.purchaseDate = item.purchaseDate ?? '';
       this.form.warrantyExpiryDate = item.warrantyExpiryDate ?? '';
+      this.currentTaxRate = item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
       }
+      this.updateGrossAmount();
     }
   }
 
