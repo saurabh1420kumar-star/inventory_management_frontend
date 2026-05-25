@@ -116,7 +116,7 @@ ion-toast.modern-toast {
   --border-radius: 16px;
   --box-shadow: 0 16px 48px rgba(0, 0, 0, 0.22), 0 4px 16px rgba(0, 0, 0, 0.12);
   position: fixed !important;
-  top: 20px !important;
+  top: calc(20px + var(--ion-safe-area-top, 0px)) !important;
   right: 16px !important;
   left: auto !important;
   bottom: auto !important;
@@ -222,7 +222,7 @@ ion-toast.modern-toast-warning::part(button) {
   ion-toast.modern-toast {
     right: 10px !important;
     inset-inline-end: 10px !important;
-    top: 12px !important;
+    top: calc(12px + var(--ion-safe-area-top, 0px)) !important;
     width: calc(100vw - 20px) !important;
     --width: calc(100vw - 20px);
     --min-width: unset;

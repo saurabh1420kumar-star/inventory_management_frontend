@@ -23,6 +23,7 @@
     display: flex;
     align-items: center;
     padding: 12px;
+    padding-top: calc(12px + var(--ion-safe-area-top, 0px));
     border-bottom: 1px solid var(--ion-border-color, rgba(0, 0, 0, 0.1));
     gap: 10px;
     min-height: 64px;

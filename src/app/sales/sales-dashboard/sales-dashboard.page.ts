@@ -1,7 +1,6 @@
 import { Component, OnInit, OnDestroy, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule, ReactiveFormsModule, FormBuilder, FormGroup, Validators } from '@angular/forms';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { HttpClientModule, HttpClient, HttpHeaders } from '@angular/common/http';
 import { environment } from '../../../environments/environment';
 import { IonicModule, ToastController } from '@ionic/angular';
@@ -168,7 +167,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   showBalanceModal = false;
   showPdfModal = false;
   pdfModalTitle = '';
-  pdfModalSrc: SafeResourceUrl | null = null;
+  legalDocType: 'terms' | 'privacy' = 'terms';
 
   distributors: Distributor[] = [];
   dealerFormDistributors: { distributorId: number; distributorName: string }[] = [];
@@ -210,8 +209,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     private toastController: ToastController,
     protected auth: Auth,
     private router: Router,
-    private http: HttpClient,
-    private readonly sanitizer: DomSanitizer
+    private http: HttpClient
   ) {
     addIcons({ menuOutline, analyticsOutline, cardOutline, trendingUpOutline, cartOutline, cashOutline, checkmarkCircleOutline, chevronDownOutline, walletOutline, searchOutline, addOutline, arrowForwardOutline, arrowBackOutline, checkmarkDoneOutline, arrowUpOutline, arrowDownOutline, calendarOutline, documentTextOutline, cloudUploadOutline, imageOutline, closeOutline, chevronForwardOutline, receiptOutline, addCircleOutline, storefrontOutline, personAddOutline, pricetagOutline, bookOutline, chevronUpOutline, briefcaseOutline, peopleOutline, locationOutline, gitBranchOutline, homeOutline, gridOutline, settingsOutline, personOutline });
   }
@@ -606,15 +604,15 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.showBalanceModal = false;
   }
 
-  openPdfModal(src: string, title: string): void {
+  openLegalDoc(type: 'terms' | 'privacy', title: string): void {
+    this.haptic.light();
+    this.legalDocType = type;
     this.pdfModalTitle = title;
-    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
     this.showPdfModal = true;
   }
 
   closePdfModal(): void {
     this.showPdfModal = false;
-    this.pdfModalSrc = null;
   }
 
   closeAddDealerModal(): void {

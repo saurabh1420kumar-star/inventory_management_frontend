@@ -22,7 +22,8 @@ import {
   eyeOffOutline,
   checkmarkCircleOutline,
   closeCircleOutline,
-  cubeOutline
+  cubeOutline,
+  arrowBackOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto, DistributorStock } from '../services/distributor.service';
 import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
@@ -133,6 +134,11 @@ export class DistributorPage implements OnInit {
   // Password visibility toggle
   showPassword: boolean = false;
 
+  // Legal document modal
+  showLegalModal: boolean = false;
+  legalDocType: 'terms' | 'privacy' = 'terms';
+  legalModalTitle: string = '';
+
   private haptic = inject(HapticService);
 
   constructor(
@@ -165,7 +171,8 @@ export class DistributorPage implements OnInit {
       'eye-off-outline': eyeOffOutline,
       'checkmark-circle-outline': checkmarkCircleOutline,
       'close-circle-outline': closeCircleOutline,
-      'cube-outline': cubeOutline
+      'cube-outline': cubeOutline,
+      'arrow-back-outline': arrowBackOutline
     });
   }
 
@@ -843,5 +850,16 @@ export class DistributorPage implements OnInit {
       month: 'long',
       year: 'numeric'
     });
+  }
+
+  openLegalDoc(type: 'terms' | 'privacy', title: string): void {
+    this.haptic.light();
+    this.legalDocType = type;
+    this.legalModalTitle = title;
+    this.showLegalModal = true;
+  }
+
+  closeLegalDoc(): void {
+    this.showLegalModal = false;
   }
 }
