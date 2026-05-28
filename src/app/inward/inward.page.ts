@@ -459,7 +459,7 @@ export class InwardPage implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/products/finished-products`, { headers: this.headers() }).subscribe({
       next: (res) => {
         const all: any[] = Array.isArray(res) ? res : (res?.data ?? res?.content ?? []);
-        this.finishedProducts = all.filter(p => p.status === 'BOM');
+        this.finishedProducts = all;
         this.isLoadingFinishedProducts = false;
       },
       error: () => {
@@ -595,6 +595,11 @@ export class InwardPage implements OnInit {
 
   getUnitShort(): string {
     return this.unitTypes.find(u => u.value === this.form.unit)?.short ?? this.form.unit;
+  }
+
+  getQuantityUnit(entry: InwardEntry | null | undefined): string {
+    if (!entry) return 'units';
+    return entry.itemType === 'finished_product' ? 'Bags' : (entry.unit || 'units');
   }
 
   private toDateTimeStr(d: string): string {
