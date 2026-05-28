@@ -17,7 +17,7 @@ import {
   businessOutline, documentTextOutline, layersOutline, filterOutline,
   waterOutline, appsOutline, gridOutline, carOutline, personOutline, callOutline,
   chatbubbleEllipsesOutline, timeOutline, barcodeOutline, buildOutline,
-  shieldCheckmarkOutline, calculatorOutline
+  shieldCheckmarkOutline, calculatorOutline, createOutline
 } from 'ionicons/icons';
 import { Auth } from '../services/auth';
 import { environment } from '../../environments/environment';
@@ -30,6 +30,7 @@ export interface InwardEntry {
   itemName: string;
   itemCode: string;
   quantity: number;
+  batchNo?: string;
   rate: number;
   grossAmount: number;
   unit: string;
@@ -98,6 +99,11 @@ export class InwardPage implements OnInit {
   // Detail modal state
   selectedEntry: InwardEntry | null = null;
   isDetailOpen = false;
+
+  // Edit mode state
+  isEditMode = false;
+  editForm: Partial<InwardEntry> = {};
+  isEditSubmitting = false;
 
   form: InwardEntry = this.emptyForm();
 
@@ -176,7 +182,8 @@ export class InwardPage implements OnInit {
       'barcode-outline': barcodeOutline,
       'build-outline': buildOutline,
       'shield-checkmark-outline': shieldCheckmarkOutline,
-      'calculator-outline': calculatorOutline
+      'calculator-outline': calculatorOutline,
+      'create-outline': createOutline
     });
   }
 
@@ -204,6 +211,7 @@ export class InwardPage implements OnInit {
       itemName: '',
       itemCode: '',
       quantity: 0,
+      batchNo: '',
       rate: 0,
       grossAmount: 0,
       unit: 'KG',
@@ -237,24 +245,28 @@ export class InwardPage implements OnInit {
       raw:         this.http.get<any>(`${environment.apiUrl}/products/raw-materials`, { headers }),
       scrap:       this.http.get<any>(`${environment.apiUrl}/products/scrap-items`, { headers }),
       machine:     this.http.get<any>(`${environment.apiUrl}/products/machine-parts`, { headers }),
-      promotional: this.http.get<any>(`${environment.apiUrl}/products/promotional-items`, { headers })
+      promotional: this.http.get<any>(`${environment.apiUrl}/products/promotional-items`, { headers }),
+      finished:    this.http.get<any>(`${environment.apiUrl}/products/finished-products`, { headers })
     }).subscribe({
       next: (res) => {
         const toArr = (r: any) => Array.isArray(r) ? r : (r?.data ?? []);
         const calcGross = (qty: number, price: number) => parseFloat(((qty || 0) * (price || 0)).toFixed(2));
         const rawItems = toArr(res.raw)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'raw_material' as InwardItemType, itemName: i.name, itemCode: i.materialCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
+          .map((i: any) => { const r = i.price || i.rate || 0; return { id: i.id, itemType: 'raw_material' as InwardItemType, itemName: i.name, itemCode: i.materialCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
         const scrapItems = toArr(res.scrap)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'scrap' as InwardItemType, itemName: i.name, itemCode: i.materialCode ?? i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
+          .map((i: any) => { const r = i.price || i.rate || 0; return { id: i.id, itemType: 'scrap' as InwardItemType, itemName: i.name, itemCode: i.materialCode ?? i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
         const machineItems = toArr(res.machine)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'spare_parts' as InwardItemType, itemName: i.name, itemCode: i.partNumber, quantity: i.quantity, unit: '', vendorName: i.vendor, vendorId: '', transportName: '', driverName: '', driverMobile: '', rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '', partNumber: i.partNumber, category: i.category, condition: i.condition }; });
+          .map((i: any) => { const r = i.price || i.rate || 0; return { id: i.id, itemType: 'spare_parts' as InwardItemType, itemName: i.name, itemCode: i.partNumber, quantity: i.quantity, unit: '', vendor: i.vendor, vendorName: i.vendor, vendorId: '', transportName: '', driverName: '', driverMobile: '', rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '', partNumber: i.partNumber, category: i.category, condition: i.condition }; });
         const promoItems = toArr(res.promotional)
           .filter((i: any) => i.status === 'INWARD')
-          .map((i: any) => { const r = i.price || i.rate || 0; return { itemType: 'promotional' as InwardItemType, itemName: i.name, itemCode: i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
-        this.entries = [...rawItems, ...scrapItems, ...machineItems, ...promoItems];
+          .map((i: any) => { const r = i.price || i.rate || 0; return { id: i.id, itemType: 'promotional' as InwardItemType, itemName: i.name, itemCode: i.itemCode, quantity: i.quantity, unit: i.unit, vendorName: i.vendorName, vendorId: i.vendorId, transportName: i.transportName, driverName: i.driverName, driverMobile: i.driverMobile, rate: r, grossAmount: calcGross(i.quantity, r), date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }; });
+        const finishedItems = toArr(res.finished)
+          .filter((i: any) => i.status === 'BOM')
+          .map((i: any) => ({ id: i.id, itemType: 'finished_product' as InwardItemType, itemName: i.name, itemCode: i.sku, quantity: i.quantity ?? 0, unit: i.unit ?? 'KG', vendorName: '', vendorId: '', transportName: '', driverName: '', driverMobile: '', rate: i.rate ?? 0, grossAmount: i.grossAmount ?? 0, batchNo: i.batchNumber ?? '', date: i.updatedAt?.split('T')[0] ?? '', invoiceNumber: '', remarks: '' }));
+        this.entries = [...rawItems, ...scrapItems, ...machineItems, ...promoItems, ...finishedItems];
         this.applyFilter();
         this.isLoading = false;
         if (event) event.target.complete();
@@ -421,10 +433,10 @@ export class InwardPage implements OnInit {
     });
   }
 
-  onMachinePartSelect(partNumber: string) {
-    const item = this.machineParts.find(m => String(m.partNumber) === partNumber);
+  onMachinePartSelect(id: string) {
+    const item = this.machineParts.find(m => String(m.id) === id);
     if (item) {
-      this.selectedMachinePartId = item.partNumber ?? null;
+      this.selectedMachinePartId = String(item.id);
       this.form.itemName = item.name ?? '';
       this.form.itemCode = item.partNumber ?? '';
       this.form.partNumber = item.partNumber ?? '';
@@ -444,9 +456,10 @@ export class InwardPage implements OnInit {
 
   loadFinishedProducts() {
     this.isLoadingFinishedProducts = true;
-    this.http.get<any>(`${environment.apiUrl}/bill-of-materials/list?page=0&size=200&sortBy=createdAt&sortDir=desc`, { headers: this.headers() }).subscribe({
+    this.http.get<any>(`${environment.apiUrl}/products/finished-products`, { headers: this.headers() }).subscribe({
       next: (res) => {
-        this.finishedProducts = res?.content ?? (Array.isArray(res) ? res : []);
+        const all: any[] = Array.isArray(res) ? res : (res?.data ?? res?.content ?? []);
+        this.finishedProducts = all.filter(p => p.status === 'BOM');
         this.isLoadingFinishedProducts = false;
       },
       error: () => {
@@ -459,10 +472,10 @@ export class InwardPage implements OnInit {
     const item = this.finishedProducts.find(p => String(p.id) === id);
     if (item) {
       this.selectedFinishedProductId = item.id;
-      this.form.itemName = item.finishedProductName ?? '';
-      this.form.itemCode = item.bomName ?? '';
-      this.form.unit = item.outputUnit ?? 'KG';
-      this.form.quantity = item.outputQuantity ?? 0;
+      this.form.itemName = item.finishedProductName ?? item.name ?? '';
+      this.form.itemCode = item.itemCode ?? item.bomName ?? '';
+      this.form.unit = item.unit ?? item.outputUnit ?? 'KG';
+      this.form.quantity = item.quantity ?? item.outputQuantity ?? 0;
     }
   }
 
@@ -478,6 +491,106 @@ export class InwardPage implements OnInit {
   closeDetail() {
     this.isDetailOpen = false;
     this.selectedEntry = null;
+    this.isEditMode = false;
+    this.editForm = {};
+  }
+
+  openEditMode(): void {
+    if (!this.selectedEntry) return;
+    this.editForm = { ...this.selectedEntry };
+    this.isEditMode = true;
+  }
+
+  cancelEdit(): void {
+    this.isEditMode = false;
+    this.editForm = {};
+  }
+
+  updateEditGrossAmount(): void {
+    const base = (this.editForm.quantity || 0) * (this.editForm.rate || 0);
+    this.editForm.grossAmount = parseFloat(base.toFixed(2));
+  }
+
+  submitEdit(): void {
+    if (!this.selectedEntry?.id) {
+      this.showToast('Cannot edit this entry (no ID found)', 'danger');
+      return;
+    }
+    this.isEditSubmitting = true;
+    const id = this.selectedEntry.id;
+    const type = this.selectedEntry.itemType;
+    let url = '';
+    let payload: any = {};
+
+    if (type === 'raw_material') {
+      url = `${environment.apiUrl}/products/raw-materials/${id}`;
+      payload = {
+        quantity: this.editForm.quantity,
+        rate: this.editForm.rate ?? 0,
+        price: this.editForm.rate ?? 0,
+        grossAmount: 0,
+        vendorName: this.editForm.vendorName,
+        vendorId: this.editForm.vendorId,
+        transportName: this.editForm.transportName,
+        driverName: this.editForm.driverName,
+        driverMobile: this.editForm.driverMobile,
+        remarks: this.editForm.remarks,
+      };
+    } else if (type === 'promotional') {
+      url = `${environment.apiUrl}/products/promotional-items/${id}`;
+      payload = {
+        quantity: this.editForm.quantity,
+        rate: this.editForm.rate ?? 0,
+        price: this.editForm.rate ?? 0,
+        grossAmount: 0,
+        vendorName: this.editForm.vendorName,
+        vendorId: this.editForm.vendorId,
+        transportName: this.editForm.transportName,
+        driverName: this.editForm.driverName,
+        driverMobile: this.editForm.driverMobile,
+        remarks: this.editForm.remarks,
+      };
+    } else if (type === 'scrap') {
+      url = `${environment.apiUrl}/products/scrap-items/${id}`;
+      payload = {
+        quantity: this.editForm.quantity,
+        rate: this.editForm.rate ?? 0,
+        price: this.editForm.rate ?? 0,
+        grossAmount: 0,
+        vendorName: this.editForm.vendorName,
+        transportName: this.editForm.transportName,
+        driverName: this.editForm.driverName,
+        driverMobile: this.editForm.driverMobile,
+      };
+    } else if (type === 'spare_parts') {
+      url = `${environment.apiUrl}/products/machine-parts/${id}`;
+      payload = {
+        quantity: this.editForm.quantity,
+        vendor: this.editForm.vendor,
+        category: this.editForm.category,
+        condition: this.editForm.condition,
+        purchaseDate: this.editForm.purchaseDate ? this.toDateTimeStr(this.editForm.purchaseDate) : null,
+        warrantyExpiryDate: this.editForm.warrantyExpiryDate ? this.toDateTimeStr(this.editForm.warrantyExpiryDate) : null,
+      };
+    } else {
+      this.showToast('Editing not supported for this type', 'warning');
+      this.isEditSubmitting = false;
+      return;
+    }
+
+    this.http.patch<any>(url, payload, { headers: this.headers() }).subscribe({
+      next: () => {
+        this.isEditSubmitting = false;
+        this.showToast('Update submitted for approval', 'success');
+        this.closeDetail();
+        this.loadEntries();
+      },
+      error: (err) => {
+        this.isEditSubmitting = false;
+        const msg = err?.error?.message ?? err?.error?.error ?? 'Failed to submit update';
+        this.showToast(msg, 'danger');
+      }
+    });
   }
 
   getUnitShort(): string {
@@ -509,7 +622,7 @@ export class InwardPage implements OnInit {
         quantity: this.form.quantity,
         minimumThreshold: 0,
         rate: this.form.rate ?? 0,
-        grossAmount: this.form.grossAmount ?? 0,
+        grossAmount: 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -547,7 +660,7 @@ export class InwardPage implements OnInit {
         quantity: this.form.quantity,
         minimumThreshold: 0,
         rate: this.form.rate ?? 0,
-        grossAmount: this.form.grossAmount ?? 0,
+        grossAmount: 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -585,7 +698,7 @@ export class InwardPage implements OnInit {
         quantity: this.form.quantity,
         minimumThreshold: 0,
         rate: this.form.rate ?? 0,
-        grossAmount: this.form.grossAmount ?? 0,
+        grossAmount: 0,
         vendorId: this.form.vendorId,
         vendorName: this.form.vendorName,
         transportName: this.form.transportName,
@@ -619,8 +732,8 @@ export class InwardPage implements OnInit {
         finishedProductName: this.form.itemName,
         quantity: this.form.quantity,
         minimumThreshold: 0,
-        rate: this.form.rate ?? 0,
-        grossAmount: this.form.grossAmount ?? 0
+        batchNumber: this.form.batchNo ?? '',
+        grossAmount: 0
       };
       this.http.post<any>(`${environment.apiUrl}/bill-of-materials/produce`, payload, { headers: this.headers() }).subscribe({
         next: () => {
@@ -655,7 +768,7 @@ export class InwardPage implements OnInit {
         condition: this.form.condition ?? 'NEW',
         status: 'INWARD'
       };
-      this.http.put<any>(`${environment.apiUrl}/products/machine-parts/sku/${encodeURIComponent(this.selectedMachinePartId)}`, payload, { headers: this.headers() }).subscribe({
+      this.http.put<any>(`${environment.apiUrl}/products/machine-parts/${this.selectedMachinePartId}`, payload, { headers: this.headers() }).subscribe({
         next: () => {
           this.isSubmitting = false;
           this.closeModal();

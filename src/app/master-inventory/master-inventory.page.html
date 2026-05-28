@@ -149,7 +149,8 @@
                    activeTab === 'spare_parts' ? 'Spare Parts' :
                    activeTab === 'promotional_items' ? 'Promotional Items' :
                    activeTab === 'scrap_material' ? 'Scrap Material' :
-                   activeTab === 'bom' ? 'Bill of Material' : 'All Categories' }}
+                   activeTab === 'bom' ? 'Bill of Material' :
+                   activeTab === 'inward_approvals' ? 'Inward Approvals' : 'All Categories' }}
               </span>
               <ion-icon name="chevron-down-outline" class="text-slate-400 text-sm transition-transform duration-200 flex-shrink-0"
                 [class.rotate-180]="filterDropdownOpen"></ion-icon>
@@ -180,7 +181,7 @@
       </div>
 
       <!-- INVENTORY LIST -->
-      <div *ngIf="activeTab !== 'bom' && filteredInventory.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+      <div *ngIf="activeTab !== 'bom' && activeTab !== 'inward_approvals' && filteredInventory.length > 0" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
         <div *ngFor="let item of paginatedInventory"
           class="bg-white rounded-3xl shadow-md overflow-hidden group hover:shadow-2xl hover:-translate-y-1 transition-all duration-300 border border-slate-100 flex flex-col"
           style="height: 400px">
@@ -318,7 +319,7 @@
           </button>
         </div>
       </div>
-      <div *ngIf="activeTab !== 'bom' && !isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
+      <div *ngIf="activeTab !== 'bom' && activeTab !== 'inward_approvals' && !isLoading && filteredInventory.length === 0" class="bg-white rounded-3xl shadow-sm border border-slate-100 p-20 text-center">
         <div class="flex flex-col items-center justify-center">
           <div class="w-20 h-20 bg-slate-100 rounded-full flex items-center justify-center shadow-sm mb-4">
             <ion-icon name="cube-outline" class="text-4xl text-slate-300"></ion-icon>
@@ -332,6 +333,111 @@
             <ion-icon name="add-circle-outline" class="mr-2"></ion-icon>
             Add New Item
           </button>
+        </div>
+      </div>
+
+      <!-- ============================================ -->
+      <!--           INWARD APPROVALS TAB               -->
+      <!-- ============================================ -->
+      <div *ngIf="activeTab === 'inward_approvals'">
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingApprovals" class="flex flex-col items-center justify-center py-20">
+          <ion-spinner name="crescent" class="text-amber-500"></ion-spinner>
+          <p class="text-slate-500 mt-4 font-medium">Loading pending approvals...</p>
+        </div>
+
+        <!-- Empty state -->
+        <div *ngIf="!isLoadingApprovals && pendingApprovals.length === 0"
+          class="bg-white rounded-3xl shadow-sm border border-slate-100 p-16 text-center">
+          <div class="w-16 h-16 bg-amber-50 rounded-full flex items-center justify-center mx-auto mb-4">
+            <ion-icon name="checkmark-done-outline" class="text-3xl text-amber-400"></ion-icon>
+          </div>
+          <h3 class="text-lg font-bold text-slate-800 mb-1">All caught up!</h3>
+          <p class="text-slate-500 text-sm">No pending inward approvals at this time.</p>
+        </div>
+
+        <!-- Approvals grid -->
+        <div *ngIf="!isLoadingApprovals && pendingApprovals.length > 0"
+          class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-5">
+
+          <div *ngFor="let approval of pendingApprovals"
+            class="bg-white rounded-3xl shadow-md border border-slate-100 overflow-hidden flex flex-col">
+
+            <!-- Card header -->
+            <div class="bg-gradient-to-r from-amber-50 to-orange-50 border-b border-amber-100 px-5 py-4 flex items-center justify-between">
+              <div class="flex items-center gap-3">
+                <div class="w-10 h-10 rounded-xl bg-amber-100 flex items-center justify-center flex-shrink-0">
+                  <ion-icon name="time-outline" class="text-xl text-amber-600"></ion-icon>
+                </div>
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-wider text-amber-600">Pending Approval</p>
+                  <p class="text-sm font-bold text-slate-800">{{ approval.productCode }}</p>
+                </div>
+              </div>
+              <span class="px-2.5 py-1 rounded-full text-[10px] font-bold uppercase tracking-wide bg-amber-100 text-amber-700 border border-amber-200">
+                {{ approval.productType === 'RAW_PRODUCT' ? 'Raw Material' :
+                   approval.productType === 'FINISHED_PRODUCT' ? 'Finished Product' :
+                   approval.productType === 'SPARE_PARTS' ? 'Spare Parts' :
+                   approval.productType === 'PROMOTIONAL' ? 'Promotional' :
+                   approval.productType ?? 'Inward' }}
+              </span>
+            </div>
+
+            <!-- Card body -->
+            <div class="px-5 py-4 flex-1">
+
+              <!-- Requested on -->
+              <div *ngIf="approval.requestedOn" class="flex justify-between items-center text-sm mb-3 pb-3 border-b border-slate-100">
+                <span class="text-slate-500 font-medium">Requested On</span>
+                <span class="text-slate-600 font-semibold">{{ approval.requestedOn | date:'dd MMM yyyy, h:mm a' }}</span>
+              </div>
+
+              <!-- Payload fields label -->
+              <p class="text-[10px] font-bold uppercase tracking-wider text-slate-400 mb-2">Request Details</p>
+
+              <!-- Dynamic payload grid -->
+              <div class="grid grid-cols-2 gap-x-4 gap-y-2.5">
+                <div *ngFor="let field of getPayloadFields(approval._payload)"
+                  class="flex flex-col min-w-0">
+                  <span class="text-[10px] font-bold uppercase tracking-wide text-slate-400 truncate">{{ field.label }}</span>
+                  <span class="text-sm font-semibold text-slate-800 truncate" [title]="field.value">{{ field.value }}</span>
+                </div>
+              </div>
+
+            </div>
+
+            <!-- Comment box -->
+            <div class="px-5 pb-3">
+              <textarea
+                [(ngModel)]="approvalComments[approval.id]"
+                [disabled]="processingApprovalId === approval.id"
+                placeholder="Add comments (optional)..."
+                rows="2"
+                class="w-full text-sm text-slate-700 placeholder-slate-400 bg-slate-50 border border-slate-200 focus:border-amber-400 focus:ring-2 focus:ring-amber-50 rounded-xl px-3 py-2 outline-none resize-none transition-all disabled:opacity-50">
+              </textarea>
+            </div>
+
+            <!-- Actions -->
+            <div class="px-5 pb-5 flex gap-3">
+              <button
+                (click)="processApproval(approval.id, 'REJECT')"
+                [disabled]="processingApprovalId === approval.id"
+                class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl border-2 border-rose-200 text-rose-600 font-bold text-sm hover:bg-rose-50 transition-colors disabled:opacity-50">
+                <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
+                Reject
+              </button>
+              <button
+                (click)="processApproval(approval.id, 'APPROVE')"
+                [disabled]="processingApprovalId === approval.id"
+                class="flex-1 flex items-center justify-center gap-2 py-2.5 rounded-xl bg-emerald-500 hover:bg-emerald-600 text-white font-bold text-sm transition-colors disabled:opacity-50">
+                <ion-icon *ngIf="processingApprovalId !== approval.id" name="checkmark-circle-outline" class="text-base"></ion-icon>
+                <ion-spinner *ngIf="processingApprovalId === approval.id" name="crescent" class="w-4 h-4"></ion-spinner>
+                Approve
+              </button>
+            </div>
+
+          </div>
         </div>
       </div>
 

@@ -1298,3 +1298,31 @@ ion-input, ion-select {
 ion-button { --border-radius: 12px; font-weight: 600; }
 ion-button:disabled { opacity: 0.6; }
 ion-spinner { --color: #38bdf8; }
+
+/* Dark action sheet for distributor picker */
+.dark-action-sheet {
+  .action-sheet-wrapper {
+    .action-sheet-container {
+      background: #161b22 !important;
+      .action-sheet-title {
+        color: #e6edf3 !important;
+        background: #161b22 !important;
+        font-weight: 700;
+        font-size: 15px;
+        border-bottom: 1px solid #30363d;
+      }
+      .action-sheet-button {
+        color: #e6edf3 !important;
+        background: #161b22 !important;
+        font-size: 14px;
+        font-weight: 500;
+        &:hover, &.activated { background: #21262d !important; }
+      }
+      .action-sheet-cancel .action-sheet-button-inner {
+        color: #f85149 !important;
+        font-weight: 700;
+      }
+    }
+  }
+}
+

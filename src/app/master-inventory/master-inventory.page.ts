@@ -9,6 +9,8 @@ import {
   Validators
 } from '@angular/forms';
 import { forkJoin } from 'rxjs';
+import { HttpClient, HttpHeaders, HttpClientModule } from '@angular/common/http';
+import { environment } from '../../environments/environment';
 
 import {
   IonHeader,
@@ -55,6 +57,7 @@ import {
 import { UnitService } from '../services/unit.service';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
+import { Auth } from '../services/auth';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -82,6 +85,7 @@ interface DisplayInventoryItem extends ApiInventoryItem {
     CommonModule,
     FormsModule,
     ReactiveFormsModule,
+    HttpClientModule,
 
     IonHeader,
     IonToolbar,
@@ -108,7 +112,7 @@ interface DisplayInventoryItem extends ApiInventoryItem {
 export class MasterInventoryPage implements OnInit {
 
   /* ---------- UI STATE ---------- */
-  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' = 'all';
+  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals' = 'all';
   filterDropdownOpen = false;
   filterOptions = [
     { value: 'all',               label: 'All Categories',    dot: 'bg-emerald-400' },
@@ -117,8 +121,15 @@ export class MasterInventoryPage implements OnInit {
     { value: 'spare_parts',       label: 'Spare Parts',       dot: 'bg-orange-400' },
     { value: 'promotional_items', label: 'Promotional Items', dot: 'bg-pink-400' },
     { value: 'scrap_material',    label: 'Scrap Material',    dot: 'bg-slate-400' },
-    { value: 'bom',               label: 'Bill of Material',  dot: 'bg-teal-400' }
+    { value: 'bom',               label: 'Bill of Material',  dot: 'bg-teal-400' },
+    { value: 'inward_approvals',  label: 'Inward Approvals',  dot: 'bg-amber-400' }
   ];
+
+  /* ---------- INWARD APPROVALS STATE ---------- */
+  pendingApprovals: any[] = [];
+  isLoadingApprovals = false;
+  processingApprovalId: number | null = null;
+  approvalComments: { [id: number]: string } = {};
   searchTerm = '';
   isAddModalOpen = false;
   isEditModalOpen = false;
@@ -185,7 +196,9 @@ export class MasterInventoryPage implements OnInit {
     private modalCtrl: ModalController,
     private inventoryService: InventoryService,
     private unitService: UnitService,
-    private router: Router
+    private router: Router,
+    private http: HttpClient,
+    private auth: Auth
   ) {
     this.addForm = this.fb.group({
       category: ['', Validators.required],
@@ -950,7 +963,7 @@ export class MasterInventoryPage implements OnInit {
     this.confirmCallback = null;
   }
 
-  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material') {
+  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals') {
     this.haptic.selectionChanged();
     this.activeTab = tab;
     this.resetPagination();
@@ -958,6 +971,93 @@ export class MasterInventoryPage implements OnInit {
       this.loadBOMs();
       this.loadBOMSummary();
     }
+    if (tab === 'inward_approvals') {
+      this.loadPendingApprovals();
+    }
+  }
+
+  /* ---------- INWARD APPROVALS ---------- */
+  loadPendingApprovals() {
+    this.isLoadingApprovals = true;
+    const token = localStorage.getItem('token');
+    const headers = new HttpHeaders(token ? { Authorization: `Bearer ${token}` } : {});
+    this.http.get<any>(`${environment.apiUrl}/products/inward-approvals/pending`, { headers }).subscribe({
+      next: (res) => {
+        const raw: any[] = Array.isArray(res) ? res : (res?.data ?? res?.content ?? []);
+        this.pendingApprovals = raw.map(a => {
+          let payload: any = {};
+          try { payload = JSON.parse(a.requestPayload ?? '{}'); } catch {}
+          return { ...a, _payload: payload };
+        });
+        this.approvalComments = {};
+        this.pendingApprovals.forEach(a => this.approvalComments[a.id] = '');
+        this.isLoadingApprovals = false;
+      },
+      error: () => {
+        this.isLoadingApprovals = false;
+        this.toast.present('Failed to load pending approvals', 'danger');
+      }
+    });
+  }
+
+  private readonly payloadLabelMap: Record<string, string> = {
+    name:               'Name',
+    materialCode:       'Material Code',
+    unit:               'Unit',
+    price:              'Price (₹)',
+    quantity:           'Quantity',
+    minimumThreshold:   'Min. Threshold',
+    hsn:                'HSN Code',
+    taxRate:            'Tax Rate (%)',
+    vendorId:           'Vendor ID',
+    vendorName:         'Vendor',
+    transportName:      'Transport',
+    driverName:         'Driver Name',
+    driverMobile:       'Driver Mobile',
+    status:             'Status',
+    rate:               'Rate (₹)',
+    gst:                'GST',
+    grossAmount:        'Gross Amount (₹)',
+    batchNumber:        'Batch No',
+    invoiceNumber:      'Invoice No',
+    remarks:            'Remarks',
+  };
+
+  getPayloadFields(payload: any): { label: string; value: string }[] {
+    if (!payload) return [];
+    return Object.entries(payload)
+      .filter(([, v]) => v !== null && v !== undefined && v !== '' && v !== 0)
+      .map(([k, v]) => ({
+        label: this.payloadLabelMap[k] ?? k,
+        value: String(v)
+      }));
+  }
+
+  processApproval(approvalId: number, action: 'APPROVE' | 'REJECT') {
+    this.haptic.medium();
+    this.processingApprovalId = approvalId;
+    const token = localStorage.getItem('token');
+    const username = this.auth.getUsername() ?? '';
+    const headers = new HttpHeaders({
+      ...(token ? { Authorization: `Bearer ${token}` } : {}),
+      'Admin-Username': username
+    });
+    this.http.post<any>(
+      `${environment.apiUrl}/products/inward-approvals/${approvalId}/process`,
+      { action, comments: this.approvalComments[approvalId] ?? '' },
+      { headers }
+    ).subscribe({
+      next: () => {
+        this.pendingApprovals = this.pendingApprovals.filter(a => a.id !== approvalId);
+        delete this.approvalComments[approvalId];
+        this.processingApprovalId = null;
+        this.toast.present(action === 'APPROVE' ? 'Approved successfully!' : 'Rejected successfully!', action === 'APPROVE' ? 'success' : 'warning');
+      },
+      error: () => {
+        this.processingApprovalId = null;
+        this.toast.present('Failed to process approval', 'danger');
+      }
+    });
   }
 
   refreshInventory() {

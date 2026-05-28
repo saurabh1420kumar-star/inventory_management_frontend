@@ -332,21 +332,20 @@
 
         <!-- Distributor Select -->
         <div class="bm-field">
-          <p class="bm-field__label">Distributor</p>
-          <div class="bm-field__select-wrap">
-            <select
-              class="bm-field__select"
+          <p class="bm-field__label">DISTRIBUTOR</p>
+          <div class="dist-select-box">
+            <ion-select
+              class="dist-balance-select"
               [(ngModel)]="selectedDistributorForBalance"
-              (ngModelChange)="onDistributorBalanceChange()"
-              [disabled]="isLoadingDealerDistributors">
-              <option [ngValue]="null" disabled>
-                {{ isLoadingDealerDistributors ? 'Loading distributors…' : 'Select a distributor' }}
-              </option>
-              <option *ngFor="let d of dealerFormDistributors" [ngValue]="d.distributorId">
+              (ionChange)="onDistributorBalanceChange()"
+              [disabled]="isLoadingDealerDistributors"
+              interface="action-sheet"
+              [placeholder]="isLoadingDealerDistributors ? 'Loading distributors…' : 'Select a distributor'"
+              [interfaceOptions]="{ header: 'Select Distributor', cssClass: 'dark-action-sheet' }">
+              <ion-select-option *ngFor="let d of dealerFormDistributors" [value]="d.distributorId">
                 {{ d.distributorName }}
-              </option>
-            </select>
-            <ion-icon name="chevron-down-outline" class="bm-field__arrow"></ion-icon>
+              </ion-select-option>
+            </ion-select>
           </div>
         </div>
 

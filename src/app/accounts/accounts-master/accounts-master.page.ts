@@ -581,17 +581,23 @@ export class AccountsMasterPage implements OnInit {
   }
 
   get filteredAccounts(): LedgerAccount[] {
-    // Use distributors
     const accountsToFilter = this.mapDistributorsToLedgerAccounts(this.distributors);
 
     if (!this.accountSearchQuery.trim()) {
       return accountsToFilter;
     }
     const query = this.accountSearchQuery.toLowerCase();
-    return accountsToFilter.filter(account =>
+    const matched = accountsToFilter.filter(account =>
       account.name.toLowerCase().includes(query) ||
       account.accountCode.toLowerCase().includes(query)
     );
+    // Sort: starts-with match first, then contains
+    matched.sort((a, b) => {
+      const aStarts = a.name.toLowerCase().startsWith(query) ? 0 : 1;
+      const bStarts = b.name.toLowerCase().startsWith(query) ? 0 : 1;
+      return aStarts - bStarts;
+    });
+    return matched;
   }
 
   get creditUtilized(): number {

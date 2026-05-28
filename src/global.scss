@@ -240,3 +240,95 @@ ion-toast.modern-toast-warning::part(button) {
 @import "@ionic/angular/css/text-alignment.css";
 @import "@ionic/angular/css/text-transformation.css";
 @import "@ionic/angular/css/flex-utils.css";
+
+// ============================================================
+// Distributor balance select
+// ============================================================
+// Wrapper provides the visual box; ion-select fills it transparently
+.dist-select-box {
+  width: 100%;
+  height: 52px;
+  background: #161b22;
+  border: 1.5px solid #30363d;
+  border-radius: 14px;
+  display: flex;
+  align-items: center;
+  overflow: hidden;
+}
+ion-select.dist-balance-select {
+  width: 100%;
+  height: 100%;
+  --background: transparent;
+  --color: #e6edf3;
+  --placeholder-color: rgba(230, 237, 243, 0.45);
+  --padding-start: 14px;
+  --padding-end: 10px;
+  --padding-top: 0;
+  --padding-bottom: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+ion-select.dist-balance-select::part(container) {
+  height: 100%;
+  display: flex;
+  align-items: center;
+}
+ion-select.dist-balance-select::part(text) {
+  color: #e6edf3;
+  font-size: 14px;
+  font-weight: 600;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+ion-select.dist-balance-select::part(placeholder) {
+  color: rgba(230, 237, 243, 0.45);
+  font-weight: 500;
+}
+ion-select.dist-balance-select::part(icon) {
+  color: rgba(230, 237, 243, 0.6);
+}
+
+// ============================================================
+// Dark Action Sheet — distributor picker
+// ============================================================
+.dark-action-sheet {
+  --background: #161b22;
+  --color: #e6edf3;
+}
+.dark-action-sheet .action-sheet-wrapper {
+  background: transparent !important;
+}
+.dark-action-sheet .action-sheet-wrapper .action-sheet-container {
+  background: #161b22 !important;
+  border-radius: 16px 16px 0 0;
+  overflow: hidden;
+}
+.dark-action-sheet .action-sheet-group {
+  background: #161b22 !important;
+}
+.dark-action-sheet .action-sheet-title {
+  color: #e6edf3 !important;
+  background: #161b22 !important;
+  font-weight: 700;
+  font-size: 15px;
+  border-bottom: 1px solid #30363d;
+}
+.dark-action-sheet .action-sheet-button {
+  color: #e6edf3 !important;
+  background: #161b22 !important;
+  font-size: 14px;
+  font-weight: 500;
+  border-bottom: 1px solid rgba(48, 54, 61, 0.5);
+}
+.dark-action-sheet .action-sheet-button.ion-activated {
+  background: #21262d !important;
+}
+// Cancel button — the button itself carries .action-sheet-cancel class
+.dark-action-sheet .action-sheet-button.action-sheet-cancel,
+.dark-action-sheet .action-sheet-group-cancel .action-sheet-button {
+  color: #f85149 !important;
+  background: #161b22 !important;
+  font-weight: 700;
+  border-top: 1px solid #30363d;
+}

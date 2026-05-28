@@ -326,7 +326,7 @@
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
                         class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
                   <option value="" disabled selected>{{ isLoadingMachineParts ? 'Loading…' : 'Select machine part' }}</option>
-                  <option *ngFor="let m of machineParts" [value]="m.partNumber">{{ m.name }} ({{ m.partNumber }})</option>
+                  <option *ngFor="let m of machineParts" [value]="m.id">{{ m.name }}{{ m.partNumber ? ' (' + m.partNumber + ')' : '' }}</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingMachineParts" name="crescent" style="width:14px;height:14px;color:#f59e0b;"></ion-spinner>
@@ -343,7 +343,7 @@
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
                         class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-10">
                   <option value="" disabled selected>{{ isLoadingFinishedProducts ? 'Loading…' : 'Select finished product' }}</option>
-                  <option *ngFor="let fp of finishedProducts" [value]="fp.id">{{ fp.finishedProductName }}</option>
+                  <option *ngFor="let fp of finishedProducts" [value]="fp.id">{{ fp.finishedProductName ?? fp.name }}</option>
                 </select>
                 <div class="pointer-events-none absolute inset-y-0 right-3 flex items-center">
                   <ion-spinner *ngIf="isLoadingFinishedProducts" name="crescent" style="width:14px;height:14px;color:#3b82f6;"></ion-spinner>
@@ -408,7 +408,7 @@
             </div>
           </div>
 
-          <!-- Quantity + Rate -->
+          <!-- Quantity + Rate / Batch No -->
           <div class="grid grid-cols-2 gap-3">
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
@@ -418,75 +418,33 @@
               </label>
               <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
                 <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
-                       (ngModelChange)="updateGrossAmount()"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
               </div>
             </div>
-            <div class="group">
+            <!-- Rate: raw_material, promotional, scrap -->
+            <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
-                <ion-icon name="pricetag-outline" class="text-slate-400"></ion-icon>
+                <ion-icon name="cash-outline" class="text-slate-400"></ion-icon>
                 Rate (₹)
               </label>
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
-                <span class="absolute left-3.5 top-1/2 -translate-y-1/2 text-slate-400 font-bold text-sm pointer-events-none">₹</span>
-                <input [(ngModel)]="form.rate" type="number" min="0" step="0.01" placeholder="0.00"
-                       (ngModelChange)="updateGrossAmount()"
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.rate" type="number" min="0" placeholder="0.00"
                        style="background:transparent; color:#1e293b;"
-                       class="w-full pl-8 pr-4 py-3.5 rounded-2xl text-sm outline-none" />
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
               </div>
             </div>
-          </div>
-
-          <!-- Gross Amount with Taxes (auto-calculated) -->
-          <div>
-            <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1">
-              <ion-icon name="calculator-outline" class="text-indigo-400"></ion-icon>
-              Gross Amount with Taxes (SGST + CGST)
-            </label>
-
-            <!-- Tax breakdown rows -->
-            <div class="rounded-2xl border border-indigo-100 overflow-hidden shadow-sm">
-
-              <!-- Base amount row -->
-              <div class="flex items-center justify-between px-4 py-2.5 bg-slate-50 border-b border-slate-100">
-                <div class="flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-slate-300"></div>
-                  <span class="text-xs text-slate-500 font-medium">Base Amount (Qty × Rate)</span>
-                </div>
-                <span class="text-sm font-bold text-slate-700">₹ {{ baseAmount | number:'1.2-2' }}</span>
+            <!-- Batch No: only for finished_product -->
+            <div *ngIf="selectedType === 'finished_product'" class="group">
+              <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
+                <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
+                Batch No
+              </label>
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+                <input [(ngModel)]="form.batchNo" type="text" placeholder="e.g. B-2026-001"
+                       style="background:transparent; color:#1e293b;"
+                       class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
               </div>
-
-              <!-- CGST row -->
-              <div class="flex items-center justify-between px-4 py-2.5 bg-blue-50/60 border-b border-blue-100">
-                <div class="flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-blue-400"></div>
-                  <span class="text-xs text-blue-600 font-medium">CGST</span>
-                  <span *ngIf="currentTaxRate" class="text-[10px] text-blue-400 bg-blue-100 px-1.5 py-0.5 rounded-full font-bold">{{ currentTaxRate }}%</span>
-                </div>
-                <span class="text-sm font-bold text-blue-700">₹ {{ cgstAmount | number:'1.2-2' }}</span>
-              </div>
-
-              <!-- SGST row -->
-              <div class="flex items-center justify-between px-4 py-2.5 bg-violet-50/60 border-b border-violet-100">
-                <div class="flex items-center gap-2">
-                  <div class="w-2 h-2 rounded-full bg-violet-400"></div>
-                  <span class="text-xs text-violet-600 font-medium">SGST</span>
-                  <span *ngIf="currentTaxRate" class="text-[10px] text-violet-400 bg-violet-100 px-1.5 py-0.5 rounded-full font-bold">{{ currentTaxRate }}%</span>
-                </div>
-                <span class="text-sm font-bold text-violet-700">₹ {{ sgstAmount | number:'1.2-2' }}</span>
-              </div>
-
-              <!-- Total gross amount -->
-              <div class="flex items-center justify-between px-4 py-3.5 bg-gradient-to-r from-indigo-500 to-blue-600">
-                <div class="flex items-center gap-2">
-                  <ion-icon name="checkmark-circle-outline" style="color:rgba(255,255,255,0.85); font-size:16px;"></ion-icon>
-                  <span class="text-xs font-bold text-white/90 uppercase tracking-wider">Total Gross Amount</span>
-                  <span class="text-[9px] text-indigo-200 bg-white/20 px-1.5 py-0.5 rounded-full font-bold uppercase tracking-wide">Auto</span>
-                </div>
-                <span class="text-xl font-extrabold text-white">₹ {{ form.grossAmount | number:'1.2-2' }}</span>
-              </div>
-
             </div>
           </div>
 
@@ -758,13 +716,151 @@
           <p class="text-white/75 text-xs font-mono">{{ selectedEntry.itemCode || 'No code' }}<span *ngIf="selectedEntry.id" class="ml-2 opacity-60">#{{ selectedEntry.id }}</span></p>
         </div>
       </div>
-      <button (click)="closeDetail()" class="w-9 h-9 flex items-center justify-center rounded-xl border-0 outline-none" style="background: rgba(255,255,255,0.2);">
-        <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
-      </button>
+      <div class="flex items-center gap-2">
+        <button *ngIf="!isEditMode && selectedEntry?.itemType !== 'finished_product'"
+                (click)="openEditMode()"
+                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border-0 outline-none"
+                style="background: rgba(255,255,255,0.2); color: #fff;">
+          <ion-icon name="create-outline" style="font-size:14px;"></ion-icon>
+          Edit
+        </button>
+        <button (click)="closeDetail()" class="w-9 h-9 flex items-center justify-center rounded-xl border-0 outline-none" style="background: rgba(255,255,255,0.2);">
+          <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+        </button>
+      </div>
     </div>
 
     <!-- Scrollable Body -->
     <div class="overflow-y-auto flex-1 px-5 py-4 space-y-4 bg-slate-50">
+
+      <!-- ── EDIT FORM ── -->
+      <ng-container *ngIf="isEditMode">
+        <p class="text-[10px] font-bold text-amber-600 uppercase tracking-widest bg-amber-50 border border-amber-200 rounded-xl px-3 py-2">
+          Editing — changes will be submitted for approval
+        </p>
+
+        <!-- Quantity + Rate (all types) -->
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Quantity</label>
+            <input type="number" [(ngModel)]="editForm.quantity" (ngModelChange)="updateEditGrossAmount()"
+                   class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-400" />
+          </div>
+          <!-- Rate: raw_material, promotional, scrap -->
+          <div *ngIf="selectedEntry?.itemType !== 'spare_parts' && selectedEntry?.itemType !== 'finished_product'">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Rate (₹)</label>
+            <input type="number" [(ngModel)]="editForm.rate"
+                   class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-400" />
+          </div>
+          <!-- Batch No: only for finished_product -->
+          <div *ngIf="selectedEntry?.itemType === 'finished_product'">
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Batch No</label>
+            <input type="text" [(ngModel)]="editForm.batchNo" placeholder="e.g. B-2026-001"
+                   class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm font-bold text-slate-800 outline-none focus:border-emerald-400" />
+          </div>
+        </div>
+
+        <!-- Spare parts fields -->
+        <ng-container *ngIf="selectedEntry?.itemType === 'spare_parts'">
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Vendor</label>
+            <input type="text" [(ngModel)]="editForm.vendor"
+                   class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Category</label>
+              <select [(ngModel)]="editForm.category"
+                      class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400">
+                <option value="MACHINE">Machine</option>
+                <option value="ELECTRICAL">Electrical</option>
+                <option value="HYDRAULIC">Hydraulic</option>
+                <option value="PNEUMATIC">Pneumatic</option>
+                <option value="OTHER">Other</option>
+              </select>
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Condition</label>
+              <select [(ngModel)]="editForm.condition"
+                      class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400">
+                <option value="NEW">New</option>
+                <option value="USED">Used</option>
+                <option value="REFURBISHED">Refurbished</option>
+                <option value="DAMAGED">Damaged</option>
+              </select>
+            </div>
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Purchase Date</label>
+              <input type="date" [(ngModel)]="editForm.purchaseDate"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Warranty Expiry</label>
+              <input type="date" [(ngModel)]="editForm.warrantyExpiryDate"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- Vendor & logistics (non-spare-parts) -->
+        <ng-container *ngIf="selectedEntry?.itemType !== 'spare_parts'">
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Vendor Name</label>
+              <input type="text" [(ngModel)]="editForm.vendorName"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Vendor ID</label>
+              <input type="text" [(ngModel)]="editForm.vendorId"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Transport Name</label>
+            <input type="text" [(ngModel)]="editForm.transportName"
+                   class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+          </div>
+          <div class="grid grid-cols-2 gap-3">
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Driver Name</label>
+              <input type="text" [(ngModel)]="editForm.driverName"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+            <div>
+              <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Driver Mobile</label>
+              <input type="tel" [(ngModel)]="editForm.driverMobile"
+                     class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400" />
+            </div>
+          </div>
+          <div>
+            <label class="text-[10px] font-bold text-slate-500 uppercase tracking-widest block mb-1">Remarks</label>
+            <textarea [(ngModel)]="editForm.remarks" rows="2"
+                      class="w-full px-3 py-2.5 bg-white border border-slate-200 rounded-xl text-sm text-slate-800 outline-none focus:border-emerald-400 resize-none"></textarea>
+          </div>
+        </ng-container>
+
+        <!-- Action buttons -->
+        <div class="flex gap-3 pt-2 pb-2">
+          <button type="button" (click)="cancelEdit()"
+                  class="flex-1 py-3 rounded-xl text-sm font-semibold text-slate-600 bg-slate-100">
+            Cancel
+          </button>
+          <button type="button" (click)="submitEdit()" [disabled]="isEditSubmitting"
+                  class="flex-1 py-3 rounded-xl text-sm font-bold text-white flex items-center justify-center gap-2"
+                  style="background: linear-gradient(135deg,#10b981,#059669);"
+                  [style.opacity]="isEditSubmitting ? '0.6' : '1'">
+            <ion-spinner *ngIf="isEditSubmitting" name="crescent" style="width:14px;height:14px;color:#fff;"></ion-spinner>
+            <ion-icon *ngIf="!isEditSubmitting" name="checkmark-circle-outline" style="font-size:16px;"></ion-icon>
+            {{ isEditSubmitting ? 'Submitting…' : 'Submit for Approval' }}
+          </button>
+        </div>
+      </ng-container>
+
+      <!-- ── VIEW MODE ── -->
+      <ng-container *ngIf="!isEditMode">
 
       <!-- Type + Date badges -->
       <div class="flex items-center gap-2 flex-wrap">
@@ -903,6 +999,8 @@
         <ion-icon name="time-outline" class="text-slate-300 text-xs"></ion-icon>
         <p class="text-[11px] text-slate-300">Recorded on {{ selectedEntry.createdAt | date:'dd MMM yyyy · h:mm a' }}</p>
       </div>
+
+      </ng-container><!-- end view mode -->
 
     </div>
   </div>

@@ -597,6 +597,37 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.selectedDistributorForBalance = null;
     this.distributorBalance = null;
     this.showBalanceModal = true;
+    this.loadBalanceDistributors();
+  }
+
+  loadBalanceDistributors(): void {
+    if (!this.salespersonId) return;
+    this.isLoadingDealerDistributors = true;
+    const token = this.auth.getToken();
+    const headers = new HttpHeaders({ ...(token ? { 'Authorization': `Bearer ${token}` } : {}) });
+    this.http.get<any>(
+      `${environment.apiUrl}/sales-mapping/salesperson/${this.salespersonId}`,
+      { headers }
+    ).pipe(takeUntil(this.destroy$))
+    .subscribe({
+      next: (res) => {
+        const items: any[] = Array.isArray(res) ? res : (res?.data ?? []);
+        const seen = new Set<number>();
+        this.dealerFormDistributors = items
+          .filter((item: any) => item.distributorId != null)
+          .reduce((acc: { distributorId: number; distributorName: string }[], item: any) => {
+            if (!seen.has(item.distributorId)) {
+              seen.add(item.distributorId);
+              acc.push({ distributorId: item.distributorId, distributorName: item.distributorName });
+            }
+            return acc;
+          }, []);
+        this.isLoadingDealerDistributors = false;
+      },
+      error: () => {
+        this.isLoadingDealerDistributors = false;
+      }
+    });
   }
 
   closeBalanceModal(): void {
