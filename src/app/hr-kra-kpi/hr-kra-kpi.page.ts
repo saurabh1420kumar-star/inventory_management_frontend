@@ -161,7 +161,7 @@ export class HrKraKpiPage implements OnInit {
   frequencies: string[] = ['MONTHLY'];
 
   currentPage = 1;
-  itemsPerPage = 5;
+  itemsPerPage = 10;
   salesPersonSearchQuery = '';
   selectedListSalesPerson: SalesPerson | null = null;
   showSalesPersonSearchDropdown = false;
@@ -249,38 +249,23 @@ export class HrKraKpiPage implements OnInit {
     return this.kraEntries.filter((entry) => {
       const name = (entry.salesPersonName || this.getSalesPersonName(entry.description) || '').toLowerCase();
 
-      // Multi-select filter: if salespersons are selected, filter by them
       if (this.selectedListSalesPersons.length > 0) {
         const isSelectedPerson = this.selectedListSalesPersons.some((person) => name === person.name.toLowerCase());
-        if (!isSelectedPerson) {
-          return false;
-        }
+        if (!isSelectedPerson) return false;
       }
 
-      // Single search filter (legacy, fallback if no multi-select)
       if (this.selectedListSalesPerson && this.selectedListSalesPersons.length === 0) {
         return name === this.selectedListSalesPerson.name.trim().toLowerCase();
       }
 
-      // Status filter
-      if (this.kraListFilters.status !== 'ALL' && entry.status !== this.kraListFilters.status) {
-        return false;
-      }
+      if (this.kraListFilters.status !== 'ALL' && entry.status !== this.kraListFilters.status) return false;
 
-      // Target range filter
-      if (this.kraListFilters.targetMin !== null && entry.targetValue < this.kraListFilters.targetMin) {
-        return false;
-      }
-      if (this.kraListFilters.targetMax !== null && entry.targetValue > this.kraListFilters.targetMax) {
-        return false;
-      }
+      if (this.kraListFilters.targetMin !== null && entry.targetValue < this.kraListFilters.targetMin) return false;
+      if (this.kraListFilters.targetMax !== null && entry.targetValue > this.kraListFilters.targetMax) return false;
 
-      // KRA query filter
       if (this.kraListFilters.kraQuery.trim().length > 0) {
         const kraQuery = this.kraListFilters.kraQuery.trim().toLowerCase();
-        if (!entry.kraName.toLowerCase().includes(kraQuery)) {
-          return false;
-        }
+        if (!entry.kraName.toLowerCase().includes(kraQuery)) return false;
       }
 
       return true;

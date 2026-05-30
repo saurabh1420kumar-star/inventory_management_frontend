@@ -30,6 +30,7 @@ import { DistributorService, DistributorOrder, DistributorStock } from '../servi
 import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
+import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
 import { environment } from '../../environments/environment';
 
 interface MetricCard {
@@ -105,6 +106,8 @@ interface DistributorProfile {
   id?: number;
   distributorId?: number;
   distributorName?: string;
+  name?: string;
+  firmName?: string;
   mobileNumber?: string;
   phone?: string;
   email?: string;
@@ -113,6 +116,14 @@ interface DistributorProfile {
   state?: string;
   gstNumber?: string;
   panNumber?: string;
+  creditLimit?: number;
+  creditBalance?: number;
+  accountName?: string;
+  accountNumber?: string;
+  ifsc?: string;
+  IFSC?: string;
+  bankName?: string;
+  bankBranch?: string;
 }
 
 interface PriceMasterProduct {
@@ -291,6 +302,19 @@ export class DistributorDashboardPage implements OnInit {
   distributorStock: DistributorStock | null = null;
   isLoadingStock = false;
 
+  // Copy of Invoice
+  invoiceList: ProformaInvoice[] = [];
+  filteredInvoiceList: ProformaInvoice[] = [];
+  isLoadingInvoices = false;
+  invoiceSearchQuery = '';
+  downloadingInvoiceId: number | null = null;
+
+  // Account Statement
+  accountStatementBalance = 0;
+  accountStatementDate = '';
+  accountStatementTxns: any[] = [];
+  isLoadingAccountStatement = false;
+
   showPdfModal = false;
   pdfModalTitle = '';
   pdfModalSrc: SafeResourceUrl | null = null;
@@ -303,7 +327,8 @@ export class DistributorDashboardPage implements OnInit {
     private ledgerService: LedgerService,
     private toastController: ToastController,
     private http: HttpClient,
-    private readonly sanitizer: DomSanitizer
+    private readonly sanitizer: DomSanitizer,
+    private proformaInvoiceService: ProformaInvoiceService
   ) {
     addIcons({
       'add-outline': addOutline,
@@ -416,8 +441,11 @@ export class DistributorDashboardPage implements OnInit {
     this.http.get<any>(`${environment.apiUrl}/distributors/${this.distributorId}`, { headers }).subscribe({
       next: (res) => {
         this.distributorProfile = res?.data ?? res;
-        if (this.distributorProfile?.distributorName) {
-          this.distributorName = this.distributorProfile.distributorName;
+        const resolvedName = this.distributorProfile?.distributorName
+          ?? this.distributorProfile?.name
+          ?? this.distributorProfile?.firmName;
+        if (resolvedName) {
+          this.distributorName = resolvedName;
         }
         this.isLoadingProfile = false;
       },
@@ -515,7 +543,119 @@ export class DistributorDashboardPage implements OnInit {
       this.loadAllDealerProductCounts();
     } else if (view === 'dispatch-report') {
       this.loadDispatchReport();
+      this.loadOrders();
+    } else if (view === 'copy-invoice') {
+      this.loadInvoices();
+    } else if (view === 'account-statement') {
+      this.loadAccountStatement();
+    } else if (view === 'balance-confirmation') {
+      this.loadAccountStatement();
+    } else if (view === 'credit-limit') {
+      this.loadPaymentCollections();
     }
+  }
+
+  loadInvoices() {
+    this.isLoadingInvoices = true;
+    this.proformaInvoiceService.getAllInvoices().subscribe({
+      next: (data) => {
+        const all = Array.isArray(data) ? data : [];
+        this.invoiceList = this.distributorId
+          ? all.filter(inv => inv.distributorId === this.distributorId)
+          : all;
+        this.invoiceList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.filterInvoiceList();
+        this.isLoadingInvoices = false;
+      },
+      error: () => {
+        this.isLoadingInvoices = false;
+      }
+    });
+  }
+
+  filterInvoiceList() {
+    const q = this.invoiceSearchQuery.trim().toLowerCase();
+    this.filteredInvoiceList = q
+      ? this.invoiceList.filter(inv =>
+          inv.piNumber?.toLowerCase().includes(q) ||
+          String(inv.amount).includes(q)
+        )
+      : [...this.invoiceList];
+  }
+
+  downloadInvoice(invoice: ProformaInvoice) {
+    this.haptic.medium();
+    this.downloadingInvoiceId = invoice.id;
+    this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
+      next: (blob) => {
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `${invoice.piNumber}.pdf`;
+        a.click();
+        window.URL.revokeObjectURL(url);
+        this.downloadingInvoiceId = null;
+      },
+      error: () => {
+        this.downloadingInvoiceId = null;
+      }
+    });
+  }
+
+  get creditUtilized(): number {
+    // Sum all CREDIT-type transactions from payment collections
+    return this.paymentCollections
+      .filter((p: any) => (p.transactionType ?? '').toUpperCase() === 'CREDIT')
+      .reduce((sum: number, p: any) => sum + (p.amount ?? 0), 0);
+  }
+
+  get creditAvailable(): number {
+    // If profile has explicit creditBalance, use it; otherwise creditLimit - utilized
+    if (this.distributorProfile?.creditBalance != null) return this.distributorProfile.creditBalance;
+    const limit = this.distributorProfile?.creditLimit ?? 0;
+    return limit > 0 ? Math.max(0, limit - this.creditUtilized) : 0;
+  }
+
+  get displayCreditLimit(): number {
+    // Prefer profile's creditLimit; fallback to utilized + available
+    if (this.distributorProfile?.creditLimit) return this.distributorProfile.creditLimit;
+    return this.creditUtilized + this.creditAvailable;
+  }
+
+  get creditUtilizationPct(): number {
+    const limit = this.displayCreditLimit;
+    if (!limit) return 0;
+    return Math.min(100, Math.round((this.creditUtilized / limit) * 100));
+  }
+
+  get statementTotalDebits(): number {
+    return this.accountStatementTxns
+      .filter(t => (t.transactionType ?? t.type)?.toUpperCase() !== 'CREDIT')
+      .reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
+  }
+
+  get statementTotalCredits(): number {
+    return this.accountStatementTxns
+      .filter(t => (t.transactionType ?? t.type)?.toUpperCase() === 'CREDIT')
+      .reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
+  }
+
+  loadAccountStatement() {
+    if (!this.distributorId) return;
+    this.isLoadingAccountStatement = true;
+    this.ledgerService.getPaymentHistory(this.distributorId).subscribe({
+      next: (res) => {
+        const data = (res as any)?.data ?? res;
+        this.accountStatementBalance = data?.closingBalance ?? 0;
+        const txns: any[] = Array.isArray(data?.paymentHistory) ? data.paymentHistory : [];
+        this.accountStatementTxns = txns.sort((a, b) =>
+          new Date(b.createdAt ?? b.date ?? 0).getTime() - new Date(a.createdAt ?? a.date ?? 0).getTime()
+        );
+        this.accountStatementDate = new Date().toLocaleDateString('en-IN', { day: 'numeric', month: 'short', year: 'numeric' });
+        this.isLoadingAccountStatement = false;
+      },
+      error: () => { this.isLoadingAccountStatement = false; }
+    });
   }
 
   loadDispatchReport() {
@@ -767,6 +907,43 @@ export class DistributorDashboardPage implements OnInit {
         this.isLoadingPaymentCollections = false;
       }
     });
+  }
+
+  get dispatchPendingCount(): number {
+    if (this.dispatchReportCounts) return this.dispatchReportCounts.pending;
+    return this.orders.filter(o => ['PENDING', 'APPROVED', 'PAYMENT_APPROVED'].includes(o.status?.toUpperCase() ?? '')).length;
+  }
+
+  getDispatchLabel(status: string): string {
+    const s = status?.toUpperCase();
+    if (s === 'DELIVERED' || s === 'COMPLETED') return 'Delivered';
+    if (s === 'DISPATCHED') return 'Dispatched';
+    if (s === 'APPROVED' || s === 'PAYMENT_APPROVED') return 'Awaiting Dispatch';
+    return 'Pending';
+  }
+
+  getDispatchBg(status: string): string {
+    const s = status?.toUpperCase();
+    if (s === 'DELIVERED' || s === 'COMPLETED') return 'rgba(16,185,129,0.12)';
+    if (s === 'DISPATCHED') return 'rgba(59,130,246,0.12)';
+    if (s === 'APPROVED' || s === 'PAYMENT_APPROVED') return 'rgba(168,85,247,0.12)';
+    return 'rgba(245,158,11,0.12)';
+  }
+
+  getDispatchColor(status: string): string {
+    const s = status?.toUpperCase();
+    if (s === 'DELIVERED' || s === 'COMPLETED') return '#10b981';
+    if (s === 'DISPATCHED') return '#3b82f6';
+    if (s === 'APPROVED' || s === 'PAYMENT_APPROVED') return '#a855f7';
+    return '#f59e0b';
+  }
+
+  getDispatchIcon(status: string): string {
+    const s = status?.toUpperCase();
+    if (s === 'DELIVERED' || s === 'COMPLETED') return 'checkmark-circle-outline';
+    if (s === 'DISPATCHED') return 'car-outline';
+    if (s === 'APPROVED' || s === 'PAYMENT_APPROVED') return 'checkmark-done-outline';
+    return 'time-outline';
   }
 
   getStatusColor(status: string): string {
