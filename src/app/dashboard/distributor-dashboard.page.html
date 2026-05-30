@@ -853,7 +853,7 @@
   <!-- ==================== CREDIT LIMIT VIEW ==================== -->
   <div *ngIf="activeOperationView === 'credit-limit'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
     <div class="flex items-center gap-3 mb-5">
-      <button (click)="openOperationView('account-services')" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+      <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
         <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
       </button>
       <div class="flex-1">
@@ -2302,13 +2302,6 @@
             </div>
             <p class="ops-card__title">Pending Orders</p>
             <p class="ops-card__desc">Track orders awaiting dispatch</p>
-          </button>
-          <button (click)="openOperationView('summarized-account')" class="ops-card ops-card--teal">
-            <div class="ops-card__icon" style="background: rgba(20,184,166,0.15); border-color: rgba(20,184,166,0.3);">
-              <ion-icon name="analytics-outline" style="font-size: 28px; color: #2dd4bf;"></ion-icon>
-            </div>
-            <p class="ops-card__title">Summarized Account</p>
-            <p class="ops-card__desc">View account summary</p>
           </button>
         </div>
       </div>
