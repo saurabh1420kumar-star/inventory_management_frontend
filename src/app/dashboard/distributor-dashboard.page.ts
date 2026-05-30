@@ -550,6 +550,10 @@ export class DistributorDashboardPage implements OnInit {
       this.loadAccountStatement();
     } else if (view === 'balance-confirmation') {
       this.loadAccountStatement();
+    } else if (view === 'summarized-account') {
+      this.loadAccountStatement();
+    } else if (view === 'pending-report') {
+      this.loadOrders();
     } else if (view === 'credit-limit') {
       this.loadPaymentCollections();
     }
@@ -638,6 +642,15 @@ export class DistributorDashboardPage implements OnInit {
     return this.accountStatementTxns
       .filter(t => (t.transactionType ?? t.type)?.toUpperCase() === 'CREDIT')
       .reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
+  }
+
+  get statementOpeningBalance(): number {
+    return Math.abs(this.accountStatementBalance + this.statementTotalCredits - this.statementTotalDebits);
+  }
+
+  get pendingReportOrders(): any[] {
+    const pendingStatuses = ['PENDING', 'APPROVED', 'PAYMENT_APPROVED'];
+    return this.orders.filter(o => pendingStatuses.includes(o.status?.toUpperCase() ?? ''));
   }
 
   loadAccountStatement() {

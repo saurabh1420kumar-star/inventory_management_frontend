@@ -373,15 +373,13 @@
         <div class="flex items-center justify-between mb-2">
           <p class="text-sm font-bold text-white">{{ 'ORD-' + o.id }}</p>
           <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
-            [style.background]="o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'COMPLETED' ? 'rgba(16,185,129,0.12)' : o.status.toUpperCase() === 'DISPATCHED' ? 'rgba(59,130,246,0.12)' : 'rgba(245,158,11,0.12)'"
-            [style.color]="o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'COMPLETED' ? '#10b981' : o.status.toUpperCase() === 'DISPATCHED' ? '#3b82f6' : '#f59e0b'">
-            {{ o.status }}
-          </span>
+            [style.background]="getDispatchBg(o.status)"
+            [style.color]="getDispatchColor(o.status)">{{ getDispatchLabel(o.status) }}</span>
         </div>
         <p class="text-xs text-slate-500 mb-2">{{ o.cartItems.length }} items · ₹{{ o.totalCartAmount | number:'1.0-0' }}</p>
         <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
-          <ion-icon [name]="o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'COMPLETED' ? 'checkmark-circle-outline' : o.status.toUpperCase() === 'DISPATCHED' ? 'car-outline' : 'time-outline'"
-            [class]="o.status.toUpperCase() === 'DELIVERED' || o.status.toUpperCase() === 'COMPLETED' ? 'text-emerald-400 text-sm' : o.status.toUpperCase() === 'DISPATCHED' ? 'text-blue-400 text-sm' : 'text-amber-400 text-sm'"></ion-icon>
+          <ion-icon [name]="getDispatchIcon(o.status)"
+            [class]="getDispatchColor(o.status) === '#10b981' ? 'text-emerald-400 text-sm' : getDispatchColor(o.status) === '#3b82f6' ? 'text-blue-400 text-sm' : 'text-amber-400 text-sm'"></ion-icon>
           <p class="text-xs text-slate-500">{{ o.createdAt | date:'MMM d, y' }}</p>
         </div>
       </div>
@@ -405,7 +403,7 @@
 
     <div class="rounded-2xl p-5 mb-5" style="background: rgba(59,130,246,0.08); border: 1.5px solid rgba(59,130,246,0.25);">
       <p class="text-xs text-blue-400 font-semibold uppercase tracking-widest mb-1">Total Pending Orders</p>
-      <p class="text-4xl font-extrabold text-white tracking-tight">{{ pendingOrdersCount }}</p>
+      <p class="text-4xl font-extrabold text-white tracking-tight">{{ pendingReportOrders.length }}</p>
       <p class="text-xs text-slate-500 mt-1">Pending orders · Updated today</p>
     </div>
 
@@ -413,23 +411,23 @@
     <div *ngIf="isLoadingOrders" class="flex justify-center py-8">
       <ion-spinner name="crescent" color="primary"></ion-spinner>
     </div>
-    <div *ngIf="!isLoadingOrders && pendingOrdersCount === 0" class="rounded-2xl p-6 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+    <div *ngIf="!isLoadingOrders && pendingReportOrders.length === 0" class="rounded-2xl p-6 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
       <p class="text-slate-500 text-sm">No pending orders</p>
     </div>
     <div class="flex flex-col gap-3">
-      <ng-container *ngFor="let o of orders">
-        <div *ngIf="o.status.toUpperCase() === 'PENDING'" class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
-          <div class="flex items-center justify-between mb-2">
-            <p class="text-sm font-bold text-white">{{ 'ORD-' + o.id }}</p>
-            <span class="px-2.5 py-1 rounded-full text-xs font-semibold" style="background: rgba(245,158,11,0.12); color: #f59e0b;">Pending</span>
-          </div>
-          <p class="text-xs text-slate-500 mb-2">{{ o.cartItems.length }} items · ₹{{ o.totalCartAmount | number:'1.0-0' }}</p>
-          <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
-            <ion-icon name="time-outline" class="text-amber-400 text-sm"></ion-icon>
-            <p class="text-xs text-slate-500">{{ o.createdAt | date:'MMM d, y' }}</p>
-          </div>
+      <div *ngFor="let o of pendingReportOrders" class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <div class="flex items-center justify-between mb-2">
+          <p class="text-sm font-bold text-white">{{ 'ORD-' + o.id }}</p>
+          <span class="px-2.5 py-1 rounded-full text-xs font-semibold"
+            [style.background]="getDispatchBg(o.status)"
+            [style.color]="getDispatchColor(o.status)">{{ getDispatchLabel(o.status) }}</span>
         </div>
-      </ng-container>
+        <p class="text-xs text-slate-500 mb-2">{{ o.cartItems.length }} items · ₹{{ o.totalCartAmount | number:'1.0-0' }}</p>
+        <div class="flex items-center gap-2" style="border-top: 1px solid rgba(255,255,255,0.06); padding-top: 8px;">
+          <ion-icon [name]="getDispatchIcon(o.status)" class="text-amber-400 text-sm"></ion-icon>
+          <p class="text-xs text-slate-500">{{ o.createdAt | date:'MMM d, y' }}</p>
+        </div>
+      </div>
     </div>
   </div>
 
@@ -1127,26 +1125,30 @@
       </div>
     </div>
 
-    <div class="flex flex-col gap-3 mb-5">
-      <div class="rounded-2xl p-4" style="background: rgba(59,130,246,0.08); border: 1px solid rgba(59,130,246,0.2);">
-        <p class="text-xs text-blue-400 font-semibold mb-1">Opening Balance</p>
-        <p class="text-2xl font-extrabold text-white">₹1,20,000</p>
-        <p class="text-xs text-slate-500 mt-1">Apr 1, 2024</p>
-      </div>
+    <!-- Loading -->
+    <div *ngIf="isLoadingAccountStatement" class="flex justify-center py-10">
+      <ion-spinner name="crescent" style="color: #a855f7;"></ion-spinner>
+    </div>
+
+    <div *ngIf="!isLoadingAccountStatement" class="flex flex-col gap-3 mb-5">
       <div class="rounded-2xl p-4" style="background: rgba(244,63,94,0.08); border: 1px solid rgba(244,63,94,0.2);">
         <p class="text-xs text-rose-400 font-semibold mb-1">Total Debits</p>
-        <p class="text-2xl font-extrabold text-white">₹4,85,000</p>
+        <p class="text-2xl font-extrabold text-white">₹{{ statementTotalDebits | number:'1.0-0' }}</p>
         <p class="text-xs text-slate-500 mt-1">Invoices & Charges</p>
       </div>
       <div class="rounded-2xl p-4" style="background: rgba(16,185,129,0.08); border: 1px solid rgba(16,185,129,0.2);">
         <p class="text-xs text-emerald-400 font-semibold mb-1">Total Credits</p>
-        <p class="text-2xl font-extrabold text-white">₹3,10,000</p>
+        <p class="text-2xl font-extrabold text-white">₹{{ statementTotalCredits | number:'1.0-0' }}</p>
         <p class="text-xs text-slate-500 mt-1">Payments & Adjustments</p>
       </div>
       <div class="rounded-2xl p-5" style="background: rgba(168,85,247,0.08); border: 1.5px solid rgba(168,85,247,0.25);">
         <p class="text-xs text-purple-400 font-semibold uppercase tracking-widest mb-1">Closing Balance</p>
-        <p class="text-3xl font-extrabold text-white tracking-tight">₹2,95,000</p>
-        <p class="text-xs text-slate-500 mt-1">As of Oct 28, 2024</p>
+        <p class="text-3xl font-extrabold text-white tracking-tight">{{ formatOutstandingAmount(accountStatementBalance) }}</p>
+        <p class="text-xs text-slate-500 mt-1">As of {{ accountStatementDate || '—' }}</p>
+      </div>
+      <div *ngIf="accountStatementTxns.length === 0" class="rounded-2xl p-6 text-center" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+        <ion-icon name="receipt-outline" class="text-slate-600 text-4xl mb-2 block"></ion-icon>
+        <p class="text-slate-500 text-sm">No transaction history found</p>
       </div>
     </div>
   </div>
