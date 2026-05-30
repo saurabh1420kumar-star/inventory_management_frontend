@@ -203,6 +203,7 @@ export class DistributorDashboardPage implements OnInit {
   isLoadingProfile = false;
 
   showAddPaymentModal = false;
+  showPaymentDatePicker = false;
   isSubmittingPayment = false;
   receiptFile: File | null = null;
   receiptFileName = '';
@@ -711,6 +712,7 @@ export class DistributorDashboardPage implements OnInit {
   closeAddPaymentModal() {
     this.haptic.light();
     this.showAddPaymentModal = false;
+    this.showPaymentDatePicker = false;
     this.resetPaymentForm();
   }
 

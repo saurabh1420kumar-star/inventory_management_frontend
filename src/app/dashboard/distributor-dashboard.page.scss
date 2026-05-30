@@ -608,6 +608,30 @@ ion-spinner { --color: #10b981; }
   line-height: inherit;
 }
 
+/* ─── Inline Payment Date Picker ─── */
+
+.payment-date-panel ion-datetime,
+ion-modal ion-datetime {
+  --background: #1a2234;
+  --background-rgb: 26, 34, 52;
+  --color: #e2e8f0;
+  --ion-color-primary: #10b981;
+  --ion-color-primary-contrast: #ffffff;
+  color: #e2e8f0;
+  width: 100%;
+}
+
+ion-modal ion-datetime::part(calendar-day) { color: #e2e8f0; }
+ion-modal ion-datetime::part(calendar-day today) { color: #10b981; font-weight: 700; }
+ion-modal ion-datetime::part(calendar-day active),
+ion-modal ion-datetime::part(calendar-day active focused) {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+}
+ion-modal ion-datetime::part(month-year-button) { color: #e2e8f0; font-weight: 700; }
+ion-modal ion-datetime::part(prev-next-button) { color: #94a3b8; }
+ion-modal ion-datetime::part(calendar-day-of-week) { color: #64748b; font-weight: 600; }
+
 /* ====== PDF Viewer Modal ====== */
 
 ion-header.pdf-modal-hdr ion-toolbar {

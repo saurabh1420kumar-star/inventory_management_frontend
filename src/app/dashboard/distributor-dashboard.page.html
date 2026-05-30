@@ -2411,25 +2411,32 @@
             <!-- Date -->
             <div>
               <p class="text-[10px] font-bold tracking-widest mb-2" style="color: #475569;">DATE *</p>
-              <button id="payment-date-trigger" type="button"
-                class="w-full flex items-center justify-between px-4 rounded-2xl font-medium text-left"
-                style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.10); color: white; height: 52px;">
-                <span [style.color]="paymentForm.date ? 'white' : '#475569'">
-                  {{ paymentForm.date ? (paymentForm.date | date:'dd-MM-yyyy') : 'Select date' }}
-                </span>
-                <ion-icon name="calendar-outline" style="font-size: 18px; color: #475569; flex-shrink:0;"></ion-icon>
+              <!-- Trigger button -->
+              <button type="button" (click)="showPaymentDatePicker = !showPaymentDatePicker"
+                class="w-full flex items-center justify-between px-4 rounded-2xl font-medium text-left transition-all"
+                [style.border]="showPaymentDatePicker ? '1px solid rgba(16,185,129,0.5)' : '1px solid rgba(255,255,255,0.10)'"
+                style="background: rgba(255,255,255,0.06); color: white; height: 52px;">
+                <div class="flex items-center gap-2.5">
+                  <ion-icon name="calendar-outline" style="font-size: 16px; color: #10b981; flex-shrink:0;"></ion-icon>
+                  <span [style.color]="paymentForm.date ? '#e2e8f0' : '#475569'" style="font-size: 14px;">
+                    {{ paymentForm.date ? (paymentForm.date | date:'EEE, dd MMM yyyy') : 'Select date' }}
+                  </span>
+                </div>
+                <ion-icon [name]="showPaymentDatePicker ? 'chevron-up-outline' : 'chevron-down-outline'"
+                  style="font-size: 16px; color: #475569; flex-shrink:0;"></ion-icon>
               </button>
-              <ion-popover trigger="payment-date-trigger" [keepContentsMounted]="true" [showBackdrop]="true">
-                <ng-template>
-                  <ion-datetime
-                    presentation="date"
-                    [(ngModel)]="paymentForm.date"
-                    name="paymentDate"
-                    [preferWheel]="false"
-                    style="--background: #161b22; --background-rgb: 22,27,34; --ion-color-primary: #10b981; --ion-color-primary-contrast: #fff;">
-                  </ion-datetime>
-                </ng-template>
-              </ion-popover>
+              <!-- Inline calendar panel -->
+              <div *ngIf="showPaymentDatePicker"
+                style="margin-top: 8px; border-radius: 16px; overflow: hidden; border: 1px solid rgba(16,185,129,0.2); background: #1a2234;">
+                <ion-datetime
+                  presentation="date"
+                  [(ngModel)]="paymentForm.date"
+                  name="paymentDate"
+                  [preferWheel]="false"
+                  (ionChange)="showPaymentDatePicker = false"
+                  style="--background: #1a2234; --background-rgb: 26,34,52; --ion-color-primary: #10b981; --ion-color-primary-contrast: #ffffff; --color: #e2e8f0; width: 100%;">
+                </ion-datetime>
+              </div>
             </div>
 
             <!-- Amount -->

@@ -217,6 +217,68 @@ ion-toast.modern-toast-warning::part(button) {
   color: #fde68a;
 }
 
+// ============================================================
+// Dark Date Picker Popover (Distributor Dashboard)
+// ============================================================
+
+.dark-date-popover {
+  --background: #161b22;
+  --border-radius: 16px;
+  --box-shadow: 0 16px 48px rgba(0, 0, 0, 0.75);
+}
+
+// Popover content wrapper background
+.dark-date-popover .popover-viewport,
+.dark-date-popover .popover-content {
+  background: #161b22 !important;
+  border-radius: 16px;
+}
+
+// ion-datetime inside the dark popover — calendar grid text
+.dark-date-popover ion-datetime {
+  --background: #161b22;
+  --background-rgb: 22, 27, 34;
+  --color: #e2e8f0;
+  --ion-color-primary: #10b981;
+  --ion-color-primary-contrast: #ffffff;
+  color: #e2e8f0;
+}
+
+// Calendar day numbers
+.dark-date-popover ion-datetime::part(calendar-day) {
+  color: #e2e8f0;
+}
+
+// Today's date highlight
+.dark-date-popover ion-datetime::part(calendar-day today) {
+  color: #10b981;
+  font-weight: 700;
+}
+
+// Selected / active day
+.dark-date-popover ion-datetime::part(calendar-day active),
+.dark-date-popover ion-datetime::part(calendar-day active focused) {
+  background: rgba(16, 185, 129, 0.25);
+  color: #ffffff;
+}
+
+// Month/Year header button text
+.dark-date-popover ion-datetime::part(month-year-button) {
+  color: #e2e8f0;
+  font-weight: 700;
+}
+
+// Prev / Next navigation arrows
+.dark-date-popover ion-datetime::part(prev-next-button) {
+  color: #94a3b8;
+}
+
+// Day-of-week header labels (Sun Mon Tue …)
+.dark-date-popover ion-datetime::part(calendar-day-of-week) {
+  color: #64748b;
+  font-weight: 600;
+}
+
 // ---- Mobile tweaks ----
 @media (max-width: 480px) {
   ion-toast.modern-toast {
