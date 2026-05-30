@@ -1191,16 +1191,16 @@
            class="rounded-2xl p-4" style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
         <div class="flex items-center justify-between">
           <div>
-            <p class="text-sm font-bold text-white">{{ inv.piNumber }}</p>
+            <p class="text-sm font-bold text-white">Invoice #{{ inv.id }}</p>
             <p class="text-xs text-slate-500">
-              {{ inv.createdAt | date:'MMM d, yyyy' }} · ₹{{ inv.amount | number:'1.0-0' }}
+              {{ inv.createdAt | date:'MMM d, yyyy' }} · ₹{{ inv.totalCartAmount | number:'1.0-0' }}
             </p>
             <span class="mt-1 inline-block px-2 py-0.5 rounded-full text-xs font-semibold"
-                  [class.bg-emerald-500]="inv.paymentStatus === 'PAID'"
-                  [class.text-white]="inv.paymentStatus === 'PAID'"
-                  [class.bg-amber-500]="inv.paymentStatus !== 'PAID'"
-                  [class.text-black]="inv.paymentStatus !== 'PAID'">
-              {{ inv.paymentStatus }}
+                  [class.bg-emerald-500]="inv.status?.toUpperCase() === 'DELIVERED' || inv.status?.toUpperCase() === 'COMPLETED'"
+                  [class.text-white]="inv.status?.toUpperCase() === 'DELIVERED' || inv.status?.toUpperCase() === 'COMPLETED'"
+                  [class.bg-amber-500]="inv.status?.toUpperCase() !== 'DELIVERED' && inv.status?.toUpperCase() !== 'COMPLETED'"
+                  [class.text-black]="inv.status?.toUpperCase() !== 'DELIVERED' && inv.status?.toUpperCase() !== 'COMPLETED'">
+              {{ inv.status }}
             </span>
           </div>
           <button (click)="downloadInvoice(inv)"

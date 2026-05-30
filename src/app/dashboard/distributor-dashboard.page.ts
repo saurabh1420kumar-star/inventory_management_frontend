@@ -30,7 +30,7 @@ import { DistributorService, DistributorOrder, DistributorStock } from '../servi
 import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
-import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-invoice.service';
+import { InvoiceService } from '../services/invoice.service';
 import { environment } from '../../environments/environment';
 
 interface MetricCard {
@@ -304,8 +304,8 @@ export class DistributorDashboardPage implements OnInit {
   isLoadingStock = false;
 
   // Copy of Invoice
-  invoiceList: ProformaInvoice[] = [];
-  filteredInvoiceList: ProformaInvoice[] = [];
+  invoiceList: DistributorOrder[] = [];
+  filteredInvoiceList: DistributorOrder[] = [];
   isLoadingInvoices = false;
   invoiceSearchQuery = '';
   downloadingInvoiceId: number | null = null;
@@ -329,7 +329,7 @@ export class DistributorDashboardPage implements OnInit {
     private toastController: ToastController,
     private http: HttpClient,
     private readonly sanitizer: DomSanitizer,
-    private proformaInvoiceService: ProformaInvoiceService
+    private invoiceService: InvoiceService
   ) {
     addIcons({
       'add-outline': addOutline,
@@ -561,20 +561,19 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   loadInvoices() {
+    if (!this.distributorId) return;
     this.isLoadingInvoices = true;
-    this.proformaInvoiceService.getAllInvoices().subscribe({
-      next: (data) => {
-        const all = Array.isArray(data) ? data : [];
-        this.invoiceList = this.distributorId
-          ? all.filter(inv => inv.distributorId === this.distributorId)
-          : all;
-        this.invoiceList.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+    this.distributorService.getDistributorOrders(this.distributorId).subscribe({
+      next: (response) => {
+        const all: DistributorOrder[] = response.data || [];
+        const excluded = ['ACTIVE', 'DISMISSED'];
+        this.invoiceList = all
+          .filter(o => !excluded.includes(o.status?.toUpperCase() ?? ''))
+          .sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
         this.filterInvoiceList();
         this.isLoadingInvoices = false;
       },
-      error: () => {
-        this.isLoadingInvoices = false;
-      }
+      error: () => { this.isLoadingInvoices = false; }
     });
   }
 
@@ -582,27 +581,31 @@ export class DistributorDashboardPage implements OnInit {
     const q = this.invoiceSearchQuery.trim().toLowerCase();
     this.filteredInvoiceList = q
       ? this.invoiceList.filter(inv =>
-          inv.piNumber?.toLowerCase().includes(q) ||
-          String(inv.amount).includes(q)
+          String(inv.id).includes(q) ||
+          String(inv.totalCartAmount).includes(q)
         )
       : [...this.invoiceList];
   }
 
-  downloadInvoice(invoice: ProformaInvoice) {
+  downloadInvoice(order: DistributorOrder) {
     this.haptic.medium();
-    this.downloadingInvoiceId = invoice.id;
-    this.proformaInvoiceService.downloadInvoicePdf(invoice.cartId).subscribe({
+    this.downloadingInvoiceId = order.id;
+    this.invoiceService.downloadInvoicePdf(order.id).subscribe({
       next: (blob) => {
+        this.downloadingInvoiceId = null;
         const url = window.URL.createObjectURL(blob);
         const a = document.createElement('a');
         a.href = url;
-        a.download = `${invoice.piNumber}.pdf`;
+        a.download = `Invoice-${order.id}.pdf`;
+        document.body.appendChild(a);
         a.click();
+        document.body.removeChild(a);
         window.URL.revokeObjectURL(url);
-        this.downloadingInvoiceId = null;
+        this.showToast('Invoice downloaded successfully', 'success');
       },
       error: () => {
         this.downloadingInvoiceId = null;
+        this.showToast('Invoice not available for this order', 'danger');
       }
     });
   }
