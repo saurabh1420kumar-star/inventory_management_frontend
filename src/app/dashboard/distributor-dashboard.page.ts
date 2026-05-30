@@ -606,10 +606,19 @@ export class DistributorDashboardPage implements OnInit {
     });
   }
 
+  isCreditType(txType: string): boolean {
+    const t = (txType ?? '').toUpperCase();
+    return t === 'CREDIT' || t === 'JV_CREDIT' || t === 'JV';
+  }
+
+  isDebitType(txType: string): boolean {
+    const t = (txType ?? '').toUpperCase();
+    return t === 'DEBIT' || t === 'JV_DEBIT';
+  }
+
   get creditUtilized(): number {
-    // Sum all CREDIT-type transactions from payment collections
     return this.paymentCollections
-      .filter((p: any) => (p.transactionType ?? '').toUpperCase() === 'CREDIT')
+      .filter((p: any) => this.isCreditType(p.transactionType ?? ''))
       .reduce((sum: number, p: any) => sum + (p.amount ?? 0), 0);
   }
 
@@ -634,13 +643,13 @@ export class DistributorDashboardPage implements OnInit {
 
   get statementTotalDebits(): number {
     return this.accountStatementTxns
-      .filter(t => (t.transactionType ?? t.type)?.toUpperCase() !== 'CREDIT')
+      .filter(t => this.isDebitType(t.transactionType ?? t.type ?? ''))
       .reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
   }
 
   get statementTotalCredits(): number {
     return this.accountStatementTxns
-      .filter(t => (t.transactionType ?? t.type)?.toUpperCase() === 'CREDIT')
+      .filter(t => this.isCreditType(t.transactionType ?? t.type ?? ''))
       .reduce((s: number, t: any) => s + (t.amount ?? 0), 0);
   }
 

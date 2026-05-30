@@ -161,6 +161,11 @@ export class DashboardPage implements OnInit {
   // User stats cards
   userStatCards: UserStatCard[] = [];
 
+  // Indian Financial Year month order: Apr → Mar
+  private readonly FY_MONTHS = ['Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec', 'Jan', 'Feb', 'Mar'];
+  // Month index in calendar year for each FY position (Apr=3, May=4 ... Mar=2)
+  private readonly FY_MONTH_INDICES = [3, 4, 5, 6, 7, 8, 9, 10, 11, 0, 1, 2];
+
   // Region chart data
   regionLabels: string[] = [];
   regionValues: number[] = [];
@@ -214,6 +219,7 @@ export class DashboardPage implements OnInit {
     this.selectedPeriod = p;
     if (this.analytics) {
       this.updateStatsCards(this.analytics);
+      this.buildRegionCharts(this.analytics);
     }
   }
 
@@ -238,6 +244,7 @@ export class DashboardPage implements OnInit {
           this.buildPeriodRows(data);
           this.buildUserStatCards(data);
           this.buildRegionCharts(data);
+          this.buildMonthlyChart(data);
         }
         this.isLoading = false;
       },
@@ -307,7 +314,29 @@ export class DashboardPage implements OnInit {
   }
 
   private buildRegionCharts(data: DashboardAnalytics) {
-    const region = data.salesByRegion || {};
+    const periodMetrics = { wtd: data.weekToDate, mtd: data.monthToDate, ytd: data.yearToDate }[this.selectedPeriod];
+
+    let region: { [key: string]: number };
+
+    if (periodMetrics?.salesByRegion) {
+      // Backend provides per-period regional breakdown — use it directly
+      region = periodMetrics.salesByRegion;
+    } else {
+      // Scale global salesByRegion proportionally to the selected period's totalSales
+      const globalRegion = data.salesByRegion || {};
+      const globalTotal = Object.values(globalRegion).reduce((a, b) => a + b, 0);
+      const periodTotal = periodMetrics?.totalSales ?? 0;
+
+      if (globalTotal > 0 && periodTotal > 0) {
+        region = Object.keys(globalRegion).reduce((acc, k) => {
+          acc[k] = Math.round((globalRegion[k] / globalTotal) * periodTotal);
+          return acc;
+        }, {} as { [key: string]: number });
+      } else {
+        region = globalRegion;
+      }
+    }
+
     this.regionLabels = Object.keys(region);
     this.regionValues = Object.values(region);
 
@@ -353,11 +382,17 @@ export class DashboardPage implements OnInit {
     this.isReady = true;
   }
 
-  initializeChart() {
+  initializeChart(revenueData?: number[], ordersData?: number[]) {
+    const rev = revenueData ?? new Array(12).fill(0);
+    const ord = ordersData ?? new Array(12).fill(0);
+    const maxVal = Math.max(...rev, ...ord);
+    // When no real data exists, default the Y-axis to a 5L range so the axis shows Lakh scale
+    const yMax = maxVal > 0 ? undefined : 500000;
+
     this.chartOptions = {
       series: [
-        { name: 'Revenue', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] },
-        { name: 'Orders', data: [0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0, 0] }
+        { name: 'Revenue (₹)', data: rev },
+        { name: 'Orders', data: ord }
       ],
       chart: { height: 300, type: this.selectedChartType, toolbar: { show: false }, zoom: { enabled: false }, fontFamily: 'inherit' },
       stroke: { curve: 'smooth', width: 3 },
@@ -365,28 +400,74 @@ export class DashboardPage implements OnInit {
       dataLabels: { enabled: false },
       grid: { borderColor: '#f1f5f9', strokeDashArray: 5 },
       xaxis: {
-        categories: ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'],
+        categories: this.FY_MONTHS,
         labels: { style: { colors: '#64748b', fontSize: '11px' } },
         axisBorder: { show: false },
-        axisTicks: { show: false }
+        axisTicks: { show: false },
+        title: { text: 'FY (Apr – Mar)', style: { color: '#94a3b8', fontSize: '10px' } }
       },
       yaxis: {
+        min: 0,
+        max: yMax,
+        tickAmount: 5,
         labels: {
           style: { colors: '#64748b', fontSize: '11px' },
-          formatter: (value: number) => '₹' + (value / 1000) + 'K'
+          formatter: (value: number) => {
+            if (value >= 10000000) return '₹' + (value / 10000000).toFixed(1) + 'Cr';
+            if (value >= 100000)   return '₹' + (value / 100000).toFixed(1) + 'L';
+            if (value >= 1000)     return '₹' + (value / 1000).toFixed(1) + 'K';
+            return '₹' + value.toFixed(0);
+          }
         }
       },
       fill: {
         type: 'gradient',
         gradient: { shade: 'light', type: 'vertical', shadeIntensity: 0.3, gradientToColors: ['#34d399', '#60a5fa'], opacityFrom: 0.6, opacityTo: 0.05, stops: [0, 100] }
       },
-      tooltip: { y: { formatter: (value: number) => '₹' + value.toLocaleString() } }
+      tooltip: {
+        y: {
+          formatter: (value: number) => {
+            if (value >= 10000000) return '₹' + (value / 10000000).toFixed(2) + ' Cr';
+            if (value >= 100000)   return '₹' + (value / 100000).toFixed(2) + ' L';
+            if (value >= 1000)     return '₹' + (value / 1000).toFixed(1) + 'K';
+            return '₹' + value.toLocaleString('en-IN');
+          }
+        }
+      }
     };
+  }
+
+  private buildMonthlyChart(data: DashboardAnalytics) {
+    const calMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+    const salesByMonth = data.salesByMonth || {};
+    const ordersByMonth = data.ordersByMonth || {};
+
+    // Map FY order: try both short-name keys (Apr, May...) and numeric keys (4, 5...)
+    const revenueData = this.FY_MONTH_INDICES.map(i => {
+      const name = calMonths[i];
+      const num = i + 1;
+      return salesByMonth[name] ?? salesByMonth[String(num).padStart(2, '0')] ?? salesByMonth[String(num)] ?? 0;
+    });
+
+    const ordersData = this.FY_MONTH_INDICES.map(i => {
+      const name = calMonths[i];
+      const num = i + 1;
+      return ordersByMonth[name] ?? ordersByMonth[String(num).padStart(2, '0')] ?? ordersByMonth[String(num)] ?? 0;
+    });
+
+    // Only re-init if there is real data to show
+    const hasData = revenueData.some(v => v > 0) || ordersData.some(v => v > 0);
+    if (hasData) {
+      this.initializeChart(revenueData, ordersData);
+    }
   }
 
   onChartTypeChange(event: any) {
     this.haptic.selectionChanged();
     this.selectedChartType = event.detail.value;
-    this.initializeChart();
+    const series = this.chartOptions?.series as any[];
+    const rev = series?.[0]?.data;
+    const ord = series?.[1]?.data;
+    this.initializeChart(rev, ord);
   }
 }

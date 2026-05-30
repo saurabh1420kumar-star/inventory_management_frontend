@@ -1049,9 +1049,9 @@
         <div class="flex justify-between items-center mb-1">
           <p class="text-sm font-bold text-white">{{ txn.description || txn.reference || 'Transaction' }}</p>
           <p class="text-sm font-bold"
-             [class.text-emerald-400]="(txn.transactionType ?? txn.type)?.toUpperCase() === 'CREDIT'"
-             [class.text-rose-400]="(txn.transactionType ?? txn.type)?.toUpperCase() !== 'CREDIT'">
-            {{ (txn.transactionType ?? txn.type)?.toUpperCase() === 'CREDIT' ? '+' : '-' }}₹{{ txn.amount | number:'1.0-0' }}
+             [class.text-emerald-400]="isCreditType(txn.transactionType ?? txn.type ?? '')"
+             [class.text-rose-400]="!isCreditType(txn.transactionType ?? txn.type ?? '')">
+            {{ isCreditType(txn.transactionType ?? txn.type ?? '') ? '+' : '-' }}₹{{ txn.amount | number:'1.0-0' }}
           </p>
         </div>
         <p class="text-xs text-slate-500">

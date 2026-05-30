@@ -402,8 +402,8 @@ export class AccountsMasterPage implements OnInit {
       
       // Determine debit/credit based on transactionType
       const txType = (payment.transactionType || '').toUpperCase();
-      const isCredit = txType === 'CREDIT';
-      const isDebit = txType === 'DEBIT';
+      const isCredit = txType === 'CREDIT' || txType === 'JV_CREDIT';
+      const isDebit = txType === 'DEBIT' || txType === 'JV_DEBIT';
       const isJV = txType === 'JV';
       const amount = payment.amount || 0;
       const debit = isDebit ? amount : 0;

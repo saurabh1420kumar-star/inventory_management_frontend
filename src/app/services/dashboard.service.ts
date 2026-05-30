@@ -8,6 +8,8 @@ export interface TimePeriodMetrics {
   totalSales: number;
   transactionCount: number;
   averageOrderValue: number;
+  salesByRegion?: { [key: string]: number };
+  salesByCategory?: { [key: string]: number };
 }
 
 export interface UserStats {
@@ -24,6 +26,8 @@ export interface DashboardAnalytics {
   yearToDate: TimePeriodMetrics;
   salesByCategory: { [key: string]: number };
   salesByRegion: { [key: string]: number };
+  salesByMonth?: { [key: string]: number };
+  ordersByMonth?: { [key: string]: number };
   totalAmount: number;
   totalOrders: number;
   userStats: UserStats;
