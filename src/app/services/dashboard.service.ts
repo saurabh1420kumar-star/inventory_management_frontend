@@ -20,6 +20,18 @@ export interface UserStats {
   users: number;
 }
 
+export interface MonthlySalesMonth {
+  month: string;
+  year: number;
+  revenue: number;
+  orderCount: number;
+}
+
+export interface MonthlySalesResponse {
+  financialYear: string;
+  months: MonthlySalesMonth[];
+}
+
 export interface DashboardAnalytics {
   monthToDate: TimePeriodMetrics;
   weekToDate: TimePeriodMetrics;
@@ -62,6 +74,17 @@ export class DashboardService {
       catchError(err => {
         console.error('Failed to fetch dashboard analytics:', err);
         return of({} as DashboardAnalytics);
+      })
+    );
+  }
+
+  getMonthlySales(): Observable<MonthlySalesResponse> {
+    return this.http.get<MonthlySalesResponse>(
+      `${this.dashboardUrl}/monthly-sales`
+    ).pipe(
+      catchError(err => {
+        console.error('Failed to fetch monthly sales:', err);
+        return of({ financialYear: '', months: [] });
       })
     );
   }

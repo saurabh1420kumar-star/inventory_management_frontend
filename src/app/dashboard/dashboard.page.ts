@@ -10,7 +10,7 @@ import { Auth } from '../services/auth';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import { HapticService } from '../services/haptic.service';
-import { DashboardService, DashboardAnalytics } from '../services/dashboard.service';
+import { DashboardService, DashboardAnalytics, MonthlySalesResponse } from '../services/dashboard.service';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -244,12 +244,19 @@ export class DashboardPage implements OnInit {
           this.buildPeriodRows(data);
           this.buildUserStatCards(data);
           this.buildRegionCharts(data);
-          this.buildMonthlyChart(data);
         }
         this.isLoading = false;
       },
       error: () => {
         this.isLoading = false;
+      }
+    });
+
+    this.dashboardService.getMonthlySales().subscribe({
+      next: (res: MonthlySalesResponse) => {
+        if (res?.months?.length) {
+          this.buildMonthlyChartFromResponse(res);
+        }
       }
     });
   }
@@ -437,25 +444,13 @@ export class DashboardPage implements OnInit {
     };
   }
 
-  private buildMonthlyChart(data: DashboardAnalytics) {
-    const calMonths = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-    const salesByMonth = data.salesByMonth || {};
-    const ordersByMonth = data.ordersByMonth || {};
+  private buildMonthlyChartFromResponse(res: MonthlySalesResponse) {
+    // API returns months already in FY order (Apr → Mar); build a lookup by month name
+    const byMonth = new Map(res.months.map(m => [m.month, m]));
 
-    // Map FY order: try both short-name keys (Apr, May...) and numeric keys (4, 5...)
-    const revenueData = this.FY_MONTH_INDICES.map(i => {
-      const name = calMonths[i];
-      const num = i + 1;
-      return salesByMonth[name] ?? salesByMonth[String(num).padStart(2, '0')] ?? salesByMonth[String(num)] ?? 0;
-    });
+    const revenueData = this.FY_MONTHS.map(m => byMonth.get(m)?.revenue ?? 0);
+    const ordersData  = this.FY_MONTHS.map(m => byMonth.get(m)?.orderCount ?? 0);
 
-    const ordersData = this.FY_MONTH_INDICES.map(i => {
-      const name = calMonths[i];
-      const num = i + 1;
-      return ordersByMonth[name] ?? ordersByMonth[String(num).padStart(2, '0')] ?? ordersByMonth[String(num)] ?? 0;
-    });
-
-    // Only re-init if there is real data to show
     const hasData = revenueData.some(v => v > 0) || ordersData.some(v => v > 0);
     if (hasData) {
       this.initializeChart(revenueData, ordersData);

@@ -383,7 +383,7 @@ export class InwardPage implements OnInit {
       this.selectedScrapId = item.materialCode ?? item.itemCode ?? null;
       this.form.itemName = item.name ?? '';
       this.form.itemCode = item.materialCode ?? item.itemCode ?? '';
-      this.currentTaxRate = item.taxRate ?? 0;
+      this.currentTaxRate = item.gst ?? item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -411,7 +411,7 @@ export class InwardPage implements OnInit {
       this.selectedPromotionalItemId = item.id ?? null;
       this.form.itemName = item.name ?? '';
       this.form.itemCode = item.itemCode ?? '';
-      this.currentTaxRate = item.taxRate ?? 0;
+      this.currentTaxRate = item.gst ?? item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;
@@ -445,7 +445,7 @@ export class InwardPage implements OnInit {
       this.form.condition = item.condition ?? 'NEW';
       this.form.purchaseDate = item.purchaseDate ?? '';
       this.form.warrantyExpiryDate = item.warrantyExpiryDate ?? '';
-      this.currentTaxRate = item.taxRate ?? 0;
+      this.currentTaxRate = item.gst ?? item.taxRate ?? 0;
       if (item.unit) {
         const matched = this.unitTypes.find(u => u.value === item.unit);
         this.form.unit = matched ? matched.value : this.form.unit;

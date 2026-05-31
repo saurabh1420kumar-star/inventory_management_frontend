@@ -418,7 +418,7 @@
                 <span *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
               </label>
               <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
-                <input [(ngModel)]="form.quantity" type="number" min="0" placeholder="0"
+                <input [(ngModel)]="form.quantity" (ngModelChange)="updateGrossAmount()" type="number" min="0" placeholder="0"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
               </div>
@@ -430,7 +430,7 @@
                 Rate (₹)
               </label>
               <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
-                <input [(ngModel)]="form.rate" type="number" min="0" placeholder="0.00"
+                <input [(ngModel)]="form.rate" (ngModelChange)="updateGrossAmount()" type="number" min="0" placeholder="0.00"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
               </div>
@@ -448,6 +448,72 @@
               </div>
             </div>
           </div>
+
+          <!-- ── AMOUNT BREAKDOWN (shown for types with qty + rate) ── -->
+          <ng-container *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'">
+            <div class="rounded-2xl overflow-hidden border border-slate-200 shadow-sm">
+              <!-- Header -->
+              <div class="px-4 py-2.5 flex items-center gap-2" style="background: linear-gradient(135deg,#6366f1,#8b5cf6);">
+                <ion-icon name="calculator-outline" class="text-white text-sm"></ion-icon>
+                <span class="text-xs font-bold text-white uppercase tracking-widest">Amount Breakdown</span>
+                <span *ngIf="currentTaxRate > 0" class="ml-auto text-[10px] font-bold bg-white/20 text-white px-2 py-0.5 rounded-full">
+                  GST {{ currentTaxRate }}%
+                </span>
+                <span *ngIf="currentTaxRate === 0" class="ml-auto text-[10px] font-semibold bg-white/20 text-white/70 px-2 py-0.5 rounded-full">
+                  No GST applied
+                </span>
+              </div>
+              <!-- Rows -->
+              <div class="bg-white divide-y divide-slate-100">
+                <!-- Base amount -->
+                <div class="flex items-center justify-between px-4 py-3">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg bg-slate-100 flex items-center justify-center">
+                      <ion-icon name="layers-outline" class="text-slate-500 text-xs"></ion-icon>
+                    </div>
+                    <span class="text-xs font-semibold text-slate-600">Base Amount</span>
+                    <span class="text-[10px] text-slate-400">({{ form.quantity || 0 }} × ₹{{ form.rate || 0 }})</span>
+                  </div>
+                  <span class="text-sm font-bold text-slate-800">₹{{ baseAmount | number:'1.2-2' }}</span>
+                </div>
+                <!-- CGST -->
+                <div class="flex items-center justify-between px-4 py-3"
+                     [style.opacity]="currentTaxRate === 0 ? '0.45' : '1'">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:#ede9fe;">
+                      <span class="text-[9px] font-black" style="color:#7c3aed;">+</span>
+                    </div>
+                    <span class="text-xs font-semibold" style="color:#7c3aed;">CGST</span>
+                    <span class="text-[10px] bg-violet-50 text-violet-400 px-1.5 py-0.5 rounded-md font-bold">{{ currentTaxRate }}%</span>
+                  </div>
+                  <span class="text-sm font-bold" style="color:#7c3aed;">+ ₹{{ cgstAmount | number:'1.2-2' }}</span>
+                </div>
+                <!-- SGST -->
+                <div class="flex items-center justify-between px-4 py-3"
+                     [style.opacity]="currentTaxRate === 0 ? '0.45' : '1'">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg flex items-center justify-center" style="background:#ede9fe;">
+                      <span class="text-[9px] font-black" style="color:#7c3aed;">+</span>
+                    </div>
+                    <span class="text-xs font-semibold" style="color:#7c3aed;">SGST</span>
+                    <span class="text-[10px] bg-violet-50 text-violet-400 px-1.5 py-0.5 rounded-md font-bold">{{ currentTaxRate }}%</span>
+                  </div>
+                  <span class="text-sm font-bold" style="color:#7c3aed;">+ ₹{{ sgstAmount | number:'1.2-2' }}</span>
+                </div>
+                <!-- Total gross -->
+                <div class="flex items-center justify-between px-4 py-3.5" style="background: linear-gradient(135deg,#f0fdf4,#ecfdf5);">
+                  <div class="flex items-center gap-2">
+                    <div class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
+                      <ion-icon name="checkmark-circle-outline" class="text-emerald-600 text-xs"></ion-icon>
+                    </div>
+                    <span class="text-xs font-bold text-emerald-700">Gross Amount</span>
+                    <span *ngIf="currentTaxRate > 0" class="text-[10px] text-emerald-500">(incl. GST)</span>
+                  </div>
+                  <span class="text-base font-extrabold text-emerald-700">₹{{ form.grossAmount | number:'1.2-2' }}</span>
+                </div>
+              </div>
+            </div>
+          </ng-container>
 
           <!-- Spare parts extra fields -->
           <ng-container *ngIf="selectedType === 'spare_parts'">
