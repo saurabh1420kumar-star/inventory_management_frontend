@@ -394,6 +394,14 @@ export class DistributorCartPage implements OnInit {
     this.cartService.removeFromCart(productId);
   }
 
+  getCartQuantity(productId: number): number {
+    return this.cartItems.find(ci => ci.id === productId)?.cartQuantity ?? 0;
+  }
+
+  getCartItemId(productId: number): number | undefined {
+    return this.cartItems.find(ci => ci.id === productId)?.cartItemId;
+  }
+
   updateCartQuantity(productId: number, quantity: number) {
     this.haptic.selectionChanged();
     if (quantity > 0) {

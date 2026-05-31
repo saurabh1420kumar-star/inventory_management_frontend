@@ -206,11 +206,13 @@ ion-modal input:-webkit-autofill:focus {
   }
 
   &__value {
-    font-size: 28px;
+    font-size: clamp(14px, 4vw, 22px);
     font-weight: 800;
     color: #ffffff;
-    line-height: 1.1;
+    line-height: 1.2;
     letter-spacing: -0.02em;
+    word-break: break-all;
+    overflow-wrap: break-word;
 
     &--dark {
       color: #0f172a;
@@ -255,11 +257,13 @@ ion-modal input:-webkit-autofill:focus {
   }
 
   &__value {
-    font-size: 32px;
+    font-size: clamp(14px, 4vw, 22px);
     font-weight: 800;
     color: #ffffff;
-    line-height: 1;
+    line-height: 1.2;
     letter-spacing: -0.02em;
+    word-break: break-all;
+    overflow-wrap: break-word;
   }
 }
 

@@ -55,8 +55,10 @@
     <!-- Product Cards (Glass) -->
     <div class="flex flex-col gap-3">
       <div *ngFor="let product of filteredProducts"
-           class="rounded-2xl overflow-hidden"
-           style="background: rgba(255,255,255,0.04); border: 1.5px solid rgba(16,185,129,0.2); backdrop-filter: blur(12px); box-shadow: 0 0 20px rgba(16,185,129,0.04);">
+           class="rounded-2xl overflow-hidden relative"
+           [style.background]="getCartQuantity(product.id) > 0 ? 'rgba(16,185,129,0.07)' : 'rgba(255,255,255,0.04)'"
+           [style.border]="getCartQuantity(product.id) > 0 ? '1.5px solid rgba(16,185,129,0.55)' : '1.5px solid rgba(16,185,129,0.2)'"
+           style="backdrop-filter: blur(12px); box-shadow: 0 0 20px rgba(16,185,129,0.04);">
         <div class="px-4 py-3 flex items-center gap-3">
           <div class="w-12 h-12 rounded-xl flex items-center justify-center flex-shrink-0" style="background: rgba(16,185,129,0.1); border: 1px solid rgba(16,185,129,0.15);">
             <ion-icon name="hardware-chip-outline" class="text-emerald-400 text-2xl"></ion-icon>
@@ -70,12 +72,27 @@
             <p class="text-slate-500 text-xs mb-0.5">Price</p>
             <p class="font-bold text-white text-base">₹{{ product.price }}</p>
           </div>
-          <button (click)="openProductModal(product)"
+          <!-- Not in cart -->
+          <button *ngIf="getCartQuantity(product.id) === 0"
+                  (click)="openProductModal(product)"
                   class="px-5 py-2 bg-emerald-500 hover:bg-emerald-400 text-white rounded-xl text-sm font-bold transition-all flex items-center gap-1"
                   style="box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
             <ion-icon name="add-outline" class="text-base"></ion-icon>
             Add
           </button>
+          <!-- In cart: Flipkart-style stepper -->
+          <div *ngIf="getCartQuantity(product.id) > 0"
+               class="flex items-center rounded-xl overflow-hidden"
+               style="border: 1.5px solid #10b981; background: #10b981; box-shadow: 0 4px 15px rgba(16,185,129,0.3);">
+            <button (click)="updateCartQuantity(product.id, getCartQuantity(product.id) - 1)"
+                    class="w-9 h-9 flex items-center justify-center font-bold text-white text-xl"
+                    style="background: transparent;">&#8722;</button>
+            <span class="w-8 text-center font-bold text-white text-sm"
+                  style="background: rgba(0,0,0,0.15);">{{ getCartQuantity(product.id) }}</span>
+            <button (click)="updateCartQuantity(product.id, getCartQuantity(product.id) + 1)"
+                    class="w-9 h-9 flex items-center justify-center font-bold text-white text-xl"
+                    style="background: transparent;">+</button>
+          </div>
         </div>
       </div>
     </div>

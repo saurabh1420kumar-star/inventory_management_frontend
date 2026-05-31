@@ -942,11 +942,7 @@ export class DistributorDashboardPage implements OnInit {
   }
 
   getDispatchLabel(status: string): string {
-    const s = status?.toUpperCase();
-    if (s === 'DELIVERED' || s === 'COMPLETED') return 'Delivered';
-    if (s === 'DISPATCHED') return 'Dispatched';
-    if (s === 'APPROVED' || s === 'PAYMENT_APPROVED') return 'Awaiting Dispatch';
-    return 'Pending';
+    return status ?? 'PENDING';
   }
 
   getDispatchBg(status: string): string {
