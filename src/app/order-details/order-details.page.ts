@@ -180,7 +180,9 @@ export class OrderDetailsPage implements OnInit {
     this.loadError = '';
     const role = this.auth.getRoleType();
     const distributorId = role === 'DISTRIBUTOR' ? (this.auth.getUserId() ?? undefined) : undefined;
-    this.salesService.getOrderTracking('all', 0, 50, distributorId).subscribe({
+    const isSalesRole = role ? (role.includes('SALES') || ['NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALESPERSON'].includes(role)) : false;
+    const salespersonId = isSalesRole ? (this.auth.getUserId() ?? undefined) : undefined;
+    this.salesService.getOrderTracking('all', 0, 50, distributorId, salespersonId).subscribe({
       next: (response) => {
         this.orders = (response.orders || []).map((item: OrderTrackingItem, index: number) =>
           this.mapApiOrderToOrder(item, index === 0)

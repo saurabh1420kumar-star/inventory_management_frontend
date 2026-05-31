@@ -144,11 +144,15 @@ export class SalesService {
    * Get order tracking list
    * GET /api/order/tracking?status=all&page=0&size=50
    * GET /api/order/tracking?status=all&distributorId=35&page=0&size=50 (for distributor login)
+   * GET /api/order/tracking?status=all&salespersonId=12&page=0&size=50 (for salesperson login)
    */
-  getOrderTracking(status: string = 'all', page: number = 0, size: number = 50, distributorId?: number): Observable<OrderTrackingResponse> {
+  getOrderTracking(status: string = 'all', page: number = 0, size: number = 50, distributorId?: number, salespersonId?: number): Observable<OrderTrackingResponse> {
     let url = `${environment.apiUrl}/order/tracking?status=${status}&page=${page}&size=${size}`;
     if (distributorId) {
       url += `&distributorId=${distributorId}`;
+    }
+    if (salespersonId) {
+      url += `&salespersonId=${salespersonId}`;
     }
     return this.http.get<OrderTrackingResponse>(url, { headers: this.getAuthHeaders() });
   }
