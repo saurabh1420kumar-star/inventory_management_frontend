@@ -410,6 +410,7 @@ export class DistributorDashboardPage implements OnInit {
   ngOnInit() {
     this.initializeMetrics();
     this.getDistributorId();
+    this.loadAccountStatement();
     this.loadDistributorProfile();
     this.loadOrders();
     this.loadDealers();
@@ -466,12 +467,7 @@ export class DistributorDashboardPage implements OnInit {
     this.isLoadingOrders = true;
     this.distributorService.getDistributorOrders(this.distributorId).subscribe({
       next: (response) => {
-        // Show all orders EXCEPT ACTIVE
-        // ACTIVE orders are already being processed, so hide them
-        const visibleOrders = (response.data || []).filter((order: any) => {
-          const status = order.status?.toUpperCase();
-          return status !== 'ACTIVE';
-        });
+        const visibleOrders = (response.data || []);
 
         this.orders = visibleOrders.sort(
           (a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime()
