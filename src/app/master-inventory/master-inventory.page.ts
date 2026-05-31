@@ -185,6 +185,9 @@ export class MasterInventoryPage implements OnInit {
   previewImage: string | ArrayBuffer | null = null;
   selectedImageFile: File | null = null;
 
+  editPreviewImage: string | ArrayBuffer | null = null;
+  editSelectedImageFile: File | null = null;
+
   /* ---------- DATA ---------- */
   inventory: DisplayInventoryItem[] = [];
 
@@ -496,6 +499,42 @@ export class MasterInventoryPage implements OnInit {
     this.selectedImageFile = null;
   }
 
+  onEditImageSelected(event: any) {
+    const file = event.target.files?.[0];
+    if (!file) {
+      console.warn('⚠️ No file selected');
+      return;
+    }
+
+    console.log('📸 Image file selected:', { name: file.name, size: file.size, type: file.type });
+
+    if (!file.type.startsWith('image/')) {
+      const msg = 'Please upload a valid image file.';
+      console.error('❌ Invalid file type:', file.type);
+      this.showMessage('error', msg);
+      this.toast.present(msg, 'danger');
+      return;
+    }
+
+    this.editSelectedImageFile = file;
+
+    const reader = new FileReader();
+    reader.onload = () => {
+      this.editPreviewImage = reader.result;
+      console.log('✅ Image preview loaded:', { size: (file.size / 1024).toFixed(1) + ' KB' });
+    };
+    reader.onerror = () => {
+      console.error('❌ Error reading file:', reader.error);
+      this.toast.present('Error reading image file', 'danger');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  removeEditSelectedImage(): void {
+    this.editPreviewImage = null;
+    this.editSelectedImageFile = null;
+  }
+
   /* ---------- MODAL ---------- */
   openAddModal() {
     this.haptic.medium();
@@ -768,9 +807,11 @@ export class MasterInventoryPage implements OnInit {
       description: item.description || '',
       weight: (item as any).weight || 0,
       active: (item as any).active !== false,
-      quantity: item.quantity,
-      minimumThreshold: item.minimumThreshold
+      quantity: item.quantity ?? 0,
+      minimumThreshold: item.minimumThreshold ?? 0
     });
+    this.editPreviewImage = item.imageUrl || null;
+    this.editSelectedImageFile = null;
     this.isEditModalOpen = true;
   }
 
@@ -778,6 +819,8 @@ export class MasterInventoryPage implements OnInit {
     this.haptic.light();
     this.isEditModalOpen = false;
     this.selectedItem = null;
+    this.editPreviewImage = null;
+    this.editSelectedImageFile = null;
     this.editForm.reset({
       unit: 'KG',
       subUnit: 'KG',
@@ -825,20 +868,47 @@ export class MasterInventoryPage implements OnInit {
       };
     }
 
-    this.inventoryService.updateItem(this.selectedItem.id, payload).subscribe({
+    // Check if new image was selected for raw_material or finished_product
+    const hasNewImage = this.editSelectedImageFile && (this.selectedItem.category === 'raw_material' || this.selectedItem.category === 'finished_product');
+
+    console.log('🔄 Updating item:', {
+      id: this.selectedItem.id,
+      category: this.selectedItem.category,
+      hasNewImage,
+      fileName: this.editSelectedImageFile?.name
+    });
+
+    const request$ = hasNewImage
+      ? this.inventoryService.updateItemWithImage(this.selectedItem.id, this.selectedItem.category, payload, this.editSelectedImageFile!)
+      : this.inventoryService.updateItem(this.selectedItem.id, payload);
+
+    request$.subscribe({
       next: (updated) => {
-        const index = this.inventory.findIndex(i => i.id === this.selectedItem!.id);
-        if (index !== -1) {
-          this.inventory[index] = this.mapToDisplayItem(updated);
-        }
+        console.log('✅ Item updated successfully:', updated);
         this.closeEditModal();
-        this.showMessage('success', 'Item updated successfully!');
+
+        const categoryLabel = this.selectedItem!.category === 'finished_product' ? 'Finished Product' : 'Raw Material';
+        const successMsg = hasNewImage
+          ? `${categoryLabel} updated with new image!`
+          : `${categoryLabel} updated successfully!`;
+
+        this.showMessage('success', successMsg);
+        this.toast.present(successMsg, 'success');
+
+        // Reload inventory to refresh the page
+        this.loadInventory();
       },
       error: (err) => {
         const errorMessage = this.extractErrorMessage(err);
-        console.error(err);
-        this.showMessage('error', errorMessage);
-        this.toast.present(errorMessage, 'danger');
+        console.error('❌ Error updating item:', err);
+
+        const categoryLabel = this.selectedItem!.category === 'finished_product' ? 'finished product' : 'raw material';
+        const failureMsg = hasNewImage
+          ? `Failed to update ${categoryLabel} image: ${errorMessage}`
+          : `Failed to update ${categoryLabel}: ${errorMessage}`;
+
+        this.showMessage('error', failureMsg);
+        this.toast.present(failureMsg, 'danger');
       }
     });
   }

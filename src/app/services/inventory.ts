@@ -237,6 +237,53 @@ export class InventoryService {
   }
 
   // =======================================
+  // 🔹 UPDATE EXISTING RECORD WITH IMAGE
+  // =======================================
+  updateItemWithImage(
+    id: number,
+    category: InventoryItem['category'],
+    item: Partial<InventoryItem>,
+    imageFile: File
+  ): Observable<InventoryItem> {
+    const formData = new FormData();
+
+    // Build the request payload object (exclude category and undefined/null/empty values)
+    const requestPayload: any = {};
+    Object.entries(item).forEach(([key, value]) => {
+      if (key !== 'category' && value !== undefined && value !== null && value !== '') {
+        requestPayload[key] = value;
+      }
+    });
+
+    console.log('📤 Updating item with image:', { id, category, payload: requestPayload });
+
+    // Append the request field as JSON Blob with proper MIME type
+    const requestBlob = new Blob([JSON.stringify(requestPayload)], { type: 'application/json' });
+    formData.append('request', requestBlob);
+
+    // Append the image file
+    formData.append('image', imageFile);
+
+    if (category === 'raw_material') {
+      console.log('📤 Sending to raw-materials endpoint:', `${this.rawMaterialsUrl}/${id}`);
+      return this.http.put<InventoryItem>(
+        `${this.rawMaterialsUrl}/${id}`,
+        formData
+      );
+    }
+
+    if (category === 'finished_product') {
+      console.log('📤 Sending to finished-products endpoint:', `${this.finishedProductsCrudUrl}/${id}`);
+      return this.http.put<InventoryItem>(
+        `${this.finishedProductsCrudUrl}/${id}`,
+        formData
+      );
+    }
+
+    return this.updateItem(id, item);
+  }
+
+  // =======================================
   // 🔹 DELETE RECORD
   // =======================================
   deleteItem(id: number, category: InventoryItem['category']): Observable<void> {

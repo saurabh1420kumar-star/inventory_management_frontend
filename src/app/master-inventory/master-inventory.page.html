@@ -1380,10 +1380,61 @@
               </div>
             </div>
 
+            <!-- IMAGE UPLOAD (RAW MATERIAL & FINISHED PRODUCT ONLY) -->
+            <ng-container *ngIf="selectedItem?.category === 'raw_material' || selectedItem?.category === 'finished_product'">
+              <div class="pt-6 border-t border-slate-200">
+                <label class="block text-xs font-bold text-slate-600 uppercase tracking-wider mb-3 ml-1">
+                  <ion-icon name="image-outline" class="text-blue-500 mr-1"></ion-icon>
+                  Product Image (Optional)
+                </label>
+
+                <!-- Image Preview -->
+                <div *ngIf="editPreviewImage" class="mb-4 relative">
+                  <img [src]="editPreviewImage" alt="Preview" class="w-full h-48 object-cover rounded-xl border-2 border-slate-200" />
+                  <button
+                    type="button"
+                    (click)="removeEditSelectedImage()"
+                    class="absolute top-2 right-2 bg-red-500 hover:bg-red-600 text-white rounded-full p-2 shadow-lg transition-all">
+                    <ion-icon name="close-outline" class="text-xl"></ion-icon>
+                  </button>
+                  <!-- File name badge -->
+                  <div *ngIf="editSelectedImageFile" class="mt-2 flex items-center gap-2 bg-blue-50 border border-blue-200 rounded-lg p-3">
+                    <ion-icon name="document-outline" class="text-blue-600"></ion-icon>
+                    <span class="text-sm text-blue-800 font-medium">{{ editSelectedImageFile.name }}</span>
+                    <span class="text-xs text-blue-600 ml-auto">{{ (editSelectedImageFile.size / 1024).toFixed(1) }} KB</span>
+                  </div>
+                </div>
+
+                <!-- Upload Input -->
+                <div class="relative">
+                  <input
+                    type="file"
+                    #editImageInput
+                    accept="image/*"
+                    (change)="onEditImageSelected($event)"
+                    class="hidden"
+                  />
+                  <button
+                    type="button"
+                    (click)="editImageInput.click()"
+                    [class.border-emerald-400]="!editSelectedImageFile"
+                    [class.bg-emerald-50]="!editSelectedImageFile"
+                    class="w-full border-2 border-dashed border-slate-300 rounded-xl p-6 hover:border-emerald-400 hover:bg-emerald-50 transition-all text-center cursor-pointer"
+                  >
+                    <ion-icon name="cloud-upload-outline" class="text-3xl text-slate-400 mb-2 block"></ion-icon>
+                    <p class="text-sm font-semibold text-slate-700">
+                      {{ editSelectedImageFile ? 'Click to change image' : 'Click to upload image' }}
+                    </p>
+                    <p class="text-xs text-slate-500 mt-1">PNG, JPG, GIF up to 5MB</p>
+                  </button>
+                </div>
+              </div>
+            </ng-container>
+
             <div class="pt-8 border-t border-slate-200">
-              <ion-button 
-                expand="block" 
-                type="submit" 
+              <ion-button
+                expand="block"
+                type="submit"
                 [disabled]="editForm.invalid"
                 [class.opacity-50]="editForm.invalid"
                 [class.cursor-not-allowed]="editForm.invalid"

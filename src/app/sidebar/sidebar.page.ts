@@ -31,6 +31,7 @@ export class SidebarPage implements OnInit, OnDestroy {
   userName: string | null = null;
   userRole: string | null = null;
   isMobile: boolean = false;
+  isComplaintsOpen = false;
   
   // Global profile state
   distributorProfile: any = null;
@@ -128,6 +129,11 @@ export class SidebarPage implements OnInit, OnDestroy {
       isMobile: this.isMobile,
       userRole: this.userRole
     });
+  }
+
+  toggleComplaintsMenu() {
+    this.haptic.light();
+    this.isComplaintsOpen = !this.isComplaintsOpen;
   }
 
   onToggleSidebar() {

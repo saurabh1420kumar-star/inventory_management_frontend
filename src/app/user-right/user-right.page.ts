@@ -139,9 +139,9 @@ export class UserRightPage implements OnInit {
         icon: 'cube-outline',
         color: 'emerald',
         modules: [
-          { featureKey: 'INVENTORY_MASTERS', displayName: 'Master Inventory', icon: 'albums-outline', category: 'Inventory', access: 'NONE' },
-          { featureKey: 'INVENTORY_TRANSACTIONS', displayName: 'Machine Parts', icon: 'cog-outline', category: 'Inventory', access: 'NONE' },
-          { featureKey: 'UNIT_MASTER', displayName: 'Unit Master', icon: 'layers-outline', category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_MASTERS',       displayName: 'Master Inventory',   icon: 'albums-outline',    category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_INWARD',        displayName: 'Inward Inventory',   icon: 'download-outline',  category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_OUTWARD',       displayName: 'Outward Inventory',  icon: 'upload-outline',    category: 'Inventory', access: 'NONE' },
         ]
       },
       {

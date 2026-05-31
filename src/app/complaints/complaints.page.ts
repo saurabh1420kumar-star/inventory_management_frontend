@@ -25,7 +25,7 @@ export class ComplaintsPage implements OnInit {
   complaintDate = new Date().toISOString().split('T')[0];
 
   categories = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
-  priorityLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+  priorityLevels = ['LOW', 'MEDIUM', 'HIGH'];
 
   private haptic = inject(HapticService);
 
@@ -44,7 +44,7 @@ export class ComplaintsPage implements OnInit {
       category: ['PAYMENT', Validators.required],
       subject: ['', [Validators.required, Validators.minLength(5)]],
       priorityLevel: ['LOW', Validators.required],
-      description: ['', [Validators.required, Validators.minLength(20)]],
+      description: ['', [Validators.required, Validators.minLength(5)]],
     });
   }
 
@@ -115,20 +115,20 @@ export class ComplaintsPage implements OnInit {
     });
   }
 
+  get isDarkMode(): boolean {
+    const role = this.auth.getRoleType();
+    const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE'];
+    return salesRoles.includes(role ?? '') || role === 'DISTRIBUTOR';
+  }
+
+  get isAdminUser(): boolean {
+    const role = this.auth.getRoleType();
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  }
+
   submitComplaint() {
     this.haptic.medium();
-    console.log('Submit button clicked');
-    console.log('Form valid:', this.complaintForm.valid);
-    console.log('Form data:', this.complaintForm.value);
-    
     if (this.complaintForm.invalid) {
-      console.log('Form is invalid. Errors:', this.complaintForm.errors);
-      Object.keys(this.complaintForm.controls).forEach(key => {
-        const control = this.complaintForm.get(key);
-        if (control?.invalid) {
-          console.log(`${key} is invalid:`, control.errors);
-        }
-      });
       this.errorMessage = 'Please fill all required fields correctly.';
       return;
     }
@@ -136,11 +136,20 @@ export class ComplaintsPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-    console.log('🚀 Submitting complaint with data:', this.complaintForm.value);
 
-    this.complaintsService.createComplaint(this.complaintForm.value).subscribe({
-      next: (response) => {
-        console.log('✨ Complaint created successfully:', response);
+    const payload: any = { ...this.complaintForm.value };
+    const role = this.auth.getRoleType();
+    const userId = this.auth.getUserId();
+    if (userId && this.isDarkMode) {
+      if (role === 'DISTRIBUTOR') {
+        payload.distributorId = userId;
+      } else {
+        payload.salespersonId = userId;
+      }
+    }
+
+    this.complaintsService.createComplaint(payload).subscribe({
+      next: () => {
         this.isLoading = false;
         this.successMessage = 'Complaint submitted successfully. We will review it shortly.';
         this.showSuccess = true;
@@ -152,14 +161,7 @@ export class ComplaintsPage implements OnInit {
         setTimeout(() => this.showSuccess = false, 5000);
       },
       error: (err) => {
-        console.error('❌ Error submitting complaint:', err);
-        console.error('Error status:', err?.status);
-        console.error('Error message:', err?.error?.message);
-        console.error('Full error response:', err?.error);
-        
         this.isLoading = false;
-        
-        // Check for specific error types
         if (err?.status === 0) {
           this.errorMessage = 'Network error. Please check your internet connection.';
         } else if (err?.status === 401 || err?.status === 403) {

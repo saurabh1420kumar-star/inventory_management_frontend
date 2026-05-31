@@ -15,6 +15,9 @@ export interface Complaint {
   priorityLevel: 'LOW' | 'MEDIUM' | 'HIGH' | 'CRITICAL';
   description: string;
   status: 'OPEN' | 'IN_PROGRESS' | 'RESOLVED' | 'CLOSED';
+  comment?: string | null;
+  salespersonId?: number | null;
+  distributorId?: number | null;
   createdAt: string;
   updatedAt: string;
 }
@@ -28,6 +31,8 @@ export interface CreateComplaintRequest {
   subject: string;
   priorityLevel: string;
   description: string;
+  salespersonId?: number | null;
+  distributorId?: number | null;
 }
 
 export interface ComplaintsResponse {
@@ -88,11 +93,33 @@ export class ComplaintsService {
   }
 
   /**
+   * Get complaints filtered by salesperson or distributor
+   * GET /api/complaints/filter
+   */
+  getComplaintsByFilter(params: {
+    salespersonId?: number | null;
+    distributorId?: number | null;
+    page?: number;
+    size?: number;
+  }): Observable<ComplaintsResponse> {
+    const query = new URLSearchParams();
+    if (params.salespersonId != null) query.set('salespersonId', String(params.salespersonId));
+    if (params.distributorId != null) query.set('distributorId', String(params.distributorId));
+    query.set('page', String(params.page ?? 0));
+    query.set('size', String(params.size ?? 10));
+    return this.http.get<ComplaintsResponse>(`${this.apiUrl}/filter?${query.toString()}`, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
    * Update complaint status
    * PUT /api/complaints/{id}/status
    */
-  updateComplaintStatus(id: number, status: string): Observable<any> {
-    return this.http.put<any>(`${this.apiUrl}/${id}/status`, { status }, {
+  updateComplaintStatus(id: number, status: string, comment?: string): Observable<any> {
+    const body: any = { status };
+    if (comment?.trim()) body.comment = comment.trim();
+    return this.http.put<any>(`${this.apiUrl}/${id}/status`, body, {
       headers: this.getAuthHeaders()
     });
   }
