@@ -319,7 +319,7 @@ export class DistributorPage implements OnInit {
       bankGuaranteeNumber: dto.bankGuaranteeNumber || '',
       bgExpiryDate: dto.bgExpiryDate || '',
       accountNumber: dto.accountNumber || '',
-      ifsc: dto.ifsc || '',
+      ifsc: (dto.ifsc || (dto as any).IFSC || ''),
       accountName: dto.accountName || '',
       username: dto.username || '',
       password: dto.password || '',
@@ -467,8 +467,23 @@ export class DistributorPage implements OnInit {
   }
 
   onSearchChange(event: any) {
-    this.searchQuery = event.detail.value?.toLowerCase() || '';
+    this.searchQuery = (event.target.value || '').toLowerCase();
     this.applyFilters();
+  }
+
+  getSearchResults() {
+    if (!this.searchQuery) return [];
+    return this.distributors.filter(d =>
+      d.name.toLowerCase().includes(this.searchQuery) ||
+      d.assignedPerson.toLowerCase().includes(this.searchQuery) ||
+      d.contact.includes(this.searchQuery) ||
+      d.address.toLowerCase().includes(this.searchQuery)
+    ).slice(0, 5);
+  }
+
+  selectSearchResult(distributor: Distributor) {
+    this.searchQuery = '';
+    this.openDetailsModal(distributor);
   }
 
   setStatusFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE') {
