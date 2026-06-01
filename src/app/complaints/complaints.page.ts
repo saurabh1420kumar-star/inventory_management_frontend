@@ -7,6 +7,7 @@ import { ComplaintsService } from '../services/complaints.service';
 import { HapticService } from '../services/haptic.service';
 import { Auth } from '../services/auth';
 import { UserService } from '../services/user.service';
+import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -34,6 +35,7 @@ export class ComplaintsPage implements OnInit {
     private complaintsService: ComplaintsService,
     private auth: Auth,
     private userService: UserService,
+    private salesHierarchyService: SalesHierarchyService,
     private http: HttpClient
   ) {
     this.complaintForm = this.fb.group({
@@ -59,6 +61,20 @@ export class ComplaintsPage implements OnInit {
       return;
     }
 
+    const role = this.auth.getRoleType() || '';
+    const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE',
+      'NATIONAL_SALES_MGR', 'STATE_SALES_MGR', 'ZONAL_SALES_MGR', 'REGIONAL_SALES_MGR', 'AREA_SALES_MGR', 'SALES_OFFICER'];
+
+    if (salesRoles.includes(role)) {
+      this.autofillFromSalesHierarchy(currentUserId);
+      return;
+    }
+
+    if (role === 'DISTRIBUTOR') {
+      this.autofillFromProfileApi(currentUserId);
+      return;
+    }
+
     this.userService.getAllUsers().subscribe({
       next: (users) => {
         const currentUser = users.find((u: any) => Number(u.id) === Number(currentUserId));
@@ -73,7 +89,27 @@ export class ComplaintsPage implements OnInit {
         this.autofillFromProfileApi(currentUserId);
       },
       error: () => {
-        this.autofillFromProfileApi(currentUserId);
+        this.fillFromAuthDefaults();
+      }
+    });
+  }
+
+  private autofillFromSalesHierarchy(userId: number) {
+    this.salesHierarchyService.getAllSalesPersons().subscribe({
+      next: (persons) => {
+        const person = persons.find((p: any) => Number(p.id) === Number(userId) || Number(p.userId) === Number(userId));
+        if (person) {
+          this.patchComplaintUser({
+            fullName: person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim(),
+            emailAddress: person.email || '',
+            phoneNumber: person.phone || person.contactNo || ''
+          });
+        } else {
+          this.fillFromAuthDefaults();
+        }
+      },
+      error: () => {
+        this.fillFromAuthDefaults();
       }
     });
   }

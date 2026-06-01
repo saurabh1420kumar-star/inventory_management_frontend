@@ -11,6 +11,7 @@ import { LogoutComponent } from '../logout/logout.component';
 import { Capacitor } from '@capacitor/core';
 import { HapticService } from '../services/haptic.service';
 import { DistributorProfileService } from '../services/distributor-profile.service';
+import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 
 @Component({
   selector: 'app-sidebar',
@@ -30,9 +31,10 @@ export class SidebarPage implements OnInit, OnDestroy {
 
   userName: string | null = null;
   userRole: string | null = null;
+  salesPersonName: string | null = null;
   isMobile: boolean = false;
   isComplaintsOpen = false;
-  
+
   // Global profile state
   distributorProfile: any = null;
   showProfileModal: boolean = false;
@@ -65,18 +67,37 @@ export class SidebarPage implements OnInit, OnDestroy {
   constructor(
     private auth: Auth,
     private router: Router,
-    private distributorProfileService: DistributorProfileService
+    private distributorProfileService: DistributorProfileService,
+    private salesHierarchyService: SalesHierarchyService
   ) {}
 
   ngOnInit() {
     this.userName = this.auth.getUsername();
     this.userRole = this.auth.getRoleType();
     this.checkMobile();
-    
-    // Subscribe to global profile
+
+    // Subscribe to global distributor profile
     this.distributorProfileService.getProfile$().subscribe(profile => {
       this.distributorProfile = profile;
     });
+
+    // For sales roles, load name from hierarchy
+    const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE',
+      'NATIONAL_SALES_MGR', 'STATE_SALES_MGR', 'ZONAL_SALES_MGR', 'REGIONAL_SALES_MGR', 'AREA_SALES_MGR', 'SALES_OFFICER'];
+    if (salesRoles.includes(this.userRole || '')) {
+      const userId = this.auth.getUserId();
+      if (userId) {
+        this.salesHierarchyService.getAllSalesPersons().subscribe({
+          next: (persons) => {
+            const person = persons.find((p: any) => Number(p.id) === Number(userId) || Number(p.userId) === Number(userId));
+            if (person) {
+              this.salesPersonName = person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim() || null;
+            }
+          },
+          error: () => {}
+        });
+      }
+    }
   }
 
   ngOnDestroy() {}
