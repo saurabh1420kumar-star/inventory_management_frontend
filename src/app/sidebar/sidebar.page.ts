@@ -76,10 +76,12 @@ export class SidebarPage implements OnInit, OnDestroy {
     this.userRole = this.auth.getRoleType();
     this.checkMobile();
 
-    // Subscribe to global distributor profile
-    this.distributorProfileService.getProfile$().subscribe(profile => {
-      this.distributorProfile = profile;
-    });
+    // Subscribe to global distributor profile (only relevant for DISTRIBUTOR role)
+    if (this.userRole === 'DISTRIBUTOR') {
+      this.distributorProfileService.getProfile$().subscribe(profile => {
+        this.distributorProfile = profile;
+      });
+    }
 
     // For sales roles, load name from hierarchy
     const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE',
