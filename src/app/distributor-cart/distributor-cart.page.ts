@@ -136,7 +136,6 @@ export class DistributorCartPage implements OnInit {
     this.subscribeToDistributorProfile();
     this.fetchFinishedProducts();
     this.subscribeToCart();
-    this.checkOrderEligibility();
   }
 
   getDistributorId() {
@@ -352,10 +351,6 @@ export class DistributorCartPage implements OnInit {
           this.cartService.addToCart(this.selectedProduct!, this.quantityToAdd);
           this.closeProductModal();
           this.isLoading = false;
-          
-          // Re-check eligibility after adding items
-          console.log('🔄 Re-checking eligibility after adding items to cart');
-          this.checkOrderEligibility();
         },
         error: (err) => {
           console.error('Failed to add item to cart', err);
@@ -453,14 +448,7 @@ export class DistributorCartPage implements OnInit {
       this.showToast('Your cart is empty', 'warning');
       return;
     }
-    
-    // Re-check eligibility before opening checkout modal
-    console.log('🔄 Re-checking eligibility before checkout...');
-    this.checkOrderEligibility();
-    
-    // Start auto-refresh of eligibility status
-    this.startEligibilityAutoRefresh();
-    
+
     // Re-apply address each time in case form was reset
     if (this.distributorAddress) {
       this.orderForm.get('deliveryAddress')?.setValue(this.distributorAddress);
@@ -615,12 +603,6 @@ export class DistributorCartPage implements OnInit {
         this.currentCartId = null; // Reset cart ID after successful order
         this.closeCheckoutModal();
         this.isLoading = false;
-        
-        // Refresh eligibility check - this will disable the button if next order not allowed
-        console.log('🔄 Refreshing order eligibility...');
-        setTimeout(() => {
-          this.checkOrderEligibility();
-        }, 500);
       },
       error: (err) => {
         console.error('=== ORDER FAILED ===');
