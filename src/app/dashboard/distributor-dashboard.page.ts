@@ -105,6 +105,7 @@ interface Dealer {
 interface DistributorProfile {
   id?: number;
   distributorId?: number;
+  distributorCode?: string;
   distributorName?: string;
   name?: string;
   firmName?: string;
