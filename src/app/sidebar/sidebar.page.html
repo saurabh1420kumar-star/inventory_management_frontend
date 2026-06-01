@@ -244,7 +244,7 @@
           <ion-icon name="person-sharp" class="user-avatar"></ion-icon>
         </div>
         <div class="user-details">
-          <p class="user-greeting">Hi, {{ userName }}</p>
+          <p class="user-greeting">Hi, {{ distributorProfile?.firmName || distributorProfile?.companyName || userName }}</p>
           <span class="user-role">{{ userRole }}</span>
         </div>
         <app-logout></app-logout>

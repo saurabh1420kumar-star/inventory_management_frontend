@@ -88,7 +88,7 @@ export class ComplaintsPage implements OnInit {
       next: (res) => {
         const profile = res?.data ?? res ?? {};
         this.patchComplaintUser({
-          fullName: profile.distributorName || profile.name || this.auth.getUsername() || '',
+          fullName: profile.firmName || profile.distributorName || profile.companyName || profile.name || this.auth.getUsername() || '',
           emailAddress: profile.contactEmail || profile.email || '',
           phoneNumber: profile.phoneNumber || profile.mobileNumber || profile.phone || profile.contactNo || ''
         });

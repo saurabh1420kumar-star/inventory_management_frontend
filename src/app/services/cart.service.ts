@@ -198,6 +198,12 @@ export class CartService {
     }
   }
 
+  // Replace local cart state with items loaded from the API
+  loadCartFromAPI(items: CartItem[]): void {
+    this.cartItems.next(items);
+    this.saveCartToLocalStorage();
+  }
+
   // Clear cart
   clearCart(): void {
     this.cartItems.next([]);

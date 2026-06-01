@@ -487,17 +487,28 @@ export class DistributorCartPage implements OnInit {
           this.totalCartWeightKg = cartData.totalCartWeightKg;
         }
 
-        // Sync backend cart item IDs onto local cart items
+        // Replace local cart with the authoritative server state
         const apiItems: any[] = cartData?.cartItems || [];
         if (apiItems.length > 0) {
-          const updated = this.cartItems.map(localItem => {
-            const match = apiItems.find(
-              (a: any) => a.itemSku === (localItem.sku || localItem.id?.toString()) ||
-                          a.itemId  === (localItem.sku || localItem.id?.toString())
+          const mapped: CartItem[] = apiItems.map((a: any) => {
+            const matchingProduct = this.availableProducts.find(
+              p => (p.sku || p.id?.toString()) === a.itemSku ||
+                   (p.sku || p.id?.toString()) === a.itemId
             );
-            return match ? { ...localItem, cartItemId: match.id } : localItem;
+            return {
+              id: matchingProduct?.id ?? a.id,
+              name: a.itemName,
+              sku: a.itemSku || a.itemId,
+              quantity: matchingProduct?.quantity ?? 0,
+              price: a.priceAtTime,
+              cartQuantity: a.quantity,
+              subtotal: a.totalPrice,
+              cartItemId: a.id
+            } as CartItem;
           });
-          this.cartItems = updated;
+          this.cartService.loadCartFromAPI(mapped);
+        } else {
+          this.cartService.clearCart();
         }
         this.isLoading = false;
         this.showCartModal = true;
