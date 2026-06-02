@@ -724,6 +724,9 @@ $radius-lg: 24px;
     border-color: rgba($emerald, 0.15);
     .driver-info-hdr-icon { color: $emerald; }
     .driver-info-hdr-label { color: #94a3b8; }
+    .driver-info-row-label { color: #ffffff; }
+    .driver-info-row-sep { color: #ffffff; }
+    .driver-info-row-value { color: #ffffff; }
   }
   &[data-status="in-progress"] {
     background: rgba($blue, 0.04);
@@ -765,21 +768,21 @@ $radius-lg: 24px;
 .driver-info-row-label {
   font-size: 0.7rem;
   font-weight: 600;
-  color: #94a3b8;
+  color: #ffffff;
   white-space: nowrap;
   flex-shrink: 0;
 }
 
 .driver-info-row-sep {
   font-size: 0.7rem;
-  color: #64748b;
+  color: #ffffff;
   flex-shrink: 0;
 }
 
 .driver-info-row-value {
   font-size: 0.82rem;
   font-weight: 700;
-  color: #0f172a;
+  color: #ffffff;
   letter-spacing: 0.3px;
 }
 
