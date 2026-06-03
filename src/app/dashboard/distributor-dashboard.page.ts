@@ -1,6 +1,6 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
+import { LegalDocsModalComponent } from '../components/legal-docs-modal/legal-docs-modal.component';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { ToastController } from '@ionic/angular';
@@ -151,7 +151,7 @@ interface DealerLedgerTxn {
   templateUrl: './distributor-dashboard.page.html',
   styleUrls: ['./distributor-dashboard.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule]
+  imports: [CommonModule, FormsModule, IonicModule, LegalDocsModalComponent]
 })
 export class DistributorDashboardPage implements OnInit {
   activeTab: 'dashboard' | 'operations' = 'dashboard';
@@ -319,7 +319,7 @@ export class DistributorDashboardPage implements OnInit {
 
   showPdfModal = false;
   pdfModalTitle = '';
-  pdfModalSrc: SafeResourceUrl | null = null;
+  legalDocType: 'privacy' | 'terms' = 'privacy';
 
   constructor(
     private router: Router,
@@ -329,7 +329,6 @@ export class DistributorDashboardPage implements OnInit {
     private ledgerService: LedgerService,
     private toastController: ToastController,
     private http: HttpClient,
-    private readonly sanitizer: DomSanitizer,
     private invoiceService: InvoiceService
   ) {
     addIcons({
@@ -397,15 +396,14 @@ export class DistributorDashboardPage implements OnInit {
     });
   }
 
-  openPdfModal(src: string, title: string): void {
+  openLegalDoc(type: 'privacy' | 'terms', title: string): void {
+    this.legalDocType = type;
     this.pdfModalTitle = title;
-    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
     this.showPdfModal = true;
   }
 
   closePdfModal(): void {
     this.showPdfModal = false;
-    this.pdfModalSrc = null;
   }
 
   ngOnInit() {

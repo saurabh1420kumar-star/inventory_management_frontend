@@ -723,15 +723,27 @@ $radius-lg: 24px;
     background: rgba($emerald, 0.04);
     border-color: rgba($emerald, 0.15);
     .driver-info-hdr-icon { color: $emerald; }
-    .driver-info-hdr-label { color: #94a3b8; }
-    .driver-info-row-label { color: #ffffff; }
-    .driver-info-row-sep { color: #ffffff; }
-    .driver-info-row-value { color: #ffffff; }
+    .driver-info-hdr-label { color: #64748b; }
+    .driver-info-row-label { color: #1e293b; }
+    .driver-info-row-sep { color: #1e293b; }
+    .driver-info-row-value { color: #1e293b; }
   }
   &[data-status="in-progress"] {
     background: rgba($blue, 0.04);
     border-color: rgba($blue, 0.15);
     .driver-info-hdr-icon { color: $blue; }
+    .driver-info-row-label { color: #1e293b; }
+    .driver-info-row-sep { color: #1e293b; }
+    .driver-info-row-value { color: #1e293b; }
+  }
+}
+
+:host-context(.dark) .driver-info-card {
+  &[data-status="completed"],
+  &[data-status="in-progress"] {
+    .driver-info-row-label { color: #e2e8f0; }
+    .driver-info-row-sep { color: #e2e8f0; }
+    .driver-info-row-value { color: #f1f5f9; }
   }
 }
 
