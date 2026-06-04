@@ -31,6 +31,7 @@ export interface DistributorDto {
   gstNumber: string;
   status: string;
   creditLimit?: number;
+  creditBalance?: number;
   creditAmount?: number;
   bankGuaranteeNumber?: string;
   bgExpiryDate?: string;

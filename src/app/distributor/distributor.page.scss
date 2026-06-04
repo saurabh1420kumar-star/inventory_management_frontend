@@ -718,3 +718,310 @@ ion-modal {
     padding: 24px;
   }
 }
+
+// ─── Credited Badge ───────────────────────────────────────────────────────────
+
+.credited-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  padding: 2px 7px;
+  border-radius: 999px;
+  font-size: 0.6rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 60%, #fcd34d 100%);
+  color: #78350f;
+  box-shadow: 0 1px 5px rgba(245, 158, 11, 0.5), inset 0 1px 0 rgba(255,255,255,0.35);
+}
+
+.detail-credited-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.3px;
+  background: linear-gradient(135deg, #f59e0b 0%, #fbbf24 60%, #fcd34d 100%);
+  color: #78350f;
+  box-shadow: 0 2px 8px rgba(245, 158, 11, 0.45), inset 0 1px 0 rgba(255,255,255,0.3);
+
+  ion-icon { font-size: 12px; }
+}
+
+// ─── Credit Information Section ───────────────────────────────────────────────
+
+.credit-info-section {
+  background: linear-gradient(135deg, #fffbeb 0%, #fef3c7 50%, #fff 100%);
+  border: 1.5px solid #fde68a;
+  border-radius: 20px;
+  padding: 20px;
+  position: relative;
+  overflow: hidden;
+
+  &::before {
+    content: '';
+    position: absolute;
+    top: -30px;
+    right: -30px;
+    width: 100px;
+    height: 100px;
+    border-radius: 50%;
+    background: rgba(245, 158, 11, 0.08);
+  }
+}
+
+.credit-info-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  margin-bottom: 16px;
+}
+
+.credit-info-header-left {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+.credit-icon-wrap {
+  width: 44px;
+  height: 44px;
+  border-radius: 14px;
+  background: linear-gradient(135deg, #f59e0b, #fbbf24);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 4px 12px rgba(245, 158, 11, 0.35);
+
+  ion-icon {
+    font-size: 22px;
+    color: #fff;
+  }
+}
+
+.credit-section-title {
+  font-size: 15px;
+  font-weight: 700;
+  color: #92400e;
+  margin: 0 0 2px;
+}
+
+.credit-section-sub {
+  font-size: 11px;
+  color: #b45309;
+  margin: 0;
+}
+
+.credit-active-pill {
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  padding: 4px 10px;
+  border-radius: 999px;
+  background: rgba(16, 185, 129, 0.1);
+  border: 1px solid rgba(16, 185, 129, 0.25);
+  font-size: 11px;
+  font-weight: 700;
+  color: #065f46;
+}
+
+.credit-pulse-dot {
+  width: 7px;
+  height: 7px;
+  border-radius: 50%;
+  background: #10b981;
+  box-shadow: 0 0 0 0 rgba(16, 185, 129, 0.5);
+  animation: creditPulse 1.8s infinite;
+}
+
+@keyframes creditPulse {
+  0%   { box-shadow: 0 0 0 0 rgba(16,185,129,0.5); }
+  70%  { box-shadow: 0 0 0 6px rgba(16,185,129,0); }
+  100% { box-shadow: 0 0 0 0 rgba(16,185,129,0); }
+}
+
+// Utilisation bar
+.credit-utilisation-wrap {
+  margin-bottom: 16px;
+}
+
+.credit-util-labels {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 6px;
+}
+
+.credit-util-label-text {
+  font-size: 11px;
+  font-weight: 600;
+  color: #92400e;
+}
+
+.credit-util-pct {
+  font-size: 11px;
+  font-weight: 700;
+  color: #b45309;
+}
+
+.credit-util-bar-bg {
+  height: 8px;
+  background: rgba(245, 158, 11, 0.15);
+  border-radius: 999px;
+  overflow: hidden;
+}
+
+.credit-util-bar-fill {
+  height: 100%;
+  background: linear-gradient(90deg, #f59e0b, #fbbf24);
+  border-radius: 999px;
+  transition: width 0.6s ease;
+  min-width: 2%;
+}
+
+// Stats grid
+.credit-stats-grid {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 10px;
+  margin-bottom: 14px;
+}
+
+.credit-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 12px;
+  border-radius: 14px;
+}
+
+.credit-stat-total {
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.25);
+}
+
+.credit-stat-balance {
+  background: rgba(16, 185, 129, 0.08);
+  border: 1px solid rgba(16, 185, 129, 0.2);
+}
+
+.credit-stat-used {
+  background: rgba(239, 68, 68, 0.07);
+  border: 1px solid rgba(239, 68, 68, 0.18);
+}
+
+.credit-stat-icon {
+  width: 34px;
+  height: 34px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon { font-size: 16px; }
+
+  .credit-stat-total & { background: rgba(245,158,11,0.15); ion-icon { color: #d97706; } }
+  .credit-stat-balance & { background: rgba(16,185,129,0.12); ion-icon { color: #059669; } }
+  .credit-stat-used & { background: rgba(239,68,68,0.1); ion-icon { color: #dc2626; } }
+}
+
+.credit-stat-label {
+  font-size: 9.5px;
+  font-weight: 600;
+  color: #92400e;
+  margin: 0 0 2px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.credit-stat-value {
+  font-size: 13px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+// BG details row
+.credit-bg-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+  padding-top: 12px;
+  border-top: 1px solid rgba(245, 158, 11, 0.2);
+}
+
+.credit-bg-item {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1;
+  min-width: 140px;
+}
+
+.credit-bg-label {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+  font-size: 10px;
+  font-weight: 700;
+  color: #b45309;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+
+  ion-icon { font-size: 11px; }
+}
+
+.credit-bg-value {
+  font-size: 13px;
+  font-weight: 700;
+  color: #1e293b;
+  font-family: monospace;
+}
+
+// ─── Credit Balance Read-Out (in edit modal) ──────────────────────────────────
+
+.credit-balance-readout {
+  background: linear-gradient(135deg, #fffbeb, #fef9ee);
+  border: 1.5px solid #fde68a;
+  border-radius: 14px;
+  padding: 14px 16px;
+}
+
+.credit-balance-readout-row {
+  display: flex;
+  gap: 12px;
+  flex-wrap: wrap;
+}
+
+.credit-balance-readout-item {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1;
+  min-width: 120px;
+
+  ion-icon { font-size: 20px; flex-shrink: 0; }
+}
+
+.credit-balance-readout-label {
+  font-size: 10px;
+  font-weight: 600;
+  color: #b45309;
+  margin: 0 0 1px;
+  text-transform: uppercase;
+  letter-spacing: 0.4px;
+}
+
+.credit-balance-readout-val {
+  font-size: 14px;
+  font-weight: 800;
+  color: #1e293b;
+  margin: 0;
+}
+
+.credit-balance-readout-avail { color: #059669; }
+.credit-balance-readout-used  { color: #dc2626; }

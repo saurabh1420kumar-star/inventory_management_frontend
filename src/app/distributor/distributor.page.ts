@@ -57,6 +57,7 @@ interface Distributor {
   isActive?: boolean;
   creditLimit?: boolean;
   creditAmount?: number;
+  creditBalance?: number;
   bankGuaranteeNumber?: string;
   bgExpiryDate?: string;
   username?: string;
@@ -83,7 +84,7 @@ export class DistributorPage implements OnInit {
   distributors: Distributor[] = [];
   filteredDistributors: Distributor[] = [];
   searchQuery: string = '';
-  statusFilter: 'ALL' | 'ACTIVE' | 'INACTIVE' = 'ALL';
+  statusFilter: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'CREDITED' = 'ALL';
   salesPersons: any[] = [];
   roles = [
     { value: 'NATIONAL_SALES_MGR', label: 'National Sales Manager' },
@@ -316,6 +317,7 @@ export class DistributorPage implements OnInit {
       isActive: dto.status === 'ACTIVE' || dto.status === undefined || dto.status === null,
       creditLimit: !!dto.creditLimit,
       creditAmount: dto.creditLimit,
+      creditBalance: dto.creditBalance,
       bankGuaranteeNumber: dto.bankGuaranteeNumber || '',
       bgExpiryDate: dto.bgExpiryDate || '',
       accountNumber: dto.accountNumber || '',
@@ -486,7 +488,7 @@ export class DistributorPage implements OnInit {
     this.openDetailsModal(distributor);
   }
 
-  setStatusFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE') {
+  setStatusFilter(filter: 'ALL' | 'ACTIVE' | 'INACTIVE' | 'CREDITED') {
     this.statusFilter = filter;
     this.applyFilters();
   }
@@ -494,7 +496,9 @@ export class DistributorPage implements OnInit {
   private applyFilters() {
     let result = [...this.distributors];
 
-    if (this.statusFilter !== 'ALL') {
+    if (this.statusFilter === 'CREDITED') {
+      result = result.filter(d => (d.creditAmount ?? 0) > 0);
+    } else if (this.statusFilter !== 'ALL') {
       result = result.filter(d => (d.status || '').toUpperCase() === this.statusFilter);
     }
 
