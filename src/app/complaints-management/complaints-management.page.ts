@@ -33,6 +33,7 @@ export class ComplaintsManagementPage implements OnInit {
   isDetailModalOpen = false;
   isStatusModalOpen = false;
   newStatus = '';
+  statusComment = '';
 
   private readonly statusConfigs: Record<string, { color: string; bg: string; border: string; label: string; icon: string }> = {
     'OPEN':        { color: '#ef4444', bg: '#fef2f2', border: '#fecaca', label: 'Open',        icon: 'radio-button-on-outline' },
@@ -130,6 +131,7 @@ export class ComplaintsManagementPage implements OnInit {
     this.haptic.medium();
     this.selectedComplaint = complaint;
     this.newStatus = complaint.status;
+    this.statusComment = complaint.comment || '';
     this.isStatusModalOpen = true;
   }
 
@@ -138,6 +140,7 @@ export class ComplaintsManagementPage implements OnInit {
     this.isStatusModalOpen = false;
     this.selectedComplaint = null;
     this.newStatus = '';
+    this.statusComment = '';
   }
 
   updateStatus() {
@@ -147,11 +150,12 @@ export class ComplaintsManagementPage implements OnInit {
     const targetStatus = this.newStatus as Complaint['status'];
     this.isUpdatingStatus = true;
 
-    this.complaintsService.updateComplaintStatus(targetId, targetStatus).subscribe({
+    const comment = this.statusComment;
+    this.complaintsService.updateComplaintStatus(targetId, targetStatus, comment).subscribe({
       next: () => {
         const idx = this.complaints.findIndex(c => c.id === targetId);
         if (idx !== -1) {
-          this.complaints[idx] = { ...this.complaints[idx], status: targetStatus };
+          this.complaints[idx] = { ...this.complaints[idx], status: targetStatus, comment: comment.trim() || this.complaints[idx].comment };
         }
         this.isUpdatingStatus = false;
         this.closeStatusModal();

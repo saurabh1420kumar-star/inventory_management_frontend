@@ -9,6 +9,7 @@ import { SalesAnalyticsService, SalesAnalyticsData } from './sales-analytics.ser
 import { PaymentService, PaymentRequest, PaymentResponse } from './payment.service';
 import { DistributorService, Distributor } from './distributor.service';
 import { Auth } from '../../services/auth';
+import { LegalDocsModalComponent } from '../../components/legal-docs-modal/legal-docs-modal.component';
 import { Subject } from 'rxjs';
 import { takeUntil } from 'rxjs/operators';
 import { HapticService } from '../../services/haptic.service';
@@ -79,7 +80,8 @@ interface PerformanceSummary {
     ReactiveFormsModule,
     HttpClientModule,
     IonicModule,
-    RouterModule
+    RouterModule,
+    LegalDocsModalComponent
   ],
   templateUrl: './sales-dashboard.page.html',
   styleUrls: ['./sales-dashboard.page.scss']

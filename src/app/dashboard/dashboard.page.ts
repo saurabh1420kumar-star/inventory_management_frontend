@@ -2,11 +2,11 @@
 
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
-import { DomSanitizer, SafeResourceUrl } from '@angular/platform-browser';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
 import { Auth } from '../services/auth';
+import { LegalDocsModalComponent } from '../components/legal-docs-modal/legal-docs-modal.component';
 import { Router, ActivatedRoute } from '@angular/router';
 import { DistributorDashboardPage } from './distributor-dashboard.page';
 import { HapticService } from '../services/haptic.service';
@@ -96,7 +96,8 @@ interface UserStatCard {
     FormsModule,
     IonicModule,
     NgApexchartsModule,
-    DistributorDashboardPage
+    DistributorDashboardPage,
+    LegalDocsModalComponent
   ],
 })
 export class DashboardPage implements OnInit {
@@ -178,7 +179,7 @@ export class DashboardPage implements OnInit {
 
   showPdfModal = false;
   pdfModalTitle = '';
-  pdfModalSrc: SafeResourceUrl | null = null;
+  legalDocType: 'privacy' | 'terms' = 'privacy';
 
   private haptic = inject(HapticService);
 
@@ -186,19 +187,17 @@ export class DashboardPage implements OnInit {
     private auth: Auth,
     private router: Router,
     private route: ActivatedRoute,
-    private dashboardService: DashboardService,
-    private readonly sanitizer: DomSanitizer
+    private dashboardService: DashboardService
   ) {}
 
-  openPdfModal(src: string, title: string): void {
+  openLegalDoc(type: 'privacy' | 'terms', title: string): void {
+    this.legalDocType = type;
     this.pdfModalTitle = title;
-    this.pdfModalSrc = this.sanitizer.bypassSecurityTrustResourceUrl(src + '#toolbar=0&navpanes=0'); // NOSONAR – local asset path only
     this.showPdfModal = true;
   }
 
   closePdfModal(): void {
     this.showPdfModal = false;
-    this.pdfModalSrc = null;
   }
 
   ngOnInit() {

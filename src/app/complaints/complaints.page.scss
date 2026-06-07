@@ -5,3 +5,111 @@
 ion-content {
   --background: transparent;
 }
+
+// Dark theme for mobile sales / distributor roles
+.form-dark {
+  background: #0d1117 !important;
+
+  // Kill the light gradient
+  &.bg-gradient-to-br {
+    background: #0d1117 !important;
+  }
+
+  // Form card
+  .bg-white {
+    background: rgba(255, 255, 255, 0.04) !important;
+    border-color: rgba(255, 255, 255, 0.08) !important;
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  }
+
+  // Input/select backgrounds
+  .bg-slate-50 {
+    background: rgba(255, 255, 255, 0.05) !important;
+  }
+
+  .bg-slate-100 {
+    background: rgba(255, 255, 255, 0.04) !important;
+  }
+
+  // Borders
+  .border-slate-100 {
+    border-color: rgba(255, 255, 255, 0.08) !important;
+  }
+
+  .border-slate-200 {
+    border-color: rgba(255, 255, 255, 0.1) !important;
+  }
+
+  // Text
+  .text-slate-700 {
+    color: #e2e8f0 !important;
+  }
+
+  .text-slate-600 {
+    color: #94a3b8 !important;
+  }
+
+  // Success alert
+  .bg-green-50 {
+    background: rgba(16, 185, 129, 0.1) !important;
+  }
+
+  .border-green-200 {
+    border-color: rgba(16, 185, 129, 0.3) !important;
+  }
+
+  .text-green-800 {
+    color: #34d399 !important;
+  }
+
+  // Error alert
+  .bg-rose-50 {
+    background: rgba(239, 68, 68, 0.1) !important;
+  }
+
+  .border-rose-200 {
+    border-color: rgba(239, 68, 68, 0.3) !important;
+  }
+
+  .text-rose-800 {
+    color: #fca5a5 !important;
+  }
+
+  // Shadow on form card
+  .shadow-sm {
+    box-shadow: 0 0 0 1px rgba(255, 255, 255, 0.06) !important;
+  }
+
+  // Inputs, selects, textareas
+  input, select, textarea {
+    background: rgba(255, 255, 255, 0.05) !important;
+    color: #f1f5f9 !important;
+    border-color: rgba(255, 255, 255, 0.1) !important;
+
+    &::placeholder {
+      color: rgba(148, 163, 184, 0.6) !important;
+    }
+
+    &:focus {
+      border-color: rgba(16, 185, 129, 0.6) !important;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.08) !important;
+    }
+
+    &[readonly] {
+      background: rgba(255, 255, 255, 0.03) !important;
+      color: #64748b !important;
+    }
+  }
+
+  // Select option dropdown
+  select option {
+    background: #1e293b;
+    color: #f1f5f9;
+  }
+
+  // Clear button hover
+  .bg-slate-100:hover,
+  .hover\:bg-slate-200:hover {
+    background: rgba(255, 255, 255, 0.1) !important;
+  }
+}

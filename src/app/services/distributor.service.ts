@@ -30,7 +30,8 @@ export interface DistributorDto {
   panNumber: string;
   gstNumber: string;
   status: string;
-  creditLimit?: boolean;
+  creditLimit?: number;
+  creditBalance?: number;
   creditAmount?: number;
   bankGuaranteeNumber?: string;
   bgExpiryDate?: string;

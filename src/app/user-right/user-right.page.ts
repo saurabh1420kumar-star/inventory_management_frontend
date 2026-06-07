@@ -130,8 +130,6 @@ export class UserRightPage implements OnInit {
         color: 'blue',
         modules: [
           { featureKey: 'DASHBOARD', displayName: 'Dashboard', icon: 'speedometer-outline', category: 'Core', access: 'NONE' },
-          { featureKey: 'OPERATIONS', displayName: 'Operations', icon: 'construct-outline', category: 'Core', access: 'NONE' },
-          { featureKey: 'FEEDBACK', displayName: 'Feedback', icon: 'chatbubbles-outline', category: 'Core', access: 'NONE' },
         ]
       },
       {
@@ -139,9 +137,9 @@ export class UserRightPage implements OnInit {
         icon: 'cube-outline',
         color: 'emerald',
         modules: [
-          { featureKey: 'INVENTORY_MASTERS', displayName: 'Master Inventory', icon: 'albums-outline', category: 'Inventory', access: 'NONE' },
-          { featureKey: 'INVENTORY_TRANSACTIONS', displayName: 'Machine Parts', icon: 'cog-outline', category: 'Inventory', access: 'NONE' },
-          { featureKey: 'UNIT_MASTER', displayName: 'Unit Master', icon: 'layers-outline', category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_MASTERS', displayName: 'Master Inventory',  icon: 'albums-outline',   category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_INWARD',  displayName: 'Inward Inventory',  icon: 'download-outline', category: 'Inventory', access: 'NONE' },
+          { featureKey: 'INVENTORY_OUTWARD', displayName: 'Outward Inventory', icon: 'upload-outline',   category: 'Inventory', access: 'NONE' },
         ]
       },
       {
@@ -149,20 +147,34 @@ export class UserRightPage implements OnInit {
         icon: 'wallet-outline',
         color: 'violet',
         modules: [
-          { featureKey: 'ACCOUNTS', displayName: 'Accounts Master', icon: 'book-outline', category: 'Accounts', access: 'NONE' },
-          { featureKey: 'ACCOUNTS_TRANSACTION', displayName: 'Transactions', icon: 'swap-horizontal-outline', category: 'Accounts', access: 'NONE' },
-          { featureKey: 'PAYMENT_REQUEST', displayName: 'Payment Requests', icon: 'card-outline', category: 'Accounts', access: 'NONE' },
+          { featureKey: 'ACCOUNTS',        displayName: 'Accounts Master',  icon: 'book-outline',     category: 'Accounts', access: 'NONE' },
+          { featureKey: 'PAYMENT_REQUEST', displayName: 'Payment Requests', icon: 'card-outline',     category: 'Accounts', access: 'NONE' },
+          { featureKey: 'PI_UPDATE',       displayName: 'PI Update',        icon: 'receipt-outline',  category: 'Accounts', access: 'NONE' },
         ]
       },
       {
-        name: 'Sales & Distribution',
+        name: 'Sales',
         icon: 'trending-up-outline',
         color: 'amber',
         modules: [
-          { featureKey: 'SALES', displayName: 'Sales Management', icon: 'bar-chart-outline', category: 'Sales & Distribution', access: 'NONE' },
-          { featureKey: 'DISTRIBUTOR', displayName: 'Distributor', icon: 'people-outline', category: 'Sales & Distribution', access: 'NONE' },
-          { featureKey: 'ORDER_DETAILS', displayName: 'Order Tracking', icon: 'locate-outline', category: 'Sales & Distribution', access: 'NONE' },
-          { featureKey: 'PROFORMA_INVOICE', displayName: 'Proforma Invoice', icon: 'document-text-outline', category: 'Sales & Distribution', access: 'NONE' },
+          { featureKey: 'SALES',               displayName: 'Sales Management',  icon: 'bar-chart-outline',  category: 'Sales', access: 'NONE' },
+          { featureKey: 'REPORTING_MANAGER',   displayName: 'Reporting Manager', icon: 'people-outline',     category: 'Sales', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Distributor',
+        icon: 'storefront-outline',
+        color: 'teal',
+        modules: [
+          { featureKey: 'DISTRIBUTOR', displayName: 'Distributor', icon: 'storefront-outline', category: 'Distributor', access: 'NONE' },
+        ]
+      },
+      {
+        name: 'Order Tracking',
+        icon: 'locate-outline',
+        color: 'cyan',
+        modules: [
+          { featureKey: 'ORDER_DETAILS', displayName: 'Order Tracking', icon: 'locate-outline', category: 'Order Tracking', access: 'NONE' },
         ]
       },
       {
@@ -171,8 +183,6 @@ export class UserRightPage implements OnInit {
         color: 'sky',
         modules: [
           { featureKey: 'DISPATCH', displayName: 'Dispatch', icon: 'paper-plane-outline', category: 'Logistics', access: 'NONE' },
-          { featureKey: 'GDN', displayName: 'GDN', icon: 'receipt-outline', category: 'Logistics', access: 'NONE' },
-          { featureKey: 'LOGISTICS', displayName: 'Logistics', icon: 'car-outline', category: 'Logistics', access: 'NONE' },
         ]
       },
       {
@@ -180,9 +190,8 @@ export class UserRightPage implements OnInit {
         icon: 'people-circle-outline',
         color: 'rose',
         modules: [
-          { featureKey: 'HR', displayName: 'HR Department', icon: 'business-outline', category: 'HR', access: 'NONE' },
-          { featureKey: 'HR_DESIGNATION', displayName: 'Designation', icon: 'ribbon-outline', category: 'HR', access: 'NONE' },
-          { featureKey: 'HR_EMPLOYEE', displayName: 'Employee', icon: 'person-outline', category: 'HR', access: 'NONE' },
+          { featureKey: 'HR',         displayName: 'HR Department', icon: 'business-outline',  category: 'HR', access: 'NONE' },
+          { featureKey: 'HR_KRA_KPI', displayName: 'HR KRA / KPI',  icon: 'analytics-outline', category: 'HR', access: 'NONE' },
         ]
       },
       {
@@ -190,8 +199,8 @@ export class UserRightPage implements OnInit {
         icon: 'help-buoy-outline',
         color: 'orange',
         modules: [
-          { featureKey: 'COMPLAINT', displayName: 'Complaints', icon: 'warning-outline', category: 'Support', access: 'NONE' },
-          { featureKey: 'COMPLAINTS_MANAGEMENT', displayName: 'Manage Complaints', icon: 'shield-checkmark-outline', category: 'Support', access: 'NONE' },
+          { featureKey: 'COMPLAINT',             displayName: 'Complaints',            icon: 'warning-outline',         category: 'Support', access: 'NONE' },
+          { featureKey: 'COMPLAINTS_MANAGEMENT', displayName: 'Complaints Management', icon: 'shield-checkmark-outline', category: 'Support', access: 'NONE' },
         ]
       },
       {
@@ -514,6 +523,8 @@ export class UserRightPage implements OnInit {
       'violet':  { bg: 'bg-violet-500',  text: 'text-violet-600',  border: 'border-violet-200',  bgLight: 'bg-violet-50' },
       'amber':   { bg: 'bg-amber-500',   text: 'text-amber-600',   border: 'border-amber-200',   bgLight: 'bg-amber-50' },
       'sky':     { bg: 'bg-sky-500',     text: 'text-sky-600',     border: 'border-sky-200',     bgLight: 'bg-sky-50' },
+      'teal':    { bg: 'bg-teal-500',    text: 'text-teal-600',    border: 'border-teal-200',    bgLight: 'bg-teal-50' },
+      'cyan':    { bg: 'bg-cyan-500',    text: 'text-cyan-600',    border: 'border-cyan-200',    bgLight: 'bg-cyan-50' },
       'rose':    { bg: 'bg-rose-500',    text: 'text-rose-600',    border: 'border-rose-200',    bgLight: 'bg-rose-50' },
       'orange':  { bg: 'bg-orange-500',  text: 'text-orange-600',  border: 'border-orange-200',  bgLight: 'bg-orange-50' },
       'slate':   { bg: 'bg-slate-500',   text: 'text-slate-600',   border: 'border-slate-200',   bgLight: 'bg-slate-100' },

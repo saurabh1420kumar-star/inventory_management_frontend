@@ -183,11 +183,35 @@
           <ion-label>Logistics</ion-label>
         </ion-item> -->
 
-        <!-- ===== COMPLAINTS & FEEDBACK (Both mobile & desktop) ===== -->
-        <ion-item *appAcl="'COMPLAINT'" routerLink="/complaints" routerLinkActive="active" (click)="onMenuItemClick()">
-          <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
-          <ion-label>Complaints & Feedback</ion-label>
-        </ion-item>
+        <!-- ===== COMPLAINTS & FEEDBACK ===== -->
+        <!-- For Sales / Distributor: custom dark accordion (ion-accordion shadow DOM blocks theme CSS) -->
+        <ng-container *ngIf="isSalesRole || userRole === 'DISTRIBUTOR'">
+          <div *appAcl="'COMPLAINT'" class="dark-acc">
+            <div class="dark-acc-header" (click)="toggleComplaintsMenu()">
+              <ion-icon name="chatbubbles-outline" class="dark-acc-icon"></ion-icon>
+              <span class="dark-acc-label">Complaints</span>
+              <ion-icon [name]="isComplaintsOpen ? 'chevron-up-outline' : 'chevron-down-outline'" class="dark-acc-chevron"></ion-icon>
+            </div>
+            <div class="dark-acc-content" [class.open]="isComplaintsOpen">
+              <ion-item routerLink="/complaints" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-icon name="create-outline" slot="start"></ion-icon>
+                <ion-label>Submit Complaint</ion-label>
+              </ion-item>
+              <ion-item routerLink="/complaint-resolution" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
+                <ion-label>Complaint Resolution</ion-label>
+              </ion-item>
+            </div>
+          </div>
+        </ng-container>
+
+        <!-- For other roles: simple direct link -->
+        <ng-container *ngIf="!isSalesRole && userRole !== 'DISTRIBUTOR'">
+          <ion-item *appAcl="'COMPLAINT'" routerLink="/complaints" routerLinkActive="active" (click)="onMenuItemClick()">
+            <ion-icon name="chatbubbles-outline" slot="start"></ion-icon>
+            <ion-label>Complaints & Feedback</ion-label>
+          </ion-item>
+        </ng-container>
 
         <!-- ===== COMPLAINTS MANAGEMENT (Admin only) ===== -->
         <ion-item *ngIf="isAdmin" routerLink="/complaints-management" routerLinkActive="active" (click)="onMenuItemClick()">
@@ -220,7 +244,7 @@
           <ion-icon name="person-sharp" class="user-avatar"></ion-icon>
         </div>
         <div class="user-details">
-          <p class="user-greeting">Hi, {{ userName }}</p>
+          <p class="user-greeting">Hi, {{ salesPersonName || distributorProfile?.firmName || distributorProfile?.companyName || userName }}</p>
           <span class="user-role">{{ userRole }}</span>
         </div>
         <app-logout></app-logout>

@@ -534,7 +534,7 @@
         </div>
         <div class="flex-1 min-w-0">
           <p class="text-lg font-bold text-white truncate">{{ distributorProfile?.distributorName ?? distributorProfile?.name ?? distributorProfile?.firmName ?? distributorName }}</p>
-          <p class="text-xs font-mono mt-0.5" style="color: #d4a24e;">ID: {{ distributorId }}</p>
+          <p class="text-xs font-mono mt-0.5" style="color: #d4a24e;">{{ distributorProfile?.distributorCode ?? ('ID: ' + distributorId) }}</p>
           <p class="text-xs text-slate-500 mt-0.5">Active Distributor</p>
           <!-- Extra fields from API -->
           <div *ngIf="distributorProfile" class="mt-3 flex flex-col gap-1.5">
@@ -2699,9 +2699,9 @@
 
   <footer class="dist-legal-footer">
     © 2026 Nectar Origin Private Limited. All Rights Reserved. |
-    <button class="dist-legal-link" (click)="openPdfModal('assets/privacy-policy.pdf', 'Privacy Policy')">Privacy Policy</button>
+    <button class="dist-legal-link" (click)="openLegalDoc('privacy', 'Privacy Policy')">Privacy Policy</button>
     |
-    <button class="dist-legal-link" (click)="openPdfModal('assets/terms-and-conditions.pdf', 'Terms &amp; Conditions')">Terms &amp; Conditions</button>
+    <button class="dist-legal-link" (click)="openLegalDoc('terms', 'Terms &amp; Conditions')">Terms &amp; Conditions</button>
   </footer>
 
   </div>
@@ -2730,25 +2730,10 @@
   </div>
 </ion-footer>
 
-<!-- ==================== PDF VIEWER MODAL ==================== -->
-<ion-modal [isOpen]="showPdfModal" (didDismiss)="closePdfModal()" [backdropDismiss]="true">
-  <ng-template>
-    <ion-header class="pdf-modal-hdr">
-      <ion-toolbar>
-        <ion-buttons slot="start">
-          <ion-button (click)="closePdfModal()" (keydown.enter)="closePdfModal()" fill="clear">
-            <ion-icon name="arrow-back-outline" slot="icon-only"></ion-icon>
-          </ion-button>
-        </ion-buttons>
-        <ion-title>{{ pdfModalTitle }}</ion-title>
-      </ion-toolbar>
-    </ion-header>
-    <ion-content [scrollY]="false" (contextmenu)="$event.preventDefault()">
-      <div class="pdf-iframe-wrap">
-        @if (pdfModalSrc) {
-          <iframe [src]="pdfModalSrc" [title]="pdfModalTitle" style="border:none;display:block;width:100%;height:100%;"></iframe>
-        }
-      </div>
-    </ion-content>
-  </ng-template>
-</ion-modal>
+<!-- ==================== LEGAL DOCUMENT MODAL ==================== -->
+<app-legal-docs-modal
+  [isOpen]="showPdfModal"
+  [docType]="legalDocType"
+  [title]="pdfModalTitle"
+  (didClose)="closePdfModal()">
+</app-legal-docs-modal>

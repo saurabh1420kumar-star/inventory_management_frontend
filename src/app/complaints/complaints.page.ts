@@ -7,6 +7,7 @@ import { ComplaintsService } from '../services/complaints.service';
 import { HapticService } from '../services/haptic.service';
 import { Auth } from '../services/auth';
 import { UserService } from '../services/user.service';
+import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 import { environment } from '../../environments/environment';
 
 @Component({
@@ -25,7 +26,7 @@ export class ComplaintsPage implements OnInit {
   complaintDate = new Date().toISOString().split('T')[0];
 
   categories = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
-  priorityLevels = ['LOW', 'MEDIUM', 'HIGH', 'CRITICAL'];
+  priorityLevels = ['LOW', 'MEDIUM', 'HIGH'];
 
   private haptic = inject(HapticService);
 
@@ -34,6 +35,7 @@ export class ComplaintsPage implements OnInit {
     private complaintsService: ComplaintsService,
     private auth: Auth,
     private userService: UserService,
+    private salesHierarchyService: SalesHierarchyService,
     private http: HttpClient
   ) {
     this.complaintForm = this.fb.group({
@@ -44,7 +46,7 @@ export class ComplaintsPage implements OnInit {
       category: ['PAYMENT', Validators.required],
       subject: ['', [Validators.required, Validators.minLength(5)]],
       priorityLevel: ['LOW', Validators.required],
-      description: ['', [Validators.required, Validators.minLength(20)]],
+      description: ['', [Validators.required, Validators.minLength(5)]],
     });
   }
 
@@ -56,6 +58,20 @@ export class ComplaintsPage implements OnInit {
     const currentUserId = this.auth.getUserId();
     if (!currentUserId) {
       this.fillFromAuthDefaults();
+      return;
+    }
+
+    const role = this.auth.getRoleType() || '';
+    const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE',
+      'NATIONAL_SALES_MGR', 'STATE_SALES_MGR', 'ZONAL_SALES_MGR', 'REGIONAL_SALES_MGR', 'AREA_SALES_MGR', 'SALES_OFFICER'];
+
+    if (salesRoles.includes(role)) {
+      this.autofillFromSalesHierarchy(currentUserId);
+      return;
+    }
+
+    if (role === 'DISTRIBUTOR') {
+      this.autofillFromProfileApi(currentUserId);
       return;
     }
 
@@ -73,7 +89,27 @@ export class ComplaintsPage implements OnInit {
         this.autofillFromProfileApi(currentUserId);
       },
       error: () => {
-        this.autofillFromProfileApi(currentUserId);
+        this.fillFromAuthDefaults();
+      }
+    });
+  }
+
+  private autofillFromSalesHierarchy(userId: number) {
+    this.salesHierarchyService.getAllSalesPersons().subscribe({
+      next: (persons) => {
+        const person = persons.find((p: any) => Number(p.id) === Number(userId) || Number(p.userId) === Number(userId));
+        if (person) {
+          this.patchComplaintUser({
+            fullName: person.name || `${person.firstName || ''} ${person.lastName || ''}`.trim(),
+            emailAddress: person.email || '',
+            phoneNumber: person.phone || person.contactNo || ''
+          });
+        } else {
+          this.fillFromAuthDefaults();
+        }
+      },
+      error: () => {
+        this.fillFromAuthDefaults();
       }
     });
   }
@@ -88,7 +124,7 @@ export class ComplaintsPage implements OnInit {
       next: (res) => {
         const profile = res?.data ?? res ?? {};
         this.patchComplaintUser({
-          fullName: profile.distributorName || profile.name || this.auth.getUsername() || '',
+          fullName: profile.firmName || profile.distributorName || profile.companyName || profile.name || this.auth.getUsername() || '',
           emailAddress: profile.contactEmail || profile.email || '',
           phoneNumber: profile.phoneNumber || profile.mobileNumber || profile.phone || profile.contactNo || ''
         });
@@ -115,20 +151,20 @@ export class ComplaintsPage implements OnInit {
     });
   }
 
+  get isDarkMode(): boolean {
+    const role = this.auth.getRoleType();
+    const salesRoles = ['SALES', 'SALESPERSON', 'NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALES_EXECUTIVE'];
+    return salesRoles.includes(role ?? '') || role === 'DISTRIBUTOR';
+  }
+
+  get isAdminUser(): boolean {
+    const role = this.auth.getRoleType();
+    return role === 'ADMIN' || role === 'SUPER_ADMIN';
+  }
+
   submitComplaint() {
     this.haptic.medium();
-    console.log('Submit button clicked');
-    console.log('Form valid:', this.complaintForm.valid);
-    console.log('Form data:', this.complaintForm.value);
-    
     if (this.complaintForm.invalid) {
-      console.log('Form is invalid. Errors:', this.complaintForm.errors);
-      Object.keys(this.complaintForm.controls).forEach(key => {
-        const control = this.complaintForm.get(key);
-        if (control?.invalid) {
-          console.log(`${key} is invalid:`, control.errors);
-        }
-      });
       this.errorMessage = 'Please fill all required fields correctly.';
       return;
     }
@@ -136,11 +172,20 @@ export class ComplaintsPage implements OnInit {
     this.isLoading = true;
     this.errorMessage = '';
     this.successMessage = '';
-    console.log('🚀 Submitting complaint with data:', this.complaintForm.value);
 
-    this.complaintsService.createComplaint(this.complaintForm.value).subscribe({
-      next: (response) => {
-        console.log('✨ Complaint created successfully:', response);
+    const payload: any = { ...this.complaintForm.value };
+    const role = this.auth.getRoleType();
+    const userId = this.auth.getUserId();
+    if (userId && this.isDarkMode) {
+      if (role === 'DISTRIBUTOR') {
+        payload.distributorId = userId;
+      } else {
+        payload.salespersonId = userId;
+      }
+    }
+
+    this.complaintsService.createComplaint(payload).subscribe({
+      next: () => {
         this.isLoading = false;
         this.successMessage = 'Complaint submitted successfully. We will review it shortly.';
         this.showSuccess = true;
@@ -152,14 +197,7 @@ export class ComplaintsPage implements OnInit {
         setTimeout(() => this.showSuccess = false, 5000);
       },
       error: (err) => {
-        console.error('❌ Error submitting complaint:', err);
-        console.error('Error status:', err?.status);
-        console.error('Error message:', err?.error?.message);
-        console.error('Full error response:', err?.error);
-        
         this.isLoading = false;
-        
-        // Check for specific error types
         if (err?.status === 0) {
           this.errorMessage = 'Network error. Please check your internet connection.';
         } else if (err?.status === 401 || err?.status === 403) {

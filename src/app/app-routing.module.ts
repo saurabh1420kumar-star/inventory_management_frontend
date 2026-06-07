@@ -129,6 +129,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'complaint-resolution',
+    loadComponent: () => import('./complaint-resolution/complaint-resolution.page').then(m => m.ComplaintResolutionPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'proforma-invoice',
     loadComponent: () => import('./proforma-invoice/proforma-invoice.page').then(m => m.ProformaInvoicePage),
     canActivate: [AuthGuard]

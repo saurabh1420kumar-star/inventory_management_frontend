@@ -56,6 +56,21 @@
                 placeholder="Search distributors..."
                 type="text"
               />
+
+              <!-- Search Results Dropdown -->
+              <div *ngIf="searchQuery && getSearchResults().length > 0" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-slate-100 z-50 max-h-64 overflow-y-auto">
+                <div *ngFor="let result of getSearchResults()"
+                     (click)="selectSearchResult(result)"
+                     class="px-4 py-3 hover:bg-emerald-50 cursor-pointer border-b border-slate-50 last:border-b-0 transition-colors">
+                  <div class="font-medium text-slate-700">{{ result.name }}</div>
+                  <div class="text-xs text-slate-500 mt-0.5">{{ result.contact }} • {{ result.address }}</div>
+                </div>
+              </div>
+
+              <!-- No results message -->
+              <div *ngIf="searchQuery && getSearchResults().length === 0 && filteredDistributors.length === 0" class="absolute top-full left-0 right-0 mt-2 bg-white rounded-xl shadow-lg border border-slate-100 z-50 p-4 text-center">
+                <p class="text-sm text-slate-500">No distributors found</p>
+              </div>
             </div>
           </div>
 
@@ -84,6 +99,15 @@
               [class.text-slate-600]="statusFilter !== 'INACTIVE'"
               class="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border border-slate-200 transition-all">
               Inactive
+            </button>
+            <button (click)="setStatusFilter('CREDITED')"
+              [class.text-white]="statusFilter === 'CREDITED'"
+              [class.bg-white]="statusFilter !== 'CREDITED'"
+              [class.text-slate-600]="statusFilter !== 'CREDITED'"
+              [style.background]="statusFilter === 'CREDITED' ? 'linear-gradient(135deg, #f59e0b, #d97706)' : ''"
+              [style.border-color]="statusFilter === 'CREDITED' ? '#f59e0b' : ''"
+              class="px-4 py-2 rounded-xl text-sm font-semibold shadow-sm border border-slate-200 transition-all flex items-center gap-1.5">
+              <span>💳</span> Credited
             </button>
           </div>
 
@@ -145,6 +169,11 @@
                   <div class="flex items-center gap-1.5 flex-wrap mt-0.5">
                     <span class="inline-block px-2 py-0.5 bg-white/20 rounded-full text-white text-[0.65rem] sm:text-xs">{{ distributor.distributorType }}</span>
                     <span *ngIf="distributor.distributorCode" class="inline-block px-2 py-0.5 bg-white/30 rounded-full text-white/90 text-[0.65rem] sm:text-xs font-mono">{{ distributor.distributorCode }}</span>
+                    <span *ngIf="distributor.creditAmount && distributor.creditAmount > 0"
+                          class="credited-badge">
+                      <ion-icon name="card-outline" style="font-size:9px;"></ion-icon>
+                      Credited
+                    </span>
                   </div>
                 </div>
               </div>
@@ -624,6 +653,35 @@
 
             <!-- Credit Limit Fields (shown when checkbox is enabled) -->
             <ng-container *ngIf="distributorForm.get('creditLimit')?.value">
+              <!-- Credit Balance Read-Only (edit mode only) -->
+              <div class="md:col-span-2" *ngIf="selectedDistributor?.creditBalance != null">
+                <div class="credit-balance-readout">
+                  <div class="credit-balance-readout-row">
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="trending-up-outline" class="text-amber-500"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Credit Limit</p>
+                        <p class="credit-balance-readout-val">₹{{ selectedDistributor?.creditAmount | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="wallet-outline" class="text-emerald-500"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Available Balance</p>
+                        <p class="credit-balance-readout-val credit-balance-readout-avail">₹{{ selectedDistributor?.creditBalance | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="arrow-down-circle-outline" class="text-red-400"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Amount Used</p>
+                        <p class="credit-balance-readout-val credit-balance-readout-used">₹{{ ((selectedDistributor?.creditAmount || 0) - (selectedDistributor?.creditBalance || 0)) | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Number</label>
                 <ion-input
@@ -701,6 +759,11 @@
                 <div class="detail-badges">
                   <span class="detail-badge">{{ selectedDistributor.distributorType }}</span>
                   <span class="detail-badge">{{ selectedDistributor.companyType }}</span>
+                  <span *ngIf="selectedDistributor.creditAmount && selectedDistributor.creditAmount > 0"
+                        class="detail-credited-badge">
+                    <ion-icon name="card-outline"></ion-icon>
+                    Credited
+                  </span>
                 </div>
               </div>
             </div>
@@ -855,6 +918,92 @@
                 <span>Account Holder Name</span>
               </div>
               <p class="detail-field-value font-bold">{{ selectedDistributor.accountName || 'N/A' }}</p>
+            </div>
+          </div>
+        </div>
+
+        <!-- Credit Information -->
+        <div *ngIf="selectedDistributor.creditAmount && selectedDistributor.creditAmount > 0"
+             class="credit-info-section mb-4">
+          <div class="credit-info-header">
+            <div class="credit-info-header-left">
+              <div class="credit-icon-wrap">
+                <ion-icon name="card-outline"></ion-icon>
+              </div>
+              <div>
+                <h3 class="credit-section-title">Credit Facility</h3>
+                <p class="credit-section-sub">Active credit line for this distributor</p>
+              </div>
+            </div>
+            <span class="credit-active-pill">
+              <span class="credit-pulse-dot"></span>
+              Active
+            </span>
+          </div>
+
+          <!-- Credit Utilisation Bar -->
+          <div class="credit-utilisation-wrap">
+            <div class="credit-util-labels">
+              <span class="credit-util-label-text">Credit Utilisation</span>
+              <span class="credit-util-pct" *ngIf="selectedDistributor.creditBalance != null">
+                {{ ((selectedDistributor.creditAmount - selectedDistributor.creditBalance) / selectedDistributor.creditAmount * 100) | number:'1.0-0' }}% used
+              </span>
+            </div>
+            <div class="credit-util-bar-bg" *ngIf="selectedDistributor.creditBalance != null">
+              <div class="credit-util-bar-fill"
+                   [style.width.%]="(selectedDistributor.creditAmount - selectedDistributor.creditBalance) / selectedDistributor.creditAmount * 100">
+              </div>
+            </div>
+          </div>
+
+          <!-- Credit Stats Grid -->
+          <div class="credit-stats-grid">
+            <div class="credit-stat-card credit-stat-total">
+              <div class="credit-stat-icon">
+                <ion-icon name="trending-up-outline"></ion-icon>
+              </div>
+              <div>
+                <p class="credit-stat-label">Credit Limit</p>
+                <p class="credit-stat-value">₹{{ selectedDistributor.creditAmount | number:'1.0-0' }}</p>
+              </div>
+            </div>
+
+            <div class="credit-stat-card credit-stat-balance" *ngIf="selectedDistributor.creditBalance != null">
+              <div class="credit-stat-icon">
+                <ion-icon name="wallet-outline"></ion-icon>
+              </div>
+              <div>
+                <p class="credit-stat-label">Available Balance</p>
+                <p class="credit-stat-value">₹{{ selectedDistributor.creditBalance | number:'1.0-0' }}</p>
+              </div>
+            </div>
+
+            <div class="credit-stat-card credit-stat-used" *ngIf="selectedDistributor.creditBalance != null">
+              <div class="credit-stat-icon">
+                <ion-icon name="arrow-down-circle-outline"></ion-icon>
+              </div>
+              <div>
+                <p class="credit-stat-label">Amount Used</p>
+                <p class="credit-stat-value">₹{{ (selectedDistributor.creditAmount - selectedDistributor.creditBalance) | number:'1.0-0' }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- BG Details -->
+          <div class="credit-bg-row" *ngIf="selectedDistributor.bankGuaranteeNumber">
+            <div class="credit-bg-item">
+              <span class="credit-bg-label">
+                <ion-icon name="document-text-outline"></ion-icon>
+                BG Number
+              </span>
+              <span class="credit-bg-value">{{ selectedDistributor.bankGuaranteeNumber }}</span>
+            </div>
+            <div class="credit-bg-item" *ngIf="selectedDistributor.bgExpiryDate">
+              <span class="credit-bg-label">
+                <ion-icon name="calendar-outline"></ion-icon>
+                BG Expiry
+              </span>
+              <span class="credit-bg-value">{{ selectedDistributor.bgExpiryDate }}</span>
             </div>
           </div>
         </div>
@@ -1189,12 +1338,11 @@
           <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
             <div>
               <label class="block text-sm font-medium text-slate-600 mb-1">Account Number</label>
-              <ion-input 
-                formControlName="accountNumber" 
-                type="text" 
-                placeholder="Enter account number" 
-                class="custom-input"
-                [readonly]="true">
+              <ion-input
+                formControlName="accountNumber"
+                type="text"
+                placeholder="Enter account number"
+                class="custom-input">
               </ion-input>
               <div *ngIf="distributorForm.get('accountNumber')?.invalid && distributorForm.get('accountNumber')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -1219,12 +1367,11 @@
 
             <div class="md:col-span-2">
               <label class="block text-sm font-medium text-slate-600 mb-1">Account Name</label>
-              <ion-input 
-                formControlName="accountName" 
-                type="text" 
-                placeholder="Enter account holder name" 
-                class="custom-input"
-                [readonly]="true">
+              <ion-input
+                formControlName="accountName"
+                type="text"
+                placeholder="Enter account holder name"
+                class="custom-input">
               </ion-input>
               <div *ngIf="distributorForm.get('accountName')?.invalid && distributorForm.get('accountName')?.touched" 
                    class="text-xs text-red-500 mt-1">
@@ -1249,6 +1396,35 @@
 
             <!-- Credit Limit Fields (shown when checkbox is enabled) -->
             <ng-container *ngIf="distributorForm.get('creditLimit')?.value">
+              <!-- Credit Balance Read-Only (edit mode only) -->
+              <div class="md:col-span-2" *ngIf="selectedDistributor?.creditBalance != null">
+                <div class="credit-balance-readout">
+                  <div class="credit-balance-readout-row">
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="trending-up-outline" class="text-amber-500"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Credit Limit</p>
+                        <p class="credit-balance-readout-val">₹{{ selectedDistributor?.creditAmount | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="wallet-outline" class="text-emerald-500"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Available Balance</p>
+                        <p class="credit-balance-readout-val credit-balance-readout-avail">₹{{ selectedDistributor?.creditBalance | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                    <div class="credit-balance-readout-item">
+                      <ion-icon name="arrow-down-circle-outline" class="text-red-400"></ion-icon>
+                      <div>
+                        <p class="credit-balance-readout-label">Amount Used</p>
+                        <p class="credit-balance-readout-val credit-balance-readout-used">₹{{ ((selectedDistributor?.creditAmount || 0) - (selectedDistributor?.creditBalance || 0)) | number:'1.0-0' }}</p>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
               <div>
                 <label class="block text-sm font-medium text-slate-600 mb-1">Bank Guarantee Number</label>
                 <ion-input

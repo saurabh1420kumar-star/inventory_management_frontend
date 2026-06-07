@@ -307,12 +307,15 @@
       </div>
     </div>
 
-    <div class="sheet-footer">
-      <button class="sheet-btn-secondary" (click)="closeDetailModal()">Close</button>
-      <button class="sheet-btn-primary" (click)="openStatusModal(selectedComplaint); closeDetailModal()">
-        <ion-icon name="create-outline"></ion-icon>
-        Update Status
-      </button>
+    <!-- COMMENT SECTION (replaces footer buttons) -->
+    <div class="detail-comment-section">
+      <div class="detail-comment-header">
+        <ion-icon name="chatbox-ellipses-outline"></ion-icon>
+        <span>Comment</span>
+      </div>
+      <p class="detail-comment-body" [class.detail-comment-empty]="!selectedComplaint.comment">
+        {{ selectedComplaint.comment || 'No comment has been added yet.' }}
+      </p>
     </div>
   </div>
 </div>
@@ -343,25 +346,33 @@
     </div>
 
     <div class="sheet-body">
-      <p class="status-picker-label">Select new status</p>
-      <div class="status-options">
-        <div *ngFor="let s of statusOptions"
-          class="status-option"
-          [class.status-option-selected]="newStatus === s"
-          [style.borderColor]="newStatus === s ? getStatusConfig(s).color : 'transparent'"
+      <p class="status-picker-label">Status</p>
+      <div class="status-options-inline">
+        <button *ngFor="let s of statusOptions"
+          class="status-chip"
+          [class.status-chip-selected]="newStatus === s"
+          [style.borderColor]="newStatus === s ? getStatusConfig(s).color : '#e2e8f0'"
           [style.backgroundColor]="newStatus === s ? getStatusConfig(s).bg : '#f8fafc'"
-          (click)="newStatus = s">
-          <div class="status-opt-icon" [style.backgroundColor]="getStatusConfig(s).bg + '80'">
-            <ion-icon [name]="getStatusConfig(s).icon" [style.color]="getStatusConfig(s).color"></ion-icon>
-          </div>
-          <div class="status-opt-text">
-            <span class="status-opt-label">{{ getStatusConfig(s).label }}</span>
-            <span class="status-opt-current" *ngIf="selectedComplaint.status === s">Current status</span>
-          </div>
-          <div class="status-opt-check" *ngIf="newStatus === s" [style.backgroundColor]="getStatusConfig(s).color">
-            <ion-icon name="checkmark" style="color:white;font-size:11px"></ion-icon>
-          </div>
-        </div>
+          [style.color]="newStatus === s ? getStatusConfig(s).color : '#64748b'"
+          (click)="newStatus = s"
+          type="button">
+          <ion-icon [name]="getStatusConfig(s).icon" style="font-size:14px"></ion-icon>
+          {{ getStatusConfig(s).label }}
+        </button>
+      </div>
+
+      <!-- COMMENT INPUT -->
+      <div class="status-comment-wrap">
+        <p class="status-picker-label">
+          <ion-icon name="chatbox-ellipses-outline" style="vertical-align:middle;margin-right:4px;font-size:13px"></ion-icon>
+          Comment <span style="font-weight:500;color:#cbd5e1;text-transform:none;letter-spacing:0">(optional)</span>
+        </p>
+        <textarea
+          class="status-comment-textarea"
+          [(ngModel)]="statusComment"
+          placeholder="Add a note about this status change…"
+          rows="3">
+        </textarea>
       </div>
     </div>
 

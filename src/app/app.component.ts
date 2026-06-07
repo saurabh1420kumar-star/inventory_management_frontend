@@ -65,6 +65,9 @@ export class AppComponent {
           this.userRole = this.auth.getRoleType();
           this.userName = this.auth.getUsername();
           this.applyTheme(this.userRole);
+          if (this.userRole === 'DISTRIBUTOR') {
+            this.distributorProfileService.loadProfile();
+          }
         } else {
           this.userRole = null;
           this.userName = null;
@@ -76,8 +79,7 @@ export class AppComponent {
     this.updateAuthPageState(window.location.pathname);
     this.applyTheme(this.auth.getRoleType());
 
-    // 📋 Load distributor profile globally on app init
-    this.distributorProfileService.loadProfile();
+    // Distributor profile is loaded in NavigationEnd handler (covers both fresh login and app refresh)
   }
 
   /**

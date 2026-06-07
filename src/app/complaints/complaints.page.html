@@ -1,18 +1,18 @@
 <!-- HEADER -->
 <ion-header class="ion-no-border">
-  <ion-toolbar style="--background: #000000; --border-width: 0;">
+  <ion-toolbar [style.--background]="isAdminUser ? '#000000' : (isDarkMode ? '#0d1117' : 'var(--ion-color-primary)')" style="--border-width: 0;">
     <ion-buttons slot="start">
-      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+      <ion-menu-button [style.color]="'#ffffff'"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="text-white font-bold tracking-tight text-xl">
-      <span class="text-emerald-400">Submit</span> Complaint
+    <ion-title [style.color]="'#ffffff'" class="font-bold tracking-tight text-xl">
+      <span [style.color]="isAdminUser ? '#10b981' : (isDarkMode ? '#34d399' : '#ffffff')">Submit</span> Complaint
     </ion-title>
   </ion-toolbar>
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content class="bg-slate-50">
-  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
+<ion-content [style.--background]="isDarkMode ? '#0d1117' : 'transparent'">
+  <div [class.form-dark]="isDarkMode" class="min-h-screen bg-gradient-to-br from-slate-50 via-emerald-50/40 to-teal-50/30 pb-20">
     <div class="max-w-4xl mx-auto px-4 sm:px-6 py-6 sm:py-8">
 
       <!-- HERO -->
@@ -147,8 +147,8 @@
               rows="5"
               class="w-full bg-slate-50 text-slate-700 placeholder-slate-400 border border-slate-200 focus:border-emerald-400 focus:ring-4 focus:ring-emerald-50 rounded-xl px-4 py-3 outline-none transition-all resize-none">
             </textarea>
-            <p *ngIf="complaintForm.get('description')?.invalid && complaintForm.get('description')?.touched" 
-              class="text-rose-500 text-xs mt-1">Description is required (min 20 characters)</p>
+            <p *ngIf="complaintForm.get('description')?.invalid && complaintForm.get('description')?.touched"
+              class="text-rose-500 text-xs mt-1">Description is required (min 5 characters)</p>
           </div>
 
           <!-- Buttons -->
