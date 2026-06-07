@@ -31,6 +31,7 @@ import { Auth } from '../services/auth';
 import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
 import { InvoiceService } from '../services/invoice.service';
+import { DownloadService } from '../services/download.service';
 import { environment } from '../../environments/environment';
 
 interface MetricCard {
@@ -265,6 +266,8 @@ export class DistributorDashboardPage implements OnInit {
   selectedBillingDealer: any | null = null;
   dealerSales: any[] = [];
   isLoadingDealerSales = false;
+  dealerPlacedOrders: any[] = [];
+  isLoadingDealerPlacedOrders = false;
 
   // Price Master
   selectedPriceMasterDealer: Dealer | null = null;
@@ -329,7 +332,8 @@ export class DistributorDashboardPage implements OnInit {
     private toastController: ToastController,
     private http: HttpClient,
     private readonly sanitizer: DomSanitizer,
-    private invoiceService: InvoiceService
+    private invoiceService: InvoiceService,
+    private downloadService: DownloadService
   ) {
     addIcons({
       'add-outline': addOutline,
@@ -1113,6 +1117,7 @@ export class DistributorDashboardPage implements OnInit {
       },
       error: () => { this.isLoadingDealerSales = false; }
     });
+    this.loadDealerPlacedOrders(dealer.id);
   }
 
   backToBillingList(): void {
@@ -1120,6 +1125,43 @@ export class DistributorDashboardPage implements OnInit {
     this.selectedBillingDealer = null;
     this.dealerSales = [];
     this.orderRows = [];
+    this.dealerPlacedOrders = [];
+  }
+
+  loadDealerPlacedOrders(dealerId: number): void {
+    this.isLoadingDealerPlacedOrders = true;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>(`${environment.apiUrl}/dealer-sales/orders`, {
+      headers,
+      params: { dealerId: String(dealerId), distributorId: String(this.distributorId ?? this.auth.getUserId()) }
+    }).subscribe({
+      next: (res) => {
+        this.dealerPlacedOrders = Array.isArray(res) ? res : (res?.data ?? res?.orders ?? []);
+        this.isLoadingDealerPlacedOrders = false;
+      },
+      error: () => { this.isLoadingDealerPlacedOrders = false; }
+    });
+  }
+
+  downloadDealerInvoice(order: any): void {
+    if (this.downloadingInvoiceId === order.id) return;
+    this.downloadingInvoiceId = order.id;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get(`${environment.apiUrl}/dealer-sales/orders/${order.id}/invoice/download`, {
+      headers,
+      responseType: 'blob'
+    }).subscribe({
+      next: (blob) => {
+        const filename = `invoice-order-${order.id}.pdf`;
+        this.downloadService.downloadBlob(blob, filename).then(() => {
+          this.downloadingInvoiceId = null;
+        });
+      },
+      error: () => {
+        this.downloadingInvoiceId = null;
+        this.showToast('Failed to download invoice', 'danger');
+      }
+    });
   }
 
   orderRows: { itemName: string; sku: string; quantity: number | null; amount: number | null }[] = [];
@@ -1189,8 +1231,8 @@ export class DistributorDashboardPage implements OnInit {
 
   get filteredDealerOrders(): any[] {
     const q = this.dealerOrdersSearch.toLowerCase().trim();
-    if (!q) return this.allDealerOrders;
-    return this.allDealerOrders.filter(d =>
+    if (!q) return this.dealers;
+    return this.dealers.filter(d =>
       (d.fullName ?? '').toLowerCase().includes(q) ||
       (d.phone ?? '').includes(q) ||
       (d.address ?? '').toLowerCase().includes(q)

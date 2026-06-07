@@ -1658,7 +1658,7 @@
           <p class="text-xs text-slate-500 mt-0.5">Tap a dealer to view their sales</p>
         </div>
         <div class="text-right">
-          <p class="text-lg font-bold text-cyan-400">{{ allDealerOrders.length }}</p>
+          <p class="text-lg font-bold text-cyan-400">{{ dealers.length }}</p>
           <p class="text-xs text-slate-500">Total Dealers</p>
         </div>
       </div>
@@ -1672,13 +1672,13 @@
       </div>
 
       <!-- Loading -->
-      <div *ngIf="isLoadingDealerOrders" class="flex flex-col items-center justify-center py-16 gap-3">
+      <div *ngIf="isLoadingDealers" class="flex flex-col items-center justify-center py-16 gap-3">
         <div class="w-10 h-10 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
         <p class="text-slate-500 text-sm">Loading dealers...</p>
       </div>
 
       <!-- Empty -->
-      <div *ngIf="!isLoadingDealerOrders && filteredDealerOrders.length === 0" class="flex flex-col items-center justify-center py-16 gap-3">
+      <div *ngIf="!isLoadingDealers && filteredDealerOrders.length === 0" class="flex flex-col items-center justify-center py-16 gap-3">
         <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: rgba(56,189,248,0.10);">
           <ion-icon name="receipt-outline" class="text-cyan-400 text-3xl"></ion-icon>
         </div>
@@ -1687,7 +1687,7 @@
       </div>
 
       <!-- Dealer Cards -->
-      <div *ngIf="!isLoadingDealerOrders && filteredDealerOrders.length > 0" class="flex flex-col gap-3">
+      <div *ngIf="!isLoadingDealers && filteredDealerOrders.length > 0" class="flex flex-col gap-3">
         <button *ngFor="let dealer of filteredDealerOrders"
                 (click)="selectBillingDealer(dealer)"
                 class="w-full rounded-2xl p-4 flex items-start gap-4 text-left"
@@ -1821,6 +1821,51 @@
           {{ isPlacingOrder ? 'Placing Order...' : 'Place Order' }}
         </button>
 
+      </div>
+
+      <!-- ── ORDER HISTORY ── -->
+      <div class="mt-6">
+        <h2 class="text-sm font-bold text-slate-300 mb-3 flex items-center gap-2">
+          <ion-icon name="receipt-outline" class="text-cyan-400"></ion-icon>
+          Order History
+        </h2>
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingDealerPlacedOrders" class="flex items-center justify-center py-8 gap-2">
+          <div class="w-5 h-5 rounded-full border-2 border-cyan-500 border-t-transparent animate-spin"></div>
+          <p class="text-slate-500 text-xs">Loading orders...</p>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="!isLoadingDealerPlacedOrders && dealerPlacedOrders.length === 0"
+             class="text-center py-8 rounded-xl"
+             style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+          <p class="text-slate-500 text-sm">No orders placed yet</p>
+        </div>
+
+        <!-- Order Cards -->
+        <div *ngIf="!isLoadingDealerPlacedOrders && dealerPlacedOrders.length > 0" class="flex flex-col gap-2">
+          <div *ngFor="let order of dealerPlacedOrders"
+               class="rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+               style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);">
+            <div class="flex-1 min-w-0">
+              <p class="text-white text-xs font-semibold truncate">{{ order.itemName ?? order.item_name ?? 'Order #' + order.id }}</p>
+              <div class="flex items-center gap-3 mt-1">
+                <span class="text-emerald-400 text-xs font-semibold">₹{{ (order.amount ?? 0) | number:'1.0-0' }}</span>
+                <span class="text-slate-500 text-xs">{{ order.date ? (order.date | date:'dd MMM yyyy') : '' }}</span>
+                <span *ngIf="order.quantity" class="text-slate-500 text-xs">Qty: {{ order.quantity }}</span>
+              </div>
+            </div>
+            <button (click)="downloadDealerInvoice(order)"
+                    [disabled]="downloadingInvoiceId === order.id"
+                    class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold"
+                    style="background: rgba(56,189,248,0.12); border: 1px solid rgba(56,189,248,0.25); color: #38bdf8;">
+              <div *ngIf="downloadingInvoiceId === order.id" class="w-3.5 h-3.5 rounded-full border-2 border-cyan-400 border-t-transparent animate-spin"></div>
+              <ion-icon *ngIf="downloadingInvoiceId !== order.id" name="download-outline" style="font-size: 14px;"></ion-icon>
+              {{ downloadingInvoiceId === order.id ? 'Downloading...' : 'Invoice' }}
+            </button>
+          </div>
+        </div>
       </div>
 
     </ng-container>

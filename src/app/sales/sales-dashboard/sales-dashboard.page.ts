@@ -90,6 +90,8 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   isLoadingVolumeAnalytics = false;
   isLoadingKpiResults = false;
   volumeAnalytics: any = null;
+  hierarchyAnalytics: any = null;
+  isLoadingHierarchyAnalytics = false;
   kpiRows: KpiTableRow[] = [];
   performanceSummary: PerformanceSummary | null = null;
   activePerformancePeriod: 'MTD' | 'YTD' | null = null;
@@ -233,7 +235,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     this.loadPendingPayments();
     this.loadMyDealers();
     this.loadDealersBySalesperson();
-    this.loadVolumeAnalytics();
+    this.loadHierarchyAnalytics();
     this.loadKpiResults();
   }
 
@@ -447,7 +449,7 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
   handlePullRefresh(event: any) {
     this.loadDistributors();
     this.loadKpiResults();
-    this.loadVolumeAnalytics();
+    this.loadHierarchyAnalytics();
     setTimeout(() => event.target.complete(), 1500);
   }
 
@@ -851,24 +853,19 @@ export class SalesDashboardPage implements OnInit, OnDestroy {
     return Array.from({ length: 5 }, (_, i) => currentYear - i);
   }
 
-  loadVolumeAnalytics(): void {
+  loadHierarchyAnalytics(): void {
     if (!this.salespersonId) return;
-    this.isLoadingVolumeAnalytics = true;
+    this.isLoadingHierarchyAnalytics = true;
     const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
-    const url = `${environment.apiUrl}/dashboard/volume-analytics?salesPersonId=${this.salespersonId}`;
+    const url = `${environment.apiUrl}/dashboard/sales-hierarchy-analytics?salesPersonId=${this.salespersonId}`;
     this.http.get<any>(url, { headers })
       .pipe(takeUntil(this.destroy$))
       .subscribe({
         next: (res) => {
-          const data = res?.data ?? res;
-          this.volumeAnalytics = data;
-          this.periodData.volMTD = `${data.monthToDate?.totalVolumeTons ?? 0} Tons`;
-          this.periodData.volYTD = `${data.yearToDate?.totalVolumeTons ?? 0} Tons`;
-          this.periodData.callMTD = `${data.monthToDate?.totalTransactions ?? 0}`;
-          this.periodData.callYTD = `${data.yearToDate?.totalTransactions ?? 0}`;
-          this.isLoadingVolumeAnalytics = false;
+          this.hierarchyAnalytics = res?.data ?? res;
+          this.isLoadingHierarchyAnalytics = false;
         },
-        error: () => { this.isLoadingVolumeAnalytics = false; }
+        error: () => { this.isLoadingHierarchyAnalytics = false; }
       });
   }
 }

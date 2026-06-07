@@ -39,26 +39,26 @@
       </div>
 
       <!-- Volume Cards -->
-      <div class="sd-card-row" *ngIf="!isLoadingAnalytics">
+      <div class="sd-card-row" *ngIf="!isLoadingHierarchyAnalytics">
         <div class="sd-stat-card sd-stat-card--sky">
           <p class="sd-stat-card__label">Volume MTD</p>
-          <p class="sd-stat-card__value">{{ (volumeAnalytics?.monthToDate?.totalVolumeTons ?? 0) | number:'1.0-2' }} Tons</p>
+          <p class="sd-stat-card__value">{{ (hierarchyAnalytics?.volumeMTD ?? 0) | number:'1.0-2' }}</p>
         </div>
         <div class="sd-stat-card sd-stat-card--sky">
           <p class="sd-stat-card__label">Volume YTD</p>
-          <p class="sd-stat-card__value">{{ (volumeAnalytics?.yearToDate?.totalVolumeTons ?? 0) | number:'1.0-2' }} Tons</p>
+          <p class="sd-stat-card__value">{{ (hierarchyAnalytics?.volumeYTD ?? 0) | number:'1.0-2' }}</p>
         </div>
       </div>
 
       <!-- Value Cards -->
-      <div class="sd-card-row" *ngIf="!isLoadingAnalytics">
+      <div class="sd-card-row" *ngIf="!isLoadingHierarchyAnalytics">
         <div class="sd-stat-card sd-stat-card--light">
           <p class="sd-stat-card__label sd-stat-card__label--cyan">Value MTD</p>
-          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (volumeAnalytics?.totalAmount ?? 0) | number:'1.0-0' }}</p>
+          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (hierarchyAnalytics?.valueMTD ?? 0) | number:'1.0-0' }}</p>
         </div>
         <div class="sd-stat-card sd-stat-card--light">
           <p class="sd-stat-card__label sd-stat-card__label--cyan">Value YTD</p>
-          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (volumeAnalytics?.totalAmount ?? 0) | number:'1.0-0' }}</p>
+          <p class="sd-stat-card__value sd-stat-card__value--dark">₹{{ (hierarchyAnalytics?.valueYTD ?? 0) | number:'1.0-0' }}</p>
         </div>
       </div>
 
@@ -93,6 +93,7 @@
           <p class="sd-info-cell__value">{{ inactiveDistributorsCount }}</p>
         </div>
       </div>
+
 
       <!-- Divider -->
       <div class="sd-divider"></div>
