@@ -1,0 +1,1042 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-wide">
+      <span class="text-emerald-400">Transaction</span> Master
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="--background: #f1f5f9; --padding-start: 0px; --padding-end: 0px; --padding-top: 0px; --padding-bottom: 32px;">
+
+  <div class="max-w-5xl mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-10 sm:pb-14">
+
+    <!-- ══════════════════════════════════════════════
+         HERO BANNER
+    ══════════════════════════════════════════════ -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-xl px-5 sm:px-8 pt-5 sm:pt-7 pb-12 sm:pb-14 hero-fade">
+      <!-- decorative shapes -->
+      <div class="absolute -top-14 -right-10 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 left-1/3 w-52 h-52 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <h1 class="relative text-lg sm:text-2xl font-bold mb-2 sm:mb-3">
+        <span class="text-emerald-800">Transaction</span>
+        <span class="text-white"> Master</span>
+      </h1>
+      <div class="relative inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+        <ion-icon class="text-white text-xs sm:text-sm" name="receipt-outline"></ion-icon>
+        <span class="text-white text-xs sm:text-sm font-medium">Create ledgers, record vouchers & manage funds</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         FLOATING TAB SWITCHER (overlaps hero)
+    ══════════════════════════════════════════════ -->
+    <div class="relative z-10 -mt-7 mx-2 sm:mx-8 flex gap-1 bg-white p-1.5 rounded-2xl shadow-lg shadow-slate-200/80 border border-slate-100 tab-bar">
+      <button type="button"
+        (click)="switchTab('create-ledger')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'create-ledger'
+          ? 'bg-slate-900 text-white shadow-md'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="layers-outline" class="text-base shrink-0"></ion-icon>
+        <span class="hidden sm:inline">Create Ledger</span>
+        <span class="sm:hidden">Ledger</span>
+      </button>
+      <button type="button"
+        (click)="switchTab('voucher-entry')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'voucher-entry'
+          ? 'bg-slate-900 text-white shadow-md'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="receipt-outline" class="text-base shrink-0"></ion-icon>
+        <span class="hidden sm:inline">Voucher Entry</span>
+        <span class="sm:hidden">Voucher</span>
+      </button>
+      <button type="button"
+        (click)="switchTab('add-fund')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'add-fund'
+          ? 'bg-slate-900 text-white shadow-md'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="wallet-outline" class="text-base shrink-0"></ion-icon>
+        <span class="hidden sm:inline">Add Fund</span>
+        <span class="sm:hidden">Fund</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 1: CREATE LEDGER
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'create-ledger'" class="tab-panel mt-5 space-y-5">
+
+      <!-- Create Ledger Form Card -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shrink-0 shadow-md shadow-emerald-200">
+            <ion-icon name="add-circle-outline" class="text-white text-xl"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">New Ledger</h2>
+            <p class="text-xs text-slate-400">Define an income or expense head</p>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+
+          <!-- Ledger Name -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Ledger Name <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="text"
+              [(ngModel)]="ledgerName"
+              placeholder="e.g. Wages, Tea, Sale From Scrap"
+              class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+          </div>
+
+          <!-- Ledger Type — toggle cards -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Ledger Type <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button"
+                (click)="ledgerType = 'EXPENSE'; onLedgerTypeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="ledgerType === 'EXPENSE'
+                  ? 'bg-red-50 border-red-400 shadow-md shadow-red-100'
+                  : 'bg-white border-slate-200 hover:border-red-200 hover:bg-red-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="ledgerType === 'EXPENSE' ? 'bg-red-500 text-white shadow' : 'bg-red-100 text-red-500'">
+                  <ion-icon name="trending-down-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="ledgerType === 'EXPENSE' ? 'text-red-700' : 'text-slate-700'">Expense</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Money going out</span>
+                </div>
+              </button>
+
+              <button type="button"
+                (click)="ledgerType = 'INCOME'; onLedgerTypeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="ledgerType === 'INCOME'
+                  ? 'bg-emerald-50 border-emerald-400 shadow-md shadow-emerald-100'
+                  : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="ledgerType === 'INCOME' ? 'bg-emerald-500 text-white shadow' : 'bg-emerald-100 text-emerald-500'">
+                  <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="ledgerType === 'INCOME' ? 'text-emerald-700' : 'text-slate-700'">Income</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Money coming in</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Under Group — chips (cascade from Ledger Type) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Under Group <span class="text-red-500">*</span>
+            </label>
+            <p *ngIf="!ledgerType" class="text-xs text-slate-400 italic px-1 py-2">Select a ledger type above to choose its group.</p>
+            <div *ngIf="ledgerType" class="flex flex-wrap gap-2 tab-panel">
+              <button type="button"
+                *ngFor="let opt of underGroupOptions"
+                (click)="underGroup = opt.value"
+                class="px-4 py-2.5 rounded-full border-2 text-xs sm:text-sm font-bold transition-all duration-150 active:scale-95"
+                [ngClass]="underGroup === opt.value
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                  : 'bg-white border-slate-200 text-slate-600 hover:border-slate-400'">
+                {{ opt.label }}
+              </button>
+            </div>
+          </div>
+
+        </div>
+
+        <!-- Save Button -->
+        <button type="button"
+          (click)="saveLedger()"
+          [disabled]="isSubmittingLedger"
+          class="mt-6 w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">
+          <ion-spinner *ngIf="isSubmittingLedger" name="crescent" class="w-4 h-4"></ion-spinner>
+          <ion-icon *ngIf="!isSubmittingLedger" name="save-outline"></ion-icon>
+          {{ isSubmittingLedger ? 'Saving...' : 'Save Ledger' }}
+        </button>
+      </div>
+
+      <!-- Existing Ledgers List -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <ion-icon name="document-text-outline" class="text-emerald-500"></ion-icon>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Existing Ledgers</h3>
+            <span *ngIf="!isLoadingLedgers" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">{{ ledgers.length }}</span>
+          </div>
+          <button type="button" (click)="loadLedgers()"
+                  class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:border-emerald-300 transition active:scale-95">
+            <ion-icon name="refresh-outline"></ion-icon> Refresh
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingLedgers" class="flex items-center justify-center py-12">
+          <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="!isLoadingLedgers && ledgers.length === 0" class="py-14 text-center">
+          <div class="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3">
+            <ion-icon name="layers-outline" class="text-2xl text-slate-300"></ion-icon>
+          </div>
+          <p class="text-sm font-semibold text-slate-500">No ledgers created yet</p>
+          <p class="text-xs text-slate-400 mt-1">Use the form above to create your first ledger.</p>
+        </div>
+
+        <!-- Desktop table -->
+        <div *ngIf="!isLoadingLedgers && ledgers.length > 0" class="hidden md:block overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50/80 text-xs text-slate-400 uppercase tracking-wider">
+                <th class="px-5 py-3 text-left font-bold">Ledger Name</th>
+                <th class="px-5 py-3 text-left font-bold">Type</th>
+                <th class="px-5 py-3 text-left font-bold">Under Group</th>
+                <th class="px-5 py-3 text-left font-bold">Created</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let ledger of ledgers"
+                  class="border-t border-slate-50 hover:bg-emerald-50/40 transition">
+                <td class="px-5 py-3.5 font-bold text-slate-800">{{ ledger.ledgerName }}</td>
+                <td class="px-5 py-3.5">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                        [ngClass]="ledger.ledgerType === 'EXPENSE' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          [ngClass]="ledger.ledgerType === 'EXPENSE' ? 'bg-red-500' : 'bg-emerald-500'"></span>
+                    {{ ledger.ledgerType }}
+                  </span>
+                </td>
+                <td class="px-5 py-3.5 text-slate-500 font-medium">{{ labelForUnderGroup(ledger.underGroup) }}</td>
+                <td class="px-5 py-3.5 text-slate-400 text-xs">{{ formatDate(ledger.createdAt) }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile card list -->
+        <div *ngIf="!isLoadingLedgers && ledgers.length > 0" class="md:hidden divide-y divide-slate-50">
+          <div *ngFor="let ledger of ledgers" class="px-4 py-3.5 flex items-center justify-between gap-3">
+            <div class="min-w-0">
+              <p class="text-sm font-bold text-slate-800 truncate">{{ ledger.ledgerName }}</p>
+              <p class="text-xs text-slate-400 mt-0.5">{{ labelForUnderGroup(ledger.underGroup) }} · {{ formatDate(ledger.createdAt) }}</p>
+            </div>
+            <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-[10px] font-bold shrink-0"
+                  [ngClass]="ledger.ledgerType === 'EXPENSE' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'">
+              <span class="w-1.5 h-1.5 rounded-full"
+                    [ngClass]="ledger.ledgerType === 'EXPENSE' ? 'bg-red-500' : 'bg-emerald-500'"></span>
+              {{ ledger.ledgerType }}
+            </span>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- END Tab 1 -->
+
+    <!-- ══════════════════════════════════════════════
+         TAB 2: VOUCHER ENTRY
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'voucher-entry'" class="tab-panel mt-5 space-y-5">
+
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shrink-0 shadow-md shadow-emerald-200">
+            <ion-icon name="receipt-outline" class="text-white text-xl"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">New Voucher Entry</h2>
+            <p class="text-xs text-slate-400">Record an income or expense voucher</p>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Voucher No (Read-only ticket) -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Voucher No.
+              </label>
+              <div class="flex items-center gap-3 px-4 py-3.5 bg-gradient-to-r from-emerald-50 to-teal-50 border-2 border-dashed border-emerald-300 rounded-xl">
+                <ion-icon name="receipt-outline" class="text-emerald-500"></ion-icon>
+                <span class="text-sm font-bold text-emerald-700 tracking-widest">{{ nextVoucherNo }}</span>
+                <span class="text-[9px] text-emerald-600 ml-auto font-bold uppercase tracking-widest bg-white px-2 py-1 rounded-full border border-emerald-200">Auto</span>
+              </div>
+            </div>
+
+            <!-- Date -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Date <span class="text-red-500">*</span>
+              </label>
+              <input
+                type="date"
+                [(ngModel)]="voucherDate"
+                class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+            </div>
+          </div>
+
+          <!-- Voucher Type — toggle cards -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Voucher Type <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button"
+                (click)="voucherType = 'EXPENSE'; onVoucherTypeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="voucherType === 'EXPENSE'
+                  ? 'bg-red-50 border-red-400 shadow-md shadow-red-100'
+                  : 'bg-white border-slate-200 hover:border-red-200 hover:bg-red-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="voucherType === 'EXPENSE' ? 'bg-red-500 text-white shadow' : 'bg-red-100 text-red-500'">
+                  <ion-icon name="trending-down-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="voucherType === 'EXPENSE' ? 'text-red-700' : 'text-slate-700'">Expense</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Payment voucher</span>
+                </div>
+              </button>
+
+              <button type="button"
+                (click)="voucherType = 'INCOME'; onVoucherTypeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="voucherType === 'INCOME'
+                  ? 'bg-emerald-50 border-emerald-400 shadow-md shadow-emerald-100'
+                  : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="voucherType === 'INCOME' ? 'bg-emerald-500 text-white shadow' : 'bg-emerald-100 text-emerald-500'">
+                  <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="voucherType === 'INCOME' ? 'text-emerald-700' : 'text-slate-700'">Income</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Receipt voucher</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Ledger (cascades from Voucher Type) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Ledger <span class="text-red-500">*</span>
+            </label>
+            <select
+              [(ngModel)]="selectedLedgerId"
+              [disabled]="!voucherType"
+              class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition appearance-none cursor-pointer disabled:opacity-50 disabled:cursor-not-allowed">
+              <option [ngValue]="null">{{ voucherType ? 'Select Ledger' : 'Select Voucher Type first' }}</option>
+              <option *ngFor="let l of filteredLedgers" [ngValue]="l.id">{{ l.ledgerName }}</option>
+            </select>
+            <p *ngIf="voucherType && filteredLedgers.length === 0" class="mt-1.5 text-xs text-amber-500 font-semibold">
+              No {{ voucherType === 'EXPENSE' ? 'expense' : 'income' }} ledgers found. Create them in the Ledger tab first.
+            </p>
+          </div>
+
+          <!-- Party + Mobile No -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                {{ voucherType === 'INCOME' ? 'Received From' : 'Paid To' }}
+              </label>
+              <div class="relative">
+                <ion-icon name="person-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></ion-icon>
+                <input
+                  type="text"
+                  [(ngModel)]="partyName"
+                  [placeholder]="voucherType === 'INCOME' ? 'e.g. Received from Ramesh' : 'e.g. Paid to Suresh'"
+                  class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+              </div>
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Mobile No.
+              </label>
+              <div class="relative">
+                <ion-icon name="call-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></ion-icon>
+                <input
+                  type="tel"
+                  inputmode="numeric"
+                  [(ngModel)]="mobileNo"
+                  placeholder="e.g. 98765 43210"
+                  class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Invoice / Bill No. -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Invoice / Bill No.
+            </label>
+            <div class="relative">
+              <ion-icon name="document-text-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400"></ion-icon>
+              <input
+                type="text"
+                [(ngModel)]="invoiceRef"
+                placeholder="e.g. INV-2026-0142"
+                class="w-full pl-11 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+            </div>
+          </div>
+
+          <!-- Payment Mode — toggle cards -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Payment Mode <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button"
+                (click)="paymentMode = 'CASH'; onVoucherPaymentModeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="paymentMode === 'CASH'
+                  ? 'bg-amber-50 border-amber-400 shadow-md shadow-amber-100'
+                  : 'bg-white border-slate-200 hover:border-amber-200 hover:bg-amber-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="paymentMode === 'CASH' ? 'bg-amber-500 text-white shadow' : 'bg-amber-100 text-amber-500'">
+                  <ion-icon name="cash-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="paymentMode === 'CASH' ? 'text-amber-700' : 'text-slate-700'">Cash</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Physical payment</span>
+                </div>
+              </button>
+
+              <button type="button"
+                (click)="paymentMode = 'UPI'; onVoucherPaymentModeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="paymentMode === 'UPI'
+                  ? 'bg-indigo-50 border-indigo-400 shadow-md shadow-indigo-100'
+                  : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="paymentMode === 'UPI' ? 'bg-indigo-500 text-white shadow' : 'bg-indigo-100 text-indigo-500'">
+                  <ion-icon name="phone-portrait-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="paymentMode === 'UPI' ? 'text-indigo-700' : 'text-slate-700'">UPI</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Digital payment</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transaction ID (only for UPI) -->
+          <div *ngIf="paymentMode === 'UPI'" class="tab-panel">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Transaction ID <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <ion-icon name="phone-portrait-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400"></ion-icon>
+              <input
+                type="text"
+                [(ngModel)]="voucherTransactionId"
+                placeholder="e.g. UPI24061500123"
+                class="w-full pl-11 pr-4 py-3.5 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-400 transition" />
+            </div>
+          </div>
+
+          <!-- Amount + Less Adjustment -->
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+            <!-- Gross Amount -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Amount <span class="text-red-500">*</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-emerald-600">₹</span>
+                <input
+                  type="number"
+                  [(ngModel)]="amount"
+                  (ngModelChange)="onAmountChange()"
+                  min="1"
+                  placeholder="0.00"
+                  class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+              </div>
+            </div>
+            <!-- Less Adjustment -->
+            <div>
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+                Less Adjustment <span class="text-slate-300 normal-case font-medium">(if any)</span>
+              </label>
+              <div class="relative">
+                <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-slate-400">₹</span>
+                <input
+                  type="number"
+                  [(ngModel)]="lessAdjustment"
+                  (ngModelChange)="onLessAdjustmentChange()"
+                  min="0"
+                  placeholder="0.00"
+                  class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+              </div>
+            </div>
+          </div>
+
+          <!-- Net amount + amount in words -->
+          <div *ngIf="amount" class="space-y-2 tab-panel">
+            <div class="flex items-center justify-between px-4 py-3 bg-emerald-50 border border-emerald-200 rounded-xl">
+              <span class="text-xs font-bold text-emerald-700 uppercase tracking-wider">
+                {{ voucherType === 'INCOME' ? 'Net Receivable' : 'Net Payable' }}
+              </span>
+              <span class="text-base font-extrabold text-emerald-700">₹ {{ netAmount.toLocaleString('en-IN') }}</span>
+            </div>
+            <div *ngIf="amountInWords"
+                 class="px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2">
+              <ion-icon name="document-text-outline" class="text-amber-400 mt-0.5 shrink-0"></ion-icon>
+              <p class="text-xs text-amber-700 font-medium italic">{{ amountInWords }}</p>
+            </div>
+          </div>
+
+          <!-- Narration / Remark -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Narration / Remark <span class="text-red-500">*</span>
+            </label>
+            <textarea
+              [(ngModel)]="narration"
+              rows="3"
+              placeholder="(exp: Being Amount Paid to Suresh Against Tea)"
+              class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition resize-none"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Action Buttons -->
+        <div class="mt-6 space-y-3">
+          <!-- Save & Approve -->
+          <button type="button"
+            (click)="saveAndApproveVoucher()"
+            [disabled]="isSubmittingVoucher"
+            class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">
+            <ion-spinner *ngIf="isSubmittingVoucher" name="crescent" class="w-4 h-4"></ion-spinner>
+            <ion-icon *ngIf="!isSubmittingVoucher" name="checkmark-circle-outline" class="text-lg"></ion-icon>
+            {{ isSubmittingVoucher ? 'Saving...' : 'Save & Approve' }}
+          </button>
+
+          <div class="grid grid-cols-2 gap-3">
+            <!-- Print Voucher -->
+            <button type="button"
+              (click)="openPrintLastVoucher()"
+              class="py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <ion-icon name="print-outline" class="text-base"></ion-icon>
+              Print Voucher
+            </button>
+
+            <!-- Re Print Voucher -->
+            <button type="button"
+              (click)="openReprintModal()"
+              class="py-3 bg-white border-2 border-slate-200 hover:border-blue-400 hover:text-blue-600 text-slate-600 font-bold rounded-xl text-xs sm:text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+              <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+              Re Print Voucher
+            </button>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- END Tab 2 -->
+
+    <!-- ══════════════════════════════════════════════
+         TAB 3: ADD FUND
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'add-fund'" class="tab-panel mt-5 space-y-5">
+
+      <!-- Add Fund Form Card -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-5 sm:p-7">
+        <div class="flex items-center gap-3 mb-6">
+          <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shrink-0 shadow-md shadow-emerald-200">
+            <ion-icon name="wallet-outline" class="text-white text-xl"></ion-icon>
+          </div>
+          <div>
+            <h2 class="text-base sm:text-lg font-bold text-slate-800 leading-tight">Add Fund</h2>
+            <p class="text-xs text-slate-400">Record fund received for Office / Factory</p>
+          </div>
+        </div>
+
+        <div class="space-y-5">
+
+          <!-- Date -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Date <span class="text-red-500">*</span>
+            </label>
+            <input
+              type="date"
+              [(ngModel)]="fundDate"
+              class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+          </div>
+
+          <!-- Location — toggle cards -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Location <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button"
+                (click)="fundLocation = 'OFFICE'"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="fundLocation === 'OFFICE'
+                  ? 'bg-emerald-50 border-emerald-400 shadow-md shadow-emerald-100'
+                  : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="fundLocation === 'OFFICE' ? 'bg-emerald-500 text-white shadow' : 'bg-emerald-100 text-emerald-500'">
+                  <ion-icon name="business-outline" class="text-lg"></ion-icon>
+                </div>
+                <span class="text-sm font-bold" [ngClass]="fundLocation === 'OFFICE' ? 'text-emerald-700' : 'text-slate-700'">Office</span>
+              </button>
+
+              <button type="button"
+                (click)="fundLocation = 'FACTORY'"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="fundLocation === 'FACTORY'
+                  ? 'bg-emerald-50 border-emerald-400 shadow-md shadow-emerald-100'
+                  : 'bg-white border-slate-200 hover:border-emerald-200 hover:bg-emerald-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="fundLocation === 'FACTORY' ? 'bg-emerald-500 text-white shadow' : 'bg-emerald-100 text-emerald-500'">
+                  <ion-icon name="construct-outline" class="text-lg"></ion-icon>
+                </div>
+                <span class="text-sm font-bold" [ngClass]="fundLocation === 'FACTORY' ? 'text-emerald-700' : 'text-slate-700'">Factory</span>
+              </button>
+            </div>
+          </div>
+
+          <!-- Amount -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Amount <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <span class="absolute left-4 top-1/2 -translate-y-1/2 text-lg font-bold text-emerald-600">₹</span>
+              <input
+                type="number"
+                [(ngModel)]="fundAmount"
+                (ngModelChange)="onFundAmountChange()"
+                min="1"
+                placeholder="0.00"
+                class="w-full pl-10 pr-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-base font-bold text-slate-800 placeholder-slate-300 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+            </div>
+            <!-- Amount in words -->
+            <div *ngIf="fundAmountInWords"
+                 class="mt-2 px-4 py-2.5 bg-amber-50 border border-amber-200 rounded-xl flex items-start gap-2 tab-panel">
+              <ion-icon name="document-text-outline" class="text-amber-400 mt-0.5 shrink-0"></ion-icon>
+              <p class="text-xs text-amber-700 font-medium italic">{{ fundAmountInWords }}</p>
+            </div>
+          </div>
+
+          <!-- Payment Mode — toggle cards -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Payment Mode <span class="text-red-500">*</span>
+            </label>
+            <div class="grid grid-cols-2 gap-3">
+              <button type="button"
+                (click)="fundPaymentMode = 'CASH'; onFundPaymentModeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="fundPaymentMode === 'CASH'
+                  ? 'bg-amber-50 border-amber-400 shadow-md shadow-amber-100'
+                  : 'bg-white border-slate-200 hover:border-amber-200 hover:bg-amber-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="fundPaymentMode === 'CASH' ? 'bg-amber-500 text-white shadow' : 'bg-amber-100 text-amber-500'">
+                  <ion-icon name="cash-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="fundPaymentMode === 'CASH' ? 'text-amber-700' : 'text-slate-700'">Cash</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Physical payment</span>
+                </div>
+              </button>
+
+              <button type="button"
+                (click)="fundPaymentMode = 'UPI'; onFundPaymentModeChange()"
+                class="flex items-center gap-3 p-3.5 sm:p-4 rounded-2xl border-2 transition-all duration-150 text-left active:scale-[0.98]"
+                [ngClass]="fundPaymentMode === 'UPI'
+                  ? 'bg-indigo-50 border-indigo-400 shadow-md shadow-indigo-100'
+                  : 'bg-white border-slate-200 hover:border-indigo-200 hover:bg-indigo-50/40'">
+                <div class="w-10 h-10 rounded-xl flex items-center justify-center shrink-0 transition"
+                     [ngClass]="fundPaymentMode === 'UPI' ? 'bg-indigo-500 text-white shadow' : 'bg-indigo-100 text-indigo-500'">
+                  <ion-icon name="phone-portrait-outline" class="text-lg"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <span class="block text-sm font-bold" [ngClass]="fundPaymentMode === 'UPI' ? 'text-indigo-700' : 'text-slate-700'">UPI</span>
+                  <span class="block text-[10px] uppercase tracking-wider text-slate-400">Digital payment</span>
+                </div>
+              </button>
+            </div>
+          </div>
+
+          <!-- Transaction ID (only for UPI) -->
+          <div *ngIf="fundPaymentMode === 'UPI'" class="tab-panel">
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Transaction ID <span class="text-red-500">*</span>
+            </label>
+            <div class="relative">
+              <ion-icon name="phone-portrait-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-indigo-400"></ion-icon>
+              <input
+                type="text"
+                [(ngModel)]="fundTransactionId"
+                placeholder="e.g. UPI24061500123"
+                class="w-full pl-11 pr-4 py-3.5 bg-indigo-50/50 border-2 border-indigo-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-indigo-400 transition" />
+            </div>
+          </div>
+
+          <!-- Narration / Remark (optional) -->
+          <div>
+            <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2">
+              Narration / Remark <span class="text-slate-300 normal-case font-medium">(optional)</span>
+            </label>
+            <textarea
+              [(ngModel)]="fundNarration"
+              rows="2"
+              placeholder="(exp: Fund received from Head Office)"
+              class="w-full px-4 py-3.5 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 focus:outline-none focus:bg-white focus:border-emerald-400 transition resize-none"></textarea>
+          </div>
+
+        </div>
+
+        <!-- Save Fund Button -->
+        <button type="button"
+          (click)="saveFund()"
+          [disabled]="isSubmittingFund"
+          class="mt-6 w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">
+          <ion-spinner *ngIf="isSubmittingFund" name="crescent" class="w-4 h-4"></ion-spinner>
+          <ion-icon *ngIf="!isSubmittingFund" name="wallet-outline" class="text-lg"></ion-icon>
+          {{ isSubmittingFund ? 'Adding...' : 'Add Fund' }}
+        </button>
+      </div>
+
+      <!-- Existing Funds List -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-5 py-4 border-b border-slate-100 flex items-center justify-between">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <ion-icon name="document-text-outline" class="text-emerald-500"></ion-icon>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Fund History</h3>
+            <span *ngIf="!isLoadingFunds" class="px-2 py-0.5 rounded-full bg-emerald-100 text-emerald-700 text-xs font-bold">{{ funds.length }}</span>
+          </div>
+          <button type="button" (click)="loadFunds()"
+                  class="flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-semibold text-slate-500 hover:text-emerald-600 hover:border-emerald-300 transition active:scale-95">
+            <ion-icon name="refresh-outline"></ion-icon> Refresh
+          </button>
+        </div>
+
+        <!-- Loading -->
+        <div *ngIf="isLoadingFunds" class="flex items-center justify-center py-12">
+          <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+        </div>
+
+        <!-- Empty -->
+        <div *ngIf="!isLoadingFunds && funds.length === 0" class="py-14 text-center">
+          <div class="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3">
+            <ion-icon name="wallet-outline" class="text-2xl text-slate-300"></ion-icon>
+          </div>
+          <p class="text-sm font-semibold text-slate-500">No funds added yet</p>
+          <p class="text-xs text-slate-400 mt-1">Funds you add will appear here.</p>
+        </div>
+
+        <!-- Desktop table -->
+        <div *ngIf="!isLoadingFunds && funds.length > 0" class="hidden md:block overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50/80 text-xs text-slate-400 uppercase tracking-wider">
+                <th class="px-5 py-3 text-left font-bold">Fund No.</th>
+                <th class="px-5 py-3 text-left font-bold">Date</th>
+                <th class="px-5 py-3 text-right font-bold">Amount</th>
+                <th class="px-5 py-3 text-left font-bold">Mode</th>
+                <th class="px-5 py-3 text-left font-bold">Transaction ID</th>
+                <th class="px-5 py-3 text-left font-bold">Location</th>
+                <th class="px-5 py-3 text-right font-bold">Voucher</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let fund of funds"
+                  class="border-t border-slate-50 hover:bg-emerald-50/40 transition">
+                <td class="px-5 py-3.5 font-bold text-emerald-600 tracking-wider">{{ fund.fundNo }}</td>
+                <td class="px-5 py-3.5 text-slate-400 text-xs">{{ formatDate(fund.date) }}</td>
+                <td class="px-5 py-3.5 text-right font-bold text-slate-800 tabular-nums">₹ {{ fund.amount.toLocaleString('en-IN') }}</td>
+                <td class="px-5 py-3.5">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                        [ngClass]="fund.paymentMode === 'UPI' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          [ngClass]="fund.paymentMode === 'UPI' ? 'bg-indigo-500' : 'bg-amber-500'"></span>
+                    {{ fund.paymentMode }}
+                  </span>
+                </td>
+                <td class="px-5 py-3.5 text-slate-500 text-xs">{{ fund.transactionId || '—' }}</td>
+                <td class="px-5 py-3.5 text-slate-600 font-medium">{{ labelForLocation(fund.location) }}</td>
+                <td class="px-5 py-3.5 text-right">
+                  <button type="button" (click)="printFund(fund)"
+                          class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-xs font-bold transition active:scale-95">
+                    <ion-icon name="print-outline"></ion-icon> Print
+                  </button>
+                </td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- Mobile card list -->
+        <div *ngIf="!isLoadingFunds && funds.length > 0" class="md:hidden divide-y divide-slate-50">
+          <div *ngFor="let fund of funds" class="px-4 py-3.5">
+            <div class="flex items-center justify-between mb-1.5">
+              <span class="text-xs font-bold text-emerald-600 tracking-widest">{{ fund.fundNo }}</span>
+              <span class="text-base font-bold text-slate-800 tabular-nums">₹ {{ fund.amount.toLocaleString('en-IN') }}</span>
+            </div>
+            <div class="flex items-center justify-between">
+              <div class="flex items-center gap-2">
+                <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                      [ngClass]="fund.paymentMode === 'UPI' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
+                  {{ fund.paymentMode }}
+                </span>
+                <span class="inline-flex items-center px-2 py-0.5 rounded-full text-[10px] font-bold bg-slate-100 text-slate-600">
+                  {{ labelForLocation(fund.location) }}
+                </span>
+              </div>
+              <span class="text-[10px] text-slate-400">{{ formatDate(fund.date) }}</span>
+            </div>
+            <div class="flex items-center justify-between mt-2">
+              <p class="text-[10px] text-slate-400">{{ fund.transactionId ? 'Txn: ' + fund.transactionId : '' }}</p>
+              <button type="button" (click)="printFund(fund)"
+                      class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-slate-900 hover:bg-slate-800 text-white rounded-lg text-[11px] font-bold transition active:scale-95">
+                <ion-icon name="print-outline"></ion-icon> Print Voucher
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+
+    </div>
+    <!-- END Tab 3 -->
+
+  </div>
+
+</ion-content>
+
+<!-- ══════════════════════════════════════════════
+     PRINT PREVIEW MODAL (bottom sheet on mobile)
+══════════════════════════════════════════════ -->
+<div *ngIf="showPrintModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-md max-h-[92vh] overflow-y-auto modal-card">
+
+    <!-- Drag handle (mobile) -->
+    <div class="sm:hidden flex justify-center pt-3">
+      <div class="w-10 h-1 rounded-full bg-slate-200"></div>
+    </div>
+
+    <!-- Modal Header -->
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center"
+             [ngClass]="printTargetVoucher?.voucherType === 'EXPENSE' ? 'bg-red-50' : 'bg-emerald-50'">
+          <ion-icon name="receipt-outline"
+                    [ngClass]="printTargetVoucher?.voucherType === 'EXPENSE' ? 'text-red-500' : 'text-emerald-500'"
+                    class="text-xl"></ion-icon>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 leading-tight">Voucher Preview</h3>
+          <p class="text-xs text-slate-400">Review before printing</p>
+        </div>
+      </div>
+      <button type="button" (click)="showPrintModal = false"
+              class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition active:scale-90">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </button>
+    </div>
+
+    <!-- Voucher Card Preview -->
+    <div *ngIf="printTargetVoucher" class="px-6 py-5">
+
+      <!-- Company -->
+      <div class="text-center mb-4 pb-4 border-b border-dashed border-slate-200">
+        <p class="font-bold text-slate-800 text-sm tracking-wide">NECTAR ORIGIN PRIVATE LIMITED</p>
+        <p class="text-xs text-slate-400">UNIT ADDRESS / OFFICE ADDRESS</p>
+      </div>
+
+      <!-- Type badge + Voucher No -->
+      <div class="flex items-center justify-between mb-4">
+        <span class="inline-flex items-center px-3 py-1 rounded-full text-xs font-bold"
+              [ngClass]="printTargetVoucher.voucherType === 'EXPENSE'
+                ? 'bg-red-50 text-red-600 border border-red-200'
+                : 'bg-emerald-50 text-emerald-600 border border-emerald-200'">
+          {{ printTargetVoucher.voucherType }} VOUCHER
+        </span>
+        <span class="text-xs text-slate-400 font-medium">{{ formatDate(printTargetVoucher.date) }}</span>
+      </div>
+      <p class="text-sm font-bold text-emerald-600 mb-3 tracking-widest">{{ printTargetVoucher.voucherNo }}</p>
+
+      <!-- Details rows -->
+      <div class="space-y-2.5 text-sm">
+        <div class="flex justify-between py-1.5 border-b border-slate-50">
+          <span class="text-slate-400 font-medium">Ledger</span>
+          <span class="font-bold text-slate-800">{{ printTargetVoucher.ledgerName }}</span>
+        </div>
+        <div class="flex justify-between py-1.5 border-b border-slate-50">
+          <span class="text-slate-400 font-medium">Payment Mode</span>
+          <span class="font-bold text-slate-800">{{ printTargetVoucher.paymentMode }}</span>
+        </div>
+        <div class="py-1.5 border-b border-slate-50">
+          <div class="flex justify-between mb-1">
+            <span class="text-slate-400 font-medium">Amount</span>
+            <span class="font-bold text-slate-800 tabular-nums">₹ {{ printTargetVoucher.amount.toLocaleString('en-IN') }}</span>
+          </div>
+          <p class="text-xs text-amber-600 italic text-right">{{ getAmountWords(printTargetVoucher.amount) }}</p>
+        </div>
+        <div class="py-1.5 border-b border-slate-50">
+          <span class="text-slate-400 font-medium block mb-1">Narration</span>
+          <p class="text-slate-700 italic text-xs">{{ printTargetVoucher.narration }}</p>
+        </div>
+        <div class="flex justify-between py-1.5">
+          <span class="text-slate-400 font-medium">Status</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold bg-emerald-50 text-emerald-600 border border-emerald-200">
+            ✓ {{ printTargetVoucher.status }}
+          </span>
+        </div>
+      </div>
+    </div>
+
+    <!-- Modal Actions -->
+    <div class="px-6 pb-6 sm:pb-5 flex gap-3">
+      <button type="button" (click)="showPrintModal = false"
+              class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
+        Close
+      </button>
+      <button type="button" (click)="printVoucherPdf()"
+              class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+        <ion-icon name="print-outline"></ion-icon>
+        Print / PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     RE-PRINT MODAL (bottom sheet on mobile)
+══════════════════════════════════════════════ -->
+<div *ngIf="showReprintModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] overflow-y-auto modal-card">
+
+    <div class="sm:hidden flex justify-center pt-3">
+      <div class="w-10 h-1 rounded-full bg-slate-200"></div>
+    </div>
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-blue-50 flex items-center justify-center">
+          <ion-icon name="document-text-outline" class="text-blue-500 text-xl"></ion-icon>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 leading-tight">Re Print Voucher</h3>
+          <p class="text-xs text-slate-400">Search by voucher number</p>
+        </div>
+      </div>
+      <button type="button" (click)="showReprintModal = false"
+              class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition active:scale-90">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </button>
+    </div>
+
+    <div class="px-6 py-5">
+      <p class="text-xs text-slate-400 mb-3">Works for both Expense & Income vouchers.</p>
+
+      <div class="flex gap-2 mb-4">
+        <input
+          type="text"
+          [(ngModel)]="reprintVoucherNo"
+          (keyup.enter)="searchReprintVoucher()"
+          placeholder="e.g. VCH-001"
+          class="flex-1 min-w-0 px-4 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 placeholder-slate-400 uppercase focus:outline-none focus:bg-white focus:border-blue-400 transition" />
+        <button type="button"
+          (click)="searchReprintVoucher()"
+          [disabled]="isSearchingReprint"
+          class="px-4 py-3 bg-blue-600 hover:bg-blue-700 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition flex items-center gap-1.5 active:scale-[0.97] shrink-0">
+          <ion-spinner *ngIf="isSearchingReprint" name="crescent" class="w-3.5 h-3.5"></ion-spinner>
+          <ion-icon *ngIf="!isSearchingReprint" name="search-outline"></ion-icon>
+          Search
+        </button>
+      </div>
+
+      <!-- Not found -->
+      <div *ngIf="reprintNotFound"
+           class="px-4 py-3 bg-red-50 border border-red-100 rounded-xl text-xs text-red-600 text-center mb-4 flex items-center justify-center gap-2 tab-panel">
+        <ion-icon name="alert-circle-outline" class="text-base"></ion-icon>
+        No voucher found with number "{{ reprintVoucherNo }}".
+      </div>
+
+      <!-- Found voucher preview -->
+      <div *ngIf="reprintVoucher && !reprintNotFound"
+           class="bg-slate-50 border border-slate-100 rounded-2xl p-4 mb-2 tab-panel">
+        <div class="flex items-center justify-between mb-3">
+          <span class="text-xs font-bold text-emerald-600 tracking-widest">{{ reprintVoucher.voucherNo }}</span>
+          <span class="inline-flex items-center px-2 py-0.5 rounded-full text-xs font-bold"
+                [ngClass]="reprintVoucher.voucherType === 'EXPENSE' ? 'bg-red-50 text-red-600 border border-red-100' : 'bg-emerald-50 text-emerald-600 border border-emerald-100'">
+            {{ reprintVoucher.voucherType }}
+          </span>
+        </div>
+        <div class="space-y-1.5 text-xs">
+          <div class="flex justify-between">
+            <span class="text-slate-400">Date</span>
+            <span class="text-slate-700 font-semibold">{{ formatDate(reprintVoucher.date) }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Ledger</span>
+            <span class="text-slate-700 font-semibold">{{ reprintVoucher.ledgerName }}</span>
+          </div>
+          <div class="flex justify-between">
+            <span class="text-slate-400">Amount</span>
+            <span class="text-slate-700 font-bold tabular-nums">₹ {{ reprintVoucher.amount.toLocaleString('en-IN') }}</span>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <div class="px-6 pb-6 sm:pb-5 flex gap-3">
+      <button type="button" (click)="showReprintModal = false"
+              class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
+        Cancel
+      </button>
+      <button type="button"
+        *ngIf="reprintVoucher"
+        (click)="reprintSelectedVoucher()"
+        class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+        <ion-icon name="print-outline"></ion-icon>
+        Print / PDF
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     FEEDBACK MODAL
+══════════════════════════════════════════════ -->
+<div *ngIf="showFeedbackModal"
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-center justify-center z-50 p-6 modal-backdrop">
+  <div class="bg-white rounded-3xl shadow-2xl w-full max-w-xs p-6 text-center modal-card">
+    <div class="w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4 ring-8"
+         [ngClass]="feedbackIsSuccess ? 'bg-emerald-100 ring-emerald-50' : 'bg-red-100 ring-red-50'">
+      <ion-icon [name]="feedbackIsSuccess ? 'checkmark-circle-outline' : 'alert-circle-outline'"
+                class="text-3xl"
+                [ngClass]="feedbackIsSuccess ? 'text-emerald-500' : 'text-red-500'"></ion-icon>
+    </div>
+    <p class="text-sm text-slate-700 font-semibold mb-5">{{ feedbackMessage }}</p>
+    <button type="button" (click)="showFeedbackModal = false"
+            class="w-full py-3 bg-slate-900 hover:bg-slate-800 text-white font-bold rounded-xl text-sm transition active:scale-[0.98]">
+      OK
+    </button>
+  </div>
+</div>

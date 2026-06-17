@@ -3,6 +3,7 @@
 // The list of file replacements can be found in `angular.json`.
 export const environment = {
   production: false,
+  // Live server URLs (commented out for now)
   apiUrl: 'https://api.imsnectarorigin.com/api',
   permissionsUrl: 'https://api.imsnectarorigin.com/api/permissions',
   hrUrl: 'https://api.imsnectarorigin.com/api/hr',
@@ -11,6 +12,16 @@ export const environment = {
   ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
   dealersUrl: 'https://api.imsnectarorigin.com/api/dealers',
   dealerLedgerUrl: 'https://api.imsnectarorigin.com/api/dealer-ledger',
+
+  // Localhost URLs
+  // apiUrl: 'http://localhost:8080/api',
+  // permissionsUrl: 'http://localhost:8080/api/permissions',
+  // hrUrl: 'http://localhost:8080/api/hr',
+  // productsUrl: 'http://localhost:8080/api/products',
+  // distributorUrl: 'http://localhost:8080/api/distributors',
+  // ledgerUrl: 'http://localhost:8080/api/ledger',
+  // dealersUrl: 'http://localhost:8080/api/dealers',
+  // dealerLedgerUrl: 'http://localhost:8080/api/dealer-ledger',
 };
 
 
