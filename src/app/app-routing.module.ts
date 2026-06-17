@@ -149,6 +149,16 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'transaction-master',
+    loadComponent: () => import('./transaction-master/transaction-master.page').then(m => m.TransactionMasterPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'transaction-cashbook',
+    loadComponent: () => import('./transaction-cashbook/transaction-cashbook.page').then(m => m.TransactionCashbookPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }

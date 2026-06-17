@@ -1,0 +1,726 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-wide">
+      <span class="text-emerald-400">Cash</span>book
+    </ion-title>
+    <ion-buttons slot="end">
+      <ion-button (click)="showExportModal = true" style="--color: #10b981;">
+        <ion-icon slot="icon-only" name="download-outline"></ion-icon>
+      </ion-button>
+      <ion-button (click)="loadCashbook()" style="--color: #ffffff;">
+        <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="--background: #f1f5f9; --padding-start: 0px; --padding-end: 0px; --padding-top: 0px; --padding-bottom: 32px;">
+
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-10 sm:pb-14 space-y-4 sm:space-y-5">
+
+    <!-- ══════════════════════════════════════════
+         HERO BANNER
+    ══════════════════════════════════════════ -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-xl p-5 sm:p-8 hero-fade">
+      <!-- decorative shapes -->
+      <div class="absolute -top-14 -right-10 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 left-1/3 w-52 h-52 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <div class="relative flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4">
+        <div>
+          <h1 class="text-lg sm:text-2xl font-bold mb-2 sm:mb-3">
+            <span class="text-emerald-800">Cash</span><span class="text-white">book</span>
+          </h1>
+          <div class="flex flex-wrap items-center gap-2">
+            <div class="inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+              <ion-icon class="text-white text-xs sm:text-sm" name="book-outline"></ion-icon>
+              <span class="text-white text-xs sm:text-sm font-medium">Double-column cash statement</span>
+            </div>
+            <div class="inline-flex items-center gap-1.5 px-3 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+              <ion-icon class="text-white text-xs sm:text-sm" name="calendar-outline"></ion-icon>
+              <span class="text-white text-xs sm:text-sm font-semibold">{{ formatDate(fromDate) }} — {{ formatDate(toDate) }}</span>
+            </div>
+          </div>
+        </div>
+
+        <!-- Hero actions (desktop) -->
+        <div class="hidden sm:flex items-center gap-3 shrink-0">
+          <button type="button" (click)="showExportModal = true"
+                  class="flex items-center gap-2 px-5 py-3 bg-white text-emerald-600 rounded-xl hover:bg-emerald-50 transition-all font-bold text-sm shadow-lg hover:shadow-xl active:scale-[0.97]">
+            <ion-icon class="text-lg" name="download-outline"></ion-icon>
+            Export
+          </button>
+          <button type="button" (click)="loadCashbook()"
+                  class="flex items-center gap-2 px-5 py-3 bg-white/20 backdrop-blur-sm border border-white/40 text-white rounded-xl hover:bg-white/30 transition-all font-bold text-sm active:scale-[0.97]">
+            <ion-icon class="text-lg" name="refresh-outline"></ion-icon>
+            Refresh
+          </button>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         SUMMARY STAT CARDS
+    ══════════════════════════════════════════ -->
+    <div *ngIf="!isLoading && summary" class="grid grid-cols-2 lg:grid-cols-4 gap-3 sm:gap-4 fade-in">
+
+      <!-- Opening Balance -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-slate-100 to-slate-200 flex items-center justify-center">
+            <ion-icon name="wallet-outline" class="text-slate-500 text-lg"></ion-icon>
+          </div>
+        </div>
+        <p class="text-[10px] sm:text-xs font-bold text-slate-400 uppercase tracking-wider mb-1">Opening Balance</p>
+        <p class="text-base sm:text-xl font-bold text-slate-800 tabular-nums">₹ {{ formatCurrency(summary.openingBalance) }}</p>
+      </div>
+
+      <!-- Total Income -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200">
+            <ion-icon name="trending-up-outline" class="text-white text-lg"></ion-icon>
+          </div>
+        </div>
+        <p class="text-[10px] sm:text-xs font-bold text-emerald-500 uppercase tracking-wider mb-1">Total Income</p>
+        <p class="text-base sm:text-xl font-bold text-emerald-600 tabular-nums">₹ {{ formatCurrency(totalIncome) }}</p>
+      </div>
+
+      <!-- Total Expense -->
+      <div class="bg-white rounded-2xl shadow-sm border border-slate-100 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-gradient-to-br from-red-400 to-rose-500 flex items-center justify-center shadow-md shadow-red-200">
+            <ion-icon name="trending-down-outline" class="text-white text-lg"></ion-icon>
+          </div>
+        </div>
+        <p class="text-[10px] sm:text-xs font-bold text-red-400 uppercase tracking-wider mb-1">Total Expense</p>
+        <p class="text-base sm:text-xl font-bold text-red-500 tabular-nums">₹ {{ formatCurrency(totalExpense) }}</p>
+      </div>
+
+      <!-- Closing Balance (hero card) -->
+      <div class="relative overflow-hidden rounded-2xl shadow-lg shadow-emerald-200 p-4 sm:p-5 bg-gradient-to-br from-emerald-500 to-teal-600">
+        <div class="absolute -top-8 -right-8 w-24 h-24 bg-white/10 rounded-full blur-xl pointer-events-none"></div>
+        <div class="flex items-center justify-between mb-3">
+          <div class="w-10 h-10 rounded-xl bg-white/20 flex items-center justify-center">
+            <ion-icon name="cash-outline" class="text-white text-lg"></ion-icon>
+          </div>
+        </div>
+        <p class="text-[10px] sm:text-xs font-bold text-emerald-100 uppercase tracking-wider mb-1">Closing Balance</p>
+        <p class="text-base sm:text-xl font-bold text-white tabular-nums">₹ {{ formatCurrency(summary.closingBalance) }}</p>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         FILTERS
+    ══════════════════════════════════════════ -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-4">
+
+      <!-- DATE FILTER CARD -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-4 sm:p-5">
+        <div class="flex items-center gap-2.5 mb-4">
+          <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+            <ion-icon name="calendar-outline" class="text-emerald-500"></ion-icon>
+          </div>
+          <h3 class="text-sm font-bold text-slate-800">Date Range</h3>
+        </div>
+        <div class="grid grid-cols-2 gap-3">
+          <div>
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">From</label>
+            <input
+              type="date"
+              [(ngModel)]="fromDate"
+              class="w-full px-3 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">To</label>
+            <input
+              type="date"
+              [(ngModel)]="toDate"
+              class="w-full px-3 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition" />
+          </div>
+        </div>
+        <button type="button"
+          (click)="loadCashbook()"
+          class="mt-4 w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-emerald-200 active:scale-[0.99]">
+          <ion-icon name="refresh-outline"></ion-icon>
+          Apply Filter
+        </button>
+      </div>
+
+      <!-- LEDGER FILTER CARD -->
+      <div class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 p-4 sm:p-5">
+        <div class="flex items-center justify-between mb-4">
+          <div class="flex items-center gap-2.5">
+            <div class="w-9 h-9 rounded-xl bg-emerald-50 flex items-center justify-center">
+              <ion-icon name="filter-outline" class="text-emerald-500"></ion-icon>
+            </div>
+            <h3 class="text-sm font-bold text-slate-800">Ledger Breakdown</h3>
+          </div>
+          <!-- Clear Filter -->
+          <button type="button"
+            *ngIf="filterLedgerType || filterUnderGroup || filterLedgerName"
+            (click)="filterLedgerType = ''; filterUnderGroup = ''; filterLedgerName = ''; buildFilteredLedgersList()"
+            class="flex items-center gap-1 px-3 py-1.5 bg-white border border-slate-200 rounded-full text-xs font-semibold text-slate-500 hover:text-red-500 hover:border-red-200 transition active:scale-95">
+            <ion-icon name="close-outline"></ion-icon> Clear
+          </button>
+        </div>
+
+        <div class="space-y-3.5">
+          <!-- Type chips -->
+          <div>
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">Type</label>
+            <div class="flex flex-wrap gap-2">
+              <button type="button"
+                (click)="filterLedgerType = ''; onLedgerTypeChange()"
+                class="px-4 py-2 rounded-full border-2 text-xs font-bold transition-all active:scale-95"
+                [ngClass]="filterLedgerType === ''
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'">
+                All
+              </button>
+              <button type="button"
+                (click)="filterLedgerType = 'EXPENSE'; onLedgerTypeChange()"
+                class="px-4 py-2 rounded-full border-2 text-xs font-bold transition-all active:scale-95"
+                [ngClass]="filterLedgerType === 'EXPENSE'
+                  ? 'bg-red-500 border-red-500 text-white shadow-md shadow-red-200'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-red-300 hover:text-red-500'">
+                Expenses
+              </button>
+              <button type="button"
+                (click)="filterLedgerType = 'INCOME'; onLedgerTypeChange()"
+                class="px-4 py-2 rounded-full border-2 text-xs font-bold transition-all active:scale-95"
+                [ngClass]="filterLedgerType === 'INCOME'
+                  ? 'bg-emerald-500 border-emerald-500 text-white shadow-md shadow-emerald-200'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-emerald-300 hover:text-emerald-600'">
+                Income
+              </button>
+            </div>
+          </div>
+
+          <!-- Group chips (appear only if type is selected) -->
+          <div *ngIf="filterLedgerType" class="fade-in">
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">Group</label>
+            <div class="flex flex-wrap gap-2">
+              <button type="button"
+                (click)="filterUnderGroup = 'DIRECT'; onUnderGroupChange()"
+                class="px-4 py-2 rounded-full border-2 text-xs font-bold transition-all active:scale-95"
+                [ngClass]="filterUnderGroup === 'DIRECT'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'">
+                Direct {{ filterLedgerType === 'EXPENSE' ? 'Expense' : 'Income' }}
+              </button>
+              <button type="button"
+                (click)="filterUnderGroup = 'INDIRECT'; onUnderGroupChange()"
+                class="px-4 py-2 rounded-full border-2 text-xs font-bold transition-all active:scale-95"
+                [ngClass]="filterUnderGroup === 'INDIRECT'
+                  ? 'bg-slate-900 border-slate-900 text-white shadow-md'
+                  : 'bg-white border-slate-200 text-slate-500 hover:border-slate-400'">
+                Indirect {{ filterLedgerType === 'EXPENSE' ? 'Expense' : 'Income' }}
+              </button>
+            </div>
+          </div>
+
+          <!-- Ledger select (appears after type + group) -->
+          <div *ngIf="filterLedgerType && filterUnderGroup" class="fade-in">
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">Ledger</label>
+            <select
+              [(ngModel)]="filterLedgerName"
+              class="w-full px-3 py-3 bg-slate-50 border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:bg-white focus:border-emerald-400 transition appearance-none cursor-pointer">
+              <option value="">-- Choose Ledger --</option>
+              <option *ngFor="let ledger of filteredLedgers" [value]="ledger.label">
+                {{ ledger.label }}
+              </option>
+            </select>
+          </div>
+
+          <!-- View Breakdown -->
+          <button type="button"
+            *ngIf="filterLedgerName"
+            (click)="openDetailModal(filterLedgerName)"
+            class="w-full py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 shadow-md shadow-emerald-200 active:scale-[0.99] fade-in">
+            <ion-icon name="eye-outline" class="text-base"></ion-icon>
+            View Breakdown
+          </button>
+        </div>
+      </div>
+
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         LOADING STATE
+    ══════════════════════════════════════════ -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-16 gap-3">
+      <ion-spinner name="crescent" class="text-emerald-500 w-8 h-8"></ion-spinner>
+      <p class="text-sm text-slate-400">Loading cashbook...</p>
+    </div>
+
+    <!-- ══════════════════════════════════════════
+         CASHBOOK STATEMENT
+    ══════════════════════════════════════════ -->
+    <div *ngIf="!isLoading && summary" class="bg-white rounded-2xl sm:rounded-3xl shadow-sm border border-slate-100 overflow-hidden fade-in">
+
+      <!-- Company Header -->
+      <div class="text-center py-5 sm:py-6 px-4 bg-gradient-to-r from-slate-900 via-slate-800 to-slate-900 relative overflow-hidden">
+        <div class="absolute top-0 left-0 right-0 h-0.5 bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500"></div>
+        <h2 class="text-sm sm:text-base font-bold text-white tracking-widest">NECTAR ORIGIN PRIVATE LIMITED</h2>
+        <p class="text-[10px] sm:text-xs text-slate-300 mt-1 max-w-xl mx-auto leading-relaxed">
+          Kahalgaon, Bhagalpur, Bihar, 813203 · CIN: U74999BR2016PTC032690 · +91-9797979522
+        </p>
+        <span class="inline-flex items-center gap-1.5 mt-2.5 px-3.5 py-1.5 rounded-full bg-emerald-500/15 border border-emerald-500/30 text-xs text-emerald-300 font-bold">
+          <ion-icon name="calendar-outline" class="text-sm"></ion-icon>
+          {{ formatDate(fromDate) }} — {{ formatDate(toDate) }}
+        </span>
+      </div>
+
+      <!-- Two columns on desktop, stacked sections on mobile -->
+      <div class="grid grid-cols-1 lg:grid-cols-2 lg:divide-x divide-slate-200">
+
+        <!-- ── EXPENDITURE ───────────────────── -->
+        <div>
+          <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-red-50 to-rose-50 border-b-2 border-red-100">
+            <span class="text-xs font-bold text-red-600 uppercase tracking-wider flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-red-100 flex items-center justify-center">
+                <ion-icon name="trending-down-outline" class="text-red-500 text-sm"></ion-icon>
+              </span>
+              Expenditure
+            </span>
+            <span class="text-xs font-bold text-red-600">Amount (₹)</span>
+          </div>
+
+          <div *ngFor="let row of leftRows">
+
+            <!-- Sub-header row -->
+            <div *ngIf="row.isSubHeader"
+                 class="flex items-center px-4 py-2 bg-slate-50 border-l-4 border-l-slate-300">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{{ row.label }}</span>
+            </div>
+
+            <!-- Total row -->
+            <div *ngIf="row.isTotal"
+                 class="flex items-center justify-between px-4 py-3.5 bg-slate-900">
+              <span class="text-xs font-bold text-white uppercase tracking-widest">{{ row.label }}</span>
+              <span class="text-sm font-bold text-emerald-400 tabular-nums">₹ {{ formatCurrency(row.amount ?? 0) }}</span>
+            </div>
+
+            <!-- Bold row (Closing Balance) -->
+            <div *ngIf="!row.isSubHeader && !row.isTotal && row.isBold"
+                 class="flex items-center justify-between px-4 py-3 bg-emerald-50/70 border-t border-emerald-100">
+              <span class="text-xs font-bold text-emerald-800">{{ row.label }}</span>
+              <span class="text-xs font-bold text-emerald-800 tabular-nums">₹ {{ formatCurrency(row.amount ?? 0) }}</span>
+            </div>
+
+            <!-- Normal data row (clickable) -->
+            <button type="button" *ngIf="!row.isSubHeader && !row.isTotal && !row.isBold"
+                 (click)="openDetailModal(row.label)"
+                 class="group w-full flex items-center justify-between px-4 py-2.5 border-b border-slate-50 bg-white hover:bg-emerald-50/70 transition text-left">
+              <span class="text-xs text-slate-600 pl-2 font-medium group-hover:text-emerald-700 transition">{{ row.label }}</span>
+              <span class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-700 font-semibold tabular-nums group-hover:text-emerald-700 transition">{{ formatCurrency(row.amount ?? 0) }}</span>
+                <ion-icon name="chevron-forward-outline" class="text-xs text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all"></ion-icon>
+              </span>
+            </button>
+
+          </div>
+        </div>
+
+        <!-- ── INCOME ───────────────────────── -->
+        <div class="border-t-4 border-slate-100 lg:border-t-0">
+          <div class="flex items-center justify-between px-4 py-3 bg-gradient-to-r from-emerald-50 to-teal-50 border-b-2 border-emerald-100">
+            <span class="text-xs font-bold text-emerald-600 uppercase tracking-wider flex items-center gap-2">
+              <span class="w-6 h-6 rounded-lg bg-emerald-100 flex items-center justify-center">
+                <ion-icon name="trending-up-outline" class="text-emerald-500 text-sm"></ion-icon>
+              </span>
+              Income
+            </span>
+            <span class="text-xs font-bold text-emerald-600">Amount (₹)</span>
+          </div>
+
+          <div *ngFor="let row of rightRows">
+
+            <!-- Sub-header -->
+            <div *ngIf="row.isSubHeader"
+                 class="flex items-center px-4 py-2 bg-slate-50 border-l-4 border-l-slate-300">
+              <span class="text-[11px] font-bold text-slate-500 uppercase tracking-widest">{{ row.label }}</span>
+            </div>
+
+            <!-- Total row -->
+            <div *ngIf="row.isTotal"
+                 class="flex items-center justify-between px-4 py-3.5 bg-slate-900">
+              <span class="text-xs font-bold text-white uppercase tracking-widest">{{ row.label }}</span>
+              <span class="text-sm font-bold text-emerald-400 tabular-nums">₹ {{ formatCurrency(row.amount ?? 0) }}</span>
+            </div>
+
+            <!-- Highlighted (Received From HO) - clickable -->
+            <button type="button" *ngIf="!row.isSubHeader && !row.isTotal && row.isHighlighted"
+                 (click)="openDetailModal(row.label)"
+                 class="group w-full flex items-center justify-between px-4 py-2.5 border-b border-amber-100 bg-amber-50 border-l-4 border-l-amber-400 hover:bg-amber-100 transition text-left">
+              <span class="text-xs text-amber-800 font-bold pl-1">{{ row.label }}</span>
+              <span class="flex items-center gap-1.5">
+                <span class="text-xs font-bold text-amber-800 tabular-nums">{{ formatCurrency(row.amount ?? 0) }}</span>
+                <ion-icon name="chevron-forward-outline" class="text-xs text-amber-400 group-hover:translate-x-0.5 transition-all"></ion-icon>
+              </span>
+            </button>
+
+            <!-- Bold row (Opening Balance) -->
+            <div *ngIf="!row.isSubHeader && !row.isTotal && row.isBold && !row.isHighlighted"
+                 class="flex items-center justify-between px-4 py-3 bg-emerald-50/70 border-b border-emerald-100">
+              <span class="text-xs font-bold text-emerald-800">{{ row.label }}</span>
+              <span class="text-xs font-bold text-emerald-800 tabular-nums">₹ {{ formatCurrency(row.amount ?? 0) }}</span>
+            </div>
+
+            <!-- Normal data row (clickable) -->
+            <button type="button" *ngIf="!row.isSubHeader && !row.isTotal && !row.isBold && !row.isHighlighted"
+                 (click)="openDetailModal(row.label)"
+                 class="group w-full flex items-center justify-between px-4 py-2.5 border-b border-slate-50 bg-white hover:bg-emerald-50/70 transition text-left">
+              <span class="text-xs text-slate-600 pl-2 font-medium group-hover:text-emerald-700 transition">{{ row.label }}</span>
+              <span class="flex items-center gap-1.5">
+                <span class="text-xs text-slate-700 font-semibold tabular-nums group-hover:text-emerald-700 transition">{{ formatCurrency(row.amount ?? 0) }}</span>
+                <ion-icon name="chevron-forward-outline" class="text-xs text-slate-300 group-hover:text-emerald-500 group-hover:translate-x-0.5 transition-all"></ion-icon>
+              </span>
+            </button>
+
+          </div>
+        </div>
+
+      </div><!-- END columns -->
+
+      <!-- Balance footer -->
+      <div class="px-4 py-4 bg-slate-50 border-t border-slate-200 flex flex-wrap items-center justify-center gap-2.5 sm:gap-3">
+        <div class="flex items-center gap-2 px-3.5 py-2 bg-white border border-red-100 rounded-full shadow-sm">
+          <ion-icon name="trending-down-outline" class="text-red-500"></ion-icon>
+          <span class="text-xs text-red-500 font-bold">Expenditure</span>
+          <span class="text-xs font-bold text-slate-800 tabular-nums">₹ {{ formatCurrency(leftTotal) }}</span>
+        </div>
+        <div class="flex items-center gap-2 px-3.5 py-2 bg-white border border-emerald-100 rounded-full shadow-sm">
+          <ion-icon name="trending-up-outline" class="text-emerald-500"></ion-icon>
+          <span class="text-xs text-emerald-600 font-bold">Income</span>
+          <span class="text-xs font-bold text-slate-800 tabular-nums">₹ {{ formatCurrency(rightTotal) }}</span>
+        </div>
+        <div *ngIf="leftTotal === rightTotal"
+             class="flex items-center gap-1.5 px-3.5 py-2 bg-emerald-500 rounded-full shadow-md shadow-emerald-200">
+          <ion-icon name="checkmark-circle-outline" class="text-white"></ion-icon>
+          <span class="text-xs font-bold text-white">Books Balanced</span>
+        </div>
+      </div>
+
+      <!-- Hint note -->
+      <div class="px-4 py-2.5 bg-white border-t border-slate-100 text-center">
+        <p class="text-[11px] text-slate-400">Ledgers with ₹0 value are hidden · Tap any ledger row to view its CASH / UPI breakdown</p>
+      </div>
+
+    </div>
+    <!-- END statement -->
+
+  </div>
+
+</ion-content>
+
+<!-- ══════════════════════════════════════════════
+     EXPORT MODAL (bottom sheet on mobile)
+══════════════════════════════════════════════ -->
+<div *ngIf="showExportModal"
+     class="fixed inset-0 bg-black/50 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-xs overflow-hidden modal-card">
+
+    <div class="sm:hidden flex justify-center pt-3">
+      <div class="w-10 h-1 rounded-full bg-slate-200"></div>
+    </div>
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div class="flex items-center gap-3">
+        <div class="w-10 h-10 rounded-2xl bg-emerald-50 flex items-center justify-center">
+          <ion-icon name="download-outline" class="text-emerald-500 text-lg"></ion-icon>
+        </div>
+        <div>
+          <h3 class="font-bold text-slate-800 leading-tight">Export Cashbook</h3>
+          <p class="text-xs text-slate-400">Choose a format</p>
+        </div>
+      </div>
+      <button type="button" (click)="showExportModal = false"
+              class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition active:scale-90">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </button>
+    </div>
+    <div class="p-5 pb-6 sm:pb-5 space-y-3">
+      <button type="button"
+        (click)="exportAsPdf()"
+        class="w-full py-3.5 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md shadow-red-200 active:scale-[0.98]">
+        <ion-icon name="document-outline" class="text-base"></ion-icon>
+        Export as PDF
+      </button>
+      <button type="button"
+        (click)="exportAsExcel()"
+        class="w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-md shadow-emerald-200 active:scale-[0.98]">
+        <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+        Export as Excel
+      </button>
+      <button type="button"
+        (click)="showExportModal = false"
+        class="w-full py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
+        Cancel
+      </button>
+    </div>
+  </div>
+</div>
+
+<!-- ══════════════════════════════════════════════
+     DETAIL BREAKDOWN MODAL (bottom sheet on mobile)
+══════════════════════════════════════════════ -->
+<div *ngIf="showDetailModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-2xl max-h-[92vh] sm:max-h-[90vh] overflow-hidden flex flex-col modal-card">
+
+    <!-- Modal Header (gradient) -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-500 to-teal-500 px-6 pt-4 pb-5 shrink-0">
+      <div class="absolute -top-10 -right-8 w-32 h-32 bg-white/10 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="sm:hidden flex justify-center mb-2">
+        <div class="w-10 h-1 rounded-full bg-white/40"></div>
+      </div>
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-3 min-w-0">
+          <div class="w-10 h-10 rounded-2xl bg-white/20 flex items-center justify-center shrink-0">
+            <ion-icon name="layers-outline" class="text-white text-lg"></ion-icon>
+          </div>
+          <div class="min-w-0">
+            <h3 class="font-bold text-white leading-tight truncate">{{ detailLedgerName }}</h3>
+            <p class="text-xs text-emerald-100 font-medium">CASH / UPI payment breakdown</p>
+          </div>
+        </div>
+        <button type="button" (click)="showDetailModal = false"
+                class="w-9 h-9 rounded-full bg-white/20 hover:bg-white/30 flex items-center justify-center text-white transition active:scale-90 shrink-0">
+          <ion-icon name="close-outline" class="text-xl"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- Date Range Filter -->
+    <div class="px-5 sm:px-6 py-4 border-b border-slate-100 bg-slate-50 shrink-0">
+      <div class="flex flex-col sm:flex-row sm:items-end gap-3">
+        <div class="grid grid-cols-2 gap-3 flex-1">
+          <div>
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">From</label>
+            <input
+              type="date"
+              [(ngModel)]="detailFromDate"
+              class="w-full px-3 py-2.5 bg-white border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-emerald-400 transition" />
+          </div>
+          <div>
+            <label class="block text-xs text-slate-400 font-bold uppercase tracking-wider mb-1.5">To</label>
+            <input
+              type="date"
+              [(ngModel)]="detailToDate"
+              class="w-full px-3 py-2.5 bg-white border-2 border-slate-100 rounded-xl text-sm text-slate-800 focus:outline-none focus:border-emerald-400 transition" />
+          </div>
+        </div>
+        <button type="button"
+          (click)="loadDetailVouchers()"
+          class="px-5 py-2.5 bg-slate-900 hover:bg-slate-800 text-white text-sm font-bold rounded-xl transition flex items-center justify-center gap-2 active:scale-[0.98] shrink-0">
+          <ion-icon name="refresh-outline"></ion-icon>
+          Apply
+        </button>
+      </div>
+    </div>
+
+    <!-- Loading state -->
+    <div *ngIf="isLoadingDetail" class="flex items-center justify-center py-12">
+      <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+    </div>
+
+    <!-- Content -->
+    <div *ngIf="!isLoadingDetail" class="flex-1 overflow-y-auto">
+
+      <!-- Summary cards -->
+      <div class="px-5 sm:px-6 py-4 bg-slate-50 border-b border-slate-100">
+        <div class="grid grid-cols-3 gap-2.5 sm:gap-3">
+          <div class="bg-white rounded-xl p-3 sm:p-4 border border-slate-100 shadow-sm">
+            <p class="text-[9px] sm:text-[10px] text-slate-400 font-bold uppercase tracking-wider mb-1">Total</p>
+            <p class="text-sm sm:text-lg font-bold text-slate-800 tabular-nums">₹ {{ formatCurrency(getTotalForDetail()) }}</p>
+          </div>
+          <div class="bg-amber-50 rounded-xl p-3 sm:p-4 border border-amber-100 shadow-sm">
+            <p class="text-[9px] sm:text-[10px] text-amber-600 font-bold uppercase tracking-wider mb-1">Cash ({{ getCashCount() }})</p>
+            <p class="text-sm sm:text-lg font-bold text-amber-700 tabular-nums">₹ {{ formatCurrency(getCashTotal()) }}</p>
+          </div>
+          <div class="bg-indigo-50 rounded-xl p-3 sm:p-4 border border-indigo-100 shadow-sm">
+            <p class="text-[9px] sm:text-[10px] text-indigo-600 font-bold uppercase tracking-wider mb-1">UPI ({{ getUpiCount() }})</p>
+            <p class="text-sm sm:text-lg font-bold text-indigo-700 tabular-nums">₹ {{ formatCurrency(getUpiTotal()) }}</p>
+          </div>
+        </div>
+
+        <!-- Tab switcher: Transactions / Chart -->
+        <div class="mt-4 inline-flex p-1 bg-slate-100 rounded-xl w-full sm:w-auto">
+          <button type="button" (click)="detailTab = 'list'"
+            class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all"
+            [ngClass]="detailTab === 'list' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+            <ion-icon name="document-text-outline" class="text-sm"></ion-icon>
+            Transactions
+          </button>
+          <button type="button" (click)="detailTab = 'chart'"
+            class="flex-1 sm:flex-none flex items-center justify-center gap-1.5 px-5 py-2 rounded-lg text-xs font-bold transition-all"
+            [ngClass]="detailTab === 'chart' ? 'bg-white text-emerald-600 shadow-sm' : 'text-slate-500 hover:text-slate-700'">
+            <ion-icon name="bar-chart-outline" class="text-sm"></ion-icon>
+            Chart
+          </button>
+        </div>
+      </div>
+
+      <!-- ═══ CHART TAB ═══ -->
+      <div *ngIf="detailTab === 'chart'" class="px-5 sm:px-6 py-5 space-y-5 tab-panel">
+
+        <!-- CASH vs UPI donut -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <h4 class="text-sm font-bold text-slate-700 mb-4 flex items-center gap-2">
+            <ion-icon name="cash-outline" class="text-emerald-500"></ion-icon>
+            Payment Mode Split
+          </h4>
+          <div class="flex items-center gap-5 sm:gap-8">
+            <div class="relative w-28 h-28 sm:w-32 sm:h-32 shrink-0">
+              <div class="w-full h-full rounded-full" [style.background]="donutGradient"></div>
+              <div class="absolute inset-[22%] bg-white rounded-full flex flex-col items-center justify-center shadow-inner">
+                <span class="text-[8px] sm:text-[9px] text-slate-400 font-bold uppercase tracking-wider">Total</span>
+                <span class="text-xs sm:text-sm font-bold text-slate-800 tabular-nums">₹{{ formatCurrency(getTotalForDetail()) }}</span>
+              </div>
+            </div>
+            <div class="flex-1 space-y-3">
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  <span class="w-3 h-3 rounded-full bg-amber-400"></span>
+                  Cash ({{ getCashCount() }})
+                </span>
+                <span class="text-xs font-bold text-slate-800 tabular-nums">₹{{ formatCurrency(getCashTotal()) }} · {{ getCashPct() }}%</span>
+              </div>
+              <div class="flex items-center justify-between">
+                <span class="flex items-center gap-2 text-xs font-semibold text-slate-600">
+                  <span class="w-3 h-3 rounded-full bg-indigo-500"></span>
+                  UPI ({{ getUpiCount() }})
+                </span>
+                <span class="text-xs font-bold text-slate-800 tabular-nums">₹{{ formatCurrency(getUpiTotal()) }} · {{ getUpiPct() }}%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Monthly bar chart -->
+        <div class="bg-white rounded-2xl border border-slate-100 shadow-sm p-5">
+          <div class="flex items-center justify-between mb-4">
+            <h4 class="text-sm font-bold text-slate-700 flex items-center gap-2">
+              <ion-icon name="bar-chart-outline" class="text-emerald-500"></ion-icon>
+              Monthly Trend
+            </h4>
+            <div class="flex items-center gap-3 text-[10px] font-semibold text-slate-500">
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-amber-400"></span>Cash</span>
+              <span class="flex items-center gap-1"><span class="w-2.5 h-2.5 rounded-sm bg-indigo-500"></span>UPI</span>
+            </div>
+          </div>
+
+          <div *ngIf="monthlyData.length > 0" class="space-y-4">
+            <div *ngFor="let m of monthlyData">
+              <div class="flex items-center justify-between mb-1.5">
+                <span class="text-xs font-bold text-slate-600">{{ m.label }}</span>
+                <span class="text-xs font-bold text-slate-800 tabular-nums">₹ {{ formatCurrency(m.total) }}</span>
+              </div>
+              <div class="h-4 rounded-full bg-slate-100 overflow-hidden flex">
+                <div class="h-full bg-amber-400 transition-all duration-500" [style.width.%]="(m.cash / monthlyMax) * 100"></div>
+                <div class="h-full bg-indigo-500 transition-all duration-500" [style.width.%]="(m.upi / monthlyMax) * 100"></div>
+              </div>
+            </div>
+          </div>
+
+          <div *ngIf="monthlyData.length === 0" class="py-8 text-center">
+            <p class="text-sm text-slate-400">No data to chart for this range.</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Desktop vouchers table -->
+      <div *ngIf="detailTab === 'list' && detailVouchers.length > 0" class="hidden sm:block px-6 py-5">
+        <h4 class="text-sm font-bold text-slate-700 mb-3 flex items-center gap-2">
+          <ion-icon name="document-text-outline" class="text-emerald-500"></ion-icon>
+          Transaction Details
+        </h4>
+        <div class="overflow-x-auto rounded-xl border border-slate-100">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50 text-xs text-slate-400 uppercase tracking-wider">
+                <th class="px-3 py-2.5 text-left font-bold">Voucher No.</th>
+                <th class="px-3 py-2.5 text-left font-bold">Date</th>
+                <th class="px-3 py-2.5 text-left font-bold">Mode</th>
+                <th class="px-3 py-2.5 text-right font-bold">Amount</th>
+                <th class="px-3 py-2.5 text-left font-bold">Narration</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let v of detailVouchers"
+                  class="border-t border-slate-50 hover:bg-emerald-50/40 transition">
+                <td class="px-3 py-3 font-bold text-emerald-600 tracking-wide">{{ v.voucherNo }}</td>
+                <td class="px-3 py-3 text-slate-400 text-xs">{{ formatDate(v.date) }}</td>
+                <td class="px-3 py-3">
+                  <span class="inline-flex items-center gap-1.5 px-2.5 py-1 rounded-full text-xs font-bold"
+                        [ngClass]="v.paymentMode === 'UPI' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
+                    <span class="w-1.5 h-1.5 rounded-full"
+                          [ngClass]="v.paymentMode === 'UPI' ? 'bg-indigo-500' : 'bg-amber-500'"></span>
+                    {{ v.paymentMode }}
+                  </span>
+                </td>
+                <td class="px-3 py-3 text-right font-bold text-slate-800 tabular-nums">₹ {{ v.amount.toLocaleString('en-IN') }}</td>
+                <td class="px-3 py-3 text-slate-500 text-xs">{{ v.narration }}</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Mobile voucher cards -->
+      <div *ngIf="detailTab === 'list' && detailVouchers.length > 0" class="sm:hidden divide-y divide-slate-50 px-4 py-2">
+        <div *ngFor="let v of detailVouchers" class="py-3">
+          <div class="flex items-center justify-between mb-1">
+            <span class="text-xs font-bold text-emerald-600 tracking-widest">{{ v.voucherNo }}</span>
+            <span class="text-sm font-bold text-slate-800 tabular-nums">₹ {{ v.amount.toLocaleString('en-IN') }}</span>
+          </div>
+          <div class="flex items-center justify-between mb-1">
+            <span class="inline-flex items-center gap-1 px-2 py-0.5 rounded-full text-[10px] font-bold"
+                  [ngClass]="v.paymentMode === 'UPI' ? 'bg-indigo-50 text-indigo-600 border border-indigo-100' : 'bg-amber-50 text-amber-600 border border-amber-100'">
+              {{ v.paymentMode }}
+            </span>
+            <span class="text-[10px] text-slate-400">{{ formatDate(v.date) }}</span>
+          </div>
+          <p class="text-[11px] text-slate-500 italic">{{ v.narration }}</p>
+        </div>
+      </div>
+
+      <!-- Empty state -->
+      <div *ngIf="detailTab === 'list' && detailVouchers.length === 0" class="px-6 py-12 text-center">
+        <div class="w-16 h-16 rounded-3xl bg-slate-50 border border-slate-100 flex items-center justify-center mx-auto mb-3">
+          <ion-icon name="document-outline" class="text-2xl text-slate-300"></ion-icon>
+        </div>
+        <p class="text-sm font-semibold text-slate-500">No transactions found for this ledger.</p>
+        <p class="text-xs text-slate-400 mt-1">Try a wider date range above.</p>
+      </div>
+
+    </div>
+
+    <!-- Modal Footer -->
+    <div class="px-5 sm:px-6 py-4 border-t border-slate-100 flex gap-2.5 sm:gap-3 shrink-0 bg-white">
+      <button type="button" (click)="showDetailModal = false"
+              class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
+        Close
+      </button>
+      <button type="button" (click)="exportDetailAsPdf()"
+              [disabled]="detailVouchers.length === 0"
+              class="flex-1 py-3 bg-gradient-to-r from-red-500 to-rose-500 hover:from-red-600 hover:to-rose-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+        <ion-icon name="document-outline" class="text-base"></ion-icon>
+        PDF
+      </button>
+      <button type="button" (click)="exportDetailAsExcel()"
+              [disabled]="detailVouchers.length === 0"
+              class="flex-1 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
+        <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+        Excel
+      </button>
+    </div>
+
+  </div>
+</div>

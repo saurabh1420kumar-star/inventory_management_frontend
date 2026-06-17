@@ -288,7 +288,7 @@ export class MasterInventoryPage implements OnInit {
 
   /* ---------- GET INDUSTRY-STANDARD IMAGE FOR ITEM ---------- */
   getImageUrlForItem(itemName: string, category: ItemCategory): string {
-    const name = itemName.toLowerCase().trim();
+    const name = (itemName || '').toLowerCase().trim();
     
     // Raw Materials - Diverse Industrial/Manufacturing images
     const rawMaterials: { [key: string]: string } = {
@@ -371,9 +371,24 @@ export class MasterInventoryPage implements OnInit {
     // ✔ USE category from API (set in service)
     const category = (item as any).category as ItemCategory;
 
+    // Normalize the display name: different endpoints return different name
+    // fields (name / finishedProductName / rawMaterialName / materialName /
+    // productName / itemName). Fall back to '' so downstream string ops never
+    // throw and freeze the page on "Loading inventory...".
+    const anyItem = item as any;
+    const name: string =
+      anyItem.name ??
+      anyItem.finishedProductName ??
+      anyItem.rawMaterialName ??
+      anyItem.materialName ??
+      anyItem.productName ??
+      anyItem.itemName ??
+      '';
+
     // Preserve the price fields from API during mapping
     return {
       ...item,
+      name,              // <— normalized, always a string
       status,
       category,          // <— correct tag
       lowStock: isLowStock,
@@ -381,7 +396,7 @@ export class MasterInventoryPage implements OnInit {
       minimumThreshold,
       price: item.price,  // <— Explicitly preserve price from API
       perItemPrice: item.perItemPrice,  // <— Preserve perItemPrice for BOM
-      imageUrl: (item as any).imageUrl || (item as any).image || this.getImageUrlForItem(item.name, category)
+      imageUrl: (item as any).imageUrl || (item as any).image || this.getImageUrlForItem(name, category)
     };
   }
 
@@ -458,7 +473,7 @@ export class MasterInventoryPage implements OnInit {
     return this.inventory.filter(item => {
       const match =
         !q ||
-        item.name.toLowerCase().includes(q) ||
+        item.name?.toLowerCase().includes(q) ||
         item.sku?.toLowerCase().includes(q) ||
         item.description?.toLowerCase().includes(q);
 

@@ -108,29 +108,38 @@ export class InventoryService {
   constructor(private http: HttpClient) {}
 
   // =======================================
-  // 🔹 MASTER INVENTORY (RAW + FINISHED ONLY)
+  // 🔹 MASTER INVENTORY (ALL CATEGORIES)
   // =======================================
   getAllItems(): Observable<InventoryItem[]> {
-    const raw$ = this.http.get<InventoryItem[]>(
-      `${this.rawMaterialsUrl}`
-    ).pipe(map(items =>
-      items.map(i => ({
-        ...i,
-        category: 'raw_material' as const
-      }))
-    ));
+    const raw$ = this.http.get<any>(`${this.rawMaterialsUrl}`).pipe(
+      map(res => {
+        const items: any[] = Array.isArray(res) ? res : (res?.content ?? []);
+        return items.map(i => ({ ...i, category: 'raw_material' as const }));
+      }),
+      catchError(() => of([]))
+    );
 
-    const finished$ = this.http.get<InventoryItem[]>(
-      `${this.finishedProductsUrl}`
-    ).pipe(map(items =>
-      items.map(i => ({
-        ...i,
-        category: 'finished_product' as const
-      }))
-    ));
+    const finished$ = this.http.get<any>(`${this.finishedProductsUrl}`).pipe(
+      map(res => {
+        const items: any[] = Array.isArray(res) ? res : (res?.content ?? []);
+        return items.map(i => ({ ...i, category: 'finished_product' as const }));
+      }),
+      catchError(() => of([]))
+    );
 
-    return forkJoin([raw$, finished$]).pipe(
-      map(([raw, finished]) => [...raw, ...finished])
+    const spareParts$ = this.http.get<any>(`${this.machinePartsUrl}`).pipe(
+      map(res => {
+        const items: any[] = Array.isArray(res) ? res : (res?.content ?? []);
+        return items.map(i => ({ ...i, category: 'spare_parts' as const }));
+      }),
+      catchError(() => of([]))
+    );
+
+    const promotional$ = this.getPromotionalItems();
+    const scrap$ = this.getScrapItems();
+
+    return forkJoin([raw$, finished$, spareParts$, promotional$, scrap$]).pipe(
+      map(([raw, finished, spare, promo, scrap]) => [...raw, ...finished, ...spare, ...promo, ...scrap])
     );
   }
 
@@ -336,29 +345,31 @@ export class InventoryService {
   }
 
   getPromotionalItems(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItem[]>(
+    return this.http.get<any>(
       `${this.promotionalItemsUrl}`
     ).pipe(
-      map(items =>
-        items.map(i => ({
+      map(res => {
+        const items: any[] = Array.isArray(res) ? res : (res?.content ?? []);
+        return items.map(i => ({
           ...i,
           category: 'promotional_items' as const
-        }))
-      ),
+        }));
+      }),
       catchError(() => of([]))
     );
   }
 
   getScrapItems(): Observable<InventoryItem[]> {
-    return this.http.get<InventoryItem[]>(
+    return this.http.get<any>(
       `${this.scrapItemsUrl}`
     ).pipe(
-      map(items =>
-        items.map(i => ({
+      map(res => {
+        const items: any[] = Array.isArray(res) ? res : (res?.content ?? []);
+        return items.map(i => ({
           ...i,
           category: 'scrap_material' as const
-        }))
-      ),
+        }));
+      }),
       catchError(() => of([]))
     );
   }
