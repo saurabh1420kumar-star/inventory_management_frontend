@@ -7,8 +7,6 @@ import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../servic
 import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
 import { Auth } from '../../services/auth';
 import { Toast as ToastService } from '../../services/toast';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import { generateLedgerStatementPdf, LedgerStatementRow } from '../../shared/utils/voucher-pdf';
 import { addIcons } from 'ionicons';
 import {
@@ -711,47 +709,40 @@ export class AccountsMasterPage implements OnInit {
       import('xlsx').then(XLSX => {
         const workbook = XLSX.utils.book_new();
 
-        // Create company info section
+        // Create company info section (Tally-style: centered/stacked in column C)
+        const tp = this.selectedAccount!.toParty;
+        const nowDt = new Date();
+        const fyStart = nowDt.getMonth() >= 3 ? nowDt.getFullYear() : nowDt.getFullYear() - 1;
+        const yy = (yr: number) => yr.toString().slice(-2);
+        const fyRange = `1-Apr-${yy(fyStart)} to 31-Mar-${yy(fyStart + 1)}`;
         const companyData = [
-          [`Account Ledger Export - ${this.selectedAccount!.name}`],
-          [`Account Code: ${this.selectedAccount!.accountCode}`],
-          [`Export Date: ${new Date().toLocaleString()}`],
+          ['', 'NECTAR ORIGIN PRIVATE LIMITED'],
+          ['', '360 K, Shiv Parwati Nagar, Block Road No -2, Ward No 16, Kahalzaon, Bhagalpur, Bihar - 813203'],
+          ['', 'CIN: U74999BR2016PTC032690'],
+          ['', 'Contact: 06429-450126, +91-9797979522'],
+          ['', 'Email: info@nectarorigin.com'],
           [],
-          ['FROM PARTY:'],
-          [`Name: ${this.selectedAccount!.fromParty.name}`],
-          [`Address: ${this.selectedAccount!.fromParty.address}`],
-          [`City: ${this.selectedAccount!.fromParty.city}, ${this.selectedAccount!.fromParty.state} - ${this.selectedAccount!.fromParty.pincode}`],
-          [`Phone: ${this.selectedAccount!.fromParty.phone || 'N/A'}`],
-          [`Email: ${this.selectedAccount!.fromParty.email || 'N/A'}`],
-          [`GSTIN: ${this.selectedAccount!.fromParty.gstin || 'N/A'}`],
-          [],
-          ['TO PARTY:'],
-          [`Name: ${this.selectedAccount!.toParty.name}`],
-          [`Address: ${this.selectedAccount!.toParty.address}`],
-          [`City: ${this.selectedAccount!.toParty.city}, ${this.selectedAccount!.toParty.state} - ${this.selectedAccount!.toParty.pincode}`],
-          [`Phone: ${this.selectedAccount!.toParty.phone || 'N/A'}`],
-          [`Email: ${this.selectedAccount!.toParty.email || 'N/A'}`],
-          [`GSTIN: ${this.selectedAccount!.toParty.gstin || 'N/A'}`],
-          [],
-          [`Opening Balance: ${this.formatCurrency(this.selectedAccount!.openingBalance)}`],
-          [`Total Transactions: ${transactions.length}`],
+          ['', tp.name],
+          ['', 'Ledger Account'],
+          ['', tp.address],
+          ['', `${tp.city}, ${tp.state} - ${tp.pincode}`],
+          ['', fyRange],
           []
         ];
 
-        // Create header row
-        const headers = ['Date', 'Reference', 'Description', 'Type', 'Category', 'Debit', 'Credit', 'Balance', 'Notes'];
+        // Create header row (table starts at the 2nd column)
+        const headers = ['', 'Date', 'Reference', 'Description', 'Type', 'Debit', 'Credit', 'Closing Balance'];
 
         // Format transaction rows with DD/MM/YYYY date format
         const rows = transactions.map(t => [
+          '',
           this.formatDateDDMMYYYY(t.date),
           t.reference,
           t.description,
           t.type,
-          t.category,
           t.debit,
           t.credit,
-          t.balance,
-          t.notes || ''
+          t.balance
         ]);
 
         // Combine company info + header + data
@@ -760,17 +751,16 @@ export class AccountsMasterPage implements OnInit {
         // Create worksheet
         const worksheet = XLSX.utils.aoa_to_sheet(allData);
 
-        // Set column widths
+        // Set column widths (column A is a blank indent)
         worksheet['!cols'] = [
-          { wch: 15 }, // Date
-          { wch: 15 }, // Reference
-          { wch: 25 }, // Description
+          { wch: 4 },  // (indent)
+          { wch: 14 }, // Date
+          { wch: 16 }, // Reference
+          { wch: 30 }, // Description
           { wch: 12 }, // Type
-          { wch: 15 }, // Category
           { wch: 15 }, // Debit
           { wch: 15 }, // Credit
-          { wch: 15 }, // Balance
-          { wch: 20 }  // Notes
+          { wch: 18 }  // Closing Balance
         ];
 
         // Add worksheet to workbook
@@ -804,170 +794,26 @@ export class AccountsMasterPage implements OnInit {
         return;
       }
 
-      const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-      const pageW = 297;
-      const margin = 14;
+      const rows: LedgerStatementRow[] = transactions.map(t => ({
+        date: this.formatDateDDMMYYYY(t.date),
+        reference: t.reference,
+        description: t.description,
+        type: t.type === 'debit' ? 'DEBIT' : 'CREDIT',
+        debit: t.debit || 0,
+        credit: t.credit || 0,
+        balance: t.balance || 0,
+      }));
 
-      // Header section
-      doc.setFillColor(26, 40, 99); // Navy
-      doc.rect(margin, 10, pageW - 2 * margin, 25, 'F');
+      const doc = generateLedgerStatementPdf(
+        this.selectedAccount.accountName || this.selectedAccount.name,
+        this.selectedAccount.toParty.name,
+        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        this.selectedAccount.toParty.phone || '',
+        this.selectedAccount.toParty.email || '',
+        rows,
+        null,
+      );
 
-      // Company name
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(14);
-      doc.setTextColor(255, 255, 255);
-      doc.text('ACCOUNT LEDGER STATEMENT', margin + 4, 22);
-
-      // Account info
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.text(`Account: ${this.selectedAccount.name}`, margin + 4, 30);
-      doc.text(`Code: ${this.selectedAccount.accountCode}`, margin + 4, 35);
-
-      doc.setFontSize(8);
-      doc.setTextColor(150, 150, 150);
-      doc.text(`Generated: ${new Date().toLocaleString()}`, pageW - margin - 40, 22);
-      if (this.startDate || this.endDate) {
-        const dateLabel = `${this.startDate ? this.formatDateDDMMYYYY(this.startDate) : 'All'} to ${this.endDate ? this.formatDateDDMMYYYY(this.endDate) : 'All'}`;
-        doc.text(`Period: ${dateLabel}`, pageW - margin - 40, 28);
-      }
-
-      let y = 38;
-
-      // Party details - Two columns
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(26, 40, 99);
-
-      // FROM PARTY
-      doc.text('FROM PARTY', margin, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(50, 50, 50);
-      doc.text(`${this.selectedAccount.fromParty.name}`, margin, y);
-      y += 4;
-      doc.text(`${this.selectedAccount.fromParty.address}`, margin, y);
-      y += 4;
-      doc.text(`${this.selectedAccount.fromParty.city}, ${this.selectedAccount.fromParty.state} - ${this.selectedAccount.fromParty.pincode}`, margin, y);
-      y += 4;
-      doc.text(`Phone: ${this.selectedAccount.fromParty.phone || 'N/A'} | Email: ${this.selectedAccount.fromParty.email || 'N/A'}`, margin, y);
-      y += 4;
-      doc.text(`GSTIN: ${this.selectedAccount.fromParty.gstin || 'N/A'}`, margin, y);
-
-      // TO PARTY
-      const colX = pageW / 2 + 2;
-      y = 38;
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(9);
-      doc.setTextColor(26, 40, 99);
-      doc.text('TO PARTY', colX, y);
-      y += 5;
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(8);
-      doc.setTextColor(50, 50, 50);
-      doc.text(`${this.selectedAccount.toParty.name}`, colX, y);
-      y += 4;
-      doc.text(`${this.selectedAccount.toParty.address}`, colX, y);
-      y += 4;
-      doc.text(`${this.selectedAccount.toParty.city}, ${this.selectedAccount.toParty.state} - ${this.selectedAccount.toParty.pincode}`, colX, y);
-      y += 4;
-      doc.text(`Phone: ${this.selectedAccount.toParty.phone || 'N/A'} | Email: ${this.selectedAccount.toParty.email || 'N/A'}`, colX, y);
-      y += 4;
-      doc.text(`GSTIN: ${this.selectedAccount.toParty.gstin || 'N/A'}`, colX, y);
-
-      y = 65;
-
-      // Summary cards
-      doc.setFont('helvetica', 'bold');
-      doc.setFontSize(8);
-      const summaryY = y;
-      const summary = this.summary;
-
-      // Cards styling
-      doc.setFillColor(240, 244, 250);
-      doc.rect(margin, summaryY, 40, 8, 'F');
-      doc.setTextColor(26, 40, 99);
-      doc.text('Opening Bal', margin + 1, summaryY + 5);
-      doc.text(`₹ ${this.formatCurrency(summary.openingBalance)}`, margin + 1, summaryY + 7);
-
-      doc.setFillColor(240, 244, 250);
-      doc.rect(margin + 42, summaryY, 40, 8, 'F');
-      doc.text('Total Debits', margin + 43, summaryY + 5);
-      doc.text(`₹ ${this.formatCurrency(summary.totalDebits)}`, margin + 43, summaryY + 7);
-
-      doc.setFillColor(240, 244, 250);
-      doc.rect(margin + 84, summaryY, 40, 8, 'F');
-      doc.text('Total Credits', margin + 85, summaryY + 5);
-      doc.text(`₹ ${this.formatCurrency(summary.totalCredits)}`, margin + 85, summaryY + 7);
-
-      doc.setFillColor(240, 244, 250);
-      doc.rect(margin + 126, summaryY, 40, 8, 'F');
-      doc.text('Closing Bal', margin + 127, summaryY + 5);
-      doc.text(`₹ ${this.formatCurrency(summary.closingBalance)}`, margin + 127, summaryY + 7);
-
-      doc.setFillColor(240, 244, 250);
-      doc.rect(margin + 168, summaryY, 40, 8, 'F');
-      doc.text('Net Balance', margin + 169, summaryY + 5);
-      doc.text(`₹ ${this.formatCurrency(summary.netBalance)}`, margin + 169, summaryY + 7);
-
-      y = 74;
-
-      // Transaction table
-      const tableData = transactions.map(t => [
-        this.formatDateDDMMYYYY(t.date),
-        t.reference,
-        t.description.substring(0, 20),
-        t.type.toUpperCase(),
-        this.formatCurrency(t.debit),
-        this.formatCurrency(t.credit),
-        this.formatCurrency(t.balance),
-        (t.notes || '').substring(0, 15)
-      ]);
-
-      autoTable(doc, {
-        startY: y,
-        head: [['Date', 'Reference', 'Description', 'Type', 'Debit', 'Credit', 'Balance', 'Notes']],
-        body: tableData,
-        theme: 'grid',
-        headStyles: {
-          fillColor: [26, 40, 99],
-          textColor: [255, 255, 255],
-          fontStyle: 'bold',
-          fontSize: 8,
-          halign: 'center'
-        },
-        bodyStyles: {
-          textColor: [50, 50, 50],
-          fontSize: 7.5
-        },
-        alternateRowStyles: {
-          fillColor: [248, 250, 252]
-        },
-        columnStyles: {
-          4: { halign: 'right' },
-          5: { halign: 'right' },
-          6: { halign: 'right' }
-        },
-        margin: { left: margin, right: margin }
-      });
-
-      // Footer
-      const pageCount = (doc as any).internal.getNumberOfPages();
-      doc.setFont('helvetica', 'normal');
-      doc.setFontSize(7);
-      doc.setTextColor(150, 150, 150);
-      for (let i = 1; i <= pageCount; i++) {
-        (doc as any).setPage(i);
-        doc.text(
-          `Page ${i} of ${pageCount}`,
-          pageW / 2,
-          doc.internal.pageSize.getHeight() - 5,
-          { align: 'center' }
-        );
-      }
-
-      // Generate PDF
       const filename = `${this.selectedAccount.name}_Ledger_${new Date().toISOString().split('T')[0]}.pdf`;
       doc.save(filename);
 

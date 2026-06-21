@@ -137,6 +137,7 @@ export class DispatchPage implements OnInit {
       transportName: ['', Validators.required],
       driverName: ['', Validators.required],
       driverMobile: ['', [Validators.required, Validators.pattern(/^[0-9]{10}$/)]],
+      deliveryMethod: ['', Validators.required],
     });
   }
 

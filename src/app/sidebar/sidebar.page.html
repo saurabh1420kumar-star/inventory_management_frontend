@@ -66,14 +66,14 @@
 
         <!-- ===== TRANSACTION (Desktop only, or for all screens if admin) ===== -->
         <ng-container *ngIf="isDesktop || isAdmin">
-          <ion-accordion-group *appAcl="{ features: ['TRANSACTION', 'TRANSACTION_CASHBOOK'] }">
+          <ion-accordion-group *appAcl="{ features: ['TRANSACTION_MASTER', 'TRANSACTION_CASHBOOK'] }">
             <ion-accordion>
               <ion-item slot="header" button>
                 <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
                 <ion-label>Transaction</ion-label>
               </ion-item>
               <div slot="content">
-                <ion-item *appAcl="'TRANSACTION'" routerLink="/transaction-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'TRANSACTION_MASTER'" routerLink="/transaction-master" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="layers-outline" slot="start"></ion-icon>
                   <ion-label>Master</ion-label>
                 </ion-item>

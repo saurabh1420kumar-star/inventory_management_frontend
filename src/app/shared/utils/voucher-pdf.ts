@@ -366,6 +366,22 @@ function numberPart(ref: string): string {
   return digits || ref;
 }
 
+/**
+ * Format a number with Indian digit grouping using only ASCII characters
+ * (commas, period, minus). Avoids `toLocaleString`/`₹`, which insert glyphs
+ * jsPDF's standard Helvetica cannot render (showing up as `¹` / spacing junk).
+ */
+function formatIndianNumber(value: number): string {
+  const neg = value < 0;
+  const fixed = Math.abs(value).toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  let lastThree = intPart.slice(-3);
+  const rest = intPart.slice(0, -3);
+  if (rest) lastThree = ',' + lastThree;
+  const grouped = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+  return (neg ? '-' : '') + grouped + '.' + decPart;
+}
+
 // ── Reusable branded letterhead (real A4 coordinates, any width) ────────────
 // Draws the Nectar Origin letterhead at the top of a normal (unscaled) jsPDF
 // page and returns the Y position where body content should begin. Used by the
@@ -685,137 +701,83 @@ export function generateLedgerStatementPdf(
   y += 3.5;
   doc.text(`${COMPANY.email} | ${COMPANY.contact}`, cx, y, { align: 'center' });
 
-  // Divider
-  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
-  doc.setLineWidth(0.6);
-  y += 4;
-  doc.line(12, y, pageW - 12, y);
+  // ── Account / Ledger party block (centered, Tally-style) ─────────────────
+  const now = new Date();
 
-  // Title
-  y += 6;
+  // Account / dealer name (bold, centered)
+  y += 9;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(13);
-  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-  doc.text('ACCOUNT LEDGER STATEMENT', pageW / 2, y, { align: 'center' });
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text(partyName || ledgerName, cx, y, { align: 'center' });
 
-  // Ledger name & generated date
-  y += 7;
-  doc.setFont('helvetica', 'bold');
+  // "Ledger Account" subtitle (centered)
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+  doc.text('Ledger Account', cx, y, { align: 'center' });
+
+  // Dealer name + address lines (centered)
+  y += 5;
   doc.setFontSize(9);
   doc.setTextColor(INK[0], INK[1], INK[2]);
-  doc.text(`Ledger: ${ledgerName}`, 14, y);
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(GREY[0], GREY[1], GREY[2]);
-  const now = new Date();
-  const genDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1)
-    .toString()
-    .padStart(2, '0')}/${now.getFullYear()}`;
-  doc.text(`Generated: ${genDate}`, pageW - 14, y, { align: 'right' });
+  doc.text(partyName || ledgerName, cx, y, { align: 'center' });
+  y += 4;
+  const addrLines = (partyAddress || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  addrLines.forEach(line => {
+    doc.text(line, cx, y, { align: 'center' });
+    y += 4;
+  });
 
-  // FROM PARTY section (left) and TO PARTY section (right) - side by side
-  y += 8;
-  const colWidth = pageW / 2 - 14;
-
-  // Headers
+  // Financial-year date range (centered)
+  const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const yy2 = (yr: number) => yr.toString().slice(-2);
+  const fyRange = `1-Apr-${yy2(fyStartYear)} to 31-Mar-${yy2(fyStartYear + 1)}`;
+  y += 1;
   doc.setFont('helvetica', 'bold');
-  doc.setFontSize(10);
+  doc.setFontSize(9);
   doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-  doc.text('FROM PARTY', 14, y);
-  doc.text('TO PARTY', pageW / 2, y);
+  doc.text(fyRange, cx, y, { align: 'center' });
 
-  y += 6;
-  doc.setFont('helvetica', 'normal');
-  doc.setFontSize(8);
-  doc.setTextColor(INK[0], INK[1], INK[2]);
-
-  // FROM PARTY content
-  const compLines = [COMPANY.name];
-  const compAddrLines = doc.splitTextToSize(COMPANY.address, colWidth - 2);
-  compLines.push(...compAddrLines);
-  compLines.push(`Phone: ${COMPANY.contact.split(',')[0].trim()}`);
-  compLines.push(`Email: ${COMPANY.email}`);
-
-  // TO PARTY content
-  const partyLines = [partyName];
-  const partyAddrLines = doc.splitTextToSize(partyAddress, colWidth - 2);
-  partyLines.push(...partyAddrLines);
-  partyLines.push(`Phone: ${partyPhone || '—'}`);
-  partyLines.push(`Email: ${partyEmail || '—'}`);
-
-  const maxLines = Math.max(compLines.length, partyLines.length);
-  compLines.forEach((line, i) => {
-    doc.text(line, 14, y + i * 3.5);
-  });
-  partyLines.forEach((line, i) => {
-    doc.text(line, pageW / 2, y + i * 3.5);
-  });
-
-  y += maxLines * 3.5 + 3;
-
-  // Summary statistics
-  y += 8;
-  const totalDebits = rows.reduce((sum, r) => sum + r.debit, 0);
-  const totalCredits = rows.reduce((sum, r) => sum + r.credit, 0);
-  const openingBal = rows.length > 0 ? rows[0].balance - (rows[0].debit - rows[0].credit) : 0;
-  const closingBal = rows.length > 0 ? rows[rows.length - 1].balance : 0;
-  const netBalance = Math.abs(closingBal - openingBal);
-
-  doc.setFont('helvetica', 'bold');
-  doc.setFontSize(8);
-  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-
-  const summaryData = [
-    { label: 'Opening Bal', value: `₹ ${openingBal.toLocaleString('en-IN')}` },
-    { label: 'Total Debits', value: `₹ ${totalDebits.toLocaleString('en-IN')}` },
-    { label: 'Total Credits', value: `₹ ${totalCredits.toLocaleString('en-IN')}` },
-    { label: 'Closing Bal', value: `₹ ${closingBal.toLocaleString('en-IN')}` },
-    { label: 'Net Balance', value: `₹ ${netBalance.toLocaleString('en-IN')}` },
-  ];
-
-  const summaryColW = (pageW - 24) / summaryData.length;
-  let sx = 12;
-  summaryData.forEach(item => {
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(7.5);
-    doc.text(item.label, sx + summaryColW / 2, y, { align: 'center' as any });
-    doc.setFont('helvetica', 'bold');
-    doc.setFontSize(8);
-    doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-    doc.text(item.value, sx + summaryColW / 2, y + 4, { align: 'center' as any });
-    sx += summaryColW;
-  });
-
-  y += 12;
+  // Divider above the table
+  y += 4;
+  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setLineWidth(0.5);
+  doc.line(12, y, pageW - 12, y);
 
   // Ledger table
-  y += 4;
+  y += 6;
 
   const cols: Array<{ header: string; width: number; align: 'left' | 'center' | 'right' }> = [
-    { header: 'Date', width: 18, align: 'left' },
-    { header: 'Reference', width: 22, align: 'left' },
-    { header: 'Description', width: 50, align: 'left' },
-    { header: 'Type', width: 14, align: 'center' },
-    { header: 'Debit', width: 18, align: 'right' },
-    { header: 'Credit', width: 18, align: 'right' },
-    { header: 'Balance', width: 22, align: 'right' },
+    { header: 'Date', width: 20, align: 'left' },
+    { header: 'Reference', width: 24, align: 'left' },
+    { header: 'Description', width: 48, align: 'left' },
+    { header: 'Type', width: 18, align: 'center' },
+    { header: 'Debit', width: 24, align: 'right' },
+    { header: 'Credit', width: 24, align: 'right' },
+    { header: 'Closing Balance', width: 28, align: 'right' },
   ];
 
-  const tableStartY = y;
   const rowHeight = 6;
+  const tableW = cols.reduce((sum, c) => sum + c.width, 0);
   const maxRows = Math.floor((pageH - y - 15) / rowHeight);
 
   let currentY = y;
 
-  // Header row
+  // Header row — single full-width navy bar, then white labels on top
   doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.rect(12, currentY, tableW, rowHeight, 'F');
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(8);
   doc.setTextColor(255, 255, 255);
   let x = 12;
   cols.forEach((col) => {
-    doc.rect(x, currentY, col.width, rowHeight, 'F');
-    doc.text(col.header, x + 2, currentY + 4, { align: col.align as any });
+    const tx = col.align === 'right' ? x + col.width - 2 : col.align === 'center' ? x + col.width / 2 : x + 2;
+    doc.text(col.header, tx, currentY + 4, { align: col.align as any });
     x += col.width;
   });
 
@@ -827,56 +789,29 @@ export function generateLedgerStatementPdf(
   doc.setTextColor(INK[0], INK[1], INK[2]);
 
   rows.slice(0, maxRows).forEach((row, i) => {
-    const isAlt = i % 2 === 1;
-    if (isAlt) {
+    if (i % 2 === 1) {
       doc.setFillColor(240, 240, 240);
       doc.rect(12, currentY, pageW - 24, rowHeight, 'F');
     }
 
-    // Draw borders
     doc.setDrawColor(200, 200, 200);
     doc.setLineWidth(0.3);
 
-    x = 12;
-
-    // Date
-    doc.text(row.date, x + 2, currentY + 4, { align: 'left' as any });
-    doc.line(x + cols[0].width, currentY, x + cols[0].width, currentY + rowHeight);
-    x += cols[0].width;
-
-    // Reference
-    doc.text(row.reference, x + 2, currentY + 4, { align: 'left' as any });
-    doc.line(x + cols[1].width, currentY, x + cols[1].width, currentY + rowHeight);
-    x += cols[1].width;
-
-    // Description (wrap if needed)
+    const debitStr = row.debit > 0 ? formatIndianNumber(row.debit) : '';
+    const creditStr = row.credit > 0 ? formatIndianNumber(row.credit) : '';
+    const balStr = formatIndianNumber(row.balance);
     const descLines = doc.splitTextToSize(row.description, cols[2].width - 4);
-    doc.text(descLines.slice(0, 1), x + 2, currentY + 4, { align: 'left' as any });
-    doc.line(x + cols[2].width, currentY, x + cols[2].width, currentY + rowHeight);
-    x += cols[2].width;
 
-    // Type
-    doc.text(row.type, x + cols[3].width / 2, currentY + 4, { align: 'center' as any });
-    doc.line(x + cols[3].width, currentY, x + cols[3].width, currentY + rowHeight);
-    x += cols[3].width;
+    // Date | Reference | Description | Type | Debit | Credit | Closing Balance
+    const cells = [row.date, row.reference, descLines[0] || '', row.type, debitStr, creditStr, balStr];
 
-    // Debit
-    const debitStr = row.debit > 0 ? row.debit.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
-    doc.text(debitStr, x + cols[4].width - 2, currentY + 4, { align: 'right' as any });
-    doc.line(x + cols[4].width, currentY, x + cols[4].width, currentY + rowHeight);
-    x += cols[4].width;
-
-    // Credit
-    const creditStr = row.credit > 0 ? row.credit.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
-    doc.text(creditStr, x + cols[5].width - 2, currentY + 4, { align: 'right' as any });
-    doc.line(x + cols[5].width, currentY, x + cols[5].width, currentY + rowHeight);
-    x += cols[5].width;
-
-    // Balance
-    const balStr = row.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 });
-    doc.text(balStr, x + cols[6].width - 2, currentY + 4, { align: 'right' as any });
-    doc.line(x + cols[6].width, currentY, x + cols[6].width, currentY + rowHeight);
-    x += cols[6].width;
+    x = 12;
+    cols.forEach((col, ci) => {
+      const tx = col.align === 'right' ? x + col.width - 2 : col.align === 'center' ? x + col.width / 2 : x + 2;
+      doc.text(cells[ci], tx, currentY + 4, { align: col.align as any });
+      doc.line(x + col.width, currentY, x + col.width, currentY + rowHeight);
+      x += col.width;
+    });
 
     currentY += rowHeight;
   });
