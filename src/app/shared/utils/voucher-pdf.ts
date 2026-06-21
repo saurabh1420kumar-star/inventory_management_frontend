@@ -631,3 +631,260 @@ export function openVoucherPdf(voucher: TransactionVoucher, logo: string | null)
 export function openFundVoucherPdf(fund: TransactionFund, logo: string | null) {
   openInNewTab(generateFundVoucherPdf(fund, logo));
 }
+
+// ── Account Ledger Statement ────────────────────────────────────────────────
+
+export interface LedgerStatementRow {
+  date: string;
+  reference: string;
+  description: string;
+  type: 'DEBIT' | 'CREDIT';
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export function generateLedgerStatementPdf(
+  ledgerName: string,
+  partyName: string,
+  partyAddress: string,
+  partyPhone: string,
+  partyEmail: string,
+  rows: LedgerStatementRow[],
+  logo: string | null,
+): jsPDF {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const cx = pageW / 2;
+  let y = 10;
+
+  // Header with logo
+  if (logo) {
+    try {
+      doc.addImage(logo, 'JPEG', 14, y - 2, 20, 20);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Company name
+  doc.setFont('times', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.text(COMPANY.name, cx, y + 6, { align: 'center' });
+
+  // Company details
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  y += 12;
+  doc.text(COMPANY.address, cx, y, { align: 'center' });
+  y += 4;
+  doc.text(`${COMPANY.cin} | ${COMPANY.website}`, cx, y, { align: 'center' });
+  y += 3.5;
+  doc.text(`${COMPANY.email} | ${COMPANY.contact}`, cx, y, { align: 'center' });
+
+  // Divider
+  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setLineWidth(0.6);
+  y += 4;
+  doc.line(12, y, pageW - 12, y);
+
+  // Title
+  y += 6;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.text('ACCOUNT LEDGER STATEMENT', pageW / 2, y, { align: 'center' });
+
+  // Ledger name & generated date
+  y += 7;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text(`Ledger: ${ledgerName}`, 14, y);
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+  const now = new Date();
+  const genDate = `${now.getDate().toString().padStart(2, '0')}/${(now.getMonth() + 1)
+    .toString()
+    .padStart(2, '0')}/${now.getFullYear()}`;
+  doc.text(`Generated: ${genDate}`, pageW - 14, y, { align: 'right' });
+
+  // FROM PARTY section (left) and TO PARTY section (right) - side by side
+  y += 8;
+  const colWidth = pageW / 2 - 14;
+
+  // Headers
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(10);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.text('FROM PARTY', 14, y);
+  doc.text('TO PARTY', pageW / 2, y);
+
+  y += 6;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(8);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
+  // FROM PARTY content
+  const compLines = [COMPANY.name];
+  const compAddrLines = doc.splitTextToSize(COMPANY.address, colWidth - 2);
+  compLines.push(...compAddrLines);
+  compLines.push(`Phone: ${COMPANY.contact.split(',')[0].trim()}`);
+  compLines.push(`Email: ${COMPANY.email}`);
+
+  // TO PARTY content
+  const partyLines = [partyName];
+  const partyAddrLines = doc.splitTextToSize(partyAddress, colWidth - 2);
+  partyLines.push(...partyAddrLines);
+  partyLines.push(`Phone: ${partyPhone || '—'}`);
+  partyLines.push(`Email: ${partyEmail || '—'}`);
+
+  const maxLines = Math.max(compLines.length, partyLines.length);
+  compLines.forEach((line, i) => {
+    doc.text(line, 14, y + i * 3.5);
+  });
+  partyLines.forEach((line, i) => {
+    doc.text(line, pageW / 2, y + i * 3.5);
+  });
+
+  y += maxLines * 3.5 + 3;
+
+  // Summary statistics
+  y += 8;
+  const totalDebits = rows.reduce((sum, r) => sum + r.debit, 0);
+  const totalCredits = rows.reduce((sum, r) => sum + r.credit, 0);
+  const openingBal = rows.length > 0 ? rows[0].balance - (rows[0].debit - rows[0].credit) : 0;
+  const closingBal = rows.length > 0 ? rows[rows.length - 1].balance : 0;
+  const netBalance = Math.abs(closingBal - openingBal);
+
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+
+  const summaryData = [
+    { label: 'Opening Bal', value: `₹ ${openingBal.toLocaleString('en-IN')}` },
+    { label: 'Total Debits', value: `₹ ${totalDebits.toLocaleString('en-IN')}` },
+    { label: 'Total Credits', value: `₹ ${totalCredits.toLocaleString('en-IN')}` },
+    { label: 'Closing Bal', value: `₹ ${closingBal.toLocaleString('en-IN')}` },
+    { label: 'Net Balance', value: `₹ ${netBalance.toLocaleString('en-IN')}` },
+  ];
+
+  const summaryColW = (pageW - 24) / summaryData.length;
+  let sx = 12;
+  summaryData.forEach(item => {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(7.5);
+    doc.text(item.label, sx + summaryColW / 2, y, { align: 'center' as any });
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+    doc.text(item.value, sx + summaryColW / 2, y + 4, { align: 'center' as any });
+    sx += summaryColW;
+  });
+
+  y += 12;
+
+  // Ledger table
+  y += 4;
+
+  const cols: Array<{ header: string; width: number; align: 'left' | 'center' | 'right' }> = [
+    { header: 'Date', width: 18, align: 'left' },
+    { header: 'Reference', width: 22, align: 'left' },
+    { header: 'Description', width: 50, align: 'left' },
+    { header: 'Type', width: 14, align: 'center' },
+    { header: 'Debit', width: 18, align: 'right' },
+    { header: 'Credit', width: 18, align: 'right' },
+    { header: 'Balance', width: 22, align: 'right' },
+  ];
+
+  const tableStartY = y;
+  const rowHeight = 6;
+  const maxRows = Math.floor((pageH - y - 15) / rowHeight);
+
+  let currentY = y;
+
+  // Header row
+  doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  let x = 12;
+  cols.forEach((col) => {
+    doc.rect(x, currentY, col.width, rowHeight, 'F');
+    doc.text(col.header, x + 2, currentY + 4, { align: col.align as any });
+    x += col.width;
+  });
+
+  currentY += rowHeight;
+
+  // Data rows
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
+  rows.slice(0, maxRows).forEach((row, i) => {
+    const isAlt = i % 2 === 1;
+    if (isAlt) {
+      doc.setFillColor(240, 240, 240);
+      doc.rect(12, currentY, pageW - 24, rowHeight, 'F');
+    }
+
+    // Draw borders
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+
+    x = 12;
+
+    // Date
+    doc.text(row.date, x + 2, currentY + 4, { align: 'left' as any });
+    doc.line(x + cols[0].width, currentY, x + cols[0].width, currentY + rowHeight);
+    x += cols[0].width;
+
+    // Reference
+    doc.text(row.reference, x + 2, currentY + 4, { align: 'left' as any });
+    doc.line(x + cols[1].width, currentY, x + cols[1].width, currentY + rowHeight);
+    x += cols[1].width;
+
+    // Description (wrap if needed)
+    const descLines = doc.splitTextToSize(row.description, cols[2].width - 4);
+    doc.text(descLines.slice(0, 1), x + 2, currentY + 4, { align: 'left' as any });
+    doc.line(x + cols[2].width, currentY, x + cols[2].width, currentY + rowHeight);
+    x += cols[2].width;
+
+    // Type
+    doc.text(row.type, x + cols[3].width / 2, currentY + 4, { align: 'center' as any });
+    doc.line(x + cols[3].width, currentY, x + cols[3].width, currentY + rowHeight);
+    x += cols[3].width;
+
+    // Debit
+    const debitStr = row.debit > 0 ? row.debit.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
+    doc.text(debitStr, x + cols[4].width - 2, currentY + 4, { align: 'right' as any });
+    doc.line(x + cols[4].width, currentY, x + cols[4].width, currentY + rowHeight);
+    x += cols[4].width;
+
+    // Credit
+    const creditStr = row.credit > 0 ? row.credit.toLocaleString('en-IN', { maximumFractionDigits: 2 }) : '';
+    doc.text(creditStr, x + cols[5].width - 2, currentY + 4, { align: 'right' as any });
+    doc.line(x + cols[5].width, currentY, x + cols[5].width, currentY + rowHeight);
+    x += cols[5].width;
+
+    // Balance
+    const balStr = row.balance.toLocaleString('en-IN', { maximumFractionDigits: 2 });
+    doc.text(balStr, x + cols[6].width - 2, currentY + 4, { align: 'right' as any });
+    doc.line(x + cols[6].width, currentY, x + cols[6].width, currentY + rowHeight);
+    x += cols[6].width;
+
+    currentY += rowHeight;
+  });
+
+  // Bottom border
+  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setLineWidth(0.5);
+  doc.line(12, currentY, pageW - 12, currentY);
+
+  return doc;
+}
