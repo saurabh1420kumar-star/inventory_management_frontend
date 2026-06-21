@@ -366,6 +366,22 @@ function numberPart(ref: string): string {
   return digits || ref;
 }
 
+/**
+ * Format a number with Indian digit grouping using only ASCII characters
+ * (commas, period, minus). Avoids `toLocaleString`/`₹`, which insert glyphs
+ * jsPDF's standard Helvetica cannot render (showing up as `¹` / spacing junk).
+ */
+function formatIndianNumber(value: number): string {
+  const neg = value < 0;
+  const fixed = Math.abs(value).toFixed(2);
+  const [intPart, decPart] = fixed.split('.');
+  let lastThree = intPart.slice(-3);
+  const rest = intPart.slice(0, -3);
+  if (rest) lastThree = ',' + lastThree;
+  const grouped = rest.replace(/\B(?=(\d{2})+(?!\d))/g, ',') + lastThree;
+  return (neg ? '-' : '') + grouped + '.' + decPart;
+}
+
 // ── Reusable branded letterhead (real A4 coordinates, any width) ────────────
 // Draws the Nectar Origin letterhead at the top of a normal (unscaled) jsPDF
 // page and returns the Y position where body content should begin. Used by the
@@ -630,4 +646,180 @@ export function openVoucherPdf(voucher: TransactionVoucher, logo: string | null)
 
 export function openFundVoucherPdf(fund: TransactionFund, logo: string | null) {
   openInNewTab(generateFundVoucherPdf(fund, logo));
+}
+
+// ── Account Ledger Statement ────────────────────────────────────────────────
+
+export interface LedgerStatementRow {
+  date: string;
+  reference: string;
+  description: string;
+  type: 'DEBIT' | 'CREDIT';
+  debit: number;
+  credit: number;
+  balance: number;
+}
+
+export function generateLedgerStatementPdf(
+  ledgerName: string,
+  partyName: string,
+  partyAddress: string,
+  partyPhone: string,
+  partyEmail: string,
+  rows: LedgerStatementRow[],
+  logo: string | null,
+): jsPDF {
+  const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+  const pageW = doc.internal.pageSize.getWidth();
+  const pageH = doc.internal.pageSize.getHeight();
+  const cx = pageW / 2;
+  let y = 10;
+
+  // Header with logo
+  if (logo) {
+    try {
+      doc.addImage(logo, 'JPEG', 14, y - 2, 20, 20);
+    } catch {
+      /* ignore */
+    }
+  }
+
+  // Company name
+  doc.setFont('times', 'bold');
+  doc.setFontSize(16);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.text(COMPANY.name, cx, y + 6, { align: 'center' });
+
+  // Company details
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  y += 12;
+  doc.text(COMPANY.address, cx, y, { align: 'center' });
+  y += 4;
+  doc.text(`${COMPANY.cin} | ${COMPANY.website}`, cx, y, { align: 'center' });
+  y += 3.5;
+  doc.text(`${COMPANY.email} | ${COMPANY.contact}`, cx, y, { align: 'center' });
+
+  // ── Account / Ledger party block (centered, Tally-style) ─────────────────
+  const now = new Date();
+
+  // Account / dealer name (bold, centered)
+  y += 9;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(13);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text(partyName || ledgerName, cx, y, { align: 'center' });
+
+  // "Ledger Account" subtitle (centered)
+  y += 5;
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(9);
+  doc.setTextColor(GREY[0], GREY[1], GREY[2]);
+  doc.text('Ledger Account', cx, y, { align: 'center' });
+
+  // Dealer name + address lines (centered)
+  y += 5;
+  doc.setFontSize(9);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+  doc.text(partyName || ledgerName, cx, y, { align: 'center' });
+  y += 4;
+  const addrLines = (partyAddress || '')
+    .split(',')
+    .map(s => s.trim())
+    .filter(s => s.length > 0);
+  addrLines.forEach(line => {
+    doc.text(line, cx, y, { align: 'center' });
+    y += 4;
+  });
+
+  // Financial-year date range (centered)
+  const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+  const yy2 = (yr: number) => yr.toString().slice(-2);
+  const fyRange = `1-Apr-${yy2(fyStartYear)} to 31-Mar-${yy2(fyStartYear + 1)}`;
+  y += 1;
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(9);
+  doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.text(fyRange, cx, y, { align: 'center' });
+
+  // Divider above the table
+  y += 4;
+  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setLineWidth(0.5);
+  doc.line(12, y, pageW - 12, y);
+
+  // Ledger table
+  y += 6;
+
+  const cols: Array<{ header: string; width: number; align: 'left' | 'center' | 'right' }> = [
+    { header: 'Date', width: 20, align: 'left' },
+    { header: 'Reference', width: 24, align: 'left' },
+    { header: 'Description', width: 48, align: 'left' },
+    { header: 'Type', width: 18, align: 'center' },
+    { header: 'Debit', width: 24, align: 'right' },
+    { header: 'Credit', width: 24, align: 'right' },
+    { header: 'Closing Balance', width: 28, align: 'right' },
+  ];
+
+  const rowHeight = 6;
+  const tableW = cols.reduce((sum, c) => sum + c.width, 0);
+  const maxRows = Math.floor((pageH - y - 15) / rowHeight);
+
+  let currentY = y;
+
+  // Header row — single full-width navy bar, then white labels on top
+  doc.setFillColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.rect(12, currentY, tableW, rowHeight, 'F');
+  doc.setFont('helvetica', 'bold');
+  doc.setFontSize(8);
+  doc.setTextColor(255, 255, 255);
+  let x = 12;
+  cols.forEach((col) => {
+    const tx = col.align === 'right' ? x + col.width - 2 : col.align === 'center' ? x + col.width / 2 : x + 2;
+    doc.text(col.header, tx, currentY + 4, { align: col.align as any });
+    x += col.width;
+  });
+
+  currentY += rowHeight;
+
+  // Data rows
+  doc.setFont('helvetica', 'normal');
+  doc.setFontSize(7.5);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
+  rows.slice(0, maxRows).forEach((row, i) => {
+    if (i % 2 === 1) {
+      doc.setFillColor(240, 240, 240);
+      doc.rect(12, currentY, pageW - 24, rowHeight, 'F');
+    }
+
+    doc.setDrawColor(200, 200, 200);
+    doc.setLineWidth(0.3);
+
+    const debitStr = row.debit > 0 ? formatIndianNumber(row.debit) : '';
+    const creditStr = row.credit > 0 ? formatIndianNumber(row.credit) : '';
+    const balStr = formatIndianNumber(row.balance);
+    const descLines = doc.splitTextToSize(row.description, cols[2].width - 4);
+
+    // Date | Reference | Description | Type | Debit | Credit | Closing Balance
+    const cells = [row.date, row.reference, descLines[0] || '', row.type, debitStr, creditStr, balStr];
+
+    x = 12;
+    cols.forEach((col, ci) => {
+      const tx = col.align === 'right' ? x + col.width - 2 : col.align === 'center' ? x + col.width / 2 : x + 2;
+      doc.text(cells[ci], tx, currentY + 4, { align: col.align as any });
+      doc.line(x + col.width, currentY, x + col.width, currentY + rowHeight);
+      x += col.width;
+    });
+
+    currentY += rowHeight;
+  });
+
+  // Bottom border
+  doc.setDrawColor(NAVY[0], NAVY[1], NAVY[2]);
+  doc.setLineWidth(0.5);
+  doc.line(12, currentY, pageW - 12, currentY);
+
+  return doc;
 }

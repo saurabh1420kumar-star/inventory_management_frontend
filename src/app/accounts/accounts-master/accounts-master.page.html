@@ -363,12 +363,24 @@
               </div>
             </div>
 
-            <!-- Export Button -->
-            <button (click)="handleExport()"
-              class="flex items-center gap-2 px-4 py-3 bg-slate-100 hover:bg-slate-200 rounded-xl font-semibold text-sm text-slate-600 transition-all">
-              <ion-icon name="download-outline" class="text-lg"></ion-icon>
-              Export
-            </button>
+            <!-- Export Buttons -->
+            <div class="flex gap-2 flex-wrap">
+              <button (click)="handleExport()"
+                class="flex items-center gap-2 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md">
+                <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
+                Excel
+              </button>
+              <button (click)="handleExportPdf()"
+                class="flex items-center gap-2 px-4 py-3 bg-red-500 hover:bg-red-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md">
+                <ion-icon name="document-outline" class="text-lg"></ion-icon>
+                PDF
+              </button>
+              <button (click)="exportLedgerStatementPdf()"
+                class="flex items-center gap-2 px-4 py-3 bg-blue-600 hover:bg-blue-700 text-white rounded-xl font-semibold text-sm transition-all shadow-md">
+                <ion-icon name="print-outline" class="text-lg"></ion-icon>
+                Ledger Statement
+              </button>
+            </div>
           </div>
         </div>
       </div>

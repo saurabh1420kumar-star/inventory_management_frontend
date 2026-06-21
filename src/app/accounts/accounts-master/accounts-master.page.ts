@@ -7,6 +7,7 @@ import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../servic
 import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
 import { Auth } from '../../services/auth';
 import { Toast as ToastService } from '../../services/toast';
+import { generateLedgerStatementPdf, LedgerStatementRow } from '../../shared/utils/voucher-pdf';
 import { addIcons } from 'ionicons';
 import {
   bookOutline,
@@ -441,23 +442,23 @@ export class AccountsMasterPage implements OnInit {
       distributorId: distributor.id,
       salespersonId: undefined,
       fromParty: {
-        id: 'company-nectar',
-        name: 'Nectar private limited',
-        address: 'Company Address',
-        city: 'City',
-        state: 'State',
-        pincode: '000000',
-        phone: '+91 000 0000000',
-        email: 'company@example.com',
-        gstin: 'GSTIN000000'
+        id: 'nectar-origin',
+        name: 'NECTAR ORIGIN PRIVATE LIMITED',
+        address: 'Kahalzaon, Bhagalpur',
+        city: 'Bhagalpur',
+        state: 'Bihar',
+        pincode: '813203',
+        phone: '+91 9797979522',
+        email: 'info@nectarorigin.com',
+        gstin: 'U74999GR2016PTC032690'
       },
       toParty: {
         id: 'distributor-' + distributor.id,
         name: (distributor.firmName || '') || distributor.name,
         address: distributor.address,
-        city: 'City',
-        state: 'State',
-        pincode: '000000',
+        city: distributor.district || 'City',
+        state: distributor.state || 'State',
+        pincode: distributor.pinCode || '000000',
         phone: distributor.phoneNumber,
         email: distributor.email,
         gstin: distributor.gstNumber
@@ -704,70 +705,130 @@ export class AccountsMasterPage implements OnInit {
         return;
       }
 
-      // Company Information Header
-      const companyInfo = [
-        `Account Ledger Export - ${this.selectedAccount.name}`,
-        `Account Code: ${this.selectedAccount.accountCode}`,
-        `Export Date: ${new Date().toLocaleString()}`,
-        '',
-        'FROM PARTY:',
-        `Name: ${this.selectedAccount.fromParty.name}`,
-        `Address: ${this.selectedAccount.fromParty.address}`,
-        `City: ${this.selectedAccount.fromParty.city}, ${this.selectedAccount.fromParty.state} - ${this.selectedAccount.fromParty.pincode}`,
-        `Phone: ${this.selectedAccount.fromParty.phone || 'N/A'}`,
-        `Email: ${this.selectedAccount.fromParty.email || 'N/A'}`,
-        `GSTIN: ${this.selectedAccount.fromParty.gstin || 'N/A'}`,
-        '',
-        'TO PARTY:',
-        `Name: ${this.selectedAccount.toParty.name}`,
-        `Address: ${this.selectedAccount.toParty.address}`,
-        `City: ${this.selectedAccount.toParty.city}, ${this.selectedAccount.toParty.state} - ${this.selectedAccount.toParty.pincode}`,
-        `Phone: ${this.selectedAccount.toParty.phone || 'N/A'}`,
-        `Email: ${this.selectedAccount.toParty.email || 'N/A'}`,
-        `GSTIN: ${this.selectedAccount.toParty.gstin || 'N/A'}`,
-        '',
-        `Opening Balance: ${this.formatCurrency(this.selectedAccount.openingBalance)}`,
-        `Total Transactions: ${transactions.length}`,
-        '',
-        ''
-      ];
+      // Import xlsx at runtime
+      import('xlsx').then(XLSX => {
+        const workbook = XLSX.utils.book_new();
 
-      const headers = ['Date', 'Reference', 'Description', 'Type', 'Category', 'Debit', 'Credit', 'Balance', 'Notes'];
+        // Create company info section (Tally-style: centered/stacked in column C)
+        const tp = this.selectedAccount!.toParty;
+        const nowDt = new Date();
+        const fyStart = nowDt.getMonth() >= 3 ? nowDt.getFullYear() : nowDt.getFullYear() - 1;
+        const yy = (yr: number) => yr.toString().slice(-2);
+        const fyRange = `1-Apr-${yy(fyStart)} to 31-Mar-${yy(fyStart + 1)}`;
+        const companyData = [
+          ['', 'NECTAR ORIGIN PRIVATE LIMITED'],
+          ['', '360 K, Shiv Parwati Nagar, Block Road No -2, Ward No 16, Kahalzaon, Bhagalpur, Bihar - 813203'],
+          ['', 'CIN: U74999BR2016PTC032690'],
+          ['', 'Contact: 06429-450126, +91-9797979522'],
+          ['', 'Email: info@nectarorigin.com'],
+          [],
+          ['', tp.name],
+          ['', 'Ledger Account'],
+          ['', tp.address],
+          ['', `${tp.city}, ${tp.state} - ${tp.pincode}`],
+          ['', fyRange],
+          []
+        ];
 
-      const rows = transactions.map(t => [
-        t.date,
-        t.reference,
-        t.description,
-        t.type,
-        t.category,
-        t.debit.toString(),
-        t.credit.toString(),
-        t.balance.toString(),
-        t.notes || ''
-      ]);
+        // Create header row (table starts at the 2nd column)
+        const headers = ['', 'Date', 'Reference', 'Description', 'Type', 'Debit', 'Credit', 'Closing Balance'];
 
-      const csvContent = [
-        ...companyInfo,
-        headers.join(','),
-        ...rows.map(row => row.map(cell => `"${cell}"`).join(','))
-      ].join('\n');
+        // Format transaction rows with DD/MM/YYYY date format
+        const rows = transactions.map(t => [
+          '',
+          this.formatDateDDMMYYYY(t.date),
+          t.reference,
+          t.description,
+          t.type,
+          t.debit,
+          t.credit,
+          t.balance
+        ]);
 
-      const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
-      const link = document.createElement('a');
-      const url = URL.createObjectURL(blob);
+        // Combine company info + header + data
+        const allData = [...companyData, headers, ...rows];
 
-      link.setAttribute('href', url);
-      link.setAttribute('download', `${this.selectedAccount.name}_Transactions_${new Date().toISOString().split('T')[0]}.csv`);
-      link.style.visibility = 'hidden';
+        // Create worksheet
+        const worksheet = XLSX.utils.aoa_to_sheet(allData);
 
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
+        // Set column widths (column A is a blank indent)
+        worksheet['!cols'] = [
+          { wch: 4 },  // (indent)
+          { wch: 14 }, // Date
+          { wch: 16 }, // Reference
+          { wch: 30 }, // Description
+          { wch: 12 }, // Type
+          { wch: 15 }, // Debit
+          { wch: 15 }, // Credit
+          { wch: 18 }  // Closing Balance
+        ];
 
-      this.showToast('Transactions exported successfully', 'success');
+        // Add worksheet to workbook
+        XLSX.utils.book_append_sheet(workbook, worksheet, 'Ledger');
+
+        // Generate filename
+        const filename = `${this.selectedAccount!.name}_Ledger_${new Date().toISOString().split('T')[0]}.xlsx`;
+
+        // Write file
+        XLSX.writeFile(workbook, filename);
+
+        this.showToast('Account ledger exported successfully as Excel', 'success');
+      });
     } catch (error) {
-      this.showToast('Failed to export transactions', 'danger');
+      console.error('Export error:', error);
+      this.showToast('Failed to export ledger', 'danger');
     }
+  }
+
+  handleExportPdf() {
+    if (!this.selectedAccount) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+
+    try {
+      const transactions = this.filteredTransactions;
+
+      if (transactions.length === 0) {
+        this.showToast('No transactions to export', 'warning');
+        return;
+      }
+
+      const rows: LedgerStatementRow[] = transactions.map(t => ({
+        date: this.formatDateDDMMYYYY(t.date),
+        reference: t.reference,
+        description: t.description,
+        type: t.type === 'debit' ? 'DEBIT' : 'CREDIT',
+        debit: t.debit || 0,
+        credit: t.credit || 0,
+        balance: t.balance || 0,
+      }));
+
+      const doc = generateLedgerStatementPdf(
+        this.selectedAccount.accountName || this.selectedAccount.name,
+        this.selectedAccount.toParty.name,
+        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        this.selectedAccount.toParty.phone || '',
+        this.selectedAccount.toParty.email || '',
+        rows,
+        null,
+      );
+
+      const filename = `${this.selectedAccount.name}_Ledger_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(filename);
+
+      this.showToast('Account ledger exported successfully as PDF', 'success');
+    } catch (error) {
+      console.error('PDF export error:', error);
+      this.showToast('Failed to export ledger as PDF', 'danger');
+    }
+  }
+
+  // Format date as DD/MM/YYYY
+  private formatDateDDMMYYYY(dateStr: string): string {
+    if (!dateStr) return '';
+    const [y, m, d] = dateStr.split('-');
+    return `${d}/${m}/${y}`;
   }
 
   applyDateFilter() {
@@ -781,6 +842,50 @@ export class AccountsMasterPage implements OnInit {
     this.endDate = '';
     this.isDateDropdownOpen = false;
     this.currentPage = 1;
+  }
+
+  exportLedgerStatementPdf() {
+    if (!this.selectedAccount) {
+      this.showToast('Please select an account first', 'warning');
+      return;
+    }
+
+    try {
+      const transactions = this.filteredTransactions;
+
+      if (transactions.length === 0) {
+        this.showToast('No transactions to export', 'warning');
+        return;
+      }
+
+      const rows: LedgerStatementRow[] = transactions.map(t => ({
+        date: this.formatDateDDMMYYYY(t.date),
+        reference: t.reference,
+        description: t.description,
+        type: t.type === 'debit' ? 'DEBIT' : 'CREDIT',
+        debit: t.debit || 0,
+        credit: t.credit || 0,
+        balance: t.balance || 0,
+      }));
+
+      const doc = generateLedgerStatementPdf(
+        this.selectedAccount.accountName || this.selectedAccount.name,
+        this.selectedAccount.toParty.name,
+        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        this.selectedAccount.toParty.phone || '',
+        this.selectedAccount.toParty.email || '',
+        rows,
+        null, // logo URL can be added later
+      );
+
+      const filename = `${this.selectedAccount.name}_Ledger_Statement_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(filename);
+
+      this.showToast('Ledger statement exported successfully', 'success');
+    } catch (error) {
+      console.error('Ledger statement export error:', error);
+      this.showToast('Failed to export ledger statement', 'danger');
+    }
   }
 
   handleClearFilters() {

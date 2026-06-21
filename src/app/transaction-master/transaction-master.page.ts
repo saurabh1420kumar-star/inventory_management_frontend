@@ -14,7 +14,7 @@ import {
 
 import { TransactionService, TransactionLedger, TransactionVoucher, TransactionFund } from '../services/transaction.service';
 import { amountToWords } from '../shared/utils/amount-to-words';
-import { generateVoucherPdf as buildOfficialVoucherPdf, generateFundVoucherPdf as buildFundVoucherPdf } from '../shared/utils/voucher-pdf';
+import { generateVoucherPdf as buildOfficialVoucherPdf, generateFundVoucherPdf as buildFundVoucherPdf, generateLedgerStatementPdf, LedgerStatementRow } from '../shared/utils/voucher-pdf';
 import jsPDF from 'jspdf';
 
 type TabType = 'create-ledger' | 'voucher-entry' | 'add-fund';
@@ -38,6 +38,7 @@ const UNDER_GROUP_LABELS: Record<string, string> = {
   imports: [CommonModule, FormsModule, IonicModule],
 })
 export class TransactionMasterPage implements OnInit {
+  Math = Math;
 
   // ── Tabs ──────────────────────────────────────────────────────────
   activeTab: TabType = 'create-ledger';
@@ -47,13 +48,17 @@ export class TransactionMasterPage implements OnInit {
   ledgerType: LedgerType = '';
   underGroup: UnderGroup = '';
   isSubmittingLedger = false;
+  allLedgers: TransactionLedger[] = [];
   ledgers: TransactionLedger[] = [];
   isLoadingLedgers = false;
+  ledgerCurrentPage = 1;
+  ledgersPerPage = 20;
 
   // ── Voucher Entry form ────────────────────────────────────────────
   nextVoucherNo = 'VCH-001';
   voucherDate = '';
   voucherType: 'INCOME' | 'EXPENSE' | '' = '';
+  voucherUnderGroup: UnderGroup = '';
   selectedLedgerId: number | null = null;
   filteredLedgers: TransactionLedger[] = [];
   partyName = '';
@@ -77,8 +82,11 @@ export class TransactionMasterPage implements OnInit {
   fundLocation: FundLocation = '';
   fundNarration = '';
   isSubmittingFund = false;
+  allFunds: TransactionFund[] = [];
   funds: TransactionFund[] = [];
   isLoadingFunds = false;
+  fundCurrentPage = 1;
+  fundsPerPage = 20;
 
   // ── Print Preview modal ───────────────────────────────────────────
   showPrintModal = false;
@@ -95,6 +103,12 @@ export class TransactionMasterPage implements OnInit {
   showFeedbackModal = false;
   feedbackMessage = '';
   feedbackIsSuccess = true;
+
+  // ── Ledger Statement modal ────────────────────────────────────────
+  showLedgerStatementModal = false;
+  selectedLedgerForStatement: TransactionLedger | null = null;
+  ledgerStatementRows: LedgerStatementRow[] = [];
+  isGeneratingStatement = false;
 
   // ── Company logo (preloaded as data URL for PDF embedding) ─────────
   logoDataUrl: string | null = null;
@@ -165,10 +179,31 @@ export class TransactionMasterPage implements OnInit {
     this.underGroup = '';
   }
 
+  get voucherUnderGroupOptions(): { value: UnderGroup; label: string }[] {
+    if (this.voucherType === 'EXPENSE') {
+      return [
+        { value: 'DIRECT_EXPENSE', label: 'Direct Expense' },
+        { value: 'INDIRECT_EXPENSE', label: 'Indirect Expense' },
+      ];
+    }
+    if (this.voucherType === 'INCOME') {
+      return [
+        { value: 'DIRECT_INCOME', label: 'Direct Income' },
+        { value: 'INDIRECT_INCOME', label: 'Indirect Income' },
+      ];
+    }
+    return [];
+  }
+
   loadLedgers() {
     this.isLoadingLedgers = true;
     this.transactionSvc.getAllLedgers().subscribe({
-      next: (data) => { this.ledgers = data; this.isLoadingLedgers = false; },
+      next: (data) => {
+        this.allLedgers = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.ledgerCurrentPage = 1;
+        this.updateLedgerPagination();
+        this.isLoadingLedgers = false;
+      },
       error: () => { this.isLoadingLedgers = false; },
     });
   }
@@ -190,9 +225,10 @@ export class TransactionMasterPage implements OnInit {
         this.resetLedgerForm();
         this.loadLedgers();
       },
-      error: () => {
+      error: (err) => {
         this.isSubmittingLedger = false;
-        this.showFeedback('Failed to create ledger. Please try again.', false);
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to create ledger. Please try again.';
+        this.showFeedback(errorMsg, false);
       },
     });
   }
@@ -218,10 +254,20 @@ export class TransactionMasterPage implements OnInit {
   }
 
   onVoucherTypeChange() {
+    this.voucherUnderGroup = '';
     this.selectedLedgerId = null;
-    if (this.voucherType) {
-      this.transactionSvc.getLedgersByType(this.voucherType as 'EXPENSE' | 'INCOME').subscribe({
-        next: (data) => { this.filteredLedgers = data; },
+    this.filteredLedgers = [];
+  }
+
+  onVoucherUnderGroupChange() {
+    this.selectedLedgerId = null;
+    if (this.voucherType && this.voucherUnderGroup) {
+      this.transactionSvc.getAllLedgers().subscribe({
+        next: (data) => {
+          this.filteredLedgers = data.filter(
+            l => l.ledgerType === this.voucherType && l.underGroup === this.voucherUnderGroup
+          );
+        },
       });
     } else {
       this.filteredLedgers = [];
@@ -248,7 +294,7 @@ export class TransactionMasterPage implements OnInit {
   }
 
   saveAndApproveVoucher() {
-    if (!this.voucherType || !this.selectedLedgerId || !this.paymentMode || !this.amount || !this.narration.trim()) {
+    if (!this.voucherType || !this.voucherUnderGroup || !this.selectedLedgerId || !this.paymentMode || !this.amount || !this.narration.trim()) {
       this.showFeedback('Please fill all voucher fields before saving.', false);
       return;
     }
@@ -281,9 +327,10 @@ export class TransactionMasterPage implements OnInit {
         this.openPrintModal(saved);
         this.resetVoucherForm();
       },
-      error: () => {
+      error: (err) => {
         this.isSubmittingVoucher = false;
-        this.showFeedback('Failed to save voucher. Please try again.', false);
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to save voucher. Please try again.';
+        this.showFeedback(errorMsg, false);
       },
     });
   }
@@ -291,6 +338,7 @@ export class TransactionMasterPage implements OnInit {
   resetVoucherForm() {
     this.voucherDate = new Date().toISOString().split('T')[0];
     this.voucherType = '';
+    this.voucherUnderGroup = '';
     this.selectedLedgerId = null;
     this.filteredLedgers = [];
     this.partyName = '';
@@ -308,9 +356,65 @@ export class TransactionMasterPage implements OnInit {
   loadFunds() {
     this.isLoadingFunds = true;
     this.transactionSvc.getAllFunds().subscribe({
-      next: (data) => { this.funds = data; this.isLoadingFunds = false; },
+      next: (data) => {
+        this.allFunds = data.sort((a, b) => new Date(b.createdAt).getTime() - new Date(a.createdAt).getTime());
+        this.fundCurrentPage = 1;
+        this.updateFundPagination();
+        this.isLoadingFunds = false;
+      },
       error: () => { this.isLoadingFunds = false; },
     });
+  }
+
+  // Pagination helpers
+  updateLedgerPagination() {
+    const start = (this.ledgerCurrentPage - 1) * this.ledgersPerPage;
+    const end = start + this.ledgersPerPage;
+    this.ledgers = this.allLedgers.slice(start, end);
+  }
+
+  updateFundPagination() {
+    const start = (this.fundCurrentPage - 1) * this.fundsPerPage;
+    const end = start + this.fundsPerPage;
+    this.funds = this.allFunds.slice(start, end);
+  }
+
+  nextLedgerPage() {
+    const maxPages = Math.ceil(this.allLedgers.length / this.ledgersPerPage);
+    if (this.ledgerCurrentPage < maxPages) {
+      this.ledgerCurrentPage++;
+      this.updateLedgerPagination();
+    }
+  }
+
+  prevLedgerPage() {
+    if (this.ledgerCurrentPage > 1) {
+      this.ledgerCurrentPage--;
+      this.updateLedgerPagination();
+    }
+  }
+
+  nextFundPage() {
+    const maxPages = Math.ceil(this.allFunds.length / this.fundsPerPage);
+    if (this.fundCurrentPage < maxPages) {
+      this.fundCurrentPage++;
+      this.updateFundPagination();
+    }
+  }
+
+  prevFundPage() {
+    if (this.fundCurrentPage > 1) {
+      this.fundCurrentPage--;
+      this.updateFundPagination();
+    }
+  }
+
+  get ledgerTotalPages(): number {
+    return Math.ceil(this.allLedgers.length / this.ledgersPerPage);
+  }
+
+  get fundTotalPages(): number {
+    return Math.ceil(this.allFunds.length / this.fundsPerPage);
   }
 
   onFundAmountChange() {
@@ -351,9 +455,10 @@ export class TransactionMasterPage implements OnInit {
         this.resetFundForm();
         this.loadFunds();
       },
-      error: () => {
+      error: (err) => {
         this.isSubmittingFund = false;
-        this.showFeedback('Failed to add fund. Please try again.', false);
+        const errorMsg = err?.error?.error || err?.error?.message || 'Failed to add fund. Please try again.';
+        this.showFeedback(errorMsg, false);
       },
     });
   }
@@ -447,5 +552,113 @@ export class TransactionMasterPage implements OnInit {
     if (!dateStr) return '';
     const [y, m, d] = dateStr.split('-');
     return `${d}/${m}/${y}`;
+  }
+
+  // ── Ledger Statement ──────────────────────────────────────────────
+  openLedgerStatement(ledger: TransactionLedger) {
+    this.selectedLedgerForStatement = ledger;
+    this.isGeneratingStatement = true;
+    this.transactionSvc.getAllVouchers().subscribe({
+      next: (vouchers) => {
+        const ledgerVouchers = vouchers.filter(v => v.ledgerId === ledger.id);
+        const rows: LedgerStatementRow[] = [];
+        let balance = 0;
+
+        ledgerVouchers.forEach(v => {
+          const isDebit = v.voucherType === 'EXPENSE' ? true : false;
+          const amount = v.amount - (v.lessAdjustment || 0);
+
+          if (isDebit) balance += amount;
+          else balance -= amount;
+
+          rows.push({
+            date: this.formatDate(v.date),
+            reference: v.voucherNo,
+            description: v.narration || v.ledgerName,
+            type: isDebit ? 'DEBIT' : 'CREDIT',
+            debit: isDebit ? amount : 0,
+            credit: !isDebit ? amount : 0,
+            balance: Math.abs(balance),
+          });
+        });
+
+        this.ledgerStatementRows = rows;
+        this.showLedgerStatementModal = true;
+        this.isGeneratingStatement = false;
+      },
+      error: () => {
+        this.isGeneratingStatement = false;
+        this.showFeedback('Failed to load ledger details.', false);
+      },
+    });
+  }
+
+  generateLedgerStatementPdfReport() {
+    if (!this.selectedLedgerForStatement) return;
+    const ledger = this.selectedLedgerForStatement;
+    const doc = generateLedgerStatementPdf(
+      ledger.ledgerName,
+      'Party Name',
+      'Party Address',
+      '+91-9999999999',
+      'party@email.com',
+      this.ledgerStatementRows,
+      this.logoDataUrl,
+    );
+    window.open(String(doc.output('bloburi')), '_blank');
+  }
+
+  exportLedgerStatementCsv() {
+    if (!this.selectedLedgerForStatement) return;
+    const ledger = this.selectedLedgerForStatement;
+
+    const totalDebits = this.ledgerStatementRows.reduce((sum, r) => sum + r.debit, 0);
+    const totalCredits = this.ledgerStatementRows.reduce((sum, r) => sum + r.credit, 0);
+    const openingBal = this.ledgerStatementRows.length > 0
+      ? this.ledgerStatementRows[0].balance - (this.ledgerStatementRows[0].debit - this.ledgerStatementRows[0].credit)
+      : 0;
+    const closingBal = this.ledgerStatementRows.length > 0
+      ? this.ledgerStatementRows[this.ledgerStatementRows.length - 1].balance
+      : 0;
+
+    const csvLines: string[] = [];
+    csvLines.push('ACCOUNT LEDGER STATEMENT');
+    csvLines.push(`Ledger: ${ledger.ledgerName}`);
+    csvLines.push(`Generated: ${new Date().toLocaleDateString('en-IN')}`);
+    csvLines.push('');
+    csvLines.push('FROM PARTY,NECTAR ORIGIN PRIVATE LIMITED');
+    csvLines.push('TO PARTY,' + ledger.ledgerName);
+    csvLines.push('');
+    csvLines.push('SUMMARY');
+    csvLines.push(`Opening Balance,${openingBal}`);
+    csvLines.push(`Total Debits,${totalDebits}`);
+    csvLines.push(`Total Credits,${totalCredits}`);
+    csvLines.push(`Closing Balance,${closingBal}`);
+    csvLines.push('');
+    csvLines.push('TRANSACTIONS');
+    csvLines.push('Date,Reference,Description,Type,Debit,Credit,Balance');
+
+    this.ledgerStatementRows.forEach(row => {
+      csvLines.push(
+        [
+          row.date,
+          row.reference,
+          `"${row.description}"`,
+          row.type,
+          row.debit > 0 ? row.debit : '',
+          row.credit > 0 ? row.credit : '',
+          row.balance,
+        ].join(','),
+      );
+    });
+
+    const csvContent = csvLines.join('\n');
+    const blob = new Blob([csvContent], { type: 'text/csv;charset=utf-8;' });
+    const url = window.URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url;
+    a.download = `${ledger.ledgerName}-statement.csv`;
+    a.click();
+    window.URL.revokeObjectURL(url);
   }
 }

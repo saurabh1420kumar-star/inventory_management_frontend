@@ -56,6 +56,9 @@ export interface Distributor {
     creditBalance?: number;
     bankGuaranteeNumber?: string;
     bgExpiryDate?: string;
+    district?: string;
+    state?: string;
+    pinCode?: string;
 }
 
 @Injectable({

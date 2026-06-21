@@ -145,10 +145,15 @@ export class TransactionCashbookPage implements OnInit {
     if (!this.summary) return;
 
     const entryMap = new Map<string, number>();
+    const entryMetaMap = new Map<string, CashbookEntry>();
     for (const e of this.summary.entries) {
       entryMap.set(e.ledgerName, (entryMap.get(e.ledgerName) ?? 0) + e.amount);
+      if (!entryMetaMap.has(e.ledgerName)) {
+        entryMetaMap.set(e.ledgerName, e);
+      }
     }
 
+    // Initialize filtered ledgers list (will be filtered by type/group when filters are applied)
     this.buildFilteredLedgersList();
 
     // ── LEFT (Expenditure) ──────────────────────────────────────────
@@ -156,6 +161,7 @@ export class TransactionCashbookPage implements OnInit {
     let leftRunningTotal = 0;
     let currentHeaderHasChildren = false;
     let pendingHeader: CashbookRow | null = null;
+    const processedLeftKeys = new Set<string>();
 
     for (const def of LEFT_STRUCTURE) {
       if (def.isSubHeader) {
@@ -164,6 +170,22 @@ export class TransactionCashbookPage implements OnInit {
         continue;
       }
       if (def.key === '__CLOSING') {
+        // Before closing balance, add custom expenses that belong to this section
+        const currentUnderGroup = pendingHeader?.label === 'Indirect Expense' ? 'INDIRECT_EXPENSE' : 'DIRECT_EXPENSE';
+        for (const [name, amount] of entryMap.entries()) {
+          if (processedLeftKeys.has(name) || amount === 0) continue;
+          const meta = entryMetaMap.get(name);
+          if (meta && meta.ledgerType === 'EXPENSE' && meta.underGroup === currentUnderGroup) {
+            if (!currentHeaderHasChildren && pendingHeader) {
+              leftRows.push(pendingHeader);
+              currentHeaderHasChildren = true;
+            }
+            leftRows.push({ label: name, amount, isSubHeader: false, isBold: false, isHighlighted: false, isTotal: false });
+            leftRunningTotal += amount;
+            processedLeftKeys.add(name);
+          }
+        }
+
         leftRows.push({ label: 'Closing Balance', amount: this.summary!.closingBalance, isSubHeader: false, isBold: true, isHighlighted: false, isTotal: false });
         leftRunningTotal += this.summary!.closingBalance;
         continue;
@@ -175,6 +197,7 @@ export class TransactionCashbookPage implements OnInit {
       }
 
       const amount = entryMap.get(def.key) ?? 0;
+      processedLeftKeys.add(def.key);
       if (amount === 0) continue;
 
       // Flush pending header before first non-zero child
@@ -185,13 +208,16 @@ export class TransactionCashbookPage implements OnInit {
       leftRows.push({ label: def.label, amount, isSubHeader: false, isBold: !!def.isBold, isHighlighted: false, isTotal: false });
       leftRunningTotal += amount;
     }
+
     this.leftRows = leftRows;
+    this.leftTotal = leftRunningTotal;
 
     // ── RIGHT (Income) ──────────────────────────────────────────────
     const rightRows: CashbookRow[] = [];
     let rightRunningTotal = 0;
     let rPendingHeader: CashbookRow | null = null;
     let rHasChildren = false;
+    const processedRightKeys = new Set<string>();
 
     for (const def of RIGHT_STRUCTURE) {
       if (def.isSubHeader) {
@@ -205,12 +231,28 @@ export class TransactionCashbookPage implements OnInit {
         continue;
       }
       if (def.key === '__TOTAL_RIGHT') {
+        // Add any remaining custom income entries before total
+        for (const [name, amount] of entryMap.entries()) {
+          if (processedRightKeys.has(name) || amount === 0) continue;
+          const meta = entryMetaMap.get(name);
+          if (meta && meta.ledgerType === 'INCOME') {
+            if (!rHasChildren && rPendingHeader) {
+              rightRows.push(rPendingHeader);
+              rHasChildren = true;
+            }
+            rightRows.push({ label: name, amount, isSubHeader: false, isBold: false, isHighlighted: false, isTotal: false });
+            rightRunningTotal += amount;
+            processedRightKeys.add(name);
+          }
+        }
+
         this.rightTotal = rightRunningTotal;
         rightRows.push({ label: 'Total', amount: rightRunningTotal, isSubHeader: false, isBold: true, isHighlighted: false, isTotal: true });
         continue;
       }
 
       const amount = entryMap.get(def.key) ?? 0;
+      processedRightKeys.add(def.key);
       if (amount === 0) continue;
 
       if (rPendingHeader && !rHasChildren) {
@@ -220,8 +262,9 @@ export class TransactionCashbookPage implements OnInit {
       rightRows.push({ label: def.label, amount, isSubHeader: false, isBold: !!def.isBold, isHighlighted: !!def.isHighlighted, isTotal: false });
       rightRunningTotal += amount;
     }
-    this.rightTotal = rightRunningTotal;
+
     this.rightRows = rightRows;
+    this.rightTotal = rightRunningTotal;
   }
 
   // ── Export ─────────────────────────────────────────────────────────
@@ -720,59 +763,66 @@ export class TransactionCashbookPage implements OnInit {
     window.open(String(doc.output('bloburi')), '_blank');
   }
 
-  exportDetailAsExcel() {
-    const rows: any[] = [
-      { 'Ledger': `${this.detailLedgerName} — Payment Breakdown`, 'Mode': '', 'Amount (₹)': '', 'Narration': '' },
-      { 'Ledger': '', 'Mode': '', 'Amount (₹)': '', 'Narration': '' },
+  async exportDetailAsExcel() {
+    const wb = new Workbook();
+    const ws = wb.addWorksheet(this.detailLedgerName);
+
+    // Set column widths
+    ws.columns = [
+      { header: 'Date', width: 12 },
+      { header: 'Reference', width: 15 },
+      { header: 'Description', width: 30 },
+      { header: 'Type', width: 10 },
+      { header: 'Category', width: 15 },
+      { header: 'Debit', width: 14 },
+      { header: 'Credit', width: 14 },
+      { header: 'Balance', width: 14 },
+      { header: 'Notes', width: 25 },
     ];
 
-    const total = this.getTotalForDetail();
-    const cashTotal = this.getCashTotal();
-    const upiTotal = this.getUpiTotal();
-    rows.push({
-      'Ledger': 'Summary',
-      'Mode': '',
-      'Amount (₹)': total,
-      'Narration': '',
-    });
-    rows.push({
-      'Ledger': `CASH (${this.getCashCount()} txn)`,
-      'Mode': 'CASH',
-      'Amount (₹)': cashTotal,
-      'Narration': '',
-    });
-    rows.push({
-      'Ledger': `UPI (${this.getUpiCount()} txn)`,
-      'Mode': 'UPI',
-      'Amount (₹)': upiTotal,
-      'Narration': '',
-    });
-    rows.push({ 'Ledger': '', 'Mode': '', 'Amount (₹)': '', 'Narration': '' });
+    // Style header row
+    const headerRow = ws.getRow(1);
+    headerRow.font = { bold: true, color: { argb: 'FF1A2863' } };
+    headerRow.fill = { type: 'pattern', pattern: 'solid', fgColor: { argb: 'FFFFFFFF' } };
+    headerRow.border = { bottom: { style: 'thin', color: { argb: 'FF1A2863' } } };
 
+    // Add summary section
+    ws.addRow(['Opening Balance:', '', '', '', '', '', '', '', '']);
+    ws.addRow(['Total Transactions:', this.detailVouchers.length, '', '', '', '', '', '', '']);
+    ws.addRow([]);
+
+    // Calculate running balance
+    let balance = 0;
+    const total = this.getTotalForDetail();
+
+    // Add voucher rows
     for (const v of this.detailVouchers) {
-      rows.push({
-        'Ledger': v.voucherNo,
-        'Mode': v.paymentMode,
-        'Amount (₹)': v.amount,
-        'Narration': v.narration,
-      });
+      const isDebit = v.voucherType === 'EXPENSE';
+      if (isDebit) {
+        balance -= v.amount;
+      } else {
+        balance += v.amount;
+      }
+
+      const row = ws.addRow([
+        this.formatDate(v.date),
+        v.voucherNo,
+        v.narration,
+        v.voucherType,
+        v.ledgerName,
+        isDebit ? v.amount : '',
+        !isDebit ? v.amount : '',
+        balance,
+        v.partyName || '',
+      ]);
+
+      // Format currency columns
+      row.getCell(6).numFmt = '#,##0.00';
+      row.getCell(7).numFmt = '#,##0.00';
+      row.getCell(8).numFmt = '#,##0.00';
     }
 
-    const worksheet = XLSX.utils.json_to_sheet(rows);
-    worksheet['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 16 }, { wch: 40 }];
-    const workbook = XLSX.utils.book_new();
-    XLSX.utils.book_append_sheet(workbook, worksheet, this.detailLedgerName);
-
     const stamp = new Date().toISOString().slice(0, 10);
-    const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
-    const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-    const url = window.URL.createObjectURL(blob);
-    const link = document.createElement('a');
-    link.href = url;
-    link.download = `${this.detailLedgerName}-${stamp}.xlsx`;
-    document.body.appendChild(link);
-    link.click();
-    window.URL.revokeObjectURL(url);
-    document.body.removeChild(link);
+    await wb.xlsx.writeFile(`${this.detailLedgerName}-${stamp}.xlsx`);
   }
 }
