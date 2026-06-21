@@ -1023,7 +1023,7 @@ export class AccountsMasterPage implements OnInit {
       }));
 
       const doc = generateLedgerStatementPdf(
-        this.selectedAccount.accountName,
+        this.selectedAccount.accountName || this.selectedAccount.name,
         this.selectedAccount.toParty.name,
         `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
         this.selectedAccount.toParty.phone || '',
