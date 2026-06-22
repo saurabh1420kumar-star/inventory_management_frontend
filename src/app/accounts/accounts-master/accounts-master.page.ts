@@ -714,7 +714,9 @@ export class AccountsMasterPage implements OnInit {
         const nowDt = new Date();
         const fyStart = nowDt.getMonth() >= 3 ? nowDt.getFullYear() : nowDt.getFullYear() - 1;
         const yy = (yr: number) => yr.toString().slice(-2);
-        const fyRange = `1-Apr-${yy(fyStart)} to 31-Mar-${yy(fyStart + 1)}`;
+        const fyRange = (this.startDate && this.endDate)
+          ? `${this.formatDateShort(this.startDate)} to ${this.formatDateShort(this.endDate)}`
+          : `1-Apr-${yy(fyStart)} to 31-Mar-${yy(fyStart + 1)}`;
         const companyData = [
           ['', 'NECTAR ORIGIN PRIVATE LIMITED'],
           ['', '360 K, Shiv Parwati Nagar, Block Road No -2, Ward No 16, Kahalzaon, Bhagalpur, Bihar - 813203'],
@@ -807,11 +809,16 @@ export class AccountsMasterPage implements OnInit {
       const doc = generateLedgerStatementPdf(
         this.selectedAccount.accountName || this.selectedAccount.name,
         this.selectedAccount.toParty.name,
-        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        this.selectedAccount.toParty.address || '',
         this.selectedAccount.toParty.phone || '',
         this.selectedAccount.toParty.email || '',
         rows,
         null,
+        this.selectedAccount.toParty.city || '',
+        this.selectedAccount.toParty.state || '',
+        this.selectedAccount.toParty.pincode || '',
+        this.startDate || undefined,
+        this.endDate || undefined,
       );
 
       const filename = `${this.selectedAccount.name}_Ledger_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -868,14 +875,21 @@ export class AccountsMasterPage implements OnInit {
         balance: t.balance || 0,
       }));
 
+      const pincode = this.selectedAccount.toParty.pincode || '';
+
       const doc = generateLedgerStatementPdf(
         this.selectedAccount.accountName || this.selectedAccount.name,
         this.selectedAccount.toParty.name,
-        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        this.selectedAccount.toParty.address || '',
         this.selectedAccount.toParty.phone || '',
         this.selectedAccount.toParty.email || '',
         rows,
         null, // logo URL can be added later
+        this.selectedAccount.toParty.city || '',
+        this.selectedAccount.toParty.state || '',
+        pincode,
+        this.startDate || undefined,
+        this.endDate || undefined,
       );
 
       const filename = `${this.selectedAccount.name}_Ledger_Statement_${new Date().toISOString().split('T')[0]}.pdf`;

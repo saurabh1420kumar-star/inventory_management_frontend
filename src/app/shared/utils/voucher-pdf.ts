@@ -361,6 +361,15 @@ function fmtDate(dateStr: string): string {
   return `${d} / ${m} / ${y}`;
 }
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** Formats a 'YYYY-MM-DD' date string as 'D-MMM-YY' (e.g. "22-Jun-26"). */
+function formatShortDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  return `${d}-${MONTH_ABBR[m - 1]}-${y.toString().slice(-2)}`;
+}
+
 function numberPart(ref: string): string {
   const digits = ref.replace(/\D/g, '');
   return digits || ref;
@@ -660,6 +669,19 @@ export interface LedgerStatementRow {
   balance: number;
 }
 
+export interface LedgerStatementParams {
+  ledgerName: string;
+  partyName: string;
+  partyAddress: string;
+  partyCity?: string;
+  partyState?: string;
+  partyPincode?: string;
+  partyPhone: string;
+  partyEmail: string;
+  rows: LedgerStatementRow[];
+  logo: string | null;
+}
+
 export function generateLedgerStatementPdf(
   ledgerName: string,
   partyName: string,
@@ -668,6 +690,11 @@ export function generateLedgerStatementPdf(
   partyEmail: string,
   rows: LedgerStatementRow[],
   logo: string | null,
+  partyCity?: string,
+  partyState?: string,
+  partyPincode?: string,
+  periodStart?: string,
+  periodEnd?: string,
 ): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -724,24 +751,88 @@ export function generateLedgerStatementPdf(
   doc.setTextColor(INK[0], INK[1], INK[2]);
   doc.text(partyName || ledgerName, cx, y, { align: 'center' });
   y += 4;
+
+  // Address lines
   const addrLines = (partyAddress || '')
     .split(',')
     .map(s => s.trim())
     .filter(s => s.length > 0);
   addrLines.forEach(line => {
     doc.text(line, cx, y, { align: 'center' });
-    y += 4;
+    y += 3.5;
   });
 
-  // Financial-year date range (centered)
+  // City, State, Pincode on same line (matching website display format)
+  if (partyCity || partyState || partyPincode) {
+    let locationStr = [partyCity, partyState].filter(Boolean).join(', ');
+    if (partyPincode && partyPincode !== '000000') {
+      locationStr += ` - ${partyPincode}`;
+    }
+    doc.text(locationStr, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+
+  // Pincode (prominent) - try to extract from address if not provided
+  let displayPincode = partyPincode;
+  if (!displayPincode && partyAddress) {
+    // Try to find a 6-digit number (Indian pincode format) in the address
+    const pincodeMatch = partyAddress.match(/\b\d{6}\b/);
+    if (pincodeMatch) {
+      displayPincode = pincodeMatch[0];
+    }
+  }
+
+  if (displayPincode && displayPincode !== '000000') {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(10);
+    doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]); // Ensure visible color
+    doc.text(displayPincode, cx, y, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
+    doc.setTextColor(INK[0], INK[1], INK[2]); // Reset color
+    y += 4;
+  }
+
+  // Contact details (phone, email, and pincode)
+  y += 1;
+  doc.setFontSize(8);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
+  if (partyPhone) {
+    doc.text(`Phone: ${partyPhone}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+  if (partyEmail) {
+    doc.text(`Email: ${partyEmail}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+
+  // Pincode here as well (redundant display to ensure it shows)
+  if (displayPincode && displayPincode !== '000000') {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(`PIN: ${displayPincode}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+
+  // Statement period — uses the actually-selected date filter when supplied,
+  // otherwise falls back to the current financial year.
   const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   const yy2 = (yr: number) => yr.toString().slice(-2);
   const fyRange = `1-Apr-${yy2(fyStartYear)} to 31-Mar-${yy2(fyStartYear + 1)}`;
+  let rangeLabel = fyRange;
+  if (periodStart && periodEnd) {
+    rangeLabel = `${formatShortDate(periodStart)} to ${formatShortDate(periodEnd)}`;
+  } else if (periodStart) {
+    rangeLabel = `From ${formatShortDate(periodStart)}`;
+  } else if (periodEnd) {
+    rangeLabel = `Up to ${formatShortDate(periodEnd)}`;
+  }
   y += 1;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-  doc.text(fyRange, cx, y, { align: 'center' });
+  doc.text(rangeLabel, cx, y, { align: 'center' });
 
   // Divider above the table
   y += 4;
