@@ -868,6 +868,9 @@ export class AccountsMasterPage implements OnInit {
         balance: t.balance || 0,
       }));
 
+      const pincode = this.selectedAccount.toParty.pincode || '';
+      console.log('Exporting ledger statement with pincode:', pincode);
+
       const doc = generateLedgerStatementPdf(
         this.selectedAccount.accountName || this.selectedAccount.name,
         this.selectedAccount.toParty.name,
@@ -878,7 +881,7 @@ export class AccountsMasterPage implements OnInit {
         null, // logo URL can be added later
         this.selectedAccount.toParty.city || '',
         this.selectedAccount.toParty.state || '',
-        this.selectedAccount.toParty.pincode || '',
+        pincode,
       );
 
       const filename = `${this.selectedAccount.name}_Ledger_Statement_${new Date().toISOString().split('T')[0]}.pdf`;

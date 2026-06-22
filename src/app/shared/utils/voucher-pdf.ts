@@ -768,7 +768,9 @@ export function generateLedgerStatementPdf(
     }
   }
 
-  if (displayPincode) {
+  console.log('PDF Pincode - Received:', partyPincode, 'Display:', displayPincode);
+
+  if (displayPincode && displayPincode !== '000000') {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
     doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]); // Ensure visible color
