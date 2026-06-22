@@ -604,6 +604,9 @@ export class TransactionMasterPage implements OnInit {
       'party@email.com',
       this.ledgerStatementRows,
       this.logoDataUrl,
+      'City',
+      'State',
+      'Pin Code',
     );
     window.open(String(doc.output('bloburi')), '_blank');
   }

@@ -660,6 +660,19 @@ export interface LedgerStatementRow {
   balance: number;
 }
 
+export interface LedgerStatementParams {
+  ledgerName: string;
+  partyName: string;
+  partyAddress: string;
+  partyCity?: string;
+  partyState?: string;
+  partyPincode?: string;
+  partyPhone: string;
+  partyEmail: string;
+  rows: LedgerStatementRow[];
+  logo: string | null;
+}
+
 export function generateLedgerStatementPdf(
   ledgerName: string,
   partyName: string,
@@ -668,6 +681,9 @@ export function generateLedgerStatementPdf(
   partyEmail: string,
   rows: LedgerStatementRow[],
   logo: string | null,
+  partyCity?: string,
+  partyState?: string,
+  partyPincode?: string,
 ): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -724,6 +740,8 @@ export function generateLedgerStatementPdf(
   doc.setTextColor(INK[0], INK[1], INK[2]);
   doc.text(partyName || ledgerName, cx, y, { align: 'center' });
   y += 4;
+
+  // Address lines
   const addrLines = (partyAddress || '')
     .split(',')
     .map(s => s.trim())
@@ -733,8 +751,23 @@ export function generateLedgerStatementPdf(
     y += 3.5;
   });
 
+  // City, State on same line
+  if (partyCity || partyState) {
+    const cityState = [partyCity, partyState].filter(Boolean).join(', ');
+    doc.text(cityState, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+
+  // Pincode (prominent)
+  if (partyPincode) {
+    doc.setFont('helvetica', 'bold');
+    doc.text(partyPincode, cx, y, { align: 'center' });
+    doc.setFont('helvetica', 'normal');
+    y += 3.5;
+  }
+
   // Contact details (phone and email)
-  y += 2;
+  y += 1;
   doc.setFontSize(8);
   if (partyPhone) {
     doc.text(`Phone: ${partyPhone}`, cx, y, { align: 'center' });
