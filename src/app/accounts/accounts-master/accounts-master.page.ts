@@ -868,10 +868,20 @@ export class AccountsMasterPage implements OnInit {
         balance: t.balance || 0,
       }));
 
+      // Build complete party address with all details
+      const partyAddress = [
+        this.selectedAccount.toParty.address,
+        this.selectedAccount.toParty.city,
+        this.selectedAccount.toParty.state,
+        this.selectedAccount.toParty.pincode,
+      ]
+        .filter(Boolean)
+        .join(', ');
+
       const doc = generateLedgerStatementPdf(
         this.selectedAccount.accountName || this.selectedAccount.name,
         this.selectedAccount.toParty.name,
-        `${this.selectedAccount.toParty.address}, ${this.selectedAccount.toParty.city}`,
+        partyAddress,
         this.selectedAccount.toParty.phone || '',
         this.selectedAccount.toParty.email || '',
         rows,
