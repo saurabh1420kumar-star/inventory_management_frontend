@@ -758,11 +758,22 @@ export function generateLedgerStatementPdf(
     y += 3.5;
   }
 
-  // Pincode (prominent)
-  if (partyPincode) {
+  // Pincode (prominent) - try to extract from address if not provided
+  let displayPincode = partyPincode;
+  if (!displayPincode && partyAddress) {
+    // Try to find a 6-digit number (Indian pincode format) in the address
+    const pincodeMatch = partyAddress.match(/\b\d{6}\b/);
+    if (pincodeMatch) {
+      displayPincode = pincodeMatch[0];
+    }
+  }
+
+  if (displayPincode) {
     doc.setFont('helvetica', 'bold');
-    doc.text(partyPincode, cx, y, { align: 'center' });
+    doc.setFontSize(9);
+    doc.text(displayPincode, cx, y, { align: 'center' });
     doc.setFont('helvetica', 'normal');
+    doc.setFontSize(8);
     y += 3.5;
   }
 
