@@ -361,6 +361,15 @@ function fmtDate(dateStr: string): string {
   return `${d} / ${m} / ${y}`;
 }
 
+const MONTH_ABBR = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+/** Formats a 'YYYY-MM-DD' date string as 'D-MMM-YY' (e.g. "22-Jun-26"). */
+function formatShortDate(dateStr: string): string {
+  const [y, m, d] = dateStr.split('-').map(Number);
+  if (!y || !m || !d) return dateStr;
+  return `${d}-${MONTH_ABBR[m - 1]}-${y.toString().slice(-2)}`;
+}
+
 function numberPart(ref: string): string {
   const digits = ref.replace(/\D/g, '');
   return digits || ref;
@@ -684,6 +693,8 @@ export function generateLedgerStatementPdf(
   partyCity?: string,
   partyState?: string,
   partyPincode?: string,
+  periodStart?: string,
+  periodEnd?: string,
 ): jsPDF {
   const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const pageW = doc.internal.pageSize.getWidth();
@@ -771,8 +782,6 @@ export function generateLedgerStatementPdf(
     }
   }
 
-  console.log('PDF Pincode - Received:', partyPincode, 'Display:', displayPincode);
-
   if (displayPincode && displayPincode !== '000000') {
     doc.setFont('helvetica', 'bold');
     doc.setFontSize(10);
@@ -806,15 +815,24 @@ export function generateLedgerStatementPdf(
     y += 3.5;
   }
 
-  // Financial-year date range (centered)
+  // Statement period — uses the actually-selected date filter when supplied,
+  // otherwise falls back to the current financial year.
   const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
   const yy2 = (yr: number) => yr.toString().slice(-2);
   const fyRange = `1-Apr-${yy2(fyStartYear)} to 31-Mar-${yy2(fyStartYear + 1)}`;
+  let rangeLabel = fyRange;
+  if (periodStart && periodEnd) {
+    rangeLabel = `${formatShortDate(periodStart)} to ${formatShortDate(periodEnd)}`;
+  } else if (periodStart) {
+    rangeLabel = `From ${formatShortDate(periodStart)}`;
+  } else if (periodEnd) {
+    rangeLabel = `Up to ${formatShortDate(periodEnd)}`;
+  }
   y += 1;
   doc.setFont('helvetica', 'bold');
   doc.setFontSize(9);
   doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]);
-  doc.text(fyRange, cx, y, { align: 'center' });
+  doc.text(rangeLabel, cx, y, { align: 'center' });
 
   // Divider above the table
   y += 4;
