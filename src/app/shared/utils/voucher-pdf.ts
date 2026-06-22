@@ -730,8 +730,20 @@ export function generateLedgerStatementPdf(
     .filter(s => s.length > 0);
   addrLines.forEach(line => {
     doc.text(line, cx, y, { align: 'center' });
-    y += 4;
+    y += 3.5;
   });
+
+  // Contact details (phone and email)
+  y += 2;
+  doc.setFontSize(8);
+  if (partyPhone) {
+    doc.text(`Phone: ${partyPhone}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+  if (partyEmail) {
+    doc.text(`Email: ${partyEmail}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
 
   // Financial-year date range (centered)
   const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
