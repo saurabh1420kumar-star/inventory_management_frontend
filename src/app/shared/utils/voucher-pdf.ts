@@ -751,10 +751,13 @@ export function generateLedgerStatementPdf(
     y += 3.5;
   });
 
-  // City, State on same line
-  if (partyCity || partyState) {
-    const cityState = [partyCity, partyState].filter(Boolean).join(', ');
-    doc.text(cityState, cx, y, { align: 'center' });
+  // City, State, Pincode on same line (matching website display format)
+  if (partyCity || partyState || partyPincode) {
+    let locationStr = [partyCity, partyState].filter(Boolean).join(', ');
+    if (partyPincode && partyPincode !== '000000') {
+      locationStr += ` - ${partyPincode}`;
+    }
+    doc.text(locationStr, cx, y, { align: 'center' });
     y += 3.5;
   }
 
@@ -781,15 +784,25 @@ export function generateLedgerStatementPdf(
     y += 4;
   }
 
-  // Contact details (phone and email)
+  // Contact details (phone, email, and pincode)
   y += 1;
   doc.setFontSize(8);
+  doc.setTextColor(INK[0], INK[1], INK[2]);
+
   if (partyPhone) {
     doc.text(`Phone: ${partyPhone}`, cx, y, { align: 'center' });
     y += 3.5;
   }
   if (partyEmail) {
     doc.text(`Email: ${partyEmail}`, cx, y, { align: 'center' });
+    y += 3.5;
+  }
+
+  // Pincode here as well (redundant display to ensure it shows)
+  if (displayPincode && displayPincode !== '000000') {
+    doc.setFont('helvetica', 'bold');
+    doc.setFontSize(8);
+    doc.text(`PIN: ${displayPincode}`, cx, y, { align: 'center' });
     y += 3.5;
   }
 
