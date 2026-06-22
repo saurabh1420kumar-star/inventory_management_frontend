@@ -770,11 +770,13 @@ export function generateLedgerStatementPdf(
 
   if (displayPincode) {
     doc.setFont('helvetica', 'bold');
-    doc.setFontSize(9);
+    doc.setFontSize(10);
+    doc.setTextColor(NAVY[0], NAVY[1], NAVY[2]); // Ensure visible color
     doc.text(displayPincode, cx, y, { align: 'center' });
     doc.setFont('helvetica', 'normal');
     doc.setFontSize(8);
-    y += 3.5;
+    doc.setTextColor(INK[0], INK[1], INK[2]); // Reset color
+    y += 4;
   }
 
   // Contact details (phone and email)
