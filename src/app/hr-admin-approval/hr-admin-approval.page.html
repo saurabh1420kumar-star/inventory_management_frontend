@@ -1,0 +1,392 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-wide">
+      <span class="text-emerald-400">Admin</span> Approval
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="--background: #f1f5f9; --padding-start: 0px; --padding-end: 0px; --padding-top: 0px; --padding-bottom: 32px;">
+
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-10 sm:pb-14">
+
+    <!-- ══════════════════════════════════════════════
+         HERO BANNER
+    ══════════════════════════════════════════════ -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-xl px-5 sm:px-8 pt-5 sm:pt-7 pb-12 sm:pb-14 hero-fade">
+      <div class="absolute -top-14 -right-10 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 left-1/3 w-52 h-52 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <h1 class="relative text-lg sm:text-2xl font-bold mb-2 sm:mb-3">
+        <span class="text-emerald-800">Admin</span>
+        <span class="text-white"> Approval</span>
+      </h1>
+      <div class="relative inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+        <ion-icon class="text-white text-xs sm:text-sm" name="shield-checkmark-outline"></ion-icon>
+        <span class="text-white text-xs sm:text-sm font-medium">Review and approve pending requests</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         FLOATING TAB SWITCHER (overlaps hero)
+    ══════════════════════════════════════════════ -->
+    <div class="relative z-10 -mt-7 mx-2 sm:mx-8 flex gap-1 bg-white p-1.5 rounded-2xl shadow-lg shadow-slate-200/80 border border-slate-100 tab-bar">
+      <button type="button"
+        (click)="switchTab('inward')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'inward'
+          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="download-outline" class="text-base shrink-0"></ion-icon>
+        <span>Inward</span>
+        <span *ngIf="inwardApprovals.length" class="ml-0.5 min-w-[18px] px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+              [ngClass]="activeTab === 'inward' ? 'bg-white/25 text-white' : 'bg-emerald-100 text-emerald-700'">{{ inwardApprovals.length }}</span>
+      </button>
+      <button type="button"
+        (click)="switchTab('distributor-invoice')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'distributor-invoice'
+          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="document-text-outline" class="text-base shrink-0"></ion-icon>
+        <span class="hidden sm:inline">Distributor Invoice</span>
+        <span class="sm:hidden">Invoice</span>
+        <span *ngIf="distributorInvoiceApprovals.length" class="ml-0.5 min-w-[18px] px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+              [ngClass]="activeTab === 'distributor-invoice' ? 'bg-white/25 text-white' : 'bg-blue-100 text-blue-700'">{{ distributorInvoiceApprovals.length }}</span>
+      </button>
+      <button type="button"
+        (click)="switchTab('spare-part')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'spare-part'
+          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="construct-outline" class="text-base shrink-0"></ion-icon>
+        <span>Spare Part</span>
+        <span *ngIf="sparePartApprovals.length" class="ml-0.5 min-w-[18px] px-1.5 py-0.5 rounded-full text-[10px] font-bold leading-none"
+              [ngClass]="activeTab === 'spare-part' ? 'bg-white/25 text-white' : 'bg-amber-100 text-amber-700'">{{ sparePartApprovals.length }}</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 1: INWARD
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'inward'" class="tab-panel mt-6">
+
+      <div class="flex items-center justify-between px-1 mb-3.5">
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Pending Inward Requests</p>
+        <button type="button" (click)="loadInward()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-emerald-300 text-slate-500 hover:text-emerald-600 rounded-lg text-xs font-bold transition active:scale-95 shadow-sm">
+          <ion-icon name="refresh-outline"></ion-icon> Refresh
+        </button>
+      </div>
+
+      <div *ngIf="isLoadingInward" class="flex items-center justify-center py-16">
+        <ion-spinner name="crescent" class="text-emerald-500"></ion-spinner>
+      </div>
+
+      <div *ngIf="!isLoadingInward && inwardApprovals.length === 0" class="py-16 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div class="w-16 h-16 bg-emerald-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <ion-icon name="checkmark-done-outline" class="text-3xl text-emerald-400"></ion-icon>
+        </div>
+        <p class="text-sm font-bold text-slate-700">All caught up!</p>
+        <p class="text-xs text-slate-400 mt-0.5">No pending inward approvals.</p>
+      </div>
+
+      <div *ngIf="!isLoadingInward && inwardApprovals.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        <div *ngFor="let a of inwardApprovals"
+             class="group relative bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+
+          <!-- tinted header -->
+          <div class="px-4 pt-4 pb-3 bg-gradient-to-br from-emerald-50/90 to-teal-50/40">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-emerald-400 to-teal-500 flex items-center justify-center shadow-md shadow-emerald-200/60 shrink-0">
+                  <ion-icon name="cube-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-800 text-sm leading-tight truncate" [title]="inwardTitle(a)">{{ inwardTitle(a) }}</p>
+                  <p *ngIf="a.productCode" class="text-[11px] text-slate-500 truncate font-medium">{{ a.productCode }}</p>
+                </div>
+              </div>
+              <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+              </span>
+            </div>
+            <div class="flex flex-wrap items-center gap-1.5 mt-2.5">
+              <span class="px-2 py-0.5 rounded-md bg-white/80 text-slate-600 font-semibold text-[10px] border border-slate-200/60">{{ productTypeLabel(a.productType) }}</span>
+              <span *ngIf="a.requestedOn" class="inline-flex items-center gap-1 text-[10px] text-slate-400 font-medium">
+                <ion-icon name="calendar-outline"></ion-icon>{{ a.requestedOn | date:'dd MMM, h:mm a' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- body -->
+          <div class="px-4 py-3.5 flex flex-col flex-1">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-3 flex-1">
+              <div *ngFor="let f of getInwardSummary(a)" class="min-w-0">
+                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 truncate">{{ f.label }}</p>
+                <p class="text-[13px] font-bold text-slate-700 truncate" [title]="f.value">{{ f.value }}</p>
+              </div>
+            </div>
+
+            <!-- actions -->
+            <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3.5 border-t border-slate-100">
+              <button type="button" (click)="openAction('reject', 'inward', a.id, inwardTitle(a))"
+                      class="py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/60 font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="close-circle-outline" class="text-sm"></ion-icon> Reject
+              </button>
+              <button type="button" (click)="openAction('approve', 'inward', a.id, inwardTitle(a))"
+                      class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-200/50 transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon> Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 2: DISTRIBUTOR INVOICE  (order confirmations)
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'distributor-invoice'" class="tab-panel mt-6">
+
+      <div class="flex items-center justify-between px-1 mb-3.5">
+        <p class="text-xs font-bold uppercase tracking-wider text-slate-400">Pending Order Confirmations</p>
+        <button type="button" (click)="loadDistributorInvoices()"
+                class="inline-flex items-center gap-1.5 px-3 py-1.5 bg-white border border-slate-200 hover:border-blue-300 text-slate-500 hover:text-blue-600 rounded-lg text-xs font-bold transition active:scale-95 shadow-sm">
+          <ion-icon name="refresh-outline"></ion-icon> Refresh
+        </button>
+      </div>
+
+      <div *ngIf="isLoadingInvoice" class="flex items-center justify-center py-16">
+        <ion-spinner name="crescent" class="text-blue-500"></ion-spinner>
+      </div>
+
+      <div *ngIf="!isLoadingInvoice && distributorInvoiceApprovals.length === 0" class="py-16 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div class="w-16 h-16 bg-blue-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <ion-icon name="checkmark-done-outline" class="text-3xl text-blue-400"></ion-icon>
+        </div>
+        <p class="text-sm font-bold text-slate-700">All caught up!</p>
+        <p class="text-xs text-slate-400 mt-0.5">No pending order confirmations.</p>
+      </div>
+
+      <div *ngIf="!isLoadingInvoice && distributorInvoiceApprovals.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        <div *ngFor="let s of distributorInvoiceApprovals"
+             class="group relative bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+
+          <!-- tinted header -->
+          <div class="px-4 pt-4 pb-3 bg-gradient-to-br from-blue-50/90 to-indigo-50/40">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-blue-500 to-indigo-500 flex items-center justify-center shadow-md shadow-blue-200/60 shrink-0">
+                  <ion-icon name="receipt-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-800 text-sm leading-tight truncate">Order #{{ s.orderId }}</p>
+                  <p class="text-[11px] text-slate-500 truncate font-medium inline-flex items-center gap-1">
+                    <ion-icon name="people-outline" class="text-[11px]"></ion-icon>Distributor #{{ s.distributorId }}
+                    <span *ngIf="s.gdnNumber" class="text-slate-400">&middot; GDN {{ s.gdnNumber }}</span>
+                  </p>
+                </div>
+              </div>
+              <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+              </span>
+            </div>
+            <!-- rating + date -->
+            <div class="flex items-center justify-between mt-2.5">
+              <div class="inline-flex items-center gap-0.5 px-2 py-1 rounded-lg bg-white/70 border border-slate-200/50">
+                <ion-icon *ngFor="let star of stars"
+                          [name]="star <= s.overallRating ? 'star' : 'star-outline'"
+                          class="text-[11px]"
+                          [ngClass]="star <= s.overallRating ? 'text-amber-400' : 'text-slate-300'"></ion-icon>
+              </div>
+              <span *ngIf="s.confirmedAt" class="inline-flex items-center gap-1 text-[10px] font-medium text-slate-400">
+                <ion-icon name="calendar-outline"></ion-icon>{{ s.confirmedAt | date:'dd MMM, h:mm a' }}
+              </span>
+            </div>
+          </div>
+
+          <!-- body -->
+          <div class="px-4 py-3.5 flex flex-col flex-1">
+
+            <!-- feedback -->
+            <div *ngIf="s.feedback || s.remarks" class="mb-3 px-3 py-2 bg-slate-50 rounded-xl border border-slate-100">
+              <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5 inline-flex items-center gap-1">
+                <ion-icon name="chatbubble-ellipses-outline"></ion-icon> Feedback
+              </p>
+              <p class="text-xs text-slate-600 line-clamp-2 leading-relaxed">{{ s.feedback || s.remarks }}</p>
+            </div>
+
+            <!-- items -->
+            <div class="flex-1">
+              <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-1.5">Items ({{ s.itemConfirmations.length }})</p>
+              <div class="space-y-1.5 max-h-36 overflow-y-auto pr-0.5">
+                <div *ngFor="let it of s.itemConfirmations"
+                     class="flex items-center justify-between gap-2 text-xs bg-slate-50/80 rounded-lg px-2.5 py-2 border border-slate-100">
+                  <span class="text-slate-700 font-semibold truncate">{{ it.itemName || ('Item #' + it.itemId) }}</span>
+                  <div class="flex items-center gap-2 shrink-0">
+                    <span class="text-slate-400 tabular-nums font-medium">{{ it.receivedQuantity }}/{{ it.dispatchedQuantity }}</span>
+                    <span class="px-1.5 py-0.5 rounded-md text-[9px] font-bold"
+                          [ngClass]="it.condition === 'GOOD' ? 'bg-emerald-100 text-emerald-700' : 'bg-amber-100 text-amber-700'">{{ it.condition }}</span>
+                  </div>
+                </div>
+              </div>
+            </div>
+
+            <!-- actions -->
+            <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3.5 border-t border-slate-100">
+              <button type="button" (click)="openAction('reject', 'distributorInvoice', s.id, 'Order #' + s.orderId)"
+                      class="py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/60 font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="close-circle-outline" class="text-sm"></ion-icon> Reject
+              </button>
+              <button type="button" (click)="openAction('approve', 'distributorInvoice', s.id, 'Order #' + s.orderId)"
+                      class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-200/50 transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon> Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         TAB 3: SPARE PART  (mock)
+    ══════════════════════════════════════════════ -->
+    <div *ngIf="activeTab === 'spare-part'" class="tab-panel mt-6">
+
+      <p class="text-xs font-bold uppercase tracking-wider text-slate-400 px-1 mb-3.5">Pending Spare Part Requests</p>
+
+      <div *ngIf="isLoadingSparePart" class="flex items-center justify-center py-16">
+        <ion-spinner name="crescent" class="text-amber-500"></ion-spinner>
+      </div>
+
+      <div *ngIf="!isLoadingSparePart && sparePartApprovals.length === 0" class="py-16 text-center bg-white rounded-3xl border border-slate-100 shadow-sm">
+        <div class="w-16 h-16 bg-amber-50 rounded-2xl flex items-center justify-center mx-auto mb-3">
+          <ion-icon name="checkmark-done-outline" class="text-3xl text-amber-400"></ion-icon>
+        </div>
+        <p class="text-sm font-bold text-slate-700">All caught up!</p>
+        <p class="text-xs text-slate-400 mt-0.5">No pending spare part requests.</p>
+      </div>
+
+      <div *ngIf="!isLoadingSparePart && sparePartApprovals.length > 0" class="grid grid-cols-1 sm:grid-cols-2 xl:grid-cols-3 gap-4 sm:gap-5">
+        <div *ngFor="let row of sparePartApprovals"
+             class="group relative bg-white rounded-2xl border border-slate-200/70 shadow-sm hover:shadow-xl hover:shadow-slate-200/70 hover:-translate-y-1 transition-all duration-300 flex flex-col overflow-hidden">
+
+          <!-- tinted header -->
+          <div class="px-4 pt-4 pb-3 bg-gradient-to-br from-amber-50/90 to-orange-50/40">
+            <div class="flex items-start justify-between gap-2">
+              <div class="flex items-center gap-3 min-w-0">
+                <div class="w-11 h-11 rounded-2xl bg-gradient-to-br from-amber-400 to-orange-500 flex items-center justify-center shadow-md shadow-amber-200/60 shrink-0">
+                  <ion-icon name="construct-outline" class="text-white text-xl"></ion-icon>
+                </div>
+                <div class="min-w-0">
+                  <p class="font-bold text-slate-800 text-sm leading-tight truncate" [title]="row.materialName">{{ row.materialName || ('Scrap #' + row.id) }}</p>
+                  <p class="text-[11px] text-slate-500 truncate font-medium">{{ row.materialCode }}<span *ngIf="row.outwardTransactionId"> &middot; Outward #{{ row.outwardTransactionId }}</span></p>
+                </div>
+              </div>
+              <span class="shrink-0 inline-flex items-center gap-1 px-2 py-1 rounded-full text-[9px] font-bold uppercase tracking-wider bg-amber-100 text-amber-700">
+                <span class="w-1.5 h-1.5 rounded-full bg-amber-500 animate-pulse"></span> Pending
+              </span>
+            </div>
+            <div *ngIf="row.requestedOn" class="flex items-center gap-1 mt-2.5 text-[10px] text-slate-400 font-medium">
+              <ion-icon name="calendar-outline"></ion-icon>{{ row.requestedOn | date:'dd MMM, h:mm a' }}
+            </div>
+          </div>
+
+          <!-- body -->
+          <div class="px-4 py-3.5 flex flex-col flex-1">
+            <div class="grid grid-cols-2 gap-x-3 gap-y-3 flex-1">
+              <div class="min-w-0">
+                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Quantity</p>
+                <p class="text-[13px] font-bold text-slate-700 truncate">{{ row.quantity }}</p>
+              </div>
+              <div class="min-w-0">
+                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Quoted Price</p>
+                <p class="text-[13px] font-bold text-slate-700 truncate">₹ {{ (row.quotedSellingPrice || 0).toLocaleString('en-IN') }}</p>
+              </div>
+              <div class="min-w-0 col-span-2">
+                <p class="text-[9px] font-bold uppercase tracking-wider text-slate-400 mb-0.5">Issued To</p>
+                <p class="text-[13px] font-bold text-slate-700 truncate" [title]="row.issuedTo">{{ row.issuedTo || '—' }}</p>
+              </div>
+            </div>
+
+            <!-- actions -->
+            <div class="grid grid-cols-2 gap-2.5 mt-4 pt-3.5 border-t border-slate-100">
+              <button type="button" (click)="openAction('reject', 'sparePart', row.id, row.materialName || ('Scrap #' + row.id))"
+                      class="py-2.5 rounded-xl border border-slate-200 bg-white text-slate-600 hover:border-rose-300 hover:text-rose-600 hover:bg-rose-50/60 font-bold text-xs transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="close-circle-outline" class="text-sm"></ion-icon> Reject
+              </button>
+              <button type="button" (click)="openAction('approve', 'sparePart', row.id, row.materialName || ('Scrap #' + row.id))"
+                      class="py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-xs shadow-md shadow-emerald-200/50 transition-all flex items-center justify-center gap-1.5 active:scale-[0.97]">
+                <ion-icon name="checkmark-circle-outline" class="text-sm"></ion-icon> Approve
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+  </div>
+</ion-content>
+
+<!-- ══════════════════════════════════════════════
+     ACTION MODAL  (shared approve / reject — both carry a comment)
+══════════════════════════════════════════════ -->
+<div *ngIf="showActionModal"
+     class="fixed inset-0 bg-black/60 backdrop-blur-sm flex items-end sm:items-center justify-center z-50 p-0 sm:p-4 modal-backdrop">
+  <div class="bg-white rounded-t-3xl sm:rounded-3xl shadow-2xl w-full sm:max-w-sm max-h-[92vh] overflow-y-auto modal-card">
+
+    <div class="flex items-center justify-between px-6 py-4 border-b border-slate-100">
+      <div class="flex items-center gap-3 min-w-0">
+        <div class="w-10 h-10 rounded-2xl flex items-center justify-center shrink-0"
+             [ngClass]="actionMode === 'approve' ? 'bg-emerald-50' : 'bg-rose-50'">
+          <ion-icon [name]="actionMode === 'approve' ? 'checkmark-circle-outline' : 'close-circle-outline'"
+                    class="text-xl"
+                    [ngClass]="actionMode === 'approve' ? 'text-emerald-500' : 'text-rose-500'"></ion-icon>
+        </div>
+        <div class="min-w-0">
+          <h3 class="font-bold text-slate-800 leading-tight">{{ actionMode === 'approve' ? 'Approve Request' : 'Reject Request' }}</h3>
+          <p class="text-xs text-slate-400 truncate">{{ actionLabel }}</p>
+        </div>
+      </div>
+      <button type="button" (click)="closeActionModal()"
+              class="w-9 h-9 rounded-full bg-slate-50 hover:bg-slate-100 flex items-center justify-center text-slate-400 hover:text-slate-600 transition active:scale-90 shrink-0">
+        <ion-icon name="close-outline" class="text-xl"></ion-icon>
+      </button>
+    </div>
+
+    <div class="px-6 py-5">
+      <label for="actionComment" class="text-xs font-bold text-slate-500 uppercase">
+        {{ actionMode === 'approve' ? 'Admin Comment' : 'Rejection Reason' }}
+        <span *ngIf="actionMode === 'reject'" class="text-rose-500">*</span>
+        <span *ngIf="actionMode === 'approve'" class="text-slate-400 lowercase font-medium">(optional)</span>
+      </label>
+      <textarea id="actionComment" [(ngModel)]="actionComment" rows="4"
+                [placeholder]="actionMode === 'approve' ? 'Add an optional note for this approval' : 'Enter the reason for rejecting this request'"
+                class="mt-2 w-full px-3.5 py-2.5 bg-slate-50 border border-slate-200 rounded-xl text-sm text-slate-800 focus:outline-none focus:ring-2"
+                [ngClass]="actionMode === 'approve' ? 'focus:ring-emerald-300' : 'focus:ring-rose-300'"></textarea>
+    </div>
+
+    <div class="px-6 pb-6 flex gap-3">
+      <button type="button" (click)="closeActionModal()"
+              class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
+        Cancel
+      </button>
+      <button type="button" (click)="submitAction()"
+              [disabled]="isActionInvalid || isSubmittingAction"
+              class="flex-1 py-3 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]"
+              [ngClass]="actionMode === 'approve'
+                ? 'bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 shadow-md shadow-emerald-200/50'
+                : 'bg-rose-500 hover:bg-rose-600'">
+        <ion-spinner *ngIf="isSubmittingAction" name="crescent" class="w-4 h-4"></ion-spinner>
+        <span>{{ isSubmittingAction
+          ? (actionMode === 'approve' ? 'Approving...' : 'Rejecting...')
+          : (actionMode === 'approve' ? 'Confirm Approve' : 'Confirm Reject') }}</span>
+      </button>
+    </div>
+  </div>
+</div>
