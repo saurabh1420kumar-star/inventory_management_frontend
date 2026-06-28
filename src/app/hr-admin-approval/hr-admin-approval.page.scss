@@ -1,0 +1,73 @@
+:host {
+  display: block;
+}
+
+// Tailwind preflight is disabled, so native <button> shows a UA "ButtonFace"
+// background (dark under dark color-scheme). Reset ONLY `appearance` — never
+// background/border/color/font here, or this scoped element rule (specificity
+// 0,1,1) would override the global Tailwind utility classes (0,1,0) on the
+// buttons and strip their gradients / borders / text colors.
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+textarea {
+  color-scheme: light;
+  font-family: inherit;
+}
+
+@keyframes panelIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes heroIn {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes backdropIn {
+  from { opacity: 0; }
+  to { opacity: 1; }
+}
+
+@keyframes cardPop {
+  from {
+    opacity: 0;
+    transform: translateY(24px) scale(0.97);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0) scale(1);
+  }
+}
+
+.hero-fade {
+  animation: heroIn 0.35s ease-out;
+}
+
+.tab-panel {
+  animation: panelIn 0.25s ease-out;
+}
+
+.modal-backdrop {
+  animation: backdropIn 0.18s ease-out;
+}
+
+.modal-card {
+  animation: cardPop 0.26s cubic-bezier(0.16, 1, 0.3, 1);
+}

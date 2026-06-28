@@ -886,14 +886,14 @@
           <div *ngIf="selectedItemType === 'spare_parts'"
             class="flex gap-2 mb-5">
             <button
-              (click)="activeSpareSection = 'outward_giving'"
+              (click)="setSpareSection('outward_giving')"
               class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
               [class.section-tab--active]="activeSpareSection === 'outward_giving'">
               <ion-icon name="arrow-up-circle-outline" class="text-base"></ion-icon>
               Outward Giving
             </button>
             <button
-              (click)="activeSpareSection = 'returned_part'"
+              (click)="setSpareSection('returned_part')"
               class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
               [class.section-tab--active]="activeSpareSection === 'returned_part'">
               <ion-icon name="arrow-down-circle-outline" class="text-base"></ion-icon>
@@ -905,14 +905,14 @@
           <div *ngIf="selectedItemType === 'scrap_material'"
             class="flex gap-2 mb-5">
             <button
-              (click)="activeScrapSection = 'returned_part'"
+              (click)="setScrapSection('returned_part')"
               class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
               [class.section-tab--active]="activeScrapSection === 'returned_part'">
               <ion-icon name="return-down-back-outline" class="text-base"></ion-icon>
               Returned Part
             </button>
             <button
-              (click)="activeScrapSection = 'selling_scrap'"
+              (click)="setScrapSection('selling_scrap')"
               class="section-tab flex-1 flex items-center justify-center gap-2 py-2.5 px-3 rounded-xl text-sm font-semibold transition-all duration-200 border"
               [class.section-tab--active]="activeScrapSection === 'selling_scrap'">
               <ion-icon name="cash-outline" class="text-base"></ion-icon>

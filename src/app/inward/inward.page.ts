@@ -20,6 +20,8 @@ import {
   shieldCheckmarkOutline, calculatorOutline, createOutline
 } from 'ionicons/icons';
 import { Auth } from '../services/auth';
+import { HapticService } from '../services/haptic.service';
+import { KeyboardService } from '../services/keyboard.service';
 import { environment } from '../../environments/environment';
 
 export type InwardItemType = 'raw_material' | 'finished_product' | 'spare_parts' | 'promotional' | 'scrap';
@@ -152,7 +154,9 @@ export class InwardPage implements OnInit {
     private http: HttpClient,
     private auth: Auth,
     private router: Router,
-    private toastController: ToastController
+    private toastController: ToastController,
+    private haptic: HapticService,
+    private keyboard: KeyboardService
   ) {
     addIcons({
       'add-circle-outline': addCircleOutline,
@@ -269,7 +273,7 @@ export class InwardPage implements OnInit {
         this.entries = [...rawItems, ...scrapItems, ...machineItems, ...promoItems, ...finishedItems];
         this.applyFilter();
         this.isLoading = false;
-        if (event) event.target.complete();
+        if (event) { event.target.complete(); this.haptic.light(); }
       },
       error: () => {
         this.isLoading = false;
@@ -312,6 +316,7 @@ export class InwardPage implements OnInit {
   }
 
   selectType(type: InwardItemType) {
+    this.haptic.selectionChanged();
     this.selectedType = type;
     this.form.itemType = type;
     this.form.itemName = '';
@@ -611,6 +616,7 @@ export class InwardPage implements OnInit {
     if (!this.form.itemName.trim()) { this.showToast('Item name is required', 'warning'); return; }
     if (!this.form.quantity || this.form.quantity <= 0) { this.showToast('Enter a valid quantity', 'warning'); return; }
 
+    this.haptic.heavy();
     this.isSubmitting = true;
 
     if (this.selectedType === 'raw_material') {
@@ -807,6 +813,11 @@ export class InwardPage implements OnInit {
   }
 
   private async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
+    // Central feedback funnel — fire the matching notification haptic.
+    if (color === 'success') { this.haptic.success(); this.keyboard.dismiss(); }
+    else if (color === 'warning') this.haptic.warning();
+    else this.haptic.error();
+
     const toast = await this.toastController.create({ message, duration: 3000, position: 'top', color });
     await toast.present();
   }

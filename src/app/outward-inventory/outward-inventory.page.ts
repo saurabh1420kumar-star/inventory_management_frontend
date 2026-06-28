@@ -37,6 +37,8 @@ import { UserService } from '../services/user.service';
 import { DistributorDto, DistributorService } from '../services/distributor.service';
 import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
+import { HapticService } from '../services/haptic.service';
+import { KeyboardService } from '../services/keyboard.service';
 import { User } from '../models/user.model';
 
 export type ModalItemType = 'spare_parts' | 'promotional_items' | 'scrap_material';
@@ -144,6 +146,8 @@ export class OutwardInventoryPage implements OnInit {
   private toast = inject(Toast);
   private http = inject(HttpClient);
   private auth = inject(Auth);
+  private haptic = inject(HapticService);
+  private keyboard = inject(KeyboardService);
 
   // â”€â”€â”€ helpers â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   readonly itemTypes = [
@@ -444,6 +448,7 @@ export class OutwardInventoryPage implements OnInit {
   }
 
   selectType(type: ModalItemType): void {
+    this.haptic.selectionChanged();
     this.selectedItemType = type;
     this.activeSpareSection = 'outward_giving';
     this.activeScrapSection = 'returned_part';
@@ -455,6 +460,17 @@ export class OutwardInventoryPage implements OnInit {
     } else if (type === 'scrap_material') {
       this.loadScrapItems();
     }
+  }
+
+  /** Section sub-tab switches (template uses these so each gets tactile feedback). */
+  setSpareSection(section: SpareSection): void {
+    this.haptic.selectionChanged();
+    this.activeSpareSection = section;
+  }
+
+  setScrapSection(section: ScrapSection): void {
+    this.haptic.selectionChanged();
+    this.activeScrapSection = section;
   }
 
   private loadSparePartItems(): void {
@@ -895,20 +911,24 @@ export class OutwardInventoryPage implements OnInit {
 
     if (form.invalid) {
       form.markAllAsTouched();
+      this.haptic.warning();
       return;
     }
 
     if (this.selectedItemType === 'promotional_items' && this.activeSpareSection === 'outward_giving' && !this.hasPromoPartySelection()) {
       this.promoPartySelectionError = true;
+      this.haptic.warning();
       return;
     }
 
+    this.haptic.heavy();
     this.isSubmitting = true;
 
     const payload = this.buildOutwardGivingPayload(form, this.selectedItemType);
 
     this.outwardService.createOutwardItem(payload).subscribe({
       next: () => {
+        this.keyboard.dismiss();
         this.outwardService.getAllOutwardItems().subscribe({
           next: (data) => {
             this.records = data.map(item => this.mapApiToRecord(item));

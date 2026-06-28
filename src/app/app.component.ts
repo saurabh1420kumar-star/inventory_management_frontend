@@ -2,8 +2,11 @@ import { Component, EventEmitter, HostListener, Input, Output } from '@angular/c
 import { NavigationEnd, Router } from '@angular/router';
 import { filter } from 'rxjs';
 import { Auth } from './services/auth';
-import { MenuController } from '@ionic/angular';
+import { MenuController, Platform } from '@ionic/angular';
 import { DistributorProfileService } from './services/distributor-profile.service';
+import { Capacitor } from '@capacitor/core';
+import { StatusBar, Style } from '@capacitor/status-bar';
+import { App } from '@capacitor/app';
 
 @Component({
   selector: 'app-root',
@@ -44,15 +47,32 @@ export class AppComponent {
   }
 
   private applyTheme(role: string | null): void {
-    document.documentElement.classList.toggle('dark', this.isDarkModeRole(role));
+    const isDark = this.isDarkModeRole(role);
+    document.documentElement.classList.toggle('dark', isDark);
+    this.syncStatusBar(isDark);
+  }
+
+  /**
+   * Keeps the native Android status bar in sync with the role-based theme.
+   * No-op on web. Style.Dark = light icons (for dark backgrounds),
+   * Style.Light = dark icons (for light backgrounds).
+   */
+  private syncStatusBar(isDark: boolean): void {
+    if (!Capacitor.isNativePlatform()) return;
+    StatusBar.setStyle({ style: isDark ? Style.Dark : Style.Light });
+    StatusBar.setBackgroundColor({ color: isDark ? '#0f172a' : '#ffffff' });
   }
 
   constructor(
     private router: Router,
     private auth: Auth,
     private menuController: MenuController,
+    private platform: Platform,
     private distributorProfileService: DistributorProfileService
   ) {
+
+    // 📱 Native-only setup (status bar base config + hardware back button)
+    this.initNativeFeatures();
 
     // 🔁 Listen to route changes
     this.router.events
@@ -112,6 +132,24 @@ export class AppComponent {
   logout(): void {
     this.auth.logout();        // ✅ clear storage
     this.router.navigateByUrl('/login');
+  }
+
+  /**
+   * One-time native (Android) initialization.
+   * - Status bar drawn behind the app content disabled so our color shows.
+   * - Hardware back button: lowest priority so Ionic overlays/menu/router-outlet
+   *   handle it first; only fires App.exitApp() when there is nothing left to pop.
+   */
+  private initNativeFeatures(): void {
+    if (!Capacitor.isNativePlatform()) return;
+
+    StatusBar.setOverlaysWebView({ overlay: false });
+
+    this.platform.ready().then(() => {
+      this.platform.backButton.subscribeWithPriority(-1, () => {
+        App.exitApp();
+      });
+    });
   }
 
 }

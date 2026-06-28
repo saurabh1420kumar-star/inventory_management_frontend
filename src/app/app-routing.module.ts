@@ -154,6 +154,11 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'hr-admin-approval',
+    loadComponent: () => import('./hr-admin-approval/hr-admin-approval.page').then(m => m.HrAdminApprovalPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'transaction-cashbook',
     loadComponent: () => import('./transaction-cashbook/transaction-cashbook.page').then(m => m.TransactionCashbookPage),
     canActivate: [AuthGuard]
