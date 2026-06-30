@@ -289,7 +289,7 @@ export class SalespersonOnboardingPage implements OnInit {
       bloodGroup:         person.bloodGroup ?? '',
       status:             person.status ?? 'ACTIVE',
       username:           person.username ?? '',
-      password:           '',
+      password:           person.password ?? '',
       zone:               person.zone ?? '',
       region:             person.region ?? 'BIHAR',
       managerDesignation: managerDesignation,

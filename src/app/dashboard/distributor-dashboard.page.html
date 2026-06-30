@@ -1872,6 +1872,145 @@
 
   </div>
 
+  <!-- ==================== DEALER ORDERS (read-only order history) ==================== -->
+  <div *ngIf="activeOperationView === 'dealer-order-history'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
+
+    <!-- ── DEALER LIST ── -->
+    <ng-container *ngIf="!selectedOrderHistoryDealer">
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-5">
+        <button (click)="goBackToOperations()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+          <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+        </button>
+        <div class="flex-1">
+          <h1 class="text-xl font-bold text-white"><span class="text-teal-400">Dealer</span> Orders</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Tap a dealer to view their order history</p>
+        </div>
+        <div class="text-right">
+          <p class="text-lg font-bold text-teal-400">{{ dealerOrderHistoryGroups.length }}</p>
+          <p class="text-xs text-slate-500">Dealers with Orders</p>
+        </div>
+      </div>
+
+      <!-- Search Bar -->
+      <div class="relative mb-4">
+        <ion-icon name="search-outline" class="absolute left-3 top-1/2 -translate-y-1/2 text-slate-500 text-base pointer-events-none"></ion-icon>
+        <input [(ngModel)]="dealerOrderHistorySearch" type="text" placeholder="Search by name or phone..."
+               class="w-full pl-9 pr-4 py-2.5 rounded-xl text-sm text-white placeholder-slate-500 outline-none"
+               style="background: rgba(255,255,255,0.05); border: 1px solid rgba(255,255,255,0.08);" />
+      </div>
+
+      <!-- Loading -->
+      <div *ngIf="isLoadingDistributorDealerOrders" class="flex flex-col items-center justify-center py-16 gap-3">
+        <div class="w-10 h-10 rounded-full border-2 border-teal-500 border-t-transparent animate-spin"></div>
+        <p class="text-slate-500 text-sm">Loading orders...</p>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="!isLoadingDistributorDealerOrders && dealerOrderHistoryGroups.length === 0" class="flex flex-col items-center justify-center py-16 gap-3">
+        <div class="w-16 h-16 rounded-2xl flex items-center justify-center" style="background: rgba(45,212,191,0.10);">
+          <ion-icon name="receipt-outline" class="text-teal-400 text-3xl"></ion-icon>
+        </div>
+        <p class="text-white font-semibold">No orders found</p>
+        <p class="text-slate-500 text-sm text-center">{{ dealerOrderHistorySearch ? 'Try a different search term' : 'No dealer orders placed yet' }}</p>
+      </div>
+
+      <!-- Dealer Cards -->
+      <div *ngIf="!isLoadingDistributorDealerOrders && dealerOrderHistoryGroups.length > 0" class="flex flex-col gap-3">
+        <button *ngFor="let group of dealerOrderHistoryGroups"
+                (click)="selectOrderHistoryDealer(group.dealer)"
+                class="w-full rounded-2xl p-4 flex items-start gap-4 text-left"
+                style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.08);">
+          <!-- Avatar -->
+          <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+               style="background: rgba(45,212,191,0.12); border: 1px solid rgba(45,212,191,0.25);">
+            <ion-icon name="storefront-outline" style="font-size: 22px; color: #2dd4bf;"></ion-icon>
+          </div>
+          <!-- Info -->
+          <div class="flex-1 min-w-0">
+            <p class="font-bold text-white text-sm truncate">{{ group.dealer.fullName }}</p>
+            <div class="flex items-center gap-1.5 mt-1">
+              <ion-icon name="call-outline" class="text-slate-500" style="font-size: 12px; flex-shrink: 0;"></ion-icon>
+              <p class="text-xs text-slate-400">{{ group.dealer.phone }}</p>
+            </div>
+            <div class="flex items-center gap-3 mt-1.5">
+              <span class="text-xs text-slate-400">{{ group.orders.length }} order{{ group.orders.length === 1 ? '' : 's' }}</span>
+              <span class="text-emerald-400 text-xs font-semibold">₹{{ group.totalAmount | number:'1.0-0' }}</span>
+            </div>
+          </div>
+          <ion-icon name="chevron-forward-outline" class="text-slate-600 text-base self-center"></ion-icon>
+        </button>
+      </div>
+
+    </ng-container>
+
+    <!-- ── ORDER HISTORY DETAIL ── -->
+    <ng-container *ngIf="selectedOrderHistoryDealer">
+
+      <!-- Header -->
+      <div class="flex items-center gap-3 mb-5">
+        <button (click)="backToOrderHistoryList()" class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+          <ion-icon name="arrow-back-outline" class="text-white text-xl"></ion-icon>
+        </button>
+        <div class="flex-1">
+          <h1 class="text-xl font-bold text-white truncate">{{ selectedOrderHistoryDealer.fullName }}</h1>
+          <p class="text-xs text-slate-500 mt-0.5">Order history</p>
+        </div>
+      </div>
+
+      <!-- Dealer Info Card -->
+      <div class="rounded-2xl p-4 mb-5 flex items-center gap-4"
+           style="background: rgba(45,212,191,0.06); border: 1px solid rgba(45,212,191,0.2);">
+        <div class="w-12 h-12 rounded-xl flex-shrink-0 flex items-center justify-center"
+             style="background: rgba(45,212,191,0.12); border: 1px solid rgba(45,212,191,0.25);">
+          <ion-icon name="storefront-outline" style="font-size: 22px; color: #2dd4bf;"></ion-icon>
+        </div>
+        <div class="flex-1 min-w-0">
+          <p class="font-bold text-white text-sm">{{ selectedOrderHistoryDealer.fullName }}</p>
+          <p class="text-xs text-slate-400 mt-0.5">{{ selectedOrderHistoryDealer.phone }}</p>
+        </div>
+        <div class="text-right shrink-0">
+          <p class="text-emerald-400 font-bold text-sm">₹{{ selectedDealerOrdersTotal | number:'1.0-0' }}</p>
+          <p class="text-xs text-slate-500">{{ selectedDealerOrders.length }} order{{ selectedDealerOrders.length === 1 ? '' : 's' }}</p>
+        </div>
+      </div>
+
+      <!-- Empty -->
+      <div *ngIf="selectedDealerOrders.length === 0"
+           class="text-center py-8 rounded-xl"
+           style="background: rgba(255,255,255,0.02); border: 1px solid rgba(255,255,255,0.05);">
+        <p class="text-slate-500 text-sm">No orders placed yet</p>
+      </div>
+
+      <!-- Order Cards -->
+      <div *ngIf="selectedDealerOrders.length > 0" class="flex flex-col gap-2">
+        <div *ngFor="let order of selectedDealerOrders"
+             class="rounded-xl px-4 py-3 flex items-center justify-between gap-3"
+             style="background: rgba(255,255,255,0.04); border: 1px solid rgba(255,255,255,0.07);">
+          <div class="flex-1 min-w-0">
+            <p class="text-white text-xs font-semibold truncate">{{ order.itemName ?? order.item_name ?? 'Order #' + order.id }}</p>
+            <div class="flex items-center gap-3 mt-1">
+              <span class="text-emerald-400 text-xs font-semibold">₹{{ (order.amount ?? 0) | number:'1.0-0' }}</span>
+              <span class="text-slate-500 text-xs">{{ order.date ? (order.date | date:'dd MMM yyyy') : '' }}</span>
+              <span *ngIf="order.quantity" class="text-slate-500 text-xs">Qty: {{ order.quantity }}</span>
+            </div>
+          </div>
+          <button (click)="downloadDealerInvoice(order)"
+                  [disabled]="downloadingInvoiceId === order.id"
+                  class="flex-shrink-0 flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-semibold"
+                  style="background: rgba(45,212,191,0.12); border: 1px solid rgba(45,212,191,0.25); color: #2dd4bf;">
+            <div *ngIf="downloadingInvoiceId === order.id" class="w-3.5 h-3.5 rounded-full border-2 border-teal-400 border-t-transparent animate-spin"></div>
+            <ion-icon *ngIf="downloadingInvoiceId !== order.id" name="download-outline" style="font-size: 14px;"></ion-icon>
+            {{ downloadingInvoiceId === order.id ? 'Downloading...' : 'Invoice' }}
+          </button>
+        </div>
+      </div>
+
+    </ng-container>
+
+  </div>
+
   <!-- ==================== PRICE MASTER VIEW ==================== -->
   <div *ngIf="activeOperationView === 'price-master'" class="max-w-6xl mx-auto px-4 pt-4 pb-8">
 
@@ -2169,12 +2308,12 @@
         <div class="dd-info-row">
           <div class="dd-info-cell">
             <p class="dd-info-cell__label">Total O/S</p>
-            <p class="dd-info-cell__value" style="white-space: nowrap;">{{ formatOutstandingAmount(accountStatementBalance) }}</p>
+            <p class="dd-info-cell__value" style="white-space: nowrap;">{{ formatTotalOS(accountStatementBalance) }}</p>
           </div>
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll MTD</p>
-            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionMonthly ?? totalCollectionAmount) }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(collectionAnalytics?.collectionMonthly ?? volumeAnalytics?.collectionMonthly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 
@@ -2186,7 +2325,7 @@
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll YTD</p>
-            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionYearly ?? totalCollectionAmount) }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(collectionAnalytics?.collectionYearly ?? volumeAnalytics?.collectionYearly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 
@@ -2390,6 +2529,13 @@
             </div>
             <p class="ops-card__title">Price Master</p>
             <p class="ops-card__desc">View and manage product pricing</p>
+          </button>
+          <button (click)="openOperationView('dealer-order-history')" class="ops-card ops-card--teal">
+            <div class="ops-card__icon" style="background: rgba(45,212,191,0.15); border-color: rgba(45,212,191,0.3);">
+              <ion-icon name="cart-outline" style="font-size: 28px; color: #2dd4bf;"></ion-icon>
+            </div>
+            <p class="ops-card__title">Dealer Orders</p>
+            <p class="ops-card__desc">View order history by dealer</p>
           </button>
         </div>
       </div>

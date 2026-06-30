@@ -101,6 +101,7 @@ interface Dealer {
   fullName: string;
   phone: string;
   address: string;
+  isActive: boolean;
   sales: Sale[];
 }
 
@@ -247,6 +248,7 @@ export class DistributorDashboardPage implements OnInit {
   distributorAnalytics: { totalOrders: number; totalAmount: number; totalOutstanding?: number } | null = null;
   totalOutstanding = 0;
   volumeAnalytics: VolumeAnalytics | null = null;
+  collectionAnalytics: { collectionMonthly: number; collectionYearly: number } | null = null;
 
   // Payment Collections
   paymentCollections: any[] = [];
@@ -270,6 +272,12 @@ export class DistributorDashboardPage implements OnInit {
   isLoadingDealerSales = false;
   dealerPlacedOrders: any[] = [];
   isLoadingDealerPlacedOrders = false;
+
+  // Dealer Orders (read-only order history, separate from Dealer Billing)
+  distributorDealerOrders: any[] = [];
+  isLoadingDistributorDealerOrders = false;
+  selectedOrderHistoryDealer: any | null = null;
+  dealerOrderHistorySearch = '';
 
   // Price Master
   selectedPriceMasterDealer: Dealer | null = null;
@@ -421,6 +429,7 @@ export class DistributorDashboardPage implements OnInit {
     this.loadDealers();
     this.loadDistributorAnalytics();
     this.loadVolumeAnalytics();
+    this.loadCollectionAnalytics();
     this.loadDispatchReport();
     const view = this.route.snapshot.queryParams['view'];
     if (view) {
@@ -539,6 +548,8 @@ export class DistributorDashboardPage implements OnInit {
       this.loadPaymentCollections();
     } else if (view === 'dealer-orders') {
       this.loadDealerOrders();
+    } else if (view === 'dealer-order-history') {
+      this.loadDistributorDealerOrders();
     } else if (view === 'my-stock') {
       this.loadDistributorStock();
     } else if (view === 'price-master') {
@@ -913,6 +924,25 @@ export class DistributorDashboardPage implements OnInit {
     });
   }
 
+  loadCollectionAnalytics() {
+    if (!this.distributorId) {
+      console.warn('Distributor ID not available for collection analytics');
+      return;
+    }
+    const url = `${environment.apiUrl}/accounts/collection-analytics?distributorId=${this.distributorId}`;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>(url, { headers }).subscribe({
+      next: (res) => {
+        const data = res?.data ?? res;
+        this.collectionAnalytics = {
+          collectionMonthly: data?.collectionMonthly ?? 0,
+          collectionYearly: data?.collectionYearly ?? 0
+        };
+      },
+      error: () => {}
+    });
+  }
+
   loadPaymentCollections() {
     if (!this.distributorId) {
       console.warn('Distributor ID not available for loading payment collections');
@@ -1019,6 +1049,11 @@ export class DistributorDashboardPage implements OnInit {
     return numericAmount < 0 ? `₹-${absoluteAmount}` : `₹${absoluteAmount}`;
   }
 
+  formatTotalOS(amount: number): string {
+    const numericAmount = Number(amount) || 0;
+    return numericAmount < 0 ? this.formatOutstandingAmount(numericAmount) : '₹0';
+  }
+
   async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
     const toast = await this.toastController.create({
       message,
@@ -1055,6 +1090,7 @@ export class DistributorDashboardPage implements OnInit {
           fullName: d.fullName ?? d.full_name ?? d.name ?? '',
           phone: d.phone ?? '',
           address: d.address ?? '',
+          isActive: d.isActive ?? d.active ?? true,
           sales: []
         }));
         this.dealers.forEach(d => {
@@ -1129,6 +1165,60 @@ export class DistributorDashboardPage implements OnInit {
     this.dealerPlacedOrders = [];
   }
 
+  // GET /dealer-sales/orders/distributor/{distributorId} — flat list of every dealer's orders,
+  // grouped client-side per dealer below so the picker shows order count / total without N calls.
+  loadDistributorDealerOrders(): void {
+    if (!this.distributorId) return;
+    this.isLoadingDistributorDealerOrders = true;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>(`${environment.apiUrl}/dealer-sales/orders/distributor/${this.distributorId}`, { headers }).subscribe({
+      next: (res) => {
+        this.distributorDealerOrders = Array.isArray(res) ? res : (res?.data ?? res?.orders ?? []);
+        this.isLoadingDistributorDealerOrders = false;
+      },
+      error: () => { this.isLoadingDistributorDealerOrders = false; }
+    });
+  }
+
+  get dealerOrderHistoryGroups(): { dealer: any; orders: any[]; totalAmount: number }[] {
+    const groups = new Map<number, any[]>();
+    this.distributorDealerOrders.forEach(o => {
+      const list = groups.get(o.dealerId) ?? [];
+      list.push(o);
+      groups.set(o.dealerId, list);
+    });
+    const rows = Array.from(groups.entries()).map(([dealerId, orders]) => {
+      const dealer = this.dealers.find(d => d.id === dealerId) ?? { id: dealerId, fullName: `Dealer #${dealerId}`, phone: '', address: '', isActive: true };
+      const totalAmount = orders.reduce((sum, o) => sum + (o.amount ?? 0), 0);
+      return { dealer, orders, totalAmount };
+    });
+    const q = this.dealerOrderHistorySearch.toLowerCase().trim();
+    if (!q) return rows;
+    return rows.filter(r =>
+      (r.dealer.fullName ?? '').toLowerCase().includes(q) ||
+      (r.dealer.phone ?? '').includes(q)
+    );
+  }
+
+  get selectedDealerOrders(): any[] {
+    if (!this.selectedOrderHistoryDealer) return [];
+    return this.distributorDealerOrders.filter(o => o.dealerId === this.selectedOrderHistoryDealer.id);
+  }
+
+  get selectedDealerOrdersTotal(): number {
+    return this.selectedDealerOrders.reduce((sum, o) => sum + (o.amount ?? 0), 0);
+  }
+
+  selectOrderHistoryDealer(dealer: any): void {
+    this.haptic.light();
+    this.selectedOrderHistoryDealer = dealer;
+  }
+
+  backToOrderHistoryList(): void {
+    this.haptic.light();
+    this.selectedOrderHistoryDealer = null;
+  }
+
   loadDealerPlacedOrders(dealerId: number): void {
     this.isLoadingDealerPlacedOrders = true;
     const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
@@ -1184,10 +1274,18 @@ export class DistributorDashboardPage implements OnInit {
 
   placeOrder(): void {
     if (!this.distributorId || !this.selectedBillingDealer || this.dealerSales.length === 0) return;
+
+    // Only place lines the user actually set a quantity for — skip the 0-qty rows.
+    const itemsToOrder = this.dealerSales.filter((s: any) => (s._qty ?? 0) > 0);
+    if (itemsToOrder.length === 0) {
+      this.showToast('Add a quantity to at least one product before placing the order', 'warning');
+      return;
+    }
+
     this.isPlacingOrder = true;
     const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
     const today = new Date().toISOString().split('T')[0];
-    const calls = this.dealerSales.map((s: any) =>
+    const calls = itemsToOrder.map((s: any) =>
       this.http.post(
         `${environment.apiUrl}/dealer-sales/orders?distributorId=${this.distributorId}`,
         {
@@ -1299,6 +1397,7 @@ export class DistributorDashboardPage implements OnInit {
           fullName: d?.fullName ?? d?.full_name ?? fullName.trim(),
           phone: d?.phone ?? phone.trim(),
           address: d?.address ?? address.trim(),
+          isActive: d?.isActive ?? true,
           sales: []
         };
         this.dealers.unshift(newDealer);

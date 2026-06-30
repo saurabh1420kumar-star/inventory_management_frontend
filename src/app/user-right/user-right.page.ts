@@ -153,6 +153,15 @@ export class UserRightPage implements OnInit {
         ]
       },
       {
+        name: 'Transaction',
+        icon: 'swap-horizontal-outline',
+        color: 'indigo',
+        modules: [
+          { featureKey: 'TRANSACTION_MASTER',   displayName: 'Master',   icon: 'layers-outline', category: 'Transaction', access: 'NONE' },
+          { featureKey: 'TRANSACTION_CASHBOOK', displayName: 'Cashbook', icon: 'book-outline',   category: 'Transaction', access: 'NONE' },
+        ]
+      },
+      {
         name: 'Sales',
         icon: 'trending-up-outline',
         color: 'amber',
@@ -190,8 +199,9 @@ export class UserRightPage implements OnInit {
         icon: 'people-circle-outline',
         color: 'rose',
         modules: [
-          { featureKey: 'HR',         displayName: 'HR Department', icon: 'business-outline',  category: 'HR', access: 'NONE' },
-          { featureKey: 'HR_KRA_KPI', displayName: 'HR KRA / KPI',  icon: 'analytics-outline', category: 'HR', access: 'NONE' },
+          { featureKey: 'HR',                 displayName: 'HR Department',  icon: 'business-outline',          category: 'HR', access: 'NONE' },
+          { featureKey: 'HR_KRA_KPI',         displayName: 'HR KRA / KPI',   icon: 'analytics-outline',         category: 'HR', access: 'NONE' },
+          { featureKey: 'HR_ADMIN_APPROVAL',  displayName: 'Admin Approval', icon: 'shield-checkmark-outline',  category: 'HR', access: 'NONE' },
         ]
       },
       {
@@ -521,6 +531,7 @@ export class UserRightPage implements OnInit {
       'blue':    { bg: 'bg-blue-500',    text: 'text-blue-600',    border: 'border-blue-200',    bgLight: 'bg-blue-50' },
       'emerald': { bg: 'bg-emerald-500', text: 'text-emerald-600', border: 'border-emerald-200', bgLight: 'bg-emerald-50' },
       'violet':  { bg: 'bg-violet-500',  text: 'text-violet-600',  border: 'border-violet-200',  bgLight: 'bg-violet-50' },
+      'indigo':  { bg: 'bg-indigo-500',  text: 'text-indigo-600',  border: 'border-indigo-200',  bgLight: 'bg-indigo-50' },
       'amber':   { bg: 'bg-amber-500',   text: 'text-amber-600',   border: 'border-amber-200',   bgLight: 'bg-amber-50' },
       'sky':     { bg: 'bg-sky-500',     text: 'text-sky-600',     border: 'border-sky-200',     bgLight: 'bg-sky-50' },
       'teal':    { bg: 'bg-teal-500',    text: 'text-teal-600',    border: 'border-teal-200',    bgLight: 'bg-teal-50' },

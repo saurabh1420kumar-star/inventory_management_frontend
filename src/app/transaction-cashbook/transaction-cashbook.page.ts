@@ -17,7 +17,7 @@ import { drawCompanyLetterhead, drawTitleChip, BRAND_NAVY, BRAND_AMBER } from '.
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
 import * as XLSX from 'xlsx';
-import { Workbook } from 'exceljs';
+import { Workbook, Cell } from 'exceljs';
 
 export interface CashbookRow {
   label: string;
@@ -400,7 +400,7 @@ export class TransactionCashbookPage implements OnInit {
     title.font = { bold: true, size: 12, color: { argb: navy } };
     ws.addRow([]);
     const head = ws.addRow(['Expenditure', 'Amount (Rs.)', 'Income', 'Amount (Rs.)']);
-    head.eachCell(c => {
+    head.eachCell((c: Cell) => {
       c.font = { bold: true, color: { argb: navy } };
       c.border = { bottom: { style: 'thin', color: { argb: navy } } };
     });

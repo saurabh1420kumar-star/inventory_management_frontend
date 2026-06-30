@@ -1190,18 +1190,6 @@
               class="flex-1 py-3 bg-slate-100 hover:bg-slate-200 text-slate-700 font-bold rounded-xl text-sm transition active:scale-[0.98]">
         Close
       </button>
-      <button type="button" (click)="exportLedgerStatementCsv()"
-              [disabled]="ledgerStatementRows.length === 0"
-              class="flex-1 py-3 bg-slate-600 hover:bg-slate-700 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
-        <ion-icon name="download-outline"></ion-icon>
-        Export CSV
-      </button>
-      <button type="button" (click)="generateLedgerStatementPdfReport()"
-              [disabled]="ledgerStatementRows.length === 0"
-              class="flex-1 py-3 bg-slate-900 hover:bg-slate-800 disabled:opacity-50 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 active:scale-[0.98]">
-        <ion-icon name="print-outline"></ion-icon>
-        Print PDF
-      </button>
     </div>
   </div>
 </div>

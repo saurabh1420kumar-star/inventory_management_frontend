@@ -13,6 +13,8 @@ import {
 } from 'ionicons/icons';
 
 import { TransactionService, TransactionLedger, TransactionVoucher, TransactionFund } from '../services/transaction.service';
+import { HapticService } from '../services/haptic.service';
+import { KeyboardService } from '../services/keyboard.service';
 import { amountToWords } from '../shared/utils/amount-to-words';
 import { generateVoucherPdf as buildOfficialVoucherPdf, generateFundVoucherPdf as buildFundVoucherPdf, generateLedgerStatementPdf, LedgerStatementRow } from '../shared/utils/voucher-pdf';
 import jsPDF from 'jspdf';
@@ -113,7 +115,7 @@ export class TransactionMasterPage implements OnInit {
   // ── Company logo (preloaded as data URL for PDF embedding) ─────────
   logoDataUrl: string | null = null;
 
-  constructor(private transactionSvc: TransactionService) {
+  constructor(private transactionSvc: TransactionService, private haptic: HapticService, private keyboard: KeyboardService) {
     addIcons({
       layersOutline, addCircleOutline, saveOutline, printOutline,
       closeOutline, checkmarkCircleOutline, alertCircleOutline,
@@ -149,6 +151,7 @@ export class TransactionMasterPage implements OnInit {
 
   // ── Tab switching ─────────────────────────────────────────────────
   switchTab(tab: TabType) {
+    this.haptic.selectionChanged();
     this.activeTab = tab;
     if (tab === 'create-ledger') {
       this.resetLedgerForm();
@@ -213,6 +216,7 @@ export class TransactionMasterPage implements OnInit {
       this.showFeedback('Please fill all ledger fields.', false);
       return;
     }
+    this.haptic.heavy();
     this.isSubmittingLedger = true;
     this.transactionSvc.createLedger({
       ledgerName: this.ledgerName.trim(),
@@ -305,6 +309,7 @@ export class TransactionMasterPage implements OnInit {
     const ledger = this.filteredLedgers.find(l => l.id === Number(this.selectedLedgerId));
     if (!ledger) return;
 
+    this.haptic.heavy();
     this.isSubmittingVoucher = true;
     this.transactionSvc.createVoucher({
       date: this.voucherDate,
@@ -323,6 +328,7 @@ export class TransactionMasterPage implements OnInit {
       next: (saved) => {
         this.isSubmittingVoucher = false;
         this.lastSavedVoucher = saved;
+        this.keyboard.dismiss();
         this.fetchNextVoucherNo();
         this.openPrintModal(saved);
         this.resetVoucherForm();
@@ -440,6 +446,7 @@ export class TransactionMasterPage implements OnInit {
       return;
     }
 
+    this.haptic.heavy();
     this.isSubmittingFund = true;
     this.transactionSvc.addFund({
       date: this.fundDate,
@@ -539,6 +546,14 @@ export class TransactionMasterPage implements OnInit {
 
   // ── Feedback helper ───────────────────────────────────────────────
   showFeedback(message: string, success: boolean) {
+    // Single feedback funnel for ledger/voucher/fund results — drive the matching haptic here.
+    if (success) {
+      this.haptic.success();
+      // Inline forms stay on-page; dismiss the keyboard so it doesn't cover the result.
+      this.keyboard.dismiss();
+    } else {
+      this.haptic.error();
+    }
     this.feedbackMessage = message;
     this.feedbackIsSuccess = success;
     this.showFeedbackModal = true;
