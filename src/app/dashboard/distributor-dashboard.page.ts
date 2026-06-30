@@ -1028,6 +1028,11 @@ export class DistributorDashboardPage implements OnInit {
     return numericAmount < 0 ? `₹-${absoluteAmount}` : `₹${absoluteAmount}`;
   }
 
+  formatTotalOS(amount: number): string {
+    const numericAmount = Number(amount) || 0;
+    return numericAmount < 0 ? this.formatOutstandingAmount(numericAmount) : '₹0';
+  }
+
   async showToast(message: string, color: 'success' | 'danger' | 'warning' = 'success') {
     const toast = await this.toastController.create({
       message,
