@@ -2313,7 +2313,7 @@
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll MTD</p>
-            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionMonthly ?? totalCollectionAmount) }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(collectionAnalytics?.collectionMonthly ?? volumeAnalytics?.collectionMonthly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 
@@ -2325,7 +2325,7 @@
           <div class="dd-info-divider"></div>
           <div class="dd-info-cell">
             <p class="dd-info-cell__label dd-info-cell__label--teal">Coll YTD</p>
-            <p class="dd-info-cell__value">{{ formatAmount(volumeAnalytics?.collectionYearly ?? totalCollectionAmount) }}</p>
+            <p class="dd-info-cell__value">{{ formatAmount(collectionAnalytics?.collectionYearly ?? volumeAnalytics?.collectionYearly ?? totalCollectionAmount) }}</p>
           </div>
         </div>
 

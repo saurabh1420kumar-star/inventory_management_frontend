@@ -248,6 +248,7 @@ export class DistributorDashboardPage implements OnInit {
   distributorAnalytics: { totalOrders: number; totalAmount: number; totalOutstanding?: number } | null = null;
   totalOutstanding = 0;
   volumeAnalytics: VolumeAnalytics | null = null;
+  collectionAnalytics: { collectionMonthly: number; collectionYearly: number } | null = null;
 
   // Payment Collections
   paymentCollections: any[] = [];
@@ -428,6 +429,7 @@ export class DistributorDashboardPage implements OnInit {
     this.loadDealers();
     this.loadDistributorAnalytics();
     this.loadVolumeAnalytics();
+    this.loadCollectionAnalytics();
     this.loadDispatchReport();
     const view = this.route.snapshot.queryParams['view'];
     if (view) {
@@ -919,6 +921,25 @@ export class DistributorDashboardPage implements OnInit {
         this.isLoadingVolumeAnalytics = false;
       },
       error: () => { this.isLoadingVolumeAnalytics = false; }
+    });
+  }
+
+  loadCollectionAnalytics() {
+    if (!this.distributorId) {
+      console.warn('Distributor ID not available for collection analytics');
+      return;
+    }
+    const url = `${environment.apiUrl}/accounts/collection-analytics?distributorId=${this.distributorId}`;
+    const headers = new HttpHeaders({ Authorization: `Bearer ${this.auth.getToken()}` });
+    this.http.get<any>(url, { headers }).subscribe({
+      next: (res) => {
+        const data = res?.data ?? res;
+        this.collectionAnalytics = {
+          collectionMonthly: data?.collectionMonthly ?? 0,
+          collectionYearly: data?.collectionYearly ?? 0
+        };
+      },
+      error: () => {}
     });
   }
 

@@ -37,13 +37,14 @@ const PAGE_W = 297;
 const PAGE_H = 210;
 const M = 10; // outer margin
 
-// Output is an A5 landscape sheet (210 × 148 mm — exactly half of A4) so two
-// vouchers fit on one A4 page. The whole form is authored in the 297 × 210
-// "design space" above and rendered through a scaling Pen so every coordinate
-// and font size shrinks uniformly to fit A5.
-const PAGE_OUT_W = 210;
+// Output page is full A4 portrait so it prints/saves as portrait by default
+// in every browser. The form itself is still authored in the 297 × 210
+// landscape "design space" above and rendered through a scaling Pen, so it's
+// shrunk uniformly (unchanged layout) to fit the 210mm page width — it just
+// occupies the top portion of the taller portrait sheet instead of a full
+// landscape page.
 const PAGE_OUT_H = 148;
-const SCALE = PAGE_OUT_H / PAGE_H; // ≈ 0.7048 — maps 210→148 (and 297→209.3)
+const SCALE = PAGE_OUT_H / PAGE_H; // ≈ 0.7048 — maps design 210→148 (and 297→209.3)
 
 // A thin proxy over jsPDF that multiplies every coordinate / size by SCALE,
 // letting the design-space drawing code below stay unchanged.
@@ -451,7 +452,7 @@ export const BRAND_AMBER: [number, number, number] = AMBER;
 // ── Payment / Receipt voucher (EXPENSE | INCOME) ────────────────────────────
 
 export function generateVoucherPdf(voucher: TransactionVoucher, logo: string | null): jsPDF {
-  const raw = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [PAGE_OUT_W, PAGE_OUT_H] });
+  const raw = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const doc = makePen(raw, SCALE);
   const isExpense = voucher.voucherType === 'EXPENSE';
 
@@ -563,7 +564,7 @@ export function generateVoucherPdf(voucher: TransactionVoucher, logo: string | n
 // ── Fund transfer voucher ───────────────────────────────────────────────────
 
 export function generateFundVoucherPdf(fund: TransactionFund, logo: string | null): jsPDF {
-  const raw = new jsPDF({ orientation: 'landscape', unit: 'mm', format: [PAGE_OUT_W, PAGE_OUT_H] });
+  const raw = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
   const doc = makePen(raw, SCALE);
 
   drawFrameAndHeader(doc, logo);
