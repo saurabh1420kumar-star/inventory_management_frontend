@@ -75,13 +75,4 @@ export class UserRightsService {
       .pipe(catchError(() => of(null)));
   }
 
-  /** PUT /api/role-feature-permissions/role/{roleId}/bulk */
-  setBulkPermissions(
-    roleId: number,
-    payload: Record<string, PermissionPayload>
-  ): Observable<any> {
-    return this.http
-      .put<any>(`${this.base}/role/${roleId}/bulk`, payload, { headers: this.getHeaders() })
-      .pipe(catchError(() => of(null)));
-  }
 }

@@ -417,23 +417,26 @@ export class UserRightPage implements OnInit {
     if (!this.selectedUser) return;
     this.isSaving = true;
 
-    const bulkPayload: Record<string, PermissionPayload> = {};
-    for (const cat of this.permissionCategories) {
-      for (const mod of cat.modules) {
-        const featureId = this.featureIdMap[mod.featureKey];
-        if (featureId != null) {
-          bulkPayload[String(featureId)] = this.accessToPayload(mod.access);
-        }
-      }
-    }
+    const allMods: ModulePermission[] = ([] as ModulePermission[]).concat(
+      ...this.permissionCategories.map(cat => cat.modules)
+    );
+    const saveRequests = allMods
+      .filter((mod: ModulePermission) => this.featureIdMap[mod.featureKey] != null)
+      .map((mod: ModulePermission) =>
+        this.userRightsService.setFeaturePermission(
+          this.selectedUser!.id,
+          this.featureIdMap[mod.featureKey],
+          this.accessToPayload(mod.access)
+        )
+      );
 
-    if (Object.keys(bulkPayload).length === 0) {
+    if (saveRequests.length === 0) {
       this.isSaving = false;
       this.toast.present('No features loaded — try refreshing', 'warning');
       return;
     }
 
-    this.userRightsService.setBulkPermissions(this.selectedUser.id, bulkPayload).subscribe({
+    forkJoin(saveRequests).subscribe({
       next: () => {
         this.snapshotPermissions();
         this.hasUnsavedChanges = false;
