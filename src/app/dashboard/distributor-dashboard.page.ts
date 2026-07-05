@@ -33,6 +33,7 @@ import { LedgerService } from '../services/accountsLedger.service';
 import { HapticService } from '../services/haptic.service';
 import { InvoiceService } from '../services/invoice.service';
 import { DownloadService } from '../services/download.service';
+import { generateLedgerStatementPdf, LedgerStatementRow } from '../shared/utils/voucher-pdf';
 import { environment } from '../../environments/environment';
 
 interface MetricCard {
@@ -117,7 +118,10 @@ interface DistributorProfile {
   email?: string;
   address?: string;
   city?: string;
+  district?: string;
   state?: string;
+  pincode?: string;
+  pinCode?: string;
   gstNumber?: string;
   panNumber?: string;
   creditLimit?: number;
@@ -694,6 +698,92 @@ export class DistributorDashboardPage implements OnInit {
       },
       error: () => { this.isLoadingAccountStatement = false; }
     });
+  }
+
+  // Format an ISO / 'YYYY-MM-DD' date to 'DD/MM/YYYY' for the statement table.
+  private formatStatementDate(raw: string): string {
+    if (!raw) return '';
+    const [y, m, d] = raw.split('T')[0].split('-');
+    if (y && m && d) return `${d}/${m}/${y}`;
+    const dt = new Date(raw);
+    if (!isNaN(dt.getTime())) {
+      const pad = (n: number) => String(n).padStart(2, '0');
+      return `${pad(dt.getDate())}/${pad(dt.getMonth() + 1)}/${dt.getFullYear()}`;
+    }
+    return raw;
+  }
+
+  isDownloadingStatement = false;
+
+  // Build a ledger-style PDF of the account statement transactions and download it.
+  downloadAccountStatement(): void {
+    if (this.isLoadingAccountStatement || this.isDownloadingStatement) return;
+    if (this.accountStatementTxns.length === 0) {
+      this.showToast('No transactions to download', 'warning');
+      return;
+    }
+    this.isDownloadingStatement = true;
+    try {
+      // Oldest-first so the running balance accumulates chronologically (matches the
+      // ledger convention used in accounts-master: balance = balance - debit + credit).
+      const sorted = [...this.accountStatementTxns].sort((a, b) =>
+        new Date(a.createdAt ?? a.date ?? 0).getTime() - new Date(b.createdAt ?? b.date ?? 0).getTime()
+      );
+
+      // Choose the opening balance so the final running balance equals the API closing balance.
+      let running = this.accountStatementBalance + this.statementTotalDebits - this.statementTotalCredits;
+
+      const rows: LedgerStatementRow[] = sorted.map((t: any) => {
+        const isDebit = this.isDebitType(t.transactionType ?? t.type ?? '');
+        const amount = t.amount ?? 0;
+        const debit = isDebit ? amount : 0;
+        const credit = isDebit ? 0 : amount;
+        running = running - debit + credit;
+        return {
+          date: this.formatStatementDate(t.createdAt ?? t.date ?? ''),
+          reference: t.reference ?? (t.id != null ? `TXN-${t.id}` : ''),
+          description: t.description ?? t.narration ?? '',
+          type: isDebit ? 'DEBIT' : 'CREDIT',
+          debit,
+          credit,
+          balance: running,
+        };
+      });
+
+      const p = this.distributorProfile;
+      const partyName = p?.distributorName ?? p?.name ?? p?.firmName ?? this.distributorName ?? '';
+
+      const now = new Date();
+      const fyStartYear = now.getMonth() >= 3 ? now.getFullYear() : now.getFullYear() - 1;
+      const periodStart = `${fyStartYear}-04-01`;
+      const periodEnd = now.toISOString().split('T')[0];
+
+      const doc = generateLedgerStatementPdf(
+        partyName,
+        partyName,
+        p?.address ?? '',
+        p?.mobileNumber ?? p?.phone ?? '',
+        p?.email ?? '',
+        rows,
+        null,
+        p?.city ?? p?.district ?? '',
+        p?.state ?? '',
+        p?.pincode ?? p?.pinCode ?? '',
+        periodStart,
+        periodEnd,
+        this.accountStatementBalance,
+      );
+
+      const blob = doc.output('blob');
+      const safeName = (partyName || 'account').replace(/[^\w]+/g, '_');
+      const filename = `account-statement-${safeName}-${periodEnd}.pdf`;
+      this.downloadService.downloadBlob(blob, filename)
+        .then(() => { this.isDownloadingStatement = false; })
+        .catch(() => { this.isDownloadingStatement = false; });
+    } catch {
+      this.isDownloadingStatement = false;
+      this.showToast('Failed to generate statement PDF', 'danger');
+    }
   }
 
   loadDispatchReport() {

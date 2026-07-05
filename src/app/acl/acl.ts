@@ -40,6 +40,29 @@ export class Acl {
     return this.auth.getFeatures()?.some(f => f.path === path) ?? false;
   }
 
+  // First web-admin module route the current user can open. Used to land users who
+  // lack the DASHBOARD feature on a page they actually have access to (instead of the
+  // hidden dashboard). Order = sidebar priority; only existing top-level routes listed.
+  getLandingRoute(): string {
+    const routeByFeature: Array<[string, string]> = [
+      ['ACCOUNTS', '/accounts-master'],
+      ['TRANSACTION_MASTER', '/transaction-master'],
+      ['TRANSACTION_CASHBOOK', '/transaction-cashbook'],
+      ['HR', '/hr-department'],
+      ['ADMIN_APPROVAL', '/hr-admin-approval'],
+      ['INVENTORY_MASTERS', '/master-inventory'],
+      ['INVENTORY_INWARD', '/inward'],
+      ['INVENTORY_OUTWARD', '/outward-inventory'],
+      ['ORDER_DETAILS', '/order-details'],
+      ['DISPATCH', '/dispatch'],
+      ['COMPLAINT', '/complaints'],
+      ['USER_RIGHTS', '/user-right'],
+    ];
+    const match = routeByFeature.find(([feature]) => this.can(feature));
+    // Absolute last resort (exotic feature set) — dashboard beats a 404.
+    return match ? match[1] : '/dashboard';
+  }
+
   // =====================================
   // USER INFO (OPTIONAL)
   // =====================================
