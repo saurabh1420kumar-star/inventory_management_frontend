@@ -147,9 +147,9 @@ export class UserRightPage implements OnInit {
         icon: 'wallet-outline',
         color: 'violet',
         modules: [
-          { featureKey: 'ACCOUNTS',        displayName: 'Accounts Master',  icon: 'book-outline',     category: 'Accounts', access: 'NONE' },
-          { featureKey: 'PAYMENT_REQUEST', displayName: 'Payment Requests', icon: 'card-outline',     category: 'Accounts', access: 'NONE' },
-          { featureKey: 'PI_UPDATE',       displayName: 'PI Update',        icon: 'receipt-outline',  category: 'Accounts', access: 'NONE' },
+          { featureKey: 'ACCOUNTS_MASTER',           displayName: 'Accounts Master',  icon: 'book-outline',     category: 'Accounts', access: 'NONE' },
+          { featureKey: 'ACCOUNTS_PAYMENT_REQUESTS', displayName: 'Payment Requests', icon: 'card-outline',     category: 'Accounts', access: 'NONE' },
+          { featureKey: 'ACCOUNTS_PI_UPDATE',        displayName: 'PI Update',        icon: 'receipt-outline',  category: 'Accounts', access: 'NONE' },
         ]
       },
       {
@@ -167,7 +167,6 @@ export class UserRightPage implements OnInit {
         color: 'amber',
         modules: [
           { featureKey: 'SALES',               displayName: 'Sales Management',  icon: 'bar-chart-outline',  category: 'Sales', access: 'NONE' },
-          { featureKey: 'REPORTING_MANAGER',   displayName: 'Reporting Manager', icon: 'people-outline',     category: 'Sales', access: 'NONE' },
         ]
       },
       {
@@ -201,7 +200,7 @@ export class UserRightPage implements OnInit {
         modules: [
           { featureKey: 'HR',                 displayName: 'HR Department',  icon: 'business-outline',          category: 'HR', access: 'NONE' },
           { featureKey: 'HR_KRA_KPI',         displayName: 'HR KRA / KPI',   icon: 'analytics-outline',         category: 'HR', access: 'NONE' },
-          { featureKey: 'HR_ADMIN_APPROVAL',  displayName: 'Admin Approval', icon: 'shield-checkmark-outline',  category: 'HR', access: 'NONE' },
+          { featureKey: 'ADMIN_APPROVAL',     displayName: 'Admin Approval', icon: 'shield-checkmark-outline',  category: 'HR', access: 'NONE' },
         ]
       },
       {

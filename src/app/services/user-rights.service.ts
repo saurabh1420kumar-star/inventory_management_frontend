@@ -74,4 +74,5 @@ export class UserRightsService {
       .put<RoleFeaturePermission>(`${this.base}/role/${roleId}/feature/${featureId}`, payload, { headers: this.getHeaders() })
       .pipe(catchError(() => of(null)));
   }
+
 }

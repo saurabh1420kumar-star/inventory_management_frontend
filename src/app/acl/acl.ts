@@ -45,7 +45,7 @@ export class Acl {
   // hidden dashboard). Order = sidebar priority; only existing top-level routes listed.
   getLandingRoute(): string {
     const routeByFeature: Array<[string, string]> = [
-      ['ACCOUNTS', '/accounts-master'],
+      ['ACCOUNTS_MASTER', '/accounts-master'],
       ['TRANSACTION_MASTER', '/transaction-master'],
       ['TRANSACTION_CASHBOOK', '/transaction-cashbook'],
       ['HR', '/hr-department'],

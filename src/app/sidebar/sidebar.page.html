@@ -35,7 +35,7 @@
 
         <!-- ===== ACCOUNTS (Desktop only, or for all screens if admin) ===== -->
         <ng-container *ngIf="isDesktop || isAdmin">
-          <ion-accordion-group *appAcl="{ features: ['ACCOUNTS', 'ACCOUNTS_TRANSACTION'] }">
+          <ion-accordion-group *appAcl="{ features: ['ACCOUNTS_MASTER', 'ACCOUNTS_PAYMENT_REQUESTS', 'ACCOUNTS_PI_UPDATE'] }">
             <ion-accordion>
               <ion-item slot="header" button>
                 <ion-icon name="reader-outline" slot="start"></ion-icon>
@@ -43,19 +43,15 @@
               </ion-item>
 
               <div slot="content">
-                <ion-item *appAcl="'ACCOUNTS'" routerLink="/accounts-master" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'ACCOUNTS_MASTER'" routerLink="/accounts-master" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="document-text-outline" slot="start"></ion-icon>
                   <ion-label>Master</ion-label>
                 </ion-item>
-                <ion-item *appAcl="'ACCOUNTS_TRANSACTION'" routerLink="/accounts/transaction" routerLinkActive="active" (click)="onMenuItemClick()">
-                  <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
-                  <ion-label>Transaction</ion-label>
-                </ion-item>
-                <ion-item *appAcl="'ACCOUNTS'" routerLink="/payment-request" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'ACCOUNTS_PAYMENT_REQUESTS'" routerLink="/payment-request" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="wallet-outline" slot="start"></ion-icon>
                   <ion-label>Payment Requests</ion-label>
                 </ion-item>
-                <ion-item routerLink="/pi-update" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'ACCOUNTS_PI_UPDATE'" routerLink="/pi-update" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="document-lock-outline" slot="start"></ion-icon>
                   <ion-label>PI Update</ion-label>
                 </ion-item>
@@ -88,7 +84,7 @@
 
         <!-- ===== HUMAN RESOURCES (Desktop only, or for all screens if admin) ===== -->
         <ng-container *ngIf="isDesktop || isAdmin">
-          <ion-accordion-group *appAcl="{ features: ['HR', 'HR_DESIGNATION', 'HR_EMPLOYEE'] }">
+          <ion-accordion-group *appAcl="{ features: ['HR', 'HR_KRA_KPI', 'ADMIN_APPROVAL'] }">
             <ion-accordion>
               <ion-item slot="header" button>
                 <ion-icon name="people-outline" slot="start"></ion-icon>
@@ -100,19 +96,11 @@
                   <ion-icon name="business-outline" slot="start"></ion-icon>
                   <ion-label>Department Master</ion-label>
                 </ion-item>
-                <ion-item *appAcl="'HR'" routerLink="/hr-kra-kpi" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'HR_KRA_KPI'" routerLink="/hr-kra-kpi" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="bar-chart-outline" slot="start"></ion-icon>
                   <ion-label>KRA/KPI Master</ion-label>
                 </ion-item>
-                <ion-item *appAcl="'HR_DESIGNATION'" routerLink="/hr/designation-master" routerLinkActive="active" (click)="onMenuItemClick()">
-                  <ion-icon name="ribbon-outline" slot="start"></ion-icon>
-                  <ion-label>Designation Master</ion-label>
-                </ion-item>
-                <ion-item *appAcl="'HR_EMPLOYEE'" routerLink="/hr/employee-master" routerLinkActive="active" (click)="onMenuItemClick()">
-                  <ion-icon name="person-outline" slot="start"></ion-icon>
-                  <ion-label>Employee Master</ion-label>
-                </ion-item>
-                <ion-item *appAcl="'HR'" routerLink="/hr-admin-approval" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'ADMIN_APPROVAL'" routerLink="/hr-admin-approval" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="shield-checkmark-outline" slot="start"></ion-icon>
                   <ion-label>Admin Approval</ion-label>
                 </ion-item>
