@@ -27,8 +27,8 @@
 
       <ion-list lines="none" class="menu-list">
 
-        <!-- ===== DASHBOARD (Both mobile & desktop) ===== -->
-        <ion-item routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="onMenuItemClick()">
+        <!-- ===== DASHBOARD (only if user has the DASHBOARD feature) ===== -->
+        <ion-item *appAcl="'DASHBOARD'" routerLink="/dashboard" routerLinkActive="active" [routerLinkActiveOptions]="{ exact: true }" (click)="onMenuItemClick()">
           <ion-icon name="albums-outline" slot="start"></ion-icon>
           <ion-label>Dashboard</ion-label>
         </ion-item>
@@ -121,24 +121,22 @@
           </ion-accordion-group>
         </ng-container>
 
-        <!-- ===== DISTRIBUTOR (Mobile only, or for all screens if admin) ===== -->
-        <ng-container *ngIf="isMobile || isAdmin">
-          <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
-            <ion-accordion>
-              <ion-item slot="header" button>
-                <ion-icon name="business-outline" slot="start"></ion-icon>
-                <ion-label>Distributor</ion-label>
-              </ion-item>
+        <!-- ===== DISTRIBUTOR (any user with the DISTRIBUTOR feature — mobile & web) ===== -->
+        <ion-accordion-group *appAcl="{ features: ['DISTRIBUTOR'] }">
+          <ion-accordion>
+            <ion-item slot="header" button>
+              <ion-icon name="business-outline" slot="start"></ion-icon>
+              <ion-label>Distributor</ion-label>
+            </ion-item>
 
-              <div slot="content">
-                <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor" routerLinkActive="active" (click)="onMenuItemClick()">
-                  <ion-icon name="storefront-outline" slot="start"></ion-icon>
-                  <ion-label>Distributor Master</ion-label>
-                </ion-item>
-              </div>
-            </ion-accordion>
-          </ion-accordion-group>
-        </ng-container>
+            <div slot="content">
+              <ion-item *appAcl="'DISTRIBUTOR'" routerLink="/distributor" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-icon name="storefront-outline" slot="start"></ion-icon>
+                <ion-label>Distributor Master</ion-label>
+              </ion-item>
+            </div>
+          </ion-accordion>
+        </ion-accordion-group>
 
         <ng-container *ngIf="(isMobile || isAdmin) && !isSalesRole && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
         <ion-accordion-group *appAcl="{ features: ['SALES'] }">
@@ -164,7 +162,7 @@
 
         <!-- ===== INVENTORY (Desktop only, or for all screens if admin; hidden for distributors/dealers) ===== -->
         <ng-container *ngIf="(isDesktop || isAdmin) && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
-          <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_TRANSACTIONS'] }">
+          <ion-accordion-group *appAcl="{ features: ['INVENTORY_MASTERS', 'INVENTORY_INWARD', 'INVENTORY_OUTWARD'] }">
             <ion-accordion>
               <ion-item slot="header" button>
                 <ion-icon name="cube-outline" slot="start"></ion-icon>
@@ -176,11 +174,11 @@
                   <ion-icon name="layers-outline" slot="start"></ion-icon>
                   <ion-label>Master Inventory</ion-label>
                 </ion-item>
-                <ion-item *appAcl="'INVENTORY_MASTERS'" routerLink="/inward" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'INVENTORY_INWARD'" routerLink="/inward" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="arrow-down-circle-outline" slot="start"></ion-icon>
                   <ion-label>Inward Inventory</ion-label>
                 </ion-item>
-                <ion-item *appAcl="'INVENTORY_TRANSACTIONS'" routerLink="/outward-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
+                <ion-item *appAcl="'INVENTORY_OUTWARD'" routerLink="/outward-inventory" routerLinkActive="active" (click)="onMenuItemClick()">
                   <ion-icon name="swap-horizontal-outline" slot="start"></ion-icon>
                   <ion-label>Outward Inventory</ion-label>
                 </ion-item>

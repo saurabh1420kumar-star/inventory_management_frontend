@@ -1007,8 +1007,13 @@
         <h1 class="text-xl font-bold text-white">Account Statement</h1>
         <p class="text-xs text-purple-400">View account transaction history</p>
       </div>
-      <button class="w-10 h-10 rounded-xl flex items-center justify-center" style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
-        <ion-icon name="download-outline" class="text-slate-400 text-lg"></ion-icon>
+      <button (click)="downloadAccountStatement()"
+              [disabled]="isLoadingAccountStatement || isDownloadingStatement || accountStatementTxns.length === 0"
+              class="flex items-center gap-2 px-4 h-10 rounded-xl font-bold text-sm text-white transition active:scale-95 disabled:opacity-40"
+              style="background: linear-gradient(135deg, #a855f7, #7c3aed); box-shadow: 0 4px 14px rgba(168,85,247,0.45);">
+        <ion-spinner *ngIf="isDownloadingStatement" name="crescent" style="width:16px;height:16px;color:#fff;"></ion-spinner>
+        <ion-icon *ngIf="!isDownloadingStatement" name="download-outline" class="text-lg"></ion-icon>
+        <span>PDF</span>
       </button>
     </div>
 

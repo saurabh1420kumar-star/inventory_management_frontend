@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard'; // Import the guard
 import { AclGuard } from './guards/acl.guard';
+import { DashboardGuard } from './guards/dashboard.guard';
 
 const routes: Routes = [
   {
@@ -24,7 +25,7 @@ const routes: Routes = [
   {
     path: 'dashboard',
     loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule),
-    canActivate: [AuthGuard] // Protected route
+    canActivate: [AuthGuard, DashboardGuard] // Protected + DASHBOARD feature (web admins)
   },
   {
     path: 'master-inventory',

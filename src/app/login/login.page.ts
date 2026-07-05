@@ -8,6 +8,7 @@ import { CommonModule } from '@angular/common';
 import { Capacitor } from '@capacitor/core';
 
 import { Auth } from '../services/auth';
+import { Acl } from '../acl/acl';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 
@@ -35,6 +36,7 @@ export class LoginPage {
     private toast: Toast,
     private router: Router,
     private auth: Auth,
+    private acl: Acl,
     private platform: Platform
   ) {
     this.loginForm = this.fb.group({
@@ -110,6 +112,11 @@ export class LoginPage {
         
         if (salesRoles.some(salesRole => role.includes(salesRole))) {
           this.router.navigateByUrl('/sales/sales-dashboard', { replaceUrl: true });
+        } else if (!isMobile && !this.auth.hasFeature('DASHBOARD')) {
+          // Web (desktop) admin user without the Dashboard right — send them to the
+          // first module they can access so they don't land on the hidden dashboard.
+          // Mobile distributor and sales logins are unaffected (handled above / below).
+          this.router.navigateByUrl(this.acl.getLandingRoute(), { replaceUrl: true });
         } else {
           this.router.navigateByUrl('/dashboard', { replaceUrl: true });
         }
