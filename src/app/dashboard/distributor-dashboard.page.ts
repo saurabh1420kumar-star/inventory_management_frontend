@@ -771,7 +771,6 @@ export class DistributorDashboardPage implements OnInit {
         p?.pincode ?? p?.pinCode ?? '',
         periodStart,
         periodEnd,
-        this.accountStatementBalance,
       );
 
       const blob = doc.output('blob');
