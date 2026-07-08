@@ -182,6 +182,17 @@ export class HrKraKpiPage implements OnInit {
   // Export state
   showExportModal = false;
 
+  // Edit Weightage modal state
+  showEditWeightageForm = false;
+  weightageKraList: KraMasterResponse[] = [];
+  selectedWeightageKpiId: number | null = null;
+  selectedWeightageKra: KraMasterResponse | null = null;
+  editWeightageValue: number | null = null;
+  editWeightageFrequency = '';
+  isLoadingEditWeightage = false;
+  showWeightageKraDropdown = false;
+  isMouseOverWeightageDropdown = false;
+
   kraEntries: KraEntry[] = [];
   kraMasterList: KraMasterResponse[] = [];
 
@@ -816,6 +827,137 @@ export class HrKraKpiPage implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
+  }
+
+  // Edit Weightage methods
+  openEditWeightageForm(): void {
+    this.showEditWeightageForm = true;
+    this.selectedWeightageKpiId = null;
+    this.selectedWeightageKra = null;
+    this.editWeightageValue = null;
+    this.editWeightageFrequency = '';
+    this.showWeightageKraDropdown = false;
+    this.isMouseOverWeightageDropdown = false;
+    this.loadWeightageKraList();
+  }
+
+  closeEditWeightageForm(): void {
+    this.showEditWeightageForm = false;
+    this.selectedWeightageKpiId = null;
+    this.selectedWeightageKra = null;
+    this.editWeightageValue = null;
+    this.editWeightageFrequency = '';
+    this.showWeightageKraDropdown = false;
+    this.isMouseOverWeightageDropdown = false;
+  }
+
+  toggleWeightageKraDropdown(): void {
+    this.showWeightageKraDropdown = !this.showWeightageKraDropdown;
+  }
+
+  onWeightageDropdownMouseEnter(): void {
+    this.isMouseOverWeightageDropdown = true;
+  }
+
+  onWeightageDropdownMouseLeave(): void {
+    this.isMouseOverWeightageDropdown = false;
+  }
+
+  onWeightageKraButtonBlur(): void {
+    if (!this.isMouseOverWeightageDropdown) {
+      setTimeout(() => {
+        if (!this.isMouseOverWeightageDropdown) {
+          this.showWeightageKraDropdown = false;
+        }
+      }, 150);
+    }
+  }
+
+  selectWeightageKra(kra: KraMasterResponse): void {
+    this.selectedWeightageKpiId = kra.id;
+    this.selectedWeightageKra = kra;
+    this.editWeightageValue = kra.defaultWeightage;
+    this.editWeightageFrequency = kra.frequency;
+    this.showWeightageKraDropdown = false;
+  }
+
+  loadWeightageKraList(): void {
+    this.http.get<KraMasterResponse[]>('https://api.imsnectarorigin.com/api/admin/kra-kpi/master').subscribe({
+      next: (response: KraMasterResponse[]) => {
+        if (response && Array.isArray(response)) {
+          this.weightageKraList = response;
+        }
+      },
+      error: (error) => {
+        console.error('Error loading KRA master list for weightage:', error);
+      },
+    });
+  }
+
+  get canEditWeightage(): boolean {
+    return (
+      this.selectedWeightageKra !== null &&
+      this.editWeightageValue !== null &&
+      this.editWeightageValue !== undefined &&
+      this.editWeightageValue > 0 &&
+      this.editWeightageValue <= 100
+    );
+  }
+
+  editWeightage(): void {
+    if (!this.canEditWeightage || !this.selectedWeightageKra) {
+      return;
+    }
+
+    this.isLoadingEditWeightage = true;
+    const kra = this.selectedWeightageKra;
+    const newWeightage = this.editWeightageValue as number;
+
+    const payload: CreateKraRequest = {
+      kpiName: kra.kpiName,
+      description: kra.description || '',
+      kpiCategory: kra.kpiCategory,
+      measurementUnit: kra.measurementUnit,
+      defaultWeightage: newWeightage,
+      frequency: kra.frequency,
+      isActive: kra.isActive,
+    };
+
+    this.http.patch(`https://api.imsnectarorigin.com/api/admin/kra-kpi/${kra.id}`, payload).subscribe({
+      next: (response: any) => {
+        console.log('Weightage updated successfully:', response);
+
+        // Keep local lists in sync
+        kra.defaultWeightage = newWeightage;
+        const masterIdx = this.kraMasterList.findIndex((entry) => entry.id === kra.id);
+        if (masterIdx >= 0) {
+          this.kraMasterList[masterIdx].defaultWeightage = newWeightage;
+        }
+
+        this.isLoadingEditWeightage = false;
+        this.showEditWeightageForm = false;
+        this.isSuccessModal = true;
+        this.successMessage = `Weightage updated successfully for ${kra.kpiName}!`;
+        this.showSuccessModal = true;
+      },
+      error: (error) => {
+        console.error('Error updating weightage:', error);
+        this.isLoadingEditWeightage = false;
+
+        let errorMessage = 'Failed to update weightage. Please try again.';
+        if (error.error && error.error.error) {
+          errorMessage = error.error.error;
+        } else if (error.error && error.error.message) {
+          errorMessage = error.error.message;
+        } else if (error.error && typeof error.error === 'string') {
+          errorMessage = error.error;
+        }
+
+        this.isSuccessModal = false;
+        this.successMessage = errorMessage;
+        this.showSuccessModal = true;
+      },
+    });
   }
 
   exportAsExcel(): void {
