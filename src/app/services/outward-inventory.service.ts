@@ -55,6 +55,7 @@ export class OutwardInventoryService {
 
   private readonly baseUrl = `${environment.productsUrl}/outward-inventory`;
   private readonly outwardGivingUrl = `${environment.productsUrl}/outward-items`;
+  private readonly outwardGivingBulkUrl = `${this.outwardGivingUrl}/bulk`;
 
   constructor(private http: HttpClient) {}
 
@@ -72,6 +73,10 @@ export class OutwardInventoryService {
 
   createOutwardItem(payload: OutwardGivingPayload): Observable<unknown> {
     return this.http.post(this.outwardGivingUrl, payload);
+  }
+
+  createOutwardItemsBulk(payloads: OutwardGivingPayload[]): Observable<unknown> {
+    return this.http.post(this.outwardGivingBulkUrl, payloads);
   }
 
   getAllOutwardItems(): Observable<OutwardItemResponse[]> {

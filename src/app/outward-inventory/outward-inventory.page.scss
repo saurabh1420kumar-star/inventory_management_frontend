@@ -103,3 +103,35 @@ textarea.field-input {
   background: #e2e8f0;
   border-radius: 4px;
 }
+
+/* ── Custom dropdown (replaces native <select> so the popup
+     always matches the trigger's width, unlike native selects) ── */
+.promo-dropdown-list {
+  position: absolute;
+  top: calc(100% + 6px);
+  left: 0;
+  right: 0;
+  max-height: 220px;
+  overflow-y: auto;
+  background: #ffffff;
+  border: 1px solid #e2e8f0;
+  border-radius: 12px;
+  box-shadow: 0 14px 36px rgba(15, 23, 42, 0.18);
+  z-index: 30;
+  padding: 6px;
+}
+
+.promo-dropdown-item {
+  @apply w-full text-left rounded-lg px-3 py-2 text-sm text-slate-700 hover:bg-emerald-50 transition-colors;
+  display: block;
+  border: none;
+  background: transparent;
+}
+
+.promo-dropdown-item--placeholder {
+  @apply text-slate-400;
+}
+
+.promo-dropdown-empty {
+  @apply px-3 py-2 text-xs text-slate-500 font-medium;
+}

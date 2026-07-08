@@ -63,6 +63,14 @@ interface DistributorOption {
 
 type PromoPartyType = 'employee' | 'distributor' | 'salesperson';
 
+interface PromoOutwardRow {
+  matCode: string;
+  matName: string;
+  unit: UnitType | '';
+  quantity: number | null;
+  quotedSellingPrice: number | null;
+}
+
 @Component({
   selector: 'app-outward-inventory',
   standalone: true,
@@ -106,6 +114,15 @@ export class OutwardInventoryPage implements OnInit {
   promotionalDistributors: DistributorOption[] = [];
   promotionalSalespersons: PersonOption[] = [];
   promoPartySelectionError = false;
+
+  /** multi-row material entries for Promotional Items outward giving (bulk submit) */
+  promoOutwardRows: PromoOutwardRow[] = [];
+  promoRowsSubmitAttempted = false;
+
+  /** custom dropdown state (replaces native <select> popups, which render at browser-controlled widths) */
+  openPromoRowDropdown: { index: number; field: 'matCode' | 'matName' } | null = null;
+  openPromoPartyDropdown: PromoPartyType | null = null;
+  private isMouseOverPromoDropdown = false;
 
   /** scrap items dropdown source from /products/scrap-items */
   scrapItems: InventoryItem[] = [];
@@ -242,16 +259,12 @@ export class OutwardInventoryPage implements OnInit {
     });
 
     this.promoOutwardForm = this.fb.group({
-      matCode:  ['', Validators.required],
-      matName:  ['', Validators.required],
       employeeId: [null],
       employeeName: [''],
       distributorId: [null],
       distributorName: [''],
       salespersonId: [null],
       salespersonName: [''],
-      unit:     ['', Validators.required],
-      quantity: [null, [Validators.required, Validators.min(1)]],
       comments: ['']
     });
 
@@ -457,6 +470,9 @@ export class OutwardInventoryPage implements OnInit {
       this.loadSparePartItems();
     } else if (type === 'promotional_items') {
       this.loadPromotionalItems();
+      if (this.promoOutwardRows.length === 0) {
+        this.promoOutwardRows = [this.createEmptyPromoOutwardRow()];
+      }
     } else if (type === 'scrap_material') {
       this.loadScrapItems();
     }
@@ -605,6 +621,126 @@ export class OutwardInventoryPage implements OnInit {
       });
   }
 
+  // ─── promotional items bulk rows ────────────────────────────────────────
+  private createEmptyPromoOutwardRow(): PromoOutwardRow {
+    return { matCode: '', matName: '', unit: '', quantity: null, quotedSellingPrice: null };
+  }
+
+  addPromoOutwardRow(): void {
+    this.haptic.light();
+    this.promoOutwardRows.push(this.createEmptyPromoOutwardRow());
+  }
+
+  removePromoOutwardRow(index: number): void {
+    if (this.promoOutwardRows.length <= 1) return;
+    this.haptic.light();
+    this.promoOutwardRows.splice(index, 1);
+  }
+
+  onPromoRowMatCodeChange(index: number, code: string): void {
+    const item = this.getPromotionalItemOptions().find(option => option.code === code);
+    if (!item) return;
+    const row = this.promoOutwardRows[index];
+    row.matCode = item.code;
+    row.matName = item.name;
+    if (item.unit) row.unit = item.unit;
+    if (typeof item.price === 'number') row.quotedSellingPrice = item.price;
+  }
+
+  onPromoRowMatNameChange(index: number, name: string): void {
+    const item = this.getPromotionalItemOptions().find(option => option.name === name);
+    if (!item) return;
+    const row = this.promoOutwardRows[index];
+    row.matCode = item.code;
+    row.matName = item.name;
+    if (item.unit) row.unit = item.unit;
+    if (typeof item.price === 'number') row.quotedSellingPrice = item.price;
+  }
+
+  setPromoRowUnit(index: number, unit: UnitType): void {
+    this.promoOutwardRows[index].unit = unit;
+  }
+
+  private isPromoOutwardRowValid(row: PromoOutwardRow): boolean {
+    return !!row.matCode && !!row.matName && !!row.unit
+      && typeof row.quantity === 'number' && row.quantity > 0;
+  }
+
+  private arePromoOutwardRowsValid(): boolean {
+    return this.promoOutwardRows.length > 0 && this.promoOutwardRows.every(row => this.isPromoOutwardRowValid(row));
+  }
+
+  // ─── custom dropdowns (promo items: material code/name per row, employee/distributor/salesperson) ───
+  togglePromoRowDropdown(index: number, field: 'matCode' | 'matName'): void {
+    this.openPromoRowDropdown = this.isPromoRowDropdownOpen(index, field) ? null : { index, field };
+  }
+
+  isPromoRowDropdownOpen(index: number, field: 'matCode' | 'matName'): boolean {
+    return this.openPromoRowDropdown?.index === index && this.openPromoRowDropdown?.field === field;
+  }
+
+  selectPromoRowMatCode(index: number, code: string): void {
+    this.onPromoRowMatCodeChange(index, code);
+    this.openPromoRowDropdown = null;
+  }
+
+  selectPromoRowMatName(index: number, name: string): void {
+    this.onPromoRowMatNameChange(index, name);
+    this.openPromoRowDropdown = null;
+  }
+
+  togglePromoPartyDropdown(type: PromoPartyType): void {
+    this.openPromoPartyDropdown = this.openPromoPartyDropdown === type ? null : type;
+  }
+
+  selectPromoEmployee(employee: PersonOption): void {
+    this.onEmployeeChange(employee.id);
+    this.openPromoPartyDropdown = null;
+  }
+
+  clearPromoEmployee(): void {
+    this.onEmployeeChange('');
+    this.openPromoPartyDropdown = null;
+  }
+
+  selectPromoDistributor(distributor: DistributorOption): void {
+    this.onDistributorChange(distributor.id);
+    this.openPromoPartyDropdown = null;
+  }
+
+  clearPromoDistributor(): void {
+    this.onDistributorChange('');
+    this.openPromoPartyDropdown = null;
+  }
+
+  selectPromoSalesperson(salesperson: PersonOption): void {
+    this.onSalespersonChange(salesperson.id);
+    this.openPromoPartyDropdown = null;
+  }
+
+  clearPromoSalesperson(): void {
+    this.onSalespersonChange('');
+    this.openPromoPartyDropdown = null;
+  }
+
+  onPromoDropdownMouseEnter(): void {
+    this.isMouseOverPromoDropdown = true;
+  }
+
+  onPromoDropdownMouseLeave(): void {
+    this.isMouseOverPromoDropdown = false;
+  }
+
+  onPromoDropdownTriggerBlur(): void {
+    if (this.isMouseOverPromoDropdown) return;
+    setTimeout(() => {
+      if (!this.isMouseOverPromoDropdown) {
+        this.openPromoRowDropdown = null;
+        this.openPromoPartyDropdown = null;
+      }
+    }, 150);
+  }
+
   getScrapItemOptions(): { code: string; name: string; unit?: UnitType; quantity?: number; price?: number }[] {
     if (this.scrapOutwardItems.length) {
       const preferredScrapItems = this.scrapOutwardItems.filter(item => item.itemType === 'SCRAP_MATERIAL');
@@ -652,6 +788,10 @@ export class OutwardInventoryPage implements OnInit {
     this.spareReturnedForm.reset();
     this.promoOutwardForm.reset();
     this.updatePromotionalPartySelection(null);
+    this.promoOutwardRows = [this.createEmptyPromoOutwardRow()];
+    this.promoRowsSubmitAttempted = false;
+    this.openPromoRowDropdown = null;
+    this.openPromoPartyDropdown = null;
     this.promoReturnedForm.reset();
     this.scrapReturnedForm.reset();
     this.scrapSellingForm.reset();
@@ -896,6 +1036,11 @@ export class OutwardInventoryPage implements OnInit {
   submitForm(): void {
     if (!this.selectedItemType) return;
 
+    if (this.selectedItemType === 'promotional_items' && this.activeSpareSection === 'outward_giving') {
+      this.submitPromoOutwardBulk();
+      return;
+    }
+
     let form: FormGroup;
 
     if (this.selectedItemType === 'spare_parts') {
@@ -981,6 +1126,86 @@ export class OutwardInventoryPage implements OnInit {
     }
 
     return payload;
+  }
+
+  private submitPromoOutwardBulk(): void {
+    if (!this.arePromoOutwardRowsValid()) {
+      this.promoRowsSubmitAttempted = true;
+      this.haptic.warning();
+      return;
+    }
+
+    if (!this.hasPromoPartySelection()) {
+      this.promoPartySelectionError = true;
+      this.haptic.warning();
+      return;
+    }
+
+    this.haptic.heavy();
+    this.isSubmitting = true;
+
+    const payloads = this.buildPromoOutwardBulkPayload();
+
+    this.outwardService.createOutwardItemsBulk(payloads).subscribe({
+      next: () => {
+        this.keyboard.dismiss();
+        this.outwardService.getAllOutwardItems().subscribe({
+          next: (data) => {
+            this.records = data.map(item => this.mapApiToRecord(item));
+            this.applyFilter();
+            this.isSubmitting = false;
+            this.closeModal();
+            this.toast.present(`${payloads.length} item${payloads.length > 1 ? 's' : ''} saved successfully!`, 'success');
+          },
+          error: () => {
+            this.isSubmitting = false;
+            this.closeModal();
+            this.toast.present(`${payloads.length} item${payloads.length > 1 ? 's' : ''} saved successfully!`, 'success');
+          }
+        });
+      },
+      error: (err) => {
+        this.isSubmitting = false;
+        this.toast.present(err?.error?.message || 'Failed to save records.', 'danger');
+      }
+    });
+  }
+
+  private derivePromoPartyReference(formValue: any): { referenceNumber?: string; issuedTo?: string } {
+    if (formValue.employeeId) {
+      return { referenceNumber: String(formValue.employeeId), issuedTo: formValue.employeeName || '' };
+    }
+    if (formValue.distributorId) {
+      return {
+        referenceNumber: String(formValue.distributorId),
+        issuedTo: (formValue.distributorName as string)?.split(' - ')[0]?.trim() || ''
+      };
+    }
+    if (formValue.salespersonId) {
+      return {
+        referenceNumber: String(formValue.salespersonId),
+        issuedTo: (formValue.salespersonName as string)?.split(' - ')[0]?.trim() || ''
+      };
+    }
+    return {};
+  }
+
+  private buildPromoOutwardBulkPayload(): OutwardGivingPayload[] {
+    const formValue = this.promoOutwardForm.getRawValue();
+    const shared = this.derivePromoPartyReference(formValue);
+    const comments = formValue.comments || '';
+
+    return this.promoOutwardRows.map(row => ({
+      itemType: this.mapItemTypeForApi('promotional_items'),
+      transactionType: 'OUTWARD_GIVING',
+      materialCode: row.matCode,
+      materialName: row.matName,
+      unit: this.mapUnitForApi(row.unit as UnitType),
+      quantity: Number(row.quantity),
+      comments,
+      quotedSellingPrice: Number(row.quotedSellingPrice ?? 0),
+      ...shared
+    }));
   }
 
   private mapItemTypeForApi(itemType: ModalItemType): OutwardGivingPayload['itemType'] {

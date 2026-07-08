@@ -1065,102 +1065,168 @@
             <form [formGroup]="promoOutwardForm" class="space-y-4">
 
               <div class="field-group">
-                <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matCode"
-                    (change)="onMatCodeChange(promoOutwardForm.get('matCode')?.value, promoOutwardForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched">
-                    <option value="">Select material code...</option>
-                    <option *ngFor="let item of getPromotionalItemOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                <div class="flex items-center justify-between mb-2">
+                  <label class="field-label mb-0">Items <span class="text-rose-400">*</span></label>
+                  <button type="button" (click)="addPromoOutwardRow()"
+                    class="px-3 py-1.5 bg-purple-50 text-purple-600 font-semibold rounded-lg text-xs hover:bg-purple-100 transition-colors border border-purple-200 flex items-center gap-1">
+                    <ion-icon name="add-outline"></ion-icon>
+                    Add Item
+                  </button>
                 </div>
-                <p *ngIf="promoOutwardForm.get('matCode')?.invalid && promoOutwardForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
-              </div>
 
-              <div class="field-group">
-                <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matName"
-                    (change)="onMatNameChange(promoOutwardForm.get('matName')?.value, promoOutwardForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched">
-                    <option value="">Select material name...</option>
-                    <option *ngFor="let item of getPromotionalItemOptions()" [value]="item.name">{{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                <div *ngFor="let row of promoOutwardRows; let i = index"
+                  class="rounded-2xl border border-slate-200 bg-white p-4 mb-3 relative space-y-3">
+
+                  <div class="flex items-center justify-between">
+                    <span class="text-xs font-bold text-slate-400 uppercase">Item {{ i + 1 }}</span>
+                    <button type="button" *ngIf="promoOutwardRows.length > 1" (click)="removePromoOutwardRow(i)"
+                      class="p-1 text-rose-400 hover:text-rose-600 hover:bg-rose-50 rounded-lg transition-colors">
+                      <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
+                    </button>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
+                    <div class="relative">
+                      <button type="button"
+                        (click)="togglePromoRowDropdown(i, 'matCode')"
+                        (blur)="onPromoDropdownTriggerBlur()"
+                        class="field-input flex items-center justify-between gap-2 text-left"
+                        [class.field-input--error]="promoRowsSubmitAttempted && !row.matCode">
+                        <span [class.text-slate-400]="!row.matCode" class="truncate">{{ row.matCode ? (row.matCode + ' - ' + row.matName) : 'Select material code...' }}</span>
+                        <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
+                      </button>
+                      <div *ngIf="isPromoRowDropdownOpen(i, 'matCode')" class="promo-dropdown-list"
+                        (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
+                        <button *ngFor="let item of getPromotionalItemOptions()" type="button"
+                          (click)="selectPromoRowMatCode(i, item.code)" class="promo-dropdown-item">
+                          {{ item.code }} - {{ item.name }}
+                        </button>
+                        <div *ngIf="!getPromotionalItemOptions().length" class="promo-dropdown-empty">No items found.</div>
+                      </div>
+                    </div>
+                    <p *ngIf="promoRowsSubmitAttempted && !row.matCode" class="field-error">Please select a material code</p>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
+                    <div class="relative">
+                      <button type="button"
+                        (click)="togglePromoRowDropdown(i, 'matName')"
+                        (blur)="onPromoDropdownTriggerBlur()"
+                        class="field-input flex items-center justify-between gap-2 text-left"
+                        [class.field-input--error]="promoRowsSubmitAttempted && !row.matName">
+                        <span [class.text-slate-400]="!row.matName" class="truncate">{{ row.matName || 'Select material name...' }}</span>
+                        <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
+                      </button>
+                      <div *ngIf="isPromoRowDropdownOpen(i, 'matName')" class="promo-dropdown-list"
+                        (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
+                        <button *ngFor="let item of getPromotionalItemOptions()" type="button"
+                          (click)="selectPromoRowMatName(i, item.name)" class="promo-dropdown-item">
+                          {{ item.name }}
+                        </button>
+                        <div *ngIf="!getPromotionalItemOptions().length" class="promo-dropdown-empty">No items found.</div>
+                      </div>
+                    </div>
+                    <p *ngIf="promoRowsSubmitAttempted && !row.matName" class="field-error">Please select a material name</p>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Unit <span class="text-rose-400">*</span></label>
+                    <div class="grid grid-cols-4 gap-2">
+                      <button *ngFor="let u of unitOptions" type="button"
+                        (click)="setPromoRowUnit(i, u.key)"
+                        class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
+                        [class.border-emerald-500]="row.unit === u.key"
+                        [class.bg-emerald-50]="row.unit === u.key"
+                        [class.text-emerald-700]="row.unit === u.key"
+                        [class.border-slate-200]="row.unit !== u.key"
+                        [class.bg-white]="row.unit !== u.key"
+                        [class.text-slate-600]="row.unit !== u.key">
+                        <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
+                        {{ u.label }}
+                      </button>
+                    </div>
+                    <p *ngIf="promoRowsSubmitAttempted && !row.unit" class="field-error">Please select a unit</p>
+                  </div>
+
+                  <div class="field-group">
+                    <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
+                    <input type="number" min="1" placeholder="e.g. 10"
+                      [(ngModel)]="row.quantity" [ngModelOptions]="{standalone: true}"
+                      class="field-input"
+                      [class.field-input--error]="promoRowsSubmitAttempted && !(row.quantity && row.quantity > 0)" />
+                    <p *ngIf="promoRowsSubmitAttempted && !(row.quantity && row.quantity > 0)" class="field-error">Please enter a valid quantity</p>
+                  </div>
+
                 </div>
-                <p *ngIf="promoOutwardForm.get('matName')?.invalid && promoOutwardForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'employee'">
                 <label class="field-label">Select Employee</label>
                 <div class="relative">
-                  <select formControlName="employeeId"
-                    (change)="onEmployeeChange($any($event.target).value)"
-                    class="field-input appearance-none pr-10"
+                  <button type="button"
+                    (click)="togglePromoPartyDropdown('employee')"
+                    (blur)="onPromoDropdownTriggerBlur()"
+                    class="field-input flex items-center justify-between gap-2 text-left"
                     [class.field-input--error]="promoPartySelectionError">
-                    <option value="">Select employee...</option>
-                    <option *ngFor="let employee of promotionalEmployees" [value]="employee.id">{{ employee.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                    <span [class.text-slate-400]="!promoOutwardForm.get('employeeId')?.value" class="truncate">{{ promoOutwardForm.get('employeeName')?.value || 'Select employee...' }}</span>
+                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
+                  </button>
+                  <div *ngIf="openPromoPartyDropdown === 'employee'" class="promo-dropdown-list"
+                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
+                    <button type="button" (click)="clearPromoEmployee()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select employee...</button>
+                    <button *ngFor="let employee of promotionalEmployees" type="button"
+                      (click)="selectPromoEmployee(employee)" class="promo-dropdown-item">
+                      {{ employee.name }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'distributor'">
                 <label class="field-label">Select Distributor</label>
                 <div class="relative">
-                  <select formControlName="distributorId"
-                    (change)="onDistributorChange($any($event.target).value)"
-                    class="field-input appearance-none pr-10"
+                  <button type="button"
+                    (click)="togglePromoPartyDropdown('distributor')"
+                    (blur)="onPromoDropdownTriggerBlur()"
+                    class="field-input flex items-center justify-between gap-2 text-left"
                     [class.field-input--error]="promoPartySelectionError">
-                    <option value="">Select distributor...</option>
-                    <option *ngFor="let distributor of promotionalDistributors" [value]="distributor.id">{{ distributor.label }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                    <span [class.text-slate-400]="!promoOutwardForm.get('distributorId')?.value" class="truncate">{{ promoOutwardForm.get('distributorName')?.value || 'Select distributor...' }}</span>
+                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
+                  </button>
+                  <div *ngIf="openPromoPartyDropdown === 'distributor'" class="promo-dropdown-list"
+                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
+                    <button type="button" (click)="clearPromoDistributor()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select distributor...</button>
+                    <button *ngFor="let distributor of promotionalDistributors" type="button"
+                      (click)="selectPromoDistributor(distributor)" class="promo-dropdown-item">
+                      {{ distributor.label }}
+                    </button>
+                  </div>
                 </div>
               </div>
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'salesperson'">
                 <label class="field-label">Select Salesperson</label>
                 <div class="relative">
-                  <select formControlName="salespersonId"
-                    (change)="onSalespersonChange($any($event.target).value)"
-                    class="field-input appearance-none pr-10"
+                  <button type="button"
+                    (click)="togglePromoPartyDropdown('salesperson')"
+                    (blur)="onPromoDropdownTriggerBlur()"
+                    class="field-input flex items-center justify-between gap-2 text-left"
                     [class.field-input--error]="promoPartySelectionError">
-                    <option value="">Select salesperson...</option>
-                    <option *ngFor="let salesperson of promotionalSalespersons" [value]="salesperson.id">{{ salesperson.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
+                    <span [class.text-slate-400]="!promoOutwardForm.get('salespersonId')?.value" class="truncate">{{ promoOutwardForm.get('salespersonName')?.value || 'Select salesperson...' }}</span>
+                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
+                  </button>
+                  <div *ngIf="openPromoPartyDropdown === 'salesperson'" class="promo-dropdown-list"
+                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
+                    <button type="button" (click)="clearPromoSalesperson()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select salesperson...</button>
+                    <button *ngFor="let salesperson of promotionalSalespersons" type="button"
+                      (click)="selectPromoSalesperson(salesperson)" class="promo-dropdown-item">
+                      {{ salesperson.name }}
+                    </button>
+                  </div>
                 </div>
                 <p *ngIf="promoPartySelectionError" class="field-error">Please select any one: employee, distributor, or salesperson</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Unit <span class="text-rose-400">*</span></label>
-                <div class="grid grid-cols-4 gap-2">
-                  <button *ngFor="let u of unitOptions" type="button"
-                    (click)="setUnit(promoOutwardForm, u.key)"
-                    class="py-3 px-2 rounded-xl border-2 transition-all text-xs font-semibold flex flex-col items-center gap-1 hover:shadow-md"
-                    [class.border-emerald-500]="promoOutwardForm.get('unit')?.value === u.key"
-                    [class.bg-emerald-50]="promoOutwardForm.get('unit')?.value === u.key"
-                    [class.text-emerald-700]="promoOutwardForm.get('unit')?.value === u.key"
-                    [class.border-slate-200]="promoOutwardForm.get('unit')?.value !== u.key"
-                    [class.bg-white]="promoOutwardForm.get('unit')?.value !== u.key"
-                    [class.text-slate-600]="promoOutwardForm.get('unit')?.value !== u.key">
-                    <ion-icon [name]="u.icon" class="text-lg"></ion-icon>
-                    {{ u.label }}
-                  </button>
-                </div>
-                <p *ngIf="promoOutwardForm.get('unit')?.invalid && promoOutwardForm.get('unit')?.touched" class="field-error">Please select a unit</p>
-              </div>
-
-              <div class="field-group">
-                <label class="field-label">Quantity <span class="text-rose-400">*</span></label>
-                <input formControlName="quantity" type="number" min="1" placeholder="e.g. 10"
-                  class="field-input" [class.field-input--error]="promoOutwardForm.get('quantity')?.invalid && promoOutwardForm.get('quantity')?.touched" />
-                <p *ngIf="promoOutwardForm.get('quantity')?.invalid && promoOutwardForm.get('quantity')?.touched" class="field-error">Please enter a valid quantity</p>
               </div>
 
               <div class="field-group">
