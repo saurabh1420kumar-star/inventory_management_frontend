@@ -167,6 +167,7 @@ export class UserRightPage implements OnInit {
         color: 'amber',
         modules: [
           { featureKey: 'SALES',               displayName: 'Sales Management',  icon: 'bar-chart-outline',  category: 'Sales', access: 'NONE' },
+          { featureKey: 'REPORTING_MANAGER',   displayName: 'Reporting Manager', icon: 'people-outline',     category: 'Sales', access: 'NONE' },
         ]
       },
       {
