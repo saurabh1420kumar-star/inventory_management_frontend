@@ -1,15 +1,15 @@
 <!-- HEADER -->
 <ion-header class="ion-no-border">
-  <ion-toolbar style="--background: #000000; --border-width: 0;">
+  <ion-toolbar style="--background: var(--sp-toolbar); --border-width: 0;">
     <ion-buttons slot="start">
-      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+      <ion-menu-button style="color: var(--sp-heading);"></ion-menu-button>
     </ion-buttons>
     <ion-title>
       <span style="color: #10b981; font-weight: 800; font-size: 1.125rem;">Reporting</span>
-      <span style="color: #ffffff; font-weight: 700; font-size: 1.125rem;"> Manager</span>
+      <span style="color: var(--sp-heading); font-weight: 700; font-size: 1.125rem;"> Manager</span>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="loadSalesPersons()" style="--color: #ffffff;">
+      <ion-button (click)="loadSalesPersons()" style="--color: var(--sp-heading);">
         <ion-icon slot="icon-only" name="refresh-outline"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -17,11 +17,11 @@
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content style="--background: #0d1117;">
+<ion-content style="--background: var(--sp-bg);">
   <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <div class="min-h-screen pb-24" style="background: #0d1117;">
+  <div class="min-h-screen pb-24" style="background: var(--sp-bg);">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 py-4 sm:py-8">
 
       <!-- Hero Banner -->
@@ -60,22 +60,21 @@
       <div class="grid grid-cols-4 gap-2.5 sm:gap-4 mb-6">
         <ng-container *ngFor="let role of roles">
           <div *ngIf="countByRole(role.value) > 0"
-            class="bg-slate-800 rounded-2xl p-3.5 text-center shadow-sm border border-slate-700 hover:shadow-md hover:border-slate-600 transition-all">
-            <div class="text-2xl font-bold mb-1.5 text-white">
+            class="rm-surface rm-surface-hover rounded-2xl p-3.5 text-center shadow-sm border hover:shadow-md transition-all">
+            <div class="text-2xl font-bold mb-1.5 rm-heading">
               {{ countByRole(role.value) }}
             </div>
-            <div class="text-xs text-slate-400 font-medium">{{ role.label }}</div>
+            <div class="text-xs rm-muted font-medium">{{ role.label }}</div>
           </div>
         </ng-container>
       </div>
 
       <!-- Search -->
-      <div class="rounded-2xl p-4 mb-6 bg-slate-800 shadow-sm border border-slate-700 hover:border-slate-600 transition-all">
+      <div class="rm-surface rm-surface-hover rounded-2xl p-4 mb-6 shadow-sm border transition-all">
         <div class="relative">
-          <ion-icon name="search-outline" class="absolute left-4 top-1/2 -translate-y-1/2 text-slate-400 text-lg z-10"></ion-icon>
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 -translate-y-1/2 rm-muted text-lg z-10"></ion-icon>
           <input type="text" [(ngModel)]="searchTerm" placeholder="Search by name, role, zone, code..."
-            class="w-full rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none bg-slate-700 text-slate-100 placeholder:text-slate-500"
-            style="border: 1px solid #475569;" />
+            class="rm-input w-full rounded-xl py-2.5 pl-11 pr-4 text-sm outline-none" />
         </div>
       </div>
 
@@ -99,8 +98,8 @@
                   <ion-icon [name]="role.icon" class="text-base"></ion-icon>
                 </div>
                 <div class="flex-1 text-left">
-                  <div class="text-sm font-bold text-slate-100">{{ role.label }}</div>
-                  <div class="text-xs text-slate-400">{{ rolePersons.length }} member{{ rolePersons.length !== 1 ? 's' : '' }}</div>
+                  <div class="text-sm font-bold rm-heading">{{ role.label }}</div>
+                  <div class="text-xs rm-muted">{{ rolePersons.length }} member{{ rolePersons.length !== 1 ? 's' : '' }}</div>
                 </div>
                 <ion-icon
                   [name]="collapsedRoles.has(role.value) ? 'chevron-down-outline' : 'chevron-up-outline'"
@@ -112,7 +111,7 @@
               <!-- Person Cards -->
               <div *ngIf="!collapsedRoles.has(role.value)" class="grid grid-cols-1 sm:grid-cols-2 gap-4">
                 <div *ngFor="let person of rolePersons"
-                  class="bg-slate-800 rounded-2xl overflow-hidden shadow-sm border border-slate-700 hover:shadow-lg hover:border-slate-600 transition-all duration-200">
+                  class="rm-surface rm-surface-hover rounded-2xl overflow-hidden shadow-sm border hover:shadow-lg transition-all duration-200">
 
                   <!-- Role Accent Bar -->
                   <div class="h-1.5 w-full" [style.background]="getRoleColor(person.role)"></div>
@@ -130,24 +129,22 @@
                             [style.background]="getRoleColor(person.role)">
                             {{ getInitials(person) }}
                           </div>
-                          <span class="absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2 border-white"
+                          <span class="rm-dot-ring absolute -bottom-0.5 -right-0.5 w-3 h-3 rounded-full border-2"
                             [class]="(person.status === 'ACTIVE' || !person.status) ? 'bg-emerald-400' : 'bg-slate-300'"></span>
                         </div>
                         <!-- Name + Employee ID -->
                         <div class="min-w-0 flex-1">
-                          <h3 class="font-bold text-white text-sm leading-snug truncate">{{ person.name }}</h3>
+                          <h3 class="font-bold rm-heading text-sm leading-snug truncate">{{ person.name }}</h3>
                           <div class="flex items-center gap-1 mt-0.5">
-                            <ion-icon name="id-card-outline" class="text-[11px] text-slate-500"></ion-icon>
-                            <span class="text-[11px] text-slate-400 font-medium">{{ person.employeeRollNo || person.employeeCode || '—' }}</span>
+                            <ion-icon name="id-card-outline" class="text-[11px] rm-muted"></ion-icon>
+                            <span class="text-[11px] rm-muted font-medium">{{ person.employeeRollNo || person.employeeCode || '—' }}</span>
                           </div>
                         </div>
                       </div>
                       <!-- Status badge + Actions -->
                       <div class="flex flex-col items-end gap-2 flex-shrink-0">
                         <span class="text-[10px] font-bold px-2 py-0.5 rounded-full leading-tight"
-                          [class]="(person.status === 'ACTIVE' || !person.status)
-                            ? 'bg-emerald-900 text-emerald-300 border border-emerald-700'
-                            : 'bg-slate-700 text-slate-300 border border-slate-600'">
+                          [class]="(person.status === 'ACTIVE' || !person.status) ? 'rm-badge-on' : 'rm-badge-off'">
                           {{ person.status || 'ACTIVE' }}
                         </span>
                         <div *ngIf="canAddPerson" class="flex gap-1.5">
@@ -189,26 +186,26 @@
                     </div>
 
                     <!-- Divider -->
-                    <div class="h-px bg-slate-700 mb-3"></div>
+                    <div class="rm-divider h-px mb-3"></div>
 
                     <!-- Contact & Details -->
                     <div class="space-y-1.5">
 
                       <!-- Primary Contact -->
-                      <div *ngIf="person.contactNo || person.phone" class="flex items-center gap-2 text-xs text-slate-300">
+                      <div *ngIf="person.contactNo || person.phone" class="flex items-center gap-2 text-xs rm-text">
                         <ion-icon name="call-outline" class="text-sm text-emerald-500 flex-shrink-0"></ion-icon>
                         <span class="font-medium">{{ person.contactNo || person.phone }}</span>
-                        <span *ngIf="person.alternateContactNo" class="text-slate-500">· {{ person.alternateContactNo }}</span>
+                        <span *ngIf="person.alternateContactNo" class="rm-muted">· {{ person.alternateContactNo }}</span>
                       </div>
 
                       <!-- Email -->
-                      <div *ngIf="person.email" class="flex items-center gap-2 text-xs text-slate-300">
+                      <div *ngIf="person.email" class="flex items-center gap-2 text-xs rm-text">
                         <ion-icon name="mail-outline" class="text-sm text-sky-400 flex-shrink-0"></ion-icon>
                         <span class="font-medium truncate">{{ person.email }}</span>
                       </div>
 
                       <!-- City · Country + Gender row -->
-                      <div *ngIf="person.city || person.country || person.gender" class="flex items-center gap-3 text-xs text-slate-400">
+                      <div *ngIf="person.city || person.country || person.gender" class="flex items-center gap-3 text-xs rm-muted">
                         <div *ngIf="person.city || person.country" class="flex items-center gap-1">
                           <ion-icon name="location-outline" class="text-[11px] text-orange-400"></ion-icon>
                           <span>{{ person.city }}{{ person.city && person.country ? ', ' : '' }}{{ person.country }}</span>
@@ -220,17 +217,17 @@
                       </div>
 
                       <!-- DOB -->
-                      <div *ngIf="person.dateOfBirth" class="flex items-center gap-2 text-xs text-slate-400">
+                      <div *ngIf="person.dateOfBirth" class="flex items-center gap-2 text-xs rm-muted">
                         <ion-icon name="calendar-outline" class="text-[11px] text-indigo-400 flex-shrink-0"></ion-icon>
                         <span>{{ person.dateOfBirth | date:'d MMM yyyy' }}</span>
                       </div>
 
                       <!-- Manager / Reporting line -->
-                      <div class="pt-1.5 border-t border-slate-700 mt-1">
+                      <div class="rm-divider-border pt-1.5 border-t mt-1">
                         <div *ngIf="person.managerName || person.managerId" class="flex items-center gap-2 text-xs">
                           <ion-icon name="git-branch-outline" class="text-sm text-purple-400 flex-shrink-0"></ion-icon>
-                          <span class="text-slate-400 flex-shrink-0">Reports to</span>
-                          <span class="font-semibold text-slate-200 truncate">{{ person.managerName || getManagerName(person.managerId) }}</span>
+                          <span class="rm-muted flex-shrink-0">Reports to</span>
+                          <span class="font-semibold rm-text truncate">{{ person.managerName || getManagerName(person.managerId) }}</span>
                         </div>
                         <div *ngIf="!person.managerName && !person.managerId" class="flex items-center gap-2 text-xs">
                           <ion-icon name="ribbon-outline" class="text-sm text-amber-400 flex-shrink-0"></ion-icon>

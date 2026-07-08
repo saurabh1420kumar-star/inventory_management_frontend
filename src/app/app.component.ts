@@ -46,8 +46,18 @@ export class AppComponent {
       role === 'TSM' || role === 'ASM';
   }
 
+  /**
+   * Mobile view = native app or a narrow browser window.
+   * Kept in sync with SidebarPage.MOBILE_BREAKPOINT (768).
+   */
+  private isMobileView(): boolean {
+    return Capacitor.isNativePlatform() || window.innerWidth < 768;
+  }
+
   private applyTheme(role: string | null): void {
-    const isDark = this.isDarkModeRole(role);
+    // Sales / distributor dark theme only applies in mobile view.
+    // On the web (desktop widths) these roles use the light theme.
+    const isDark = this.isDarkModeRole(role) && this.isMobileView();
     document.documentElement.classList.toggle('dark', isDark);
     this.syncStatusBar(isDark);
   }
@@ -119,6 +129,10 @@ export class AppComponent {
   @HostListener('window:resize')
   onResize() {
     this.isDesktop = window.innerWidth >= 992;
+    // Re-apply theme so switching between desktop/mobile widths updates dark mode.
+    if (!this.isAuthPage) {
+      this.applyTheme(this.userRole);
+    }
   }
 
   onSidebarToggle() {

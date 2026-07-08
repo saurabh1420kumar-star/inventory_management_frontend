@@ -1,6 +1,75 @@
 // salesperson-onboarding.page.scss
 :host {
   display: block;
+
+  /* ─── Theme tokens (LIGHT defaults — web/desktop) ────────────────
+     Dark overrides in :host-context(.dark) below apply only when the
+     document carries the `.dark` class (sales/distributor on mobile). */
+  --sp-bg: #f1f5f9;
+  --sp-toolbar: #ffffff;
+  --sp-card: #ffffff;
+  --sp-input: #f8fafc;
+  --sp-border: #e2e8f0;
+  --sp-border-2: #cbd5e1;
+  --sp-heading: #1e293b;
+  --sp-text: #334155;
+  --sp-muted: #64748b;
+  --sp-badge-on: #ecfdf5;        /* active status badge bg   */
+  --sp-badge-on-text: #047857;
+  --sp-badge-on-border: #6ee7b7;
+  --sp-badge-off: #f1f5f9;       /* inactive status badge bg */
+  --sp-badge-off-text: #475569;
+  --sp-badge-off-border: #cbd5e1;
+}
+
+/* ─── DARK theme (sales/distributor on mobile) ───────────────────── */
+:host-context(.dark) {
+  --sp-bg: #0d1117;
+  --sp-toolbar: #000000;
+  --sp-card: #1e293b;
+  --sp-input: #334155;
+  --sp-border: #334155;
+  --sp-border-2: #475569;
+  --sp-heading: #ffffff;
+  --sp-text: #cbd5e1;
+  --sp-muted: #94a3b8;
+  --sp-badge-on: #064e3b;        /* emerald-900 */
+  --sp-badge-on-text: #6ee7b7;   /* emerald-300 */
+  --sp-badge-on-border: #047857; /* emerald-700 */
+  --sp-badge-off: #334155;       /* slate-700 */
+  --sp-badge-off-text: #cbd5e1;  /* slate-300 */
+  --sp-badge-off-border: #475569;/* slate-600 */
+}
+
+/* ─── Token-driven helper classes (replace hardcoded dark utilities) */
+.rm-surface {
+  background: var(--sp-card);
+  border-color: var(--sp-border) !important;
+}
+.rm-surface-hover:hover {
+  border-color: var(--sp-border-2) !important;
+}
+.rm-heading { color: var(--sp-heading); }
+.rm-text { color: var(--sp-text); }
+.rm-muted { color: var(--sp-muted); }
+.rm-divider { background: var(--sp-border); }
+.rm-divider-border { border-color: var(--sp-border) !important; }
+.rm-input {
+  background: var(--sp-input);
+  color: var(--sp-text);
+  border: 1px solid var(--sp-border-2);
+  &::placeholder { color: var(--sp-muted); opacity: 0.8; }
+}
+.rm-dot-ring { border-color: var(--sp-card) !important; }
+.rm-badge-on {
+  background: var(--sp-badge-on);
+  color: var(--sp-badge-on-text);
+  border: 1px solid var(--sp-badge-on-border);
+}
+.rm-badge-off {
+  background: var(--sp-badge-off);
+  color: var(--sp-badge-off-text);
+  border: 1px solid var(--sp-badge-off-border);
 }
 
 ion-toolbar.bg-gradient-to-r {

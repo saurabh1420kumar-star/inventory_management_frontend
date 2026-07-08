@@ -139,7 +139,8 @@ export class SidebarPage implements OnInit, OnDestroy {
   }
 
   get isDarkMode(): boolean {
-    return this.isSalesRole || this.userRole === 'DISTRIBUTOR';
+    // Sales / distributor dark theme only applies in mobile view; light on web.
+    return (this.isSalesRole || this.userRole === 'DISTRIBUTOR') && this.isMobile;
   }
 
   private checkMobile() {
