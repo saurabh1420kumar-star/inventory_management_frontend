@@ -126,8 +126,8 @@
           </ion-accordion>
         </ion-accordion-group>
 
-        <ng-container *ngIf="(isMobile || isAdmin) && !isSalesRole && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
-        <ion-accordion-group *appAcl="{ features: ['SALES'] }">
+        <ng-container *ngIf="!isSalesRole && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
+        <ion-accordion-group *appAcl="{ features: ['SALES', 'REPORTING_MANAGER'] }">
           <ion-accordion>
             <ion-item slot="header" button>
               <ion-icon name="trending-up-outline" slot="start"></ion-icon>
@@ -139,7 +139,7 @@
                 <ion-icon name="briefcase-outline" slot="start"></ion-icon>
                 <ion-label>Sales Management</ion-label>
               </ion-item>
-              <ion-item *appAcl="'SALES'" routerLink="/sales/salesperson-onboarding" routerLinkActive="active" (click)="onMenuItemClick()">
+              <ion-item *appAcl="'REPORTING_MANAGER'" routerLink="/sales/salesperson-onboarding" routerLinkActive="active" (click)="onMenuItemClick()">
                 <ion-icon name="person-add-outline" slot="start"></ion-icon>
                 <ion-label>Reporting Manager</ion-label>
               </ion-item>
@@ -225,8 +225,8 @@
           </ion-item>
         </ng-container>
 
-        <!-- ===== COMPLAINTS MANAGEMENT (Admin only) ===== -->
-        <ion-item *ngIf="isAdmin" routerLink="/complaints-management" routerLinkActive="active" (click)="onMenuItemClick()">
+        <!-- ===== COMPLAINTS MANAGEMENT (feature-gated) ===== -->
+        <ion-item *appAcl="'COMPLAINTS_MANAGEMENT'" routerLink="/complaints-management" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
           <ion-label>Manage Complaints</ion-label>
         </ion-item>

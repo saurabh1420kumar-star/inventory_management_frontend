@@ -1,15 +1,15 @@
 ﻿<!-- HEADER -->
 <ion-header class="ion-no-border">
-  <ion-toolbar style="--background: #000000; --border-width: 0;">
+  <ion-toolbar style="--background: var(--sp-toolbar); --border-width: 0;">
     <ion-buttons slot="start">
-      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+      <ion-menu-button style="color: var(--sp-heading);"></ion-menu-button>
     </ion-buttons>
     <ion-title>
       <span style="color: #10b981; font-weight: 800; font-size: 1.125rem; letter-spacing: -0.025em;">Sales</span>
-      <span style="color: #ffffff; font-weight: 700; font-size: 1.125rem;"> Management</span>
+      <span style="color: var(--sp-heading); font-weight: 700; font-size: 1.125rem;"> Management</span>
     </ion-title>
     <ion-buttons slot="end">
-      <ion-button (click)="refreshSales()" style="--color: #ffffff;" class="w-10 h-10">
+      <ion-button (click)="refreshSales()" style="--color: var(--sp-heading);" class="w-10 h-10">
         <ion-icon slot="icon-only" name="refresh-outline" class="text-xl"></ion-icon>
       </ion-button>
     </ion-buttons>
@@ -17,11 +17,11 @@
 </ion-header>
 
 <!-- CONTENT -->
-<ion-content style="--background: #0d1117;">
+<ion-content style="--background: var(--sp-bg);">
   <ion-refresher slot="fixed" (ionRefresh)="handlePullRefresh($event)">
     <ion-refresher-content></ion-refresher-content>
   </ion-refresher>
-  <div class="min-h-screen pb-20" style="background: #0d1117;">
+  <div class="min-h-screen pb-20" style="background: var(--sp-bg);">
     <div class="max-w-7xl mx-auto px-3 sm:px-6 lg:px-8 py-4 sm:py-8">
 
       <!-- Hero Gradient Banner -->
@@ -56,15 +56,15 @@
       <!-- QUICK ACCESS: Team & Hierarchy Pages -->
       <div class="grid grid-cols-2 gap-3 mb-6">
         <a routerLink="/sales/salesperson-onboarding"
-          class="flex items-center gap-3 p-4 rounded-2xl shadow-sm border border-slate-200 hover:shadow-md transition-shadow no-underline"
-          style="background: linear-gradient(135deg, #1e293b 0%, #0f172a 100%); border-color: #334155;">
+          class="flex items-center gap-3 p-4 rounded-2xl shadow-sm border hover:shadow-md transition-shadow no-underline"
+          style="background: var(--sp-accent-card); border-color: var(--sp-accent-card-border);">
           <div class="w-10 h-10 rounded-xl flex items-center justify-center flex-shrink-0"
             style="background: #38bdf8;">
             <ion-icon name="people-outline" class="text-lg text-white"></ion-icon>
           </div>
           <div>
-            <p class="font-bold text-sm" style="color: #38bdf8;">Reporting Manager</p>
-            <p class="text-xs" style="color: #cbd5e1;">Manage team hierarchy</p>
+            <p class="font-bold text-sm" style="color: var(--sp-accent);">Reporting Manager</p>
+            <p class="text-xs" style="color: var(--sp-muted);">Manage team hierarchy</p>
           </div>
         </a>
         <!-- Hierarchy Orders hidden -->
@@ -72,31 +72,32 @@
 
       <!-- STATS -->
       <div class="grid grid-cols-3 gap-2 sm:gap-4 mb-6 sm:mb-8">
-        <div *ngFor="let stat of statCards" class="rounded-2xl p-3 sm:p-5 shadow-sm border-2 border-slate-700 bg-slate-800 flex items-center gap-2 sm:gap-3 hover:border-slate-600 transition-all duration-300">
+        <div *ngFor="let stat of statCards" class="rounded-2xl p-3 sm:p-5 shadow-sm border-2 flex items-center gap-2 sm:gap-3 transition-all duration-300"
+          style="background: var(--sp-card); border-color: var(--sp-border);">
           <div class="w-8 h-8 sm:w-10 sm:h-10 rounded-xl flex-shrink-0 flex items-center justify-center"
-            [style.background]="stat.color === 'emerald' ? 'rgba(16,185,129,0.15)' : stat.color === 'green' ? 'rgba(20,184,166,0.15)' : 'rgba(255,255,255,0.06)'"
+            [style.background]="stat.color === 'emerald' ? 'rgba(16,185,129,0.15)' : stat.color === 'green' ? 'rgba(20,184,166,0.15)' : 'var(--sp-tint-2)'"
             [style.border]="stat.color === 'emerald' ? '2px solid #10b981' : stat.color === 'green' ? '2px solid #14b8a6' : '2px solid #475569'">
             <ion-icon [name]="stat.icon" class="text-sm sm:text-lg"
               [style.color]="stat.color === 'emerald' ? '#10b981' : stat.color === 'green' ? '#14b8a6' : '#94a3b8'">
             </ion-icon>
           </div>
           <div class="flex flex-col min-w-0">
-            <p class="text-lg sm:text-2xl font-extrabold text-white leading-none mb-0.5">{{ stat.value }}</p>
-            <h3 class="text-[9px] sm:text-xs font-bold uppercase tracking-wider truncate" style="color: #94a3b8;">{{ stat.label }}</h3>
+            <p class="text-lg sm:text-2xl font-extrabold leading-none mb-0.5" style="color: var(--sp-heading);">{{ stat.value }}</p>
+            <h3 class="text-[9px] sm:text-xs font-bold uppercase tracking-wider truncate" style="color: var(--sp-muted);">{{ stat.label }}</h3>
           </div>
         </div>
       </div>
 
       <!-- SEARCH BAR -->
-      <div class="rounded-xl p-4 mb-6 bg-slate-800 shadow-sm border border-slate-700">
+      <div class="rounded-xl p-4 mb-6 shadow-sm border" style="background: var(--sp-card); border-color: var(--sp-border);">
         <div class="flex-1 w-full relative">
-          <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg z-10" style="color: #94a3b8;"></ion-icon>
+          <ion-icon name="search-outline" class="absolute left-4 top-1/2 transform -translate-y-1/2 text-lg z-10" style="color: var(--sp-muted);"></ion-icon>
           <input
             type="text"
             [(ngModel)]="orderSearchTerm"
             placeholder="Search orders..."
-            class="w-full rounded-lg py-3 pl-11 pr-4 outline-none text-sm font-medium bg-slate-700 border border-slate-600 focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10"
-            style="color: #e2e8f0;"
+            class="w-full rounded-lg py-3 pl-11 pr-4 outline-none text-sm font-medium border focus:border-sky-400 focus:ring-4 focus:ring-sky-500/10"
+            style="color: var(--sp-text); background: var(--sp-input); border-color: var(--sp-border-2);"
           />
         </div>
       </div>
@@ -111,8 +112,8 @@
               <ion-icon name="clipboard-outline" class="text-xl" style="color: #10b981;"></ion-icon>
             </div>
             <div>
-              <h2 class="text-lg font-bold text-white leading-tight">Pending Orders</h2>
-              <p class="text-xs" style="color: #94a3b8;">Review and manage orders from distributors</p>
+              <h2 class="text-lg font-bold leading-tight" style="color: var(--sp-heading);">Pending Orders</h2>
+              <p class="text-xs" style="color: var(--sp-muted);">Review and manage orders from distributors</p>
             </div>
           </div>
           <span *ngIf="orderTabCounts['pending'] > 0"
@@ -140,15 +141,15 @@
             ]"
             (click)="orderFilterTab = $any(tab.key)"
             class="flex items-center gap-1.5 px-3 py-2 rounded-lg text-xs font-bold transition-all duration-200 whitespace-nowrap flex-shrink-0"
-            [style.background]="orderFilterTab === tab.key ? 'rgba(56,189,248,0.15)' : 'rgba(255,255,255,0.04)'"
-            [style.border]="orderFilterTab === tab.key ? '1px solid rgba(56,189,248,0.3)' : '1px solid rgba(255,255,255,0.08)'"
-            [style.color]="orderFilterTab === tab.key ? '#38bdf8' : '#94a3b8'"
+            [style.background]="orderFilterTab === tab.key ? 'rgba(56,189,248,0.15)' : 'var(--sp-tint)'"
+            [style.border]="orderFilterTab === tab.key ? '1px solid rgba(56,189,248,0.3)' : '1px solid var(--sp-tint-border)'"
+            [style.color]="orderFilterTab === tab.key ? 'var(--sp-accent)' : 'var(--sp-muted)'"
             [style.box-shadow]="orderFilterTab === tab.key ? '0 0 15px rgba(56,189,248,0.1)' : 'none'">
             <span class="w-1.5 h-1.5 rounded-full inline-block" [style.background]="tab.dotColor"></span>
             {{ tab.label }}
             <span class="text-xs font-bold px-1.5 py-0.5 rounded-full"
-              [style.background]="orderFilterTab === tab.key ? 'rgba(56,189,248,0.2)' : 'rgba(255,255,255,0.06)'"
-              [style.color]="orderFilterTab === tab.key ? '#38bdf8' : '#64748b'">
+              [style.background]="orderFilterTab === tab.key ? 'rgba(56,189,248,0.2)' : 'var(--sp-tint-2)'"
+              [style.color]="orderFilterTab === tab.key ? 'var(--sp-accent)' : 'var(--sp-muted)'">
               {{ tab.count }}
             </span>
           </button>
@@ -232,17 +233,17 @@
 
         <!-- ═══ ORDERS LOADING SKELETON ═══ -->
         <div *ngIf="isOrdersLoading && orderFilterTab !== 'pi_ready'" class="grid grid-cols-1 md:grid-cols-2 gap-4">
-          <div *ngFor="let i of [1,2,3,4]" class="rounded-2xl overflow-hidden border border-slate-700 animate-pulse" style="background: rgba(255,255,255,0.04);">
-            <div class="h-1 w-full bg-slate-700"></div>
+          <div *ngFor="let i of [1,2,3,4]" class="sp-skeleton rounded-2xl overflow-hidden border animate-pulse" style="background: var(--sp-tint); border-color: var(--sp-border);">
+            <div class="h-1 w-full sp-shimmer"></div>
             <div class="p-5 space-y-3">
-              <div class="h-3 w-1/3 rounded bg-slate-700"></div>
-              <div class="h-5 w-2/3 rounded bg-slate-700"></div>
-              <div class="h-3 w-1/4 rounded bg-slate-700"></div>
-              <div class="h-16 rounded-xl bg-slate-700 mt-3"></div>
-              <div class="h-12 rounded-xl bg-slate-700"></div>
+              <div class="h-3 w-1/3 rounded sp-shimmer"></div>
+              <div class="h-5 w-2/3 rounded sp-shimmer"></div>
+              <div class="h-3 w-1/4 rounded sp-shimmer"></div>
+              <div class="h-16 rounded-xl sp-shimmer mt-3"></div>
+              <div class="h-12 rounded-xl sp-shimmer"></div>
               <div class="flex gap-3 mt-2">
-                <div class="flex-1 h-11 rounded-xl bg-slate-700"></div>
-                <div class="flex-1 h-11 rounded-xl bg-slate-700"></div>
+                <div class="flex-1 h-11 rounded-xl sp-shimmer"></div>
+                <div class="flex-1 h-11 rounded-xl sp-shimmer"></div>
               </div>
             </div>
           </div>
@@ -394,15 +395,15 @@
         <!-- Empty State -->
         <div *ngIf="!isOrdersLoading && (orderFilterTab === 'pi_ready' ? filteredApproveCarts.length === 0 : filteredOrderSummaries.length === 0)"
           class="rounded-xl p-8 text-center"
-          style="background: rgba(255,255,255,0.04); border: 1px dashed rgba(255,255,255,0.1);">
+          style="background: var(--sp-tint); border: 1px dashed var(--sp-tint-border-2);">
           <div class="w-12 h-12 rounded-xl flex items-center justify-center mx-auto mb-3"
-            style="background: rgba(255,255,255,0.06); border: 1px solid rgba(255,255,255,0.08);">
+            style="background: var(--sp-tint-2); border: 1px solid var(--sp-tint-border);">
             <ion-icon
               [name]="orderFilterTab === 'pending' ? 'clipboard-outline' : orderFilterTab === 'approved' ? 'checkmark-done-circle-outline' : 'close-circle-outline'"
-              class="text-2xl" style="color: #475569;">
+              class="text-2xl" style="color: var(--sp-muted);">
             </ion-icon>
           </div>
-          <h3 class="text-sm font-bold text-white mb-1">
+          <h3 class="text-sm font-bold mb-1" style="color: var(--sp-heading);">
             No {{ orderFilterTab === 'pi_ready' ? 'PI Ready' : orderFilterTab === 'all' ? '' : orderFilterTab }} orders
           </h3>
           <p class="text-xs" style="color: #64748b;">
