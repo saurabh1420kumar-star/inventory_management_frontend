@@ -443,11 +443,11 @@ export class SalespersonOnboardingPage implements OnInit {
   }
 
   /**
-   * Only SUPER_ADMIN, ADMIN, HR_MGR (system role) or NSM (salesperson role) can add/edit/delete.
+   * Only SUPER_ADMIN, ADMIN (system role) or NSM (salesperson role) can add/edit/delete.
    */
   get canAddPerson(): boolean {
     const sysRole = this.auth.getRoleType();
-    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN' || sysRole === 'HR_MGR') return true;
+    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN') return true;
     return this.currentUserSalesPerson?.role === 'NATIONAL_SALES_MGR';
   }
 
