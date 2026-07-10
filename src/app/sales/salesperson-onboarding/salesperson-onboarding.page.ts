@@ -447,7 +447,7 @@ export class SalespersonOnboardingPage implements OnInit {
    */
   get canAddPerson(): boolean {
     const sysRole = this.auth.getRoleType();
-    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN') return true;
+    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN' || sysRole === 'HR_MGR') return true;
     return this.currentUserSalesPerson?.role === 'NATIONAL_SALES_MGR';
   }
 
