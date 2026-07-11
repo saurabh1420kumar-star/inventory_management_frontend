@@ -194,7 +194,7 @@
                 <ion-icon name="eye-outline"></ion-icon>
                 View Details
               </button>
-              <button class="btn-status" (click)="openStatusModal(complaint)"
+              <button *appAcl="{ feature: FEATURE, action: 'update' }" class="btn-status" (click)="openStatusModal(complaint)"
                 [style.backgroundColor]="getStatusConfig(complaint.status).color">
                 <ion-icon name="create-outline"></ion-icon>
                 Update Status

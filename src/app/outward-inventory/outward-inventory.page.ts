@@ -40,6 +40,7 @@ import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { User } from '../models/user.model';
+import { AclDirective } from '../acl/acl.directive';
 
 export type ModalItemType = 'spare_parts' | 'promotional_items' | 'scrap_material';
 export type SpareSection = 'outward_giving' | 'returned_part';
@@ -83,10 +84,14 @@ interface PromoOutwardRow {
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonSpinner, IonRefresher, IonRefresherContent,
-    NgIf, NgFor, NgClass, DatePipe
+    NgIf, NgFor, NgClass, DatePipe,
+    AclDirective
   ]
 })
 export class OutwardInventoryPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'INVENTORY_OUTWARD';
 
   // â”€â”€â”€ state flags â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   isLoading = false;

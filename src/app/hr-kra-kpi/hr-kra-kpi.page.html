@@ -21,18 +21,21 @@
           </div>
           <div class="flex items-center gap-2 flex-wrap">
             <button
+              *appAcl="{ feature: FEATURE, action: 'create' }"
               (click)="openCreateKraForm()"
               class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-white text-emerald-600 hover:bg-emerald-50 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
               <ion-icon class="text-lg" name="add-circle-outline"></ion-icon>
               <span>Create KRA</span>
             </button>
             <button
+              *appAcl="{ feature: FEATURE, action: 'create' }"
               (click)="openAssignKraForm()"
               class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-slate-950 text-cyan-300 border border-cyan-300/40 hover:bg-slate-900 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
               <ion-icon class="text-lg" name="link-outline"></ion-icon>
               <span>Assign KRA</span>
             </button>
             <button
+              *appAcl="{ feature: FEATURE, action: 'update' }"
               (click)="openEditWeightageForm()"
               class="hr-create-btn flex items-center gap-2 px-5 py-2.5 bg-white text-teal-600 hover:bg-teal-50 rounded-xl transition-all font-semibold shadow-lg whitespace-nowrap">
               <ion-icon class="text-lg" name="options-outline"></ion-icon>
@@ -147,10 +150,10 @@
                 </td>
                 <td class="px-4 sm:px-5 py-3.5">
                   <div class="flex items-center justify-end gap-1.5 text-slate-500">
-                    <button (click)="editEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Edit">
+                    <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="editEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-slate-100 transition-colors" aria-label="Edit">
                       <ion-icon name="create-outline"></ion-icon>
                     </button>
-                    <button (click)="deleteEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-500 transition-colors" aria-label="Delete">
+                    <button *appAcl="{ feature: FEATURE, action: 'delete' }" (click)="deleteEntry(entry)" class="w-8 h-8 rounded-lg hover:bg-rose-50 hover:text-rose-500 transition-colors" aria-label="Delete">
                       <ion-icon name="trash-outline"></ion-icon>
                     </button>
                   </div>

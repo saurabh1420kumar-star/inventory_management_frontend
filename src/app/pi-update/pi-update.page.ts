@@ -11,6 +11,7 @@ import { SalesService, PendingOrder } from '../services/sales.service';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 import { Auth } from '../services/auth';
+import { AclDirective } from '../acl/acl.directive';
 
 /* ── Display model ── */
 interface PIOrderTile {
@@ -28,10 +29,13 @@ interface PIOrderTile {
   templateUrl: './pi-update.page.html',
   styleUrls: ['./pi-update.page.scss'],
   imports: [
-    CommonModule, FormsModule, RouterModule, IonicModule
+    CommonModule, FormsModule, RouterModule, IonicModule, AclDirective
   ]
 })
 export class PiUpdatePage implements OnInit, ViewWillEnter {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'ACCOUNTS_PI_UPDATE';
 
   /* ── Data ── */
   orders: PIOrderTile[] = [];

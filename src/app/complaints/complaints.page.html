@@ -152,7 +152,7 @@
           </div>
 
           <!-- Buttons -->
-          <div class="flex gap-3">
+          <div *appAcl="{ feature: FEATURE, action: 'create' }" class="flex gap-3">
             <button
               type="submit"
               [disabled]="isLoading"

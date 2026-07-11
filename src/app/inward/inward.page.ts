@@ -23,6 +23,7 @@ import { Auth } from '../services/auth';
 import { HapticService } from '../services/haptic.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { environment } from '../../environments/environment';
+import { AclDirective } from '../acl/acl.directive';
 
 export type InwardItemType = 'raw_material' | 'finished_product' | 'spare_parts' | 'promotional' | 'scrap';
 
@@ -78,10 +79,14 @@ const ITEM_TYPES: { type: InwardItemType; label: string; icon: string; color: st
     CommonModule, FormsModule,
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonButtons, IonMenuButton, IonButton, IonIcon,
-    IonSpinner, IonRefresher, IonRefresherContent
+    IonSpinner, IonRefresher, IonRefresherContent,
+    AclDirective
   ]
 })
 export class InwardPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'INVENTORY_INWARD';
 
   itemTypes = ITEM_TYPES;
   unitTypes = UNIT_TYPES;

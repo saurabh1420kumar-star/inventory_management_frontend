@@ -304,12 +304,12 @@
                   <ion-icon name="time-outline" class="text-amber-400 shrink-0 text-sm"></ion-icon>
                   <span class="truncate">Awaiting review</span>
                 </span>
-                <button (click)="openRejectModal(payment)"
+                <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="openRejectModal(payment)"
                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 active:scale-95 text-red-600 rounded-xl text-sm font-bold transition-all border border-red-200 shadow-sm">
                   <ion-icon name="close-circle-outline" class="text-base"></ion-icon>
                   Reject Payment
                 </button>
-                <button (click)="openApproveModal(payment)"
+                <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="openApproveModal(payment)"
                   class="inline-flex items-center gap-2 px-4 py-2.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 active:scale-95 text-white rounded-xl text-sm font-bold transition-all shadow-md shadow-emerald-200">
                   <ion-icon name="checkmark-circle-outline" class="text-base"></ion-icon>
                   Approve Payment
@@ -530,12 +530,12 @@
 
         <!-- Footer Actions (only for PENDING) -->
         <div *ngIf="selectedPayment.status === 'PENDING'" class="p-4 border-t border-slate-100 bg-white flex gap-3">
-          <button (click)="openRejectModal(selectedPayment)"
+          <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="openRejectModal(selectedPayment)"
             class="flex-1 flex items-center justify-center gap-2 py-3 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl font-bold text-sm transition-all border border-red-200">
             <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
             Reject
           </button>
-          <button (click)="openApproveModal(selectedPayment)"
+          <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="openApproveModal(selectedPayment)"
             class="flex-1 flex items-center justify-center gap-2 py-3 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white rounded-xl font-bold text-sm transition-all shadow-md">
             <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
             Approve

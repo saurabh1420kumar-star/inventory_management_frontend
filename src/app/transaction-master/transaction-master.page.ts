@@ -18,6 +18,7 @@ import { KeyboardService } from '../services/keyboard.service';
 import { amountToWords } from '../shared/utils/amount-to-words';
 import { generateVoucherPdf as buildOfficialVoucherPdf, generateFundVoucherPdf as buildFundVoucherPdf, generateLedgerStatementPdf, LedgerStatementRow } from '../shared/utils/voucher-pdf';
 import jsPDF from 'jspdf';
+import { AclDirective } from '../acl/acl.directive';
 
 type TabType = 'create-ledger' | 'voucher-entry' | 'add-fund';
 type LedgerType = 'EXPENSE' | 'INCOME' | '';
@@ -37,9 +38,12 @@ const UNDER_GROUP_LABELS: Record<string, string> = {
   templateUrl: './transaction-master.page.html',
   styleUrls: ['./transaction-master.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule, AclDirective],
 })
 export class TransactionMasterPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'TRANSACTION_MASTER';
   Math = Math;
 
   // ── Tabs ──────────────────────────────────────────────────────────

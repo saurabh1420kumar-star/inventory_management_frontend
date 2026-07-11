@@ -38,6 +38,7 @@
           </div>
           <div class="flex flex-wrap gap-3">
             <ion-button
+              *appAcl="{ feature: FEATURE, action: 'create' }"
               (click)="openModal()"
               class="bg-white text-emerald-600 font-bold rounded-xl shadow-lg hover:shadow-xl hover:scale-105 transition-all duration-200 normal-case tracking-normal h-10"
               style="--background: white; --color: #059669; --box-shadow: none;">
@@ -97,7 +98,7 @@
       </div>
       <h3 class="text-lg font-bold text-slate-700 mb-1">No inward entries yet</h3>
       <p class="text-slate-400 text-sm mb-6">Click "Create Entry" to record your first inward entry.</p>
-      <ion-button (click)="openModal()" style="--background: #10b981; --border-radius: 12px;" class="font-semibold normal-case">
+      <ion-button *appAcl="{ feature: FEATURE, action: 'create' }" (click)="openModal()" style="--background: #10b981; --border-radius: 12px;" class="font-semibold normal-case">
         <ion-icon slot="start" name="add-circle-outline"></ion-icon>
         Create Entry
       </ion-button>
@@ -784,13 +785,15 @@
         </div>
       </div>
       <div class="flex items-center gap-2">
-        <button *ngIf="!isEditMode && selectedEntry?.itemType !== 'finished_product'"
-                (click)="openEditMode()"
-                class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border-0 outline-none"
-                style="background: rgba(255,255,255,0.2); color: #fff;">
-          <ion-icon name="create-outline" style="font-size:14px;"></ion-icon>
-          Edit
-        </button>
+        <ng-container *appAcl="{ feature: FEATURE, action: 'update' }">
+          <button *ngIf="!isEditMode && selectedEntry?.itemType !== 'finished_product'"
+                  (click)="openEditMode()"
+                  class="flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold border-0 outline-none"
+                  style="background: rgba(255,255,255,0.2); color: #fff;">
+            <ion-icon name="create-outline" style="font-size:14px;"></ion-icon>
+            Edit
+          </button>
+        </ng-container>
         <button (click)="closeDetail()" class="w-9 h-9 flex items-center justify-center rounded-xl border-0 outline-none" style="background: rgba(255,255,255,0.2);">
           <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
         </button>
