@@ -6,6 +6,7 @@ import { RouterModule } from '@angular/router';
 import { AccountsService } from '../../services/accounts.service';
 import { Auth } from '../../services/auth';
 import { HapticService } from '../../services/haptic.service';
+import { AclDirective } from '../../acl/acl.directive';
 import { addIcons } from 'ionicons';
 import {
   walletOutline,
@@ -72,9 +73,12 @@ export interface PaymentRequest {
   styleUrls: ['./payment-request.page.scss'],
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule, AclDirective],
 })
 export class PaymentRequestPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'ACCOUNTS_PAYMENT_REQUESTS';
 
   // ── Data ──────────────────────────────────────────────────────────────────
   allPayments: PaymentRequest[] = [];

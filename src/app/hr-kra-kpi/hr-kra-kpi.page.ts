@@ -6,6 +6,7 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { AclDirective } from '../acl/acl.directive';
 
 interface KraEntry {
   id: number;
@@ -127,9 +128,11 @@ interface KraMasterResponse {
   templateUrl: './hr-kra-kpi.page.html',
   styleUrls: ['./hr-kra-kpi.page.scss'],
   standalone: true,
-  imports: [CommonModule, NgIf, NgFor, FormsModule, IonicModule, HttpClientModule],
+  imports: [CommonModule, NgIf, NgFor, FormsModule, IonicModule, HttpClientModule, AclDirective],
 })
 export class HrKraKpiPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'HR_KRA_KPI';
   // Create KRA form state
   showCreateKraForm = false;
   kraNameInput = '';

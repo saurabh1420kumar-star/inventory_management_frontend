@@ -7,6 +7,8 @@ import { UserService, UpdateUserRequest } from '../services/user.service';
 import { Auth, CreateUserRequest } from '../services/auth';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
+import { AclDirective } from '../acl/acl.directive';
+import { DesignationService, Designation } from '../services/designation.service';
 
 interface Employee {
   id: number | string;
@@ -51,11 +53,14 @@ interface RoleType {
     CommonModule,
     FormsModule,
     IonicModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AclDirective
   ],
   standalone: true,
 })
 export class HrDepartmentPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'HR';
   Math = Math;
   employees: Employee[] = [];
   users: User[] = [];
@@ -130,6 +135,14 @@ export class HrDepartmentPage implements OnInit {
 
   private haptic = inject(HapticService);
   private toast = inject(Toast);
+  private designationService = inject(DesignationService);
+
+  // ── Create Designation modal state ──────────────────────────────────────────
+  showDesignationModal = false;
+  designations: Designation[] = [];
+  isLoadingDesignations = false;
+  isSavingDesignation = false;
+  designationSearch = '';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -239,6 +252,63 @@ export class HrDepartmentPage implements OnInit {
   formatRoleType(roleType: string): string {
     const role = this.roleTypes.find(r => r.value === roleType);
     return role ? role.label : roleType.replace(/_/g, ' ');
+  }
+
+  // ── Create Designation modal ─────────────────────────────────────────────────
+  openDesignationModal(): void {
+    this.showDesignationModal = true;
+    this.designationSearch = '';
+    this.loadDesignations();
+  }
+
+  closeDesignationModal(): void {
+    this.showDesignationModal = false;
+    this.designationSearch = '';
+  }
+
+  private loadDesignations(): void {
+    this.isLoadingDesignations = true;
+    this.designationService.getDesignations().subscribe({
+      next: (list) => {
+        this.designations = list;
+        this.isLoadingDesignations = false;
+      },
+      error: () => {
+        this.isLoadingDesignations = false;
+      }
+    });
+  }
+
+  /** Designations filtered by the search box. */
+  get filteredDesignations(): Designation[] {
+    const term = this.designationSearch.trim().toLowerCase();
+    if (!term) return this.designations;
+    return this.designations.filter(d => d.label.toLowerCase().includes(term));
+  }
+
+  /** True when the typed text does not match an existing designation → offer to create it. */
+  get canCreateDesignation(): boolean {
+    const term = this.designationSearch.trim();
+    return term.length > 0 && !this.designationService.exists(term);
+  }
+
+  createDesignationFromSearch(): void {
+    const label = this.designationSearch.trim();
+    if (!label || this.isSavingDesignation) return;
+
+    this.isSavingDesignation = true;
+    this.designationService.addDesignation(label).subscribe({
+      next: () => {
+        this.isSavingDesignation = false;
+        this.designationSearch = '';
+        this.loadDesignations();
+        this.toast.present(`Designation "${label}" created`, 'success');
+      },
+      error: () => {
+        this.isSavingDesignation = false;
+        this.toast.present('Could not create designation. Please try again.', 'danger');
+      }
+    });
   }
 
   private mapUserStatus(apiStatus: string): 'Pending' | 'Active' | 'Rejected' {

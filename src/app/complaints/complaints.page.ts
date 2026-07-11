@@ -9,15 +9,18 @@ import { Auth } from '../services/auth';
 import { UserService } from '../services/user.service';
 import { SalesHierarchyService } from '../services/sales-hierarchy.service';
 import { environment } from '../../environments/environment';
+import { AclDirective } from '../acl/acl.directive';
 
 @Component({
   selector: 'app-complaints',
   templateUrl: './complaints.page.html',
   styleUrls: ['./complaints.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, AclDirective],
 })
 export class ComplaintsPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'COMPLAINT';
   complaintForm: FormGroup;
   isLoading = false;
   successMessage = '';

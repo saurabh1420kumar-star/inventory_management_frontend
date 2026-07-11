@@ -357,12 +357,14 @@
             <!-- PENDING → Approve / Reject -->
             <div *ngIf="order.approvalStatus === 'pending'" class="flex gap-3">
               <button
+                *appAcl="{ feature: FEATURE, action: 'update' }"
                 (click)="approveOrder(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
                 <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
                 Approve Order
               </button>
               <button
+                *appAcl="{ feature: FEATURE, action: 'update' }"
                 (click)="openRejectModal(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95 transition-all duration-200">
                 <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
@@ -373,6 +375,7 @@
             <!-- APPROVED + no GDN → Approve PI first -->
             <div *ngIf="order.approvalStatus === 'approved' && order.gdnStatus === 'not-generated'" class="flex gap-3">
               <button
+                *appAcl="{ feature: FEATURE, action: 'update' }"
                 (click)="approvePayment(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-amber-200 hover:shadow-lg active:scale-95 transition-all duration-200">
                 <ion-icon name="card-outline" class="text-lg"></ion-icon>
@@ -391,6 +394,7 @@
               <!-- Step 1: Verify Inventory (shown when not yet verified) -->
               <ng-container *ngIf="!verifiedOrderIds.has(order.id)">
                 <button
+                  *appAcl="{ feature: FEATURE, action: 'update' }"
                   (click)="verifyInventory(order)"
                   [disabled]="verifyingOrderId === order.id"
                   class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-amber-500 to-orange-500 hover:from-amber-600 hover:to-orange-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-amber-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-60">
@@ -403,6 +407,7 @@
               <!-- Step 2: Generate GDN (shown only after verification passes) -->
               <ng-container *ngIf="verifiedOrderIds.has(order.id)">
                 <button
+                  *appAcl="{ feature: FEATURE, action: 'update' }"
                   (click)="generateGdn(order)"
                   class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-emerald-200 hover:shadow-lg active:scale-95 transition-all duration-200">
                   <ion-icon name="document-text-outline" class="text-lg"></ion-icon>
@@ -411,6 +416,7 @@
               </ng-container>
 
               <button
+                *appAcl="{ feature: FEATURE, action: 'update' }"
                 (click)="openGdnRejectModal(order)"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-rose-500 to-pink-500 hover:from-rose-600 hover:to-pink-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-rose-200 hover:shadow-lg active:scale-95 transition-all duration-200">
                 <ion-icon name="close-circle-outline" class="text-lg"></ion-icon>
@@ -426,6 +432,7 @@
             <!-- GDN Generated → Mark Dispatched + Download -->
             <div *ngIf="order.gdnStatus === 'generated'" class="flex gap-3">
               <button
+                *appAcl="{ feature: FEATURE, action: 'update' }"
                 (click)="markDispatched(order)"
                 [disabled]="isLoading"
                 class="flex-1 flex items-center justify-center gap-2 bg-gradient-to-r from-cyan-500 to-sky-500 hover:from-cyan-600 hover:to-sky-600 text-white font-bold text-sm rounded-xl py-3 shadow-md shadow-cyan-200 hover:shadow-lg active:scale-95 transition-all duration-200 disabled:opacity-50">

@@ -5,15 +5,19 @@ import { IonicModule } from '@ionic/angular';
 import { ComplaintsService, Complaint } from '../services/complaints.service';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
+import { AclDirective } from '../acl/acl.directive';
 
 @Component({
   selector: 'app-complaints-management',
   templateUrl: './complaints-management.page.html',
   styleUrls: ['./complaints-management.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule, AclDirective],
 })
 export class ComplaintsManagementPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'COMPLAINTS_MANAGEMENT';
+
   complaints: Complaint[] = [];
   isLoading = false;
   isUpdatingStatus = false;

@@ -161,6 +161,7 @@
 
         <!-- Save Button -->
         <button type="button"
+          *appAcl="{ feature: FEATURE, action: 'create' }"
           (click)="saveLedger()"
           [disabled]="isSubmittingLedger"
           class="mt-6 w-full py-3.5 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">
@@ -569,6 +570,7 @@
         <div class="mt-6 space-y-3">
           <!-- Save & Approve -->
           <button type="button"
+            *appAcl="{ feature: FEATURE, action: 'create' }"
             (click)="saveAndApproveVoucher()"
             [disabled]="isSubmittingVoucher"
             class="w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">
@@ -758,6 +760,7 @@
 
         <!-- Save Fund Button -->
         <button type="button"
+          *appAcl="{ feature: FEATURE, action: 'create' }"
           (click)="saveFund()"
           [disabled]="isSubmittingFund"
           class="mt-6 w-full py-4 bg-gradient-to-r from-emerald-500 to-teal-500 hover:from-emerald-600 hover:to-teal-600 disabled:opacity-60 text-white font-bold rounded-2xl text-sm transition flex items-center justify-center gap-2 shadow-lg shadow-emerald-200 active:scale-[0.99]">

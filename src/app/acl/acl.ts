@@ -40,6 +40,25 @@ export class Acl {
     return this.auth.getFeatures()?.some(f => f.path === path) ?? false;
   }
 
+  // =====================================
+  // CRUD ACTION CHECKS (button-level gating)
+  // =====================================
+  canCreate(featureName: string): boolean {
+    return this.auth.canCreate(featureName);
+  }
+
+  canRead(featureName: string): boolean {
+    return this.auth.canRead(featureName);
+  }
+
+  canUpdate(featureName: string): boolean {
+    return this.auth.canUpdate(featureName);
+  }
+
+  canDelete(featureName: string): boolean {
+    return this.auth.canDelete(featureName);
+  }
+
   // First web-admin module route the current user can open. Used to land users who
   // lack the DASHBOARD feature on a page they actually have access to (instead of the
   // hidden dashboard). Order = sidebar priority; only existing top-level routes listed.

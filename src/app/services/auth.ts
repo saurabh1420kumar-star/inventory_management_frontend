@@ -17,9 +17,26 @@ export interface Feature {
   name: string;
 }
 
+/**
+ * Per-feature CRUD permission entry returned in the login response.
+ * Governs which action buttons (add/create/edit/delete) are visible for a feature.
+ */
+export interface FeaturePermission {
+  userId?: number;
+  featureId?: number;
+  feature: string;
+  canCreate: boolean;
+  canRead: boolean;
+  canUpdate: boolean;
+  canDelete: boolean;
+}
+
+export type PermissionAction = 'create' | 'read' | 'update' | 'delete';
+
 export interface LoginResponse {
   featureNames: string[];
   features: Feature[];
+  roleFeaturePermissions?: FeaturePermission[];
   message: string;
   token: string;
   type: string;
@@ -153,6 +170,11 @@ export class Auth {
             'auth_feature_names',
             JSON.stringify(res.featureNames || [])
           );
+          // Store per-feature CRUD permissions used to gate action buttons
+          localStorage.setItem(
+            'auth_feature_permissions',
+            JSON.stringify(res.roleFeaturePermissions || [])
+          );
         })
       );
   }
@@ -261,6 +283,82 @@ export class Auth {
       return true;
     }
     return this.getFeatureNames().includes(featureName);
+  }
+
+  // ---------------- CRUD PERMISSION HELPERS ----------------
+  /**
+   * The per-feature CRUD permissions stored at login.
+   * Returns an empty array for legacy sessions (logged in before this field existed).
+   */
+  getFeaturePermissions(): FeaturePermission[] {
+    const raw = localStorage.getItem('auth_feature_permissions');
+    if (!raw) return [];
+    try {
+      const parsed = JSON.parse(raw);
+      return Array.isArray(parsed) ? parsed : [];
+    } catch {
+      return [];
+    }
+  }
+
+  /**
+   * Check whether the current user may perform an action on a feature.
+   *
+   * Business rule: a single "edit access" flag (`canUpdate`) governs the
+   * visibility of ALL action buttons — add/create, edit and delete alike.
+   * The `canCreate` and `canDelete` flags are intentionally ignored; if a role
+   * has `canUpdate = true` for a feature it sees every create/edit/delete
+   * control on that page, otherwise the page is view-only.
+   *
+   * Other rules (designed to never regress existing behaviour):
+   * - SUPER_ADMIN can do everything.
+   * - If no granular permissions were returned (legacy session / backend without
+   *   the field), fall back to permissive so pages keep working as before.
+   * - If a feature is accessible but has no entry, stay permissive (page access is
+   *   already governed by the feature list; we only hide buttons when told to).
+   */
+  canDo(featureName: string, action: PermissionAction): boolean {
+    if (this.isSuperAdmin()) {
+      return true;
+    }
+
+    const permissions = this.getFeaturePermissions();
+    if (!permissions.length) {
+      return true;
+    }
+
+    const entry = permissions.find((p) => p.feature === featureName);
+    if (!entry) {
+      return true;
+    }
+
+    switch (action) {
+      // All write actions (create/update/delete) hang off `canUpdate` only.
+      case 'create':
+      case 'update':
+      case 'delete':
+        return !!entry.canUpdate;
+      case 'read':
+        return !!entry.canRead;
+      default:
+        return false;
+    }
+  }
+
+  canCreate(featureName: string): boolean {
+    return this.canDo(featureName, 'create');
+  }
+
+  canRead(featureName: string): boolean {
+    return this.canDo(featureName, 'read');
+  }
+
+  canUpdate(featureName: string): boolean {
+    return this.canDo(featureName, 'update');
+  }
+
+  canDelete(featureName: string): boolean {
+    return this.canDo(featureName, 'delete');
   }
 
   // ============ PLATFORM & DEVICE HELPERS ============

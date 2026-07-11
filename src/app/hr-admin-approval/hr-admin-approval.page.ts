@@ -13,6 +13,7 @@ import {
 
 import { Observable } from 'rxjs';
 import { Auth } from '../services/auth';
+import { AclDirective } from '../acl/acl.directive';
 import { HapticService } from '../services/haptic.service';
 import { KeyboardService } from '../services/keyboard.service';
 import {
@@ -31,9 +32,12 @@ type ActionMode = 'approve' | 'reject';
   templateUrl: './hr-admin-approval.page.html',
   styleUrls: ['./hr-admin-approval.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule],
+  imports: [CommonModule, FormsModule, IonicModule, AclDirective],
 })
 export class HrAdminApprovalPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'ADMIN_APPROVAL';
 
   readonly stars = [1, 2, 3, 4, 5];
 
