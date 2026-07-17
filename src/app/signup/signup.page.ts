@@ -4,10 +4,12 @@ import { CommonModule } from '@angular/common';
 import { IonicModule } from '@ionic/angular';
 import { FormBuilder, FormGroup, Validators, ReactiveFormsModule } from '@angular/forms';
 import { Router } from '@angular/router';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 
 import { Auth, CreateUserRequest } from '../services/auth';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
+import { environment } from '../../environments/environment';
 
 @Component({
   selector: 'app-signup',
@@ -23,6 +25,12 @@ import { HapticService } from '../services/haptic.service';
 export class SignupPage implements OnInit {
 
   signupForm: FormGroup;
+  selectedCategory: 'USER' | 'SALES' = 'USER';
+  roles: { value: string; label: string }[] = [];
+  salesRoles: { value: string; label: string }[] = [];
+  zones: { value: string; label: string }[] = [];
+  regions: { value: string; label: string }[] = [];
+  isLoadingRoles = false;
 
   countries = [
     { value: 'USA', label: 'United States' },
@@ -32,22 +40,6 @@ export class SignupPage implements OnInit {
     { value: 'INDIA', label: 'India' },
     { value: 'GERMANY', label: 'Germany' },
     { value: 'FRANCE', label: 'France' },
-  ];
-
-  roles = [
-    { value: 'ADMIN', label: 'Admin' },
-    { value: 'BUSINESS_DEV_MGR', label: 'Business Dev Manager' },
-    { value: 'PLANT_MGR', label: 'Plant Manager' },
-    { value: 'HR_MGR', label: 'HR Manager' },
-    { value: 'LOGISTICS_MGR', label: 'Logistics Manager' },
-    { value: 'ACCOUNT_MGR', label: 'Account Manager' },
-    { value: 'ACCOUNT_OFFICER', label: 'Account Officer' },
-    { value: 'ACCOUNT_EXECUTIVE', label: 'Account Executive' },
-
-    { value: 'LOGISTICS_OFFICER', label: 'Logistics Officer' },
-    { value: 'HR_EXECUTIVE', label: 'HR Executive' },
-    { value: 'PLANT_OFFICER', label: 'Plant Officer' },
-    { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' },
   ];
 
   genders = [
@@ -70,6 +62,7 @@ export class SignupPage implements OnInit {
   loading = false;
 
   private haptic = inject(HapticService);
+  private http = inject(HttpClient);
 
   constructor(
     private fb: FormBuilder,
@@ -85,24 +78,30 @@ export class SignupPage implements OnInit {
         dateOfBirth: ['', [Validators.required]],
         gender: ['', [Validators.required]],
         bloodGroup: [''],
-        
+
         // Contact Information
         email: ['', [Validators.required, Validators.email]],
         contactNo: ['', [Validators.required]],
         alternateContactNo: [''],
-        
+
         // Address Information
         completeAddress: ['', [Validators.required]],
         city: ['', [Validators.required]],
         country: ['', [Validators.required]],
         zip: ['', [Validators.required]],
-        
+
         // Employment Information
         employeeRollNo: ['', [Validators.required]],
-        
+
         // Account Information
         username: ['', [Validators.required]],
         roleType: ['', [Validators.required]],
+
+        // SALES-specific fields
+        salesRole: [''],
+        zone: [''],
+        region: [''],
+
         password: ['', [Validators.required, Validators.minLength(6)]],
         confirmPassword: ['', [Validators.required]],
       },
@@ -110,7 +109,49 @@ export class SignupPage implements OnInit {
     );
   }
 
-  ngOnInit() {}
+  ngOnInit() {
+    this.loadRoles();
+  }
+
+  loadRoles(): void {
+    this.isLoadingRoles = true;
+    const token = this.auth.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http.get<{ value: string; label: string }[]>(`${environment.apiUrl}/admin/roles/by-category?category=user`, { headers })
+      .subscribe({
+        next: (roles: { value: string; label: string }[]) => {
+          this.roles = roles.map(r => ({ value: r.value, label: r.label }));
+          this.isLoadingRoles = false;
+        },
+        error: () => {
+          this.isLoadingRoles = false;
+          this.toast.present('Could not load roles', 'warning');
+        }
+      });
+  }
+
+  onCategoryChange(): void {
+    if (this.selectedCategory === 'USER') {
+      this.signupForm.get('roleType')?.setValidators([Validators.required]);
+      this.signupForm.get('salesRole')?.clearValidators();
+      this.signupForm.get('zone')?.clearValidators();
+      this.signupForm.get('region')?.clearValidators();
+    } else {
+      this.signupForm.get('roleType')?.clearValidators();
+      this.signupForm.get('salesRole')?.setValidators([Validators.required]);
+      this.signupForm.get('zone')?.setValidators([Validators.required]);
+      this.signupForm.get('region')?.setValidators([Validators.required]);
+    }
+
+    this.signupForm.get('roleType')?.updateValueAndValidity();
+    this.signupForm.get('salesRole')?.updateValueAndValidity();
+    this.signupForm.get('zone')?.updateValueAndValidity();
+    this.signupForm.get('region')?.updateValueAndValidity();
+  }
 
   passwordsMatchValidator(group: FormGroup) {
     const pass = group.get('password')?.value;
@@ -131,29 +172,57 @@ export class SignupPage implements OnInit {
 
     const v = this.signupForm.value;
 
-    const payload: CreateUserRequest = {
-      username: v.username,
-      email: v.email,
-      password: v.password,
-      status: 'ACTIVE',
-      firstName: v.firstName,
-      lastName: v.lastName,
-      contactNo: v.contactNo,
-      alternateContactNo: v.alternateContactNo, // Default to contactNo if not provided
-      bloodGroup: v.bloodGroup || 'O+', // Default to O+ if not provided
-      completeAddress: v.completeAddress,
-      city: v.city,
-      dateOfBirth: v.dateOfBirth,
-      gender: v.gender,
-      country: v.country,
-      zip: v.zip,
-      roleType: v.roleType,
-      employeeRollNo:v.employeeRollNo,
-    };
+    let payload: any;
+
+    if (this.selectedCategory === 'USER') {
+      payload = {
+        userOnboardingType: 'USER',
+        username: v.username,
+        email: v.email,
+        password: v.password,
+        status: 'ACTIVE',
+        firstName: v.firstName,
+        lastName: v.lastName,
+        contactNo: v.contactNo,
+        alternateContactNo: v.alternateContactNo,
+        bloodGroup: v.bloodGroup || 'O+',
+        completeAddress: v.completeAddress,
+        city: v.city,
+        dateOfBirth: v.dateOfBirth,
+        gender: v.gender,
+        country: v.country,
+        zip: v.zip,
+        roleType: v.roleType,
+        employeeRollNo: v.employeeRollNo,
+      };
+    } else {
+      payload = {
+        userOnboardingType: 'SALES',
+        username: v.username,
+        email: v.email,
+        password: v.password,
+        status: 'ACTIVE',
+        firstName: v.firstName,
+        lastName: v.lastName,
+        contactNo: v.contactNo,
+        alternateContactNo: v.alternateContactNo,
+        bloodGroup: v.bloodGroup || 'B+',
+        completeAddress: v.completeAddress,
+        city: v.city,
+        dateOfBirth: v.dateOfBirth,
+        gender: v.gender,
+        country: v.country,
+        zip: v.zip,
+        salesRole: v.salesRole,
+        zone: v.zone,
+        region: v.region,
+        employeeRollNo: v.employeeRollNo,
+      };
+    }
 
     this.loading = true;
 
-    this.auth.createUser(payload).subscribe({
+    this.auth.createUser(payload as CreateUserRequest).subscribe({
       next: async (res) => {
         this.loading = false;
         await this.toast.present(

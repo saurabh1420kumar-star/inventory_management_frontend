@@ -143,6 +143,7 @@ export class HrDepartmentPage implements OnInit {
   isLoadingDesignations = false;
   isSavingDesignation = false;
   designationSearch = '';
+  selectedRoleCategory: 'USER' | 'SALES' = 'USER';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -258,12 +259,14 @@ export class HrDepartmentPage implements OnInit {
   openDesignationModal(): void {
     this.showDesignationModal = true;
     this.designationSearch = '';
+    this.selectedRoleCategory = 'USER';
     this.loadDesignations();
   }
 
   closeDesignationModal(): void {
     this.showDesignationModal = false;
     this.designationSearch = '';
+    this.selectedRoleCategory = 'USER';
   }
 
   private loadDesignations(): void {
@@ -297,10 +300,11 @@ export class HrDepartmentPage implements OnInit {
     if (!label || this.isSavingDesignation) return;
 
     this.isSavingDesignation = true;
-    this.designationService.addDesignation(label).subscribe({
+    this.designationService.addDesignation(label, this.selectedRoleCategory).subscribe({
       next: () => {
         this.isSavingDesignation = false;
         this.designationSearch = '';
+        this.selectedRoleCategory = 'USER';
         this.loadDesignations();
         this.toast.present(`Designation "${label}" created`, 'success');
       },

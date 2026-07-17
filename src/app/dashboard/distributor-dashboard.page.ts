@@ -959,24 +959,10 @@ export class DistributorDashboardPage implements OnInit {
           if (typeof data.totalOutstanding === 'number') {
             this.totalOutstanding = data.totalOutstanding;
           }
-          if (this.selectedPeriod === 'month') {
-            this.periodData.valueMTD = `Rs ${((data.totalAmount ?? 0) / 100000).toFixed(2)} L`;
-          }
         }
         this.isLoadingAnalytics = false;
       },
       error: () => { this.isLoadingAnalytics = false; }
-    });
-    // Also load YTD separately for valueYTD
-    const ytdUrl = `${environment.apiUrl}/dashboard/distributor-orders?period=year&distributorId=${this.distributorId}`;
-    this.http.get<any>(ytdUrl).subscribe({
-      next: (res) => {
-        const data = res?.data ?? res ?? null;
-        if (data) {
-          this.periodData.valueYTD = `Rs ${((data.totalAmount ?? 0) / 100000).toFixed(2)} L`;
-        }
-      },
-      error: () => {}
     });
   }
 
@@ -1004,6 +990,8 @@ export class DistributorDashboardPage implements OnInit {
         this.periodData.volYTD = `${data.yearToDate?.totalVolumeTons ?? 0} Tons`;
         this.periodData.callMTD = `${data.monthToDate?.totalTransactions ?? 0}`;
         this.periodData.callYTD = `${data.yearToDate?.totalTransactions ?? 0}`;
+        this.periodData.valueMTD = `Rs ${((data.totalAmountMonthly ?? 0) / 100000).toFixed(2)} L`;
+        this.periodData.valueYTD = `Rs ${((data.totalAmountYearly ?? 0) / 100000).toFixed(2)} L`;
         if (typeof data.totalOutstanding === 'number') {
           this.totalOutstanding = data.totalOutstanding;
         }
