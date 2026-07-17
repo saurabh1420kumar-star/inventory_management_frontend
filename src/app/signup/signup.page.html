@@ -14,7 +14,49 @@
 
       <div class="px-6 md:px-10 pb-12">
         <form [formGroup]="signupForm" (ngSubmit)="onSubmit()" class="space-y-5">
-          
+
+          <!-- User Category Selection -->
+          <div class="pb-4 border-b-2 border-slate-100">
+            <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider mb-3">User Type</h3>
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-3">
+              <button
+                type="button"
+                (click)="selectedCategory = 'USER'; onCategoryChange()"
+                [class.ring-2]="selectedCategory === 'USER'"
+                [class.ring-emerald-400]="selectedCategory === 'USER'"
+                class="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-emerald-400 transition-all"
+              >
+                <div class="flex items-center gap-3">
+                  <ion-icon [name]="selectedCategory === 'USER' ? 'checkmark-circle' : 'ellipse-outline'"
+                    [class.text-emerald-500]="selectedCategory === 'USER'"
+                    class="text-2xl text-slate-400"></ion-icon>
+                  <div class="text-left">
+                    <p class="font-bold text-slate-700">User</p>
+                    <p class="text-xs text-slate-500">HR/Admin roles</p>
+                  </div>
+                </div>
+              </button>
+
+              <button
+                type="button"
+                (click)="selectedCategory = 'SALES'; onCategoryChange()"
+                [class.ring-2]="selectedCategory === 'SALES'"
+                [class.ring-blue-400]="selectedCategory === 'SALES'"
+                class="p-4 rounded-xl border-2 border-slate-200 bg-white hover:border-blue-400 transition-all"
+              >
+                <div class="flex items-center gap-3">
+                  <ion-icon [name]="selectedCategory === 'SALES' ? 'checkmark-circle' : 'ellipse-outline'"
+                    [class.text-blue-500]="selectedCategory === 'SALES'"
+                    class="text-2xl text-slate-400"></ion-icon>
+                  <div class="text-left">
+                    <p class="font-bold text-slate-700">Sales</p>
+                    <p class="text-xs text-slate-500">Sales hierarchy roles</p>
+                  </div>
+                </div>
+              </button>
+            </div>
+          </div>
+
           <!-- Personal Information Section -->
           <div class="pb-2">
             <h3 class="text-sm font-bold text-slate-700 uppercase tracking-wider flex items-center">
@@ -195,16 +237,57 @@
             </div>
           </div>
 
-          <div class="group">
+          <!-- USER Role Selection -->
+          <div *ngIf="selectedCategory === 'USER'" class="group">
             <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Role <span class="text-rose-400">*</span></label>
             <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all duration-300">
               <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
-                <ion-select placeholder="Choose Role" formControlName="roleType" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                <ion-select [disabled]="isLoadingRoles" placeholder="Choose Role" formControlName="roleType" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
                   <ion-select-option *ngFor="let r of roles" [value]="r.value">{{ r.label }}</ion-select-option>
                 </ion-select>
               </ion-item>
             </div>
           </div>
+
+          <!-- SALES Role & Location Selection -->
+          <ng-container *ngIf="selectedCategory === 'SALES'">
+            <div class="group">
+              <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Sales Role <span class="text-rose-400">*</span></label>
+              <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+                <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                  <ion-select placeholder="Choose Sales Role" formControlName="salesRole" interface="popover" class="w-full !px-5 !py-3 text-slate-900" [interfaceOptions]="{ cssClass: 'custom-popover' }">
+                    <ion-select-option value="NATIONAL_SALES_MGR">National Sales Manager</ion-select-option>
+                    <ion-select-option value="STATE_SALES_MGR">State Sales Manager</ion-select-option>
+                    <ion-select-option value="ZONAL_SALES_MGR">Zonal Sales Manager</ion-select-option>
+                    <ion-select-option value="REGIONAL_SALES_MGR">Regional Sales Manager</ion-select-option>
+                    <ion-select-option value="AREA_SALES_MGR">Area Sales Manager</ion-select-option>
+                    <ion-select-option value="SALES_OFFICER">Sales Officer</ion-select-option>
+                    <ion-select-option value="SALES_EXECUTIVE">Sales Executive</ion-select-option>
+                  </ion-select>
+                </ion-item>
+              </div>
+            </div>
+
+            <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Zone <span class="text-rose-400">*</span></label>
+                <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" placeholder="e.g., BIHAR" formControlName="zone" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+
+              <div class="group">
+                <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">Region <span class="text-rose-400">*</span></label>
+                <div class="relative bg-slate-50 rounded-xl border border-slate-200 focus-within:bg-white focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all duration-300">
+                  <ion-item lines="none" class="bg-transparent rounded-xl" style="--background: transparent; --padding-start: 0; --inner-padding-end: 0;">
+                    <ion-input type="text" placeholder="e.g., PATNA" formControlName="region" class="px-5 py-2 !text-slate-900 custom-input"></ion-input>
+                  </ion-item>
+                </div>
+              </div>
+            </div>
+          </ng-container>
 
           <div class="grid grid-cols-1 md:grid-cols-2 gap-5">
             <div class="group">

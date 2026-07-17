@@ -10,6 +10,7 @@ export interface Designation {
   value: string;   // machine key, e.g. QUALITY_MANAGER
   label: string;   // display name, e.g. Quality Manager
   custom?: boolean; // true when created by a user (not a built-in / API role)
+  roleCategory?: 'USER' | 'SALES'; // Category: USER or SALES
 }
 
 /**
@@ -93,13 +94,13 @@ export class DesignationService {
   }
 
   /** Create a designation. Persists to localStorage now; POSTs once USE_API is on. */
-  addDesignation(label: string): Observable<Designation> {
+  addDesignation(label: string, roleCategory?: 'USER' | 'SALES'): Observable<Designation> {
     const clean = (label || '').trim();
-    const designation: Designation = { value: this.toValue(clean), label: clean, custom: true };
+    const designation: Designation = { value: this.toValue(clean), label: clean, custom: true, roleCategory };
 
     if (this.USE_API) {
       return this.http
-        .post<Designation>(this.base, { label: clean, value: designation.value }, { headers: this.getHeaders() })
+        .post<Designation>(this.base, { label: clean, value: designation.value, roleCategory }, { headers: this.getHeaders() })
         .pipe(map((res) => ({ ...res, custom: true })));
     }
 
