@@ -1,11 +1,12 @@
 import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { AccountsService } from '../../services/accounts.service';
 import { Auth } from '../../services/auth';
 import { HapticService } from '../../services/haptic.service';
+import { Toast } from '../../services/toast';
 import { AclDirective } from '../../acl/acl.directive';
 import { addIcons } from 'ionicons';
 import {
@@ -115,7 +116,7 @@ export class PaymentRequestPage implements OnInit {
   private haptic = inject(HapticService);
 
   constructor(
-    private toastCtrl: ToastController,
+    private toast: Toast,
     private accountsService: AccountsService,
     private auth: Auth,
   ) {
@@ -334,18 +335,16 @@ export class PaymentRequestPage implements OnInit {
       },
       error: (err) => {
         this.isSubmitting = false;
-        const errorMessage = err?.error?.message || err?.error || err?.message;
-        // Check if it's actually a success message
-        if (errorMessage && errorMessage.toLowerCase && errorMessage.toLowerCase().includes('rejected')) {
-          this.loadPayments();
-          this.isRejectModalOpen = false;
-          this.isDetailModalOpen = false;
-          this.rejectionReason = '';
-          this.selectedPayment = null;
-          this.showToast(errorMessage, 'success');
-        } else {
-          this.showToast('Failed to reject payment. Please try again.', 'danger');
-        }
+        // Backend sometimes returns a plain-text 200 body, which Angular's HttpClient
+        // fails to JSON.parse (Content-Type: application/json) and routes here instead
+        // of `next`, with the raw text preserved on err.error.text.
+        const errorMessage = err?.error?.text || err?.error?.message || err?.error || err?.message || 'Failed to reject payment. Please try again.';
+        this.loadPayments();
+        this.isRejectModalOpen = false;
+        this.isDetailModalOpen = false;
+        this.rejectionReason = '';
+        this.selectedPayment = null;
+        this.showToast(errorMessage, 'danger');
       },
     });
   }
@@ -438,10 +437,7 @@ export class PaymentRequestPage implements OnInit {
     });
   }
 
-  private async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'primary') {
-    const toast = await this.toastCtrl.create({
-      message, color, duration: 2800, position: 'bottom',
-    });
-    toast.present();
+  private showToast(message: string, color: 'success' | 'danger' | 'warning') {
+    this.toast.present(message, color);
   }
 }
