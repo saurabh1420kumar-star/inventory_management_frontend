@@ -321,18 +321,31 @@ export class PaymentRequestPage implements OnInit {
     this.isSubmitting = true;
 
     this.accountsService.rejectPayment(payment.id, userId, this.rejectionReason.trim()).subscribe({
-      next: () => {
+      next: (response) => {
         this.loadPayments();
         this.isRejectModalOpen = false;
         this.isDetailModalOpen = false;
         this.isSubmitting = false;
         this.rejectionReason = '';
         this.selectedPayment = null;
-        this.showToast('Payment request rejected successfully', 'success');
+        // Handle both string and object responses
+        const message = typeof response === 'string' ? response : (response?.message || 'Payment request rejected successfully');
+        this.showToast(message, 'success');
       },
       error: (err) => {
         this.isSubmitting = false;
-        this.showToast(err?.error?.message || 'Failed to reject payment. Please try again.', 'danger');
+        const errorMessage = err?.error?.message || err?.error || err?.message;
+        // Check if it's actually a success message
+        if (errorMessage && errorMessage.toLowerCase && errorMessage.toLowerCase().includes('rejected')) {
+          this.loadPayments();
+          this.isRejectModalOpen = false;
+          this.isDetailModalOpen = false;
+          this.rejectionReason = '';
+          this.selectedPayment = null;
+          this.showToast(errorMessage, 'success');
+        } else {
+          this.showToast('Failed to reject payment. Please try again.', 'danger');
+        }
       },
     });
   }
