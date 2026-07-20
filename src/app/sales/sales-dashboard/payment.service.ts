@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface PaymentRequest {
   distributorId: string;
@@ -45,9 +46,15 @@ export interface PendingPayment {
   providedIn: 'root'
 })
 export class PaymentService {
-  private apiUrl = 'https://api.imsnectarorigin.com/api/accounts/update-balance-with-salesperson';
+  private readonly apiUrl: string;
+  private readonly ledgerPaymentsUrl: string;
+  private readonly pendingPaymentsUrl: string;
 
-  constructor(private http: HttpClient) {}
+  constructor(private readonly http: HttpClient) {
+    this.apiUrl = `${environment.apiUrl}/accounts/update-balance-with-salesperson`;
+    this.ledgerPaymentsUrl = `${environment.apiUrl}/accounts/ledger-updated-payments`;
+    this.pendingPaymentsUrl = `${environment.apiUrl}/accounts/pending-payments`;
+  }
 
   submitPayment(paymentData: PaymentRequest, salespersonId: number): Observable<PaymentResponse> {
     const distributorId = parseInt(paymentData.distributorId);
@@ -78,16 +85,14 @@ export class PaymentService {
   }
 
   getLedgerUpdatedPaymentsBySalesperson(salespersonId: number): Observable<any> {
-    const url = 'https://api.imsnectarorigin.com/api/accounts/ledger-updated-payments';
     const params = { salespersonId: salespersonId.toString() };
-    return this.http.get<any>(url, { params });
+    return this.http.get<any>(this.ledgerPaymentsUrl, { params });
   }
 
   getPendingPayments(salespersonId: number): Observable<any> {
-    const pendingPaymentsUrl = 'https://api.imsnectarorigin.com/api/accounts/pending-payments';
     const params = {
       salespersonId: salespersonId.toString()
     };
-    return this.http.get<any>(pendingPaymentsUrl, { params });
+    return this.http.get<any>(this.pendingPaymentsUrl, { params });
   }
 }
