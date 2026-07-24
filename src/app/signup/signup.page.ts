@@ -110,10 +110,10 @@ export class SignupPage implements OnInit {
   }
 
   ngOnInit() {
-    this.loadRoles();
+    this.loadRoles('user');
   }
 
-  loadRoles(): void {
+  loadRoles(category: string): void {
     this.isLoadingRoles = true;
     const token = this.auth.getToken();
     let headers = new HttpHeaders();
@@ -121,15 +121,20 @@ export class SignupPage implements OnInit {
       headers = headers.set('Authorization', `Bearer ${token}`);
     }
 
-    this.http.get<{ value: string; label: string }[]>(`${environment.apiUrl}/admin/roles/by-category?category=user`, { headers })
+    this.http.get<any[]>(`${environment.apiUrl}/admin/roles/by-category?category=${category}`, { headers })
       .subscribe({
-        next: (roles: { value: string; label: string }[]) => {
-          this.roles = roles.map(r => ({ value: r.value, label: r.label }));
+        next: (roles: any[]) => {
+          const mappedRoles = roles.map(r => ({ value: r.roleType, label: r.name }));
+          if (category === 'user') {
+            this.roles = mappedRoles;
+          } else if (category === 'sales') {
+            this.salesRoles = mappedRoles;
+          }
           this.isLoadingRoles = false;
         },
         error: () => {
           this.isLoadingRoles = false;
-          this.toast.present('Could not load roles', 'warning');
+          this.toast.present(`Could not load ${category} roles`, 'warning');
         }
       });
   }
@@ -140,11 +145,13 @@ export class SignupPage implements OnInit {
       this.signupForm.get('salesRole')?.clearValidators();
       this.signupForm.get('zone')?.clearValidators();
       this.signupForm.get('region')?.clearValidators();
+      this.loadRoles('user');
     } else {
       this.signupForm.get('roleType')?.clearValidators();
       this.signupForm.get('salesRole')?.setValidators([Validators.required]);
       this.signupForm.get('zone')?.setValidators([Validators.required]);
       this.signupForm.get('region')?.setValidators([Validators.required]);
+      this.loadRoles('sales');
     }
 
     this.signupForm.get('roleType')?.updateValueAndValidity();
