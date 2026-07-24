@@ -2,6 +2,7 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { User } from '../models/user.model';
 import { UserService, UpdateUserRequest } from '../services/user.service';
 import { Auth, CreateUserRequest } from '../services/auth';
@@ -9,6 +10,7 @@ import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
 import { AclDirective } from '../acl/acl.directive';
 import { DesignationService, Designation } from '../services/designation.service';
+import { environment } from '../../environments/environment';
 
 interface Employee {
   id: number | string;
@@ -76,6 +78,8 @@ export class HrDepartmentPage implements OnInit {
   selectedEmployee: Employee | null = null;
   employeeForm: FormGroup;
   showEditPassword = false;
+  pendingHRApprovalsCount = 0;
+  pendingHRApprovals: any[] = [];
 
   // Available Role Types
   roleTypes: RoleType[] = [
@@ -136,6 +140,7 @@ export class HrDepartmentPage implements OnInit {
   private haptic = inject(HapticService);
   private toast = inject(Toast);
   private designationService = inject(DesignationService);
+  private http = inject(HttpClient);
 
   // ── Create Designation modal state ──────────────────────────────────────────
   showDesignationModal = false;
@@ -144,6 +149,13 @@ export class HrDepartmentPage implements OnInit {
   isSavingDesignation = false;
   designationSearch = '';
   selectedRoleCategory: 'USER' | 'SALES' = 'USER';
+
+  // Approval modal state
+  showApprovalModal = false;
+  isProcessingApproval = false;
+  selectedApprovalRequest: any = null;
+  approvalAction: 'APPROVE' | 'REJECT' | null = null;
+  approvalComments = '';
 
   constructor(
     private formBuilder: FormBuilder,
@@ -181,6 +193,7 @@ export class HrDepartmentPage implements OnInit {
 
   ngOnInit() {
     this.loadUsers();
+    this.loadPendingHRApprovals();
   }
 
   get isAdmin(): boolean {
@@ -243,6 +256,98 @@ export class HrDepartmentPage implements OnInit {
         this.toast.present(errorMessage, 'danger');
       }
     });
+  }
+
+  loadPendingHRApprovals() {
+    const token = this.auth.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http.get<any[]>(`${environment.apiUrl}/hrmaster/pending-approvals`, { headers })
+      .subscribe({
+        next: (data: any[]) => {
+          this.pendingHRApprovals = Array.isArray(data) ? data : [];
+          this.pendingHRApprovalsCount = this.pendingHRApprovals.length;
+        },
+        error: (err) => {
+          console.error('Failed to load pending HR approvals:', err);
+          this.pendingHRApprovals = [];
+          this.pendingHRApprovalsCount = 0;
+        },
+      });
+  }
+
+  openApprovalModal(approval: any, action: 'APPROVE' | 'REJECT') {
+    this.selectedApprovalRequest = approval;
+    this.approvalAction = action;
+    this.approvalComments = '';
+    this.showApprovalModal = true;
+  }
+
+  closeApprovalModal() {
+    this.showApprovalModal = false;
+    this.selectedApprovalRequest = null;
+    this.approvalAction = null;
+    this.approvalComments = '';
+  }
+
+  processApproval() {
+    if (!this.selectedApprovalRequest || !this.approvalAction) return;
+
+    this.isProcessingApproval = true;
+    const token = this.auth.getToken();
+    const username = this.auth.getUsername() || '1';
+
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    headers = headers.set('HrMaster-Username', username);
+
+    const payload = {
+      pendingRequestId: this.selectedApprovalRequest.id,
+      action: this.approvalAction,
+      comments: this.approvalComments.trim()
+    };
+
+    this.http.post(`${environment.apiUrl}/hrmaster/process-approval`, payload, { headers, responseType: 'text' })
+      .subscribe({
+        next: (response: any) => {
+          this.isProcessingApproval = false;
+          let message = '';
+
+          // Handle different response formats
+          if (typeof response === 'string' && response.trim()) {
+            message = response.trim();
+          } else if (response?.message) {
+            message = response.message;
+          } else {
+            message = this.approvalAction === 'APPROVE'
+              ? `${this.selectedApprovalRequest.firstName} approved successfully`
+              : `${this.selectedApprovalRequest.firstName} rejected`;
+          }
+
+          this.toast.present(message, 'success');
+          this.closeApprovalModal();
+          this.loadPendingHRApprovals();
+        },
+        error: (err) => {
+          this.isProcessingApproval = false;
+          let errorMsg = 'Failed to process approval';
+
+          if (typeof err?.error === 'string') {
+            errorMsg = err.error;
+          } else if (err?.error?.message) {
+            errorMsg = err.error.message;
+          } else if (err?.message) {
+            errorMsg = err.message;
+          }
+
+          this.toast.present(errorMsg, 'danger');
+        },
+      });
   }
 
   handlePullRefresh(event: any) {
