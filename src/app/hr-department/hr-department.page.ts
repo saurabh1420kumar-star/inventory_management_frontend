@@ -157,6 +157,12 @@ export class HrDepartmentPage implements OnInit {
   approvalAction: 'APPROVE' | 'REJECT' | null = null;
   approvalComments = '';
 
+  // Edit pending approval modal state
+  showEditPendingModal = false;
+  selectedPendingForEdit: any = null;
+  isEditingPending = false;
+  editPendingForm: FormGroup;
+
   constructor(
     private formBuilder: FormBuilder,
     private userService: UserService,
@@ -188,6 +194,24 @@ export class HrDepartmentPage implements OnInit {
       department: [''],
       phone: [''],
       avatar: ['']
+    });
+
+    this.editPendingForm = this.formBuilder.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      contactNo: ['', Validators.required],
+      alternateContactNo: [''],
+      bloodGroup: [''],
+      completeAddress: ['', [Validators.required, Validators.minLength(5)]],
+      city: ['', Validators.required],
+      country: ['', Validators.required],
+      zip: ['', Validators.required],
+      dateOfBirth: ['', Validators.required],
+      gender: ['', Validators.required],
+      employeeRollNo: ['', Validators.required],
+      zone: [''],
+      region: ['']
     });
   }
 
@@ -291,6 +315,94 @@ export class HrDepartmentPage implements OnInit {
     this.selectedApprovalRequest = null;
     this.approvalAction = null;
     this.approvalComments = '';
+  }
+
+  openEditPendingModal(approval: any) {
+    this.selectedPendingForEdit = approval;
+
+    const normalizeGender = (g: string) => {
+      if (!g) return '';
+      const upper = g.toUpperCase();
+      if (upper === 'M' || upper === 'MALE') return 'MALE';
+      if (upper === 'F' || upper === 'FEMALE') return 'FEMALE';
+      if (upper === 'O' || upper === 'OTHER') return 'OTHER';
+      return upper;
+    };
+
+    this.editPendingForm.patchValue({
+      firstName: approval.firstName,
+      lastName: approval.lastName,
+      email: approval.email,
+      contactNo: approval.contactNo,
+      alternateContactNo: approval.alternateContactNo,
+      bloodGroup: approval.bloodGroup,
+      completeAddress: approval.completeAddress,
+      city: approval.city,
+      country: approval.country,
+      zip: approval.zip,
+      dateOfBirth: approval.dateOfBirth,
+      gender: normalizeGender(approval.gender),
+      employeeRollNo: approval.employeeRollNo,
+      zone: approval.zone,
+      region: approval.region
+    });
+    this.showEditPendingModal = true;
+  }
+
+  closeEditPendingModal() {
+    this.showEditPendingModal = false;
+    this.selectedPendingForEdit = null;
+    this.editPendingForm.reset();
+  }
+
+  savePendingChanges() {
+    if (!this.selectedPendingForEdit || this.editPendingForm.invalid) {
+      this.toast.present('Please fill all required fields', 'warning');
+      return;
+    }
+
+    this.isEditingPending = true;
+    const token = this.auth.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const payload = this.editPendingForm.value;
+
+    this.http.patch(`${environment.apiUrl}/hrmaster/edit-pending/${this.selectedPendingForEdit.id}`, payload, { headers, responseType: 'text' })
+      .subscribe({
+        next: (response: any) => {
+          this.isEditingPending = false;
+          let message = '';
+
+          if (typeof response === 'string' && response.trim()) {
+            message = response.trim();
+          } else if (response?.message) {
+            message = response.message;
+          } else {
+            message = `${this.selectedPendingForEdit.firstName}'s profile updated successfully`;
+          }
+
+          this.toast.present(message, 'success');
+          this.closeEditPendingModal();
+          this.loadPendingHRApprovals();
+        },
+        error: (err) => {
+          this.isEditingPending = false;
+          let errorMsg = 'Failed to update profile';
+
+          if (typeof err?.error === 'string') {
+            errorMsg = err.error;
+          } else if (err?.error?.message) {
+            errorMsg = err.error.message;
+          } else if (err?.message) {
+            errorMsg = err.message;
+          }
+
+          this.toast.present(errorMsg, 'danger');
+        },
+      });
   }
 
   processApproval() {
