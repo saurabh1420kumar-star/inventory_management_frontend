@@ -292,7 +292,19 @@ export class HrDepartmentPage implements OnInit {
     this.http.get<any[]>(`${environment.apiUrl}/hrmaster/pending-approvals`, { headers })
       .subscribe({
         next: (data: any[]) => {
-          this.pendingHRApprovals = Array.isArray(data) ? data : [];
+          if (Array.isArray(data)) {
+            this.pendingHRApprovals = data.map(approval => ({
+              ...approval.user,
+              id: approval.id,
+              approvalStatus: approval.approvalStatus,
+              requestedOn: approval.requestedOn,
+              reviewComments: approval.reviewComments,
+              reviewedBy: approval.reviewedBy,
+              reviewedOn: approval.reviewedOn
+            }));
+          } else {
+            this.pendingHRApprovals = [];
+          }
           this.pendingHRApprovalsCount = this.pendingHRApprovals.length;
         },
         error: (err) => {
