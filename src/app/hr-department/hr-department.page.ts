@@ -2,11 +2,15 @@ import { CommonModule } from '@angular/common';
 import { Component, OnInit, HostListener, ElementRef, inject } from '@angular/core';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { HttpClient, HttpHeaders } from '@angular/common/http';
 import { User } from '../models/user.model';
 import { UserService, UpdateUserRequest } from '../services/user.service';
 import { Auth, CreateUserRequest } from '../services/auth';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
+import { AclDirective } from '../acl/acl.directive';
+import { DesignationService, Designation } from '../services/designation.service';
+import { environment } from '../../environments/environment';
 
 interface Employee {
   id: number | string;
@@ -51,11 +55,14 @@ interface RoleType {
     CommonModule,
     FormsModule,
     IonicModule,
-    ReactiveFormsModule
+    ReactiveFormsModule,
+    AclDirective
   ],
   standalone: true,
 })
 export class HrDepartmentPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'HR';
   Math = Math;
   employees: Employee[] = [];
   users: User[] = [];
@@ -71,6 +78,8 @@ export class HrDepartmentPage implements OnInit {
   selectedEmployee: Employee | null = null;
   employeeForm: FormGroup;
   showEditPassword = false;
+  pendingHRApprovalsCount = 0;
+  pendingHRApprovals: any[] = [];
 
   // Available Role Types
   roleTypes: RoleType[] = [
@@ -130,6 +139,29 @@ export class HrDepartmentPage implements OnInit {
 
   private haptic = inject(HapticService);
   private toast = inject(Toast);
+  private designationService = inject(DesignationService);
+  private http = inject(HttpClient);
+
+  // ── Create Designation modal state ──────────────────────────────────────────
+  showDesignationModal = false;
+  designations: Designation[] = [];
+  isLoadingDesignations = false;
+  isSavingDesignation = false;
+  designationSearch = '';
+  selectedRoleCategory: 'USER' | 'SALES' = 'USER';
+
+  // Approval modal state
+  showApprovalModal = false;
+  isProcessingApproval = false;
+  selectedApprovalRequest: any = null;
+  approvalAction: 'APPROVE' | 'REJECT' | null = null;
+  approvalComments = '';
+
+  // Edit pending approval modal state
+  showEditPendingModal = false;
+  selectedPendingForEdit: any = null;
+  isEditingPending = false;
+  editPendingForm: FormGroup;
 
   constructor(
     private formBuilder: FormBuilder,
@@ -163,10 +195,29 @@ export class HrDepartmentPage implements OnInit {
       phone: [''],
       avatar: ['']
     });
+
+    this.editPendingForm = this.formBuilder.group({
+      firstName: ['', [Validators.required, Validators.minLength(2)]],
+      lastName: ['', [Validators.required, Validators.minLength(2)]],
+      email: ['', [Validators.required, Validators.email]],
+      contactNo: ['', Validators.required],
+      alternateContactNo: [''],
+      bloodGroup: [''],
+      completeAddress: ['', [Validators.required, Validators.minLength(5)]],
+      city: ['', Validators.required],
+      country: ['', Validators.required],
+      zip: ['', Validators.required],
+      dateOfBirth: ['', Validators.required],
+      gender: ['', Validators.required],
+      employeeRollNo: ['', Validators.required],
+      zone: [''],
+      region: ['']
+    });
   }
 
   ngOnInit() {
     this.loadUsers();
+    this.loadPendingHRApprovals();
   }
 
   get isAdmin(): boolean {
@@ -231,6 +282,186 @@ export class HrDepartmentPage implements OnInit {
     });
   }
 
+  loadPendingHRApprovals() {
+    const token = this.auth.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    this.http.get<any[]>(`${environment.apiUrl}/hrmaster/pending-approvals`, { headers })
+      .subscribe({
+        next: (data: any[]) => {
+          this.pendingHRApprovals = Array.isArray(data) ? data : [];
+          this.pendingHRApprovalsCount = this.pendingHRApprovals.length;
+        },
+        error: (err) => {
+          console.error('Failed to load pending HR approvals:', err);
+          this.pendingHRApprovals = [];
+          this.pendingHRApprovalsCount = 0;
+        },
+      });
+  }
+
+  openApprovalModal(approval: any, action: 'APPROVE' | 'REJECT') {
+    this.selectedApprovalRequest = approval;
+    this.approvalAction = action;
+    this.approvalComments = '';
+    this.showApprovalModal = true;
+  }
+
+  closeApprovalModal() {
+    this.showApprovalModal = false;
+    this.selectedApprovalRequest = null;
+    this.approvalAction = null;
+    this.approvalComments = '';
+  }
+
+  openEditPendingModal(approval: any) {
+    this.selectedPendingForEdit = approval;
+
+    const normalizeGender = (g: string) => {
+      if (!g) return '';
+      const upper = g.toUpperCase();
+      if (upper === 'M' || upper === 'MALE') return 'MALE';
+      if (upper === 'F' || upper === 'FEMALE') return 'FEMALE';
+      if (upper === 'O' || upper === 'OTHER') return 'OTHER';
+      return upper;
+    };
+
+    this.editPendingForm.patchValue({
+      firstName: approval.firstName,
+      lastName: approval.lastName,
+      email: approval.email,
+      contactNo: approval.contactNo,
+      alternateContactNo: approval.alternateContactNo,
+      bloodGroup: approval.bloodGroup,
+      completeAddress: approval.completeAddress,
+      city: approval.city,
+      country: approval.country,
+      zip: approval.zip,
+      dateOfBirth: approval.dateOfBirth,
+      gender: normalizeGender(approval.gender),
+      employeeRollNo: approval.employeeRollNo,
+      zone: approval.zone,
+      region: approval.region
+    });
+    this.showEditPendingModal = true;
+  }
+
+  closeEditPendingModal() {
+    this.showEditPendingModal = false;
+    this.selectedPendingForEdit = null;
+    this.editPendingForm.reset();
+  }
+
+  savePendingChanges() {
+    if (!this.selectedPendingForEdit || this.editPendingForm.invalid) {
+      this.toast.present('Please fill all required fields', 'warning');
+      return;
+    }
+
+    this.isEditingPending = true;
+    const token = this.auth.getToken();
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+
+    const payload = this.editPendingForm.value;
+
+    this.http.patch(`${environment.apiUrl}/hrmaster/edit-pending/${this.selectedPendingForEdit.id}`, payload, { headers, responseType: 'text' })
+      .subscribe({
+        next: (response: any) => {
+          this.isEditingPending = false;
+          let message = '';
+
+          if (typeof response === 'string' && response.trim()) {
+            message = response.trim();
+          } else if (response?.message) {
+            message = response.message;
+          } else {
+            message = `${this.selectedPendingForEdit.firstName}'s profile updated successfully`;
+          }
+
+          this.toast.present(message, 'success');
+          this.closeEditPendingModal();
+          this.loadPendingHRApprovals();
+        },
+        error: (err) => {
+          this.isEditingPending = false;
+          let errorMsg = 'Failed to update profile';
+
+          if (typeof err?.error === 'string') {
+            errorMsg = err.error;
+          } else if (err?.error?.message) {
+            errorMsg = err.error.message;
+          } else if (err?.message) {
+            errorMsg = err.message;
+          }
+
+          this.toast.present(errorMsg, 'danger');
+        },
+      });
+  }
+
+  processApproval() {
+    if (!this.selectedApprovalRequest || !this.approvalAction) return;
+
+    this.isProcessingApproval = true;
+    const token = this.auth.getToken();
+    const username = this.auth.getUsername() || '1';
+
+    let headers = new HttpHeaders();
+    if (token) {
+      headers = headers.set('Authorization', `Bearer ${token}`);
+    }
+    headers = headers.set('HrMaster-Username', username);
+
+    const payload = {
+      pendingRequestId: this.selectedApprovalRequest.id,
+      action: this.approvalAction,
+      comments: this.approvalComments.trim()
+    };
+
+    this.http.post(`${environment.apiUrl}/hrmaster/process-approval`, payload, { headers, responseType: 'text' })
+      .subscribe({
+        next: (response: any) => {
+          this.isProcessingApproval = false;
+          let message = '';
+
+          // Handle different response formats
+          if (typeof response === 'string' && response.trim()) {
+            message = response.trim();
+          } else if (response?.message) {
+            message = response.message;
+          } else {
+            message = this.approvalAction === 'APPROVE'
+              ? `${this.selectedApprovalRequest.firstName} approved successfully`
+              : `${this.selectedApprovalRequest.firstName} rejected`;
+          }
+
+          this.toast.present(message, 'success');
+          this.closeApprovalModal();
+          this.loadPendingHRApprovals();
+        },
+        error: (err) => {
+          this.isProcessingApproval = false;
+          let errorMsg = 'Failed to process approval';
+
+          if (typeof err?.error === 'string') {
+            errorMsg = err.error;
+          } else if (err?.error?.message) {
+            errorMsg = err.error.message;
+          } else if (err?.message) {
+            errorMsg = err.message;
+          }
+
+          this.toast.present(errorMsg, 'danger');
+        },
+      });
+  }
+
   handlePullRefresh(event: any) {
     this.loadUsers();
     setTimeout(() => event.target.complete(), 1500);
@@ -239,6 +470,66 @@ export class HrDepartmentPage implements OnInit {
   formatRoleType(roleType: string): string {
     const role = this.roleTypes.find(r => r.value === roleType);
     return role ? role.label : roleType.replace(/_/g, ' ');
+  }
+
+  // ── Create Designation modal ─────────────────────────────────────────────────
+  openDesignationModal(): void {
+    this.showDesignationModal = true;
+    this.designationSearch = '';
+    this.selectedRoleCategory = 'USER';
+    this.loadDesignations();
+  }
+
+  closeDesignationModal(): void {
+    this.showDesignationModal = false;
+    this.designationSearch = '';
+    this.selectedRoleCategory = 'USER';
+  }
+
+  private loadDesignations(): void {
+    this.isLoadingDesignations = true;
+    this.designationService.getDesignations().subscribe({
+      next: (list) => {
+        this.designations = list;
+        this.isLoadingDesignations = false;
+      },
+      error: () => {
+        this.isLoadingDesignations = false;
+      }
+    });
+  }
+
+  /** Designations filtered by the search box. */
+  get filteredDesignations(): Designation[] {
+    const term = this.designationSearch.trim().toLowerCase();
+    if (!term) return this.designations;
+    return this.designations.filter(d => d.label.toLowerCase().includes(term));
+  }
+
+  /** True when the typed text does not match an existing designation → offer to create it. */
+  get canCreateDesignation(): boolean {
+    const term = this.designationSearch.trim();
+    return term.length > 0 && !this.designationService.exists(term);
+  }
+
+  createDesignationFromSearch(): void {
+    const label = this.designationSearch.trim();
+    if (!label || this.isSavingDesignation) return;
+
+    this.isSavingDesignation = true;
+    this.designationService.addDesignation(label, this.selectedRoleCategory).subscribe({
+      next: () => {
+        this.isSavingDesignation = false;
+        this.designationSearch = '';
+        this.selectedRoleCategory = 'USER';
+        this.loadDesignations();
+        this.toast.present(`Designation "${label}" created`, 'success');
+      },
+      error: () => {
+        this.isSavingDesignation = false;
+        this.toast.present('Could not create designation. Please try again.', 'danger');
+      }
+    });
   }
 
   private mapUserStatus(apiStatus: string): 'Pending' | 'Active' | 'Rejected' {

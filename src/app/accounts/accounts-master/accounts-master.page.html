@@ -313,26 +313,28 @@
           </div>
 
           <div class="flex flex-wrap items-center gap-3">
-            <!-- Update Balance Button -->
-            <button *ngIf="selectedAccount" (click)="isFormModalOpen = true"
-              class="flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
-              <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
-              Update Balance
-            </button>
+            <ng-container *appAcl="{ feature: FEATURE, action: 'create' }">
+              <!-- Update Balance Button -->
+              <button *ngIf="selectedAccount" (click)="isFormModalOpen = true"
+                class="flex items-center gap-2 px-5 py-3 bg-emerald-500 hover:bg-emerald-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+                <ion-icon name="wallet-outline" class="text-lg"></ion-icon>
+                Update Balance
+              </button>
 
-            <!-- Create JV Button -->
-            <button *ngIf="selectedAccount" (click)="openJVModal()"
-              class="flex items-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
-              <ion-icon name="receipt-outline" class="text-lg"></ion-icon>
-              Create JV
-            </button>
+              <!-- Create JV Button -->
+              <button *ngIf="selectedAccount" (click)="openJVModal()"
+                class="flex items-center gap-2 px-5 py-3 bg-blue-500 hover:bg-blue-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+                <ion-icon name="receipt-outline" class="text-lg"></ion-icon>
+                Create JV
+              </button>
 
-            <!-- Add Credit Button -->
-            <button *ngIf="selectedAccount" (click)="openAddCreditModal()"
-              class="flex items-center gap-2 px-5 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
-              <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
-              Add Credit
-            </button>
+              <!-- Add Credit Button -->
+              <button *ngIf="selectedAccount" (click)="openAddCreditModal()"
+                class="flex items-center gap-2 px-5 py-3 bg-violet-500 hover:bg-violet-600 text-white rounded-xl font-semibold text-sm transition-all shadow-md hover:shadow-lg">
+                <ion-icon name="trending-up-outline" class="text-lg"></ion-icon>
+                Add Credit
+              </button>
+            </ng-container>
 
             <!-- Date Filter -->
             <div class="relative date-filter-wrap">
@@ -1220,7 +1222,7 @@
 
         <!-- Modal Footer Actions -->
         <div class="p-5 border-t border-slate-100 bg-slate-50/50 flex items-center gap-3">
-          <button (click)="handleDeleteTransaction()"
+          <button *appAcl="{ feature: FEATURE, action: 'delete' }" (click)="handleDeleteTransaction()"
             class="flex items-center justify-center gap-2 px-4 py-2.5 bg-red-50 hover:bg-red-100 text-red-600 rounded-xl text-sm font-semibold transition-all border border-red-200 hover:border-red-300">
             <ion-icon name="trash-outline" class="text-base"></ion-icon>
             Delete
@@ -1366,7 +1368,7 @@
                 </div>
 
                 <!-- Action Buttons -->
-                <div class="flex gap-2 pt-2 border-t border-slate-100">
+                <div *appAcl="{ feature: FEATURE, action: 'update' }" class="flex gap-2 pt-2 border-t border-slate-100">
                   <button (click)="approveSinglePayment(payment)"
                     class="flex-1 flex items-center justify-center gap-2 px-4 py-2.5 bg-emerald-500 hover:bg-emerald-600 text-white rounded-lg text-sm font-semibold transition-all">
                     <ion-icon name="checkmark-circle-outline" class="text-lg"></ion-icon>
@@ -1383,7 +1385,7 @@
                 <ion-icon name="close-outline" class="mr-1"></ion-icon>
                 Close
               </button>
-              <button (click)="approveAllPayments()" [disabled]="pendingPayments.length === 0"
+              <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="approveAllPayments()" [disabled]="pendingPayments.length === 0"
                 class="flex-1 px-4 py-3 bg-emerald-500 hover:bg-emerald-600 disabled:bg-slate-300 text-white rounded-xl text-sm font-semibold transition-all">
                 <ion-icon name="checkmark-circle-outline" class="mr-1"></ion-icon>
                 Approve All

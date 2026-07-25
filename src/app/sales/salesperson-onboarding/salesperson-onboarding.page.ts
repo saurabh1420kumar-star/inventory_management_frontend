@@ -442,13 +442,25 @@ export class SalespersonOnboardingPage implements OnInit {
     return m ? `${m.name} (${this.getRoleLabel(m.role)})` : '—';
   }
 
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'REPORTING_MANAGER';
+
   /**
-   * Only SUPER_ADMIN, ADMIN (system role) or NSM (salesperson role) can add/edit/delete.
+   * Add/edit/delete visibility is driven purely by the REPORTING_MANAGER feature
+   * permission (edit access) — the old hardcoded role list (ADMIN / NSM / HR_MGR)
+   * no longer applies. Whoever has edit access sees the buttons; everyone else
+   * gets a view-only page. All three actions key off `canUpdate` (see Auth.canDo).
    */
-  get canAddPerson(): boolean {
-    const sysRole = this.auth.getRoleType();
-    if (sysRole === 'SUPER_ADMIN' || sysRole === 'ADMIN') return true;
-    return this.currentUserSalesPerson?.role === 'NATIONAL_SALES_MGR';
+  get canCreatePerson(): boolean {
+    return this.auth.canCreate(this.FEATURE);
+  }
+
+  get canUpdatePerson(): boolean {
+    return this.auth.canUpdate(this.FEATURE);
+  }
+
+  get canDeletePerson(): boolean {
+    return this.auth.canDelete(this.FEATURE);
   }
 
 

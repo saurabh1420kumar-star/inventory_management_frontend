@@ -7,6 +7,7 @@ import { LedgerService, LedgerDto, ApiResponse, Distributor } from '../../servic
 import { ProformaInvoiceService, ProformaInvoice } from '../../services/proforma-invoice.service';
 import { Auth } from '../../services/auth';
 import { Toast as ToastService } from '../../services/toast';
+import { AclDirective } from '../../acl/acl.directive';
 import { generateLedgerStatementPdf, LedgerStatementRow } from '../../shared/utils/voucher-pdf';
 import { addIcons } from 'ionicons';
 import {
@@ -137,9 +138,13 @@ interface LedgerSummary {
     ReactiveFormsModule,
     IonicModule,
     RouterModule,
+    AclDirective,
   ],
 })
 export class AccountsMasterPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'ACCOUNTS_MASTER';
+
   Math = Math; // Expose Math to template
 
   // API Data properties

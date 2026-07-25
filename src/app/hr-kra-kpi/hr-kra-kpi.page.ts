@@ -6,6 +6,8 @@ import { HttpClient, HttpClientModule } from '@angular/common/http';
 import * as XLSX from 'xlsx';
 import jsPDF from 'jspdf';
 import autoTable from 'jspdf-autotable';
+import { AclDirective } from '../acl/acl.directive';
+import { environment } from '../../environments/environment';
 
 interface KraEntry {
   id: number;
@@ -127,9 +129,11 @@ interface KraMasterResponse {
   templateUrl: './hr-kra-kpi.page.html',
   styleUrls: ['./hr-kra-kpi.page.scss'],
   standalone: true,
-  imports: [CommonModule, NgIf, NgFor, FormsModule, IonicModule, HttpClientModule],
+  imports: [CommonModule, NgIf, NgFor, FormsModule, IonicModule, HttpClientModule, AclDirective],
 })
 export class HrKraKpiPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'HR_KRA_KPI';
   // Create KRA form state
   showCreateKraForm = false;
   kraNameInput = '';
@@ -205,7 +209,7 @@ export class HrKraKpiPage implements OnInit {
   }
 
   loadSalesPersons(): void {
-    this.http.get<SalesPerson[]>('https://api.imsnectarorigin.com/api/sales-hierarchy/list').subscribe({
+    this.http.get<SalesPerson[]>(`${environment.apiUrl}/sales-hierarchy/list`).subscribe({
       next: (response: SalesPerson[]) => {
         if (response && Array.isArray(response)) {
           this.salesPersons = response.filter((person) => person.active && person.name);
@@ -218,7 +222,7 @@ export class HrKraKpiPage implements OnInit {
   }
 
   loadKraMasterList(): void {
-    this.http.get<KraMasterResponse[]>('https://api.imsnectarorigin.com/api/admin/kra-kpi/master').subscribe({
+    this.http.get<KraMasterResponse[]>(`${environment.hrUrl}/admin/kra-kpi/master`).subscribe({
       next: (response: KraMasterResponse[]) => {
         if (response && Array.isArray(response)) {
           this.kraMasterList = response.filter((kra) => kra.isActive);
@@ -231,7 +235,7 @@ export class HrKraKpiPage implements OnInit {
   }
 
   loadAllAssignments(): void {
-    this.http.get<AssignmentResponse[]>('https://api.imsnectarorigin.com/api/admin/kra-kpi/report/all-assignments').subscribe({
+    this.http.get<AssignmentResponse[]>(`${environment.hrUrl}/admin/kra-kpi/report/all-assignments`).subscribe({
       next: (response: AssignmentResponse[]) => {
         if (response && Array.isArray(response)) {
           this.kraEntries = response.map((assignment, index) => ({
@@ -409,7 +413,7 @@ export class HrKraKpiPage implements OnInit {
       isActive: true,
     };
 
-    this.http.post('https://api.imsnectarorigin.com/api/admin/kra-kpi/create', payload).subscribe({
+    this.http.post(`${environment.hrUrl}/admin/kra-kpi/create`, payload).subscribe({
       next: (response: any) => {
         console.log('KRA created successfully:', response);
 
@@ -517,7 +521,7 @@ export class HrKraKpiPage implements OnInit {
       remarks: '',
     };
 
-    this.http.post('https://api.imsnectarorigin.com/api/admin/kra-kpi/assign/bulk', payload).subscribe({
+    this.http.post(`${environment.hrUrl}/admin/kra-kpi/assign/bulk`, payload).subscribe({
       next: (response: any) => {
         console.log('KRA assignments created successfully:', response);
 
@@ -609,7 +613,7 @@ export class HrKraKpiPage implements OnInit {
     };
 
     this.http
-      .put(`https://api.imsnectarorigin.com/api/admin/kra-kpi/assign/${this.editingAssignmentId}`, payload)
+      .put(`${environment.hrUrl}/admin/kra-kpi/assign/${this.editingAssignmentId}`, payload)
       .subscribe({
         next: (response: any) => {
           console.log('KRA assignment updated successfully:', response);
@@ -690,8 +694,8 @@ export class HrKraKpiPage implements OnInit {
     const isAssignment = entry.assignmentId !== undefined && entry.assignmentId > 0;
     const idToDelete = isAssignment ? entry.assignmentId : entry.id;
     const apiEndpoint = isAssignment
-      ? `https://api.imsnectarorigin.com/api/admin/kra-kpi/assign/${idToDelete}`
-      : `https://api.imsnectarorigin.com/api/admin/kra-kpi/${idToDelete}`;
+      ? `${environment.hrUrl}/admin/kra-kpi/assign/${idToDelete}`
+      : `${environment.hrUrl}/admin/kra-kpi/${idToDelete}`;
 
     // Call backend API to delete
     this.http.delete(apiEndpoint).subscribe({
@@ -882,7 +886,7 @@ export class HrKraKpiPage implements OnInit {
   }
 
   loadWeightageKraList(): void {
-    this.http.get<KraMasterResponse[]>('https://api.imsnectarorigin.com/api/admin/kra-kpi/master').subscribe({
+    this.http.get<KraMasterResponse[]>(`${environment.hrUrl}/admin/kra-kpi/master`).subscribe({
       next: (response: KraMasterResponse[]) => {
         if (response && Array.isArray(response)) {
           this.weightageKraList = response;
@@ -923,7 +927,7 @@ export class HrKraKpiPage implements OnInit {
       isActive: kra.isActive,
     };
 
-    this.http.patch(`https://api.imsnectarorigin.com/api/admin/kra-kpi/${kra.id}`, payload).subscribe({
+    this.http.patch(`${environment.hrUrl}/admin/kra-kpi/${kra.id}`, payload).subscribe({
       next: (response: any) => {
         console.log('Weightage updated successfully:', response);
 

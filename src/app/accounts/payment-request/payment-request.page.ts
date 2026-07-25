@@ -1,11 +1,13 @@
 import { Component, OnInit, ViewEncapsulation, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
-import { IonicModule, ToastController } from '@ionic/angular';
+import { IonicModule } from '@ionic/angular';
 import { RouterModule } from '@angular/router';
 import { AccountsService } from '../../services/accounts.service';
 import { Auth } from '../../services/auth';
 import { HapticService } from '../../services/haptic.service';
+import { Toast } from '../../services/toast';
+import { AclDirective } from '../../acl/acl.directive';
 import { addIcons } from 'ionicons';
 import {
   walletOutline,
@@ -72,9 +74,12 @@ export interface PaymentRequest {
   styleUrls: ['./payment-request.page.scss'],
   standalone: true,
   encapsulation: ViewEncapsulation.None,
-  imports: [CommonModule, FormsModule, IonicModule, RouterModule],
+  imports: [CommonModule, FormsModule, IonicModule, RouterModule, AclDirective],
 })
 export class PaymentRequestPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'ACCOUNTS_PAYMENT_REQUESTS';
 
   // ── Data ──────────────────────────────────────────────────────────────────
   allPayments: PaymentRequest[] = [];
@@ -111,7 +116,7 @@ export class PaymentRequestPage implements OnInit {
   private haptic = inject(HapticService);
 
   constructor(
-    private toastCtrl: ToastController,
+    private toast: Toast,
     private accountsService: AccountsService,
     private auth: Auth,
   ) {
@@ -317,18 +322,29 @@ export class PaymentRequestPage implements OnInit {
     this.isSubmitting = true;
 
     this.accountsService.rejectPayment(payment.id, userId, this.rejectionReason.trim()).subscribe({
-      next: () => {
+      next: (response) => {
         this.loadPayments();
         this.isRejectModalOpen = false;
         this.isDetailModalOpen = false;
         this.isSubmitting = false;
         this.rejectionReason = '';
         this.selectedPayment = null;
-        this.showToast('Payment request rejected successfully', 'success');
+        // Handle both string and object responses
+        const message = typeof response === 'string' ? response : (response?.message || 'Payment request rejected successfully');
+        this.showToast(message, 'success');
       },
       error: (err) => {
         this.isSubmitting = false;
-        this.showToast(err?.error?.message || 'Failed to reject payment. Please try again.', 'danger');
+        // Backend sometimes returns a plain-text 200 body, which Angular's HttpClient
+        // fails to JSON.parse (Content-Type: application/json) and routes here instead
+        // of `next`, with the raw text preserved on err.error.text.
+        const errorMessage = err?.error?.text || err?.error?.message || err?.error || err?.message || 'Failed to reject payment. Please try again.';
+        this.loadPayments();
+        this.isRejectModalOpen = false;
+        this.isDetailModalOpen = false;
+        this.rejectionReason = '';
+        this.selectedPayment = null;
+        this.showToast(errorMessage, 'danger');
       },
     });
   }
@@ -421,10 +437,7 @@ export class PaymentRequestPage implements OnInit {
     });
   }
 
-  private async showToast(message: string, color: 'success' | 'danger' | 'warning' | 'primary') {
-    const toast = await this.toastCtrl.create({
-      message, color, duration: 2800, position: 'bottom',
-    });
-    toast.present();
+  private showToast(message: string, color: 'success' | 'danger' | 'warning') {
+    this.toast.present(message, color);
   }
 }

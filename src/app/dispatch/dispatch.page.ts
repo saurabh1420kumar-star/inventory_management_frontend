@@ -10,6 +10,7 @@ import { ProformaInvoiceService, ProformaInvoice } from '../services/proforma-in
 import { GdnService, GDN } from '../services/gdn.service';
 import { DownloadService } from '../services/download.service';
 import { HapticService } from '../services/haptic.service';
+import { AclDirective } from '../acl/acl.directive';
 
 // ── Local Display Interface ──────────────────────────────────────
 
@@ -49,9 +50,12 @@ export interface DispatchOrderDisplay {
   templateUrl: './dispatch.page.html',
   styleUrls: ['./dispatch.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule],
+  imports: [CommonModule, FormsModule, ReactiveFormsModule, IonicModule, RouterModule, AclDirective],
 })
 export class DispatchPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'DISPATCH';
+
   // ── Data ──────────────────────────────────────────
   orders: DispatchOrderDisplay[] = [];
   paymentApprovedCarts: DispatchOrderDisplay[] = [];

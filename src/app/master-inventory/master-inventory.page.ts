@@ -58,6 +58,7 @@ import { UnitService } from '../services/unit.service';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
 import { Auth } from '../services/auth';
+import { AclDirective } from '../acl/acl.directive';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -106,10 +107,14 @@ interface DisplayInventoryItem extends ApiInventoryItem {
     IonSelect,
     IonSelectOption,
     IonRefresher,
-    IonRefresherContent
+    IonRefresherContent,
+    AclDirective
   ]
 })
 export class MasterInventoryPage implements OnInit {
+
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'INVENTORY_MASTERS';
 
   /* ---------- UI STATE ---------- */
   activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals' = 'all';

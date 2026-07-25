@@ -1,6 +1,7 @@
 import { Injectable } from '@angular/core';
 import { HttpClient } from '@angular/common/http';
 import { Observable } from 'rxjs';
+import { environment } from '../../../environments/environment';
 
 export interface Distributor {
   companyId: number;
@@ -25,9 +26,11 @@ export interface DistributorResponse {
   providedIn: 'root'
 })
 export class DistributorService {
-  private apiUrl = 'https://api.imsnectarorigin.com/api/sales-mapping/salesperson';
+  private readonly apiUrl: string;
 
-  constructor(private http: HttpClient) { }
+  constructor(private readonly http: HttpClient) {
+    this.apiUrl = `${environment.apiUrl}/sales-mapping/salesperson`;
+  }
 
   getDistributorsBySalesperson(salespersonId: number | string): Observable<DistributorResponse> {
     return this.http.get<DistributorResponse>(`${this.apiUrl}/${salespersonId}`);

@@ -35,7 +35,7 @@
             </div>
             <!-- Right: Action Buttons (hidden on mobile — use FAB) -->
             <div class="hidden sm:flex items-center gap-3">
-              <button (click)="openAddModal()" class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
+              <button *appAcl="{ feature: FEATURE, action: 'create' }" (click)="openAddModal()" class="flex items-center gap-2 px-6 py-3 bg-white text-emerald-600 rounded-xl hover:bg-gray-50 transition-all font-semibold shadow-lg hover:shadow-xl">
                 <ion-icon class="text-xl" name="add-outline"></ion-icon>
                 <span>Add Distributor</span>
               </button>
@@ -214,17 +214,19 @@
           <p class="text-slate-500 mb-4">
             {{ searchQuery ? 'No distributors match your search' : statusFilter !== 'ALL' ? 'No ' + statusFilter.toLowerCase() + ' distributors found' : 'No distributors found' }}
           </p>
-          <button *ngIf="!searchQuery && statusFilter === 'ALL'" (click)="openAddModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold">
-            <ion-icon name="add-outline"></ion-icon>
-            Add Distributor
-          </button>
+          <ng-container *appAcl="{ feature: FEATURE, action: 'create' }">
+            <button *ngIf="!searchQuery && statusFilter === 'ALL'" (click)="openAddModal()" class="inline-flex items-center gap-2 px-6 py-3 bg-emerald-500 text-white rounded-xl hover:bg-emerald-600 transition-all font-semibold">
+              <ion-icon name="add-outline"></ion-icon>
+              Add Distributor
+            </button>
+          </ng-container>
         </div>
       </div>
     </div>
   </div>
 
   <!-- Mobile FAB: Add Distributor -->
-  <button class="mobile-fab" (click)="openAddModal()">
+  <button *appAcl="{ feature: FEATURE, action: 'create' }" class="mobile-fab" (click)="openAddModal()">
     <ion-icon name="add-outline"></ion-icon>
     <span>New Distributor</span>
   </button>
@@ -769,11 +771,11 @@
             </div>
           </div>
           <div class="detail-actions">
-            <button (click)="onEditDistributor()" class="detail-btn detail-btn-edit">
+            <button *appAcl="{ feature: FEATURE, action: 'update' }" (click)="onEditDistributor()" class="detail-btn detail-btn-edit">
               <ion-icon name="create-outline"></ion-icon>
               <span>Edit</span>
             </button>
-            <button (click)="openDeleteConfirmModal()" class="detail-btn detail-btn-delete">
+            <button *appAcl="{ feature: FEATURE, action: 'delete' }" (click)="openDeleteConfirmModal()" class="detail-btn detail-btn-delete">
               <ion-icon name="trash-outline"></ion-icon>
               <span>Delete</span>
             </button>

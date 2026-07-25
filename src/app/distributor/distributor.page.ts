@@ -30,6 +30,7 @@ import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.s
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
 import { INDIA_LOCATION_DATA, findLocationByPincode } from '../services/india-location.data';
+import { AclDirective } from '../acl/acl.directive';
 
 
 interface Distributor {
@@ -77,10 +78,14 @@ interface Distributor {
     FormsModule,
     ReactiveFormsModule,
     IonicModule,
+    AclDirective,
   ],
   standalone: true,
 })
 export class DistributorPage implements OnInit {
+  /** Feature key used for CRUD button gating on this page. */
+  readonly FEATURE = 'DISTRIBUTOR';
+
   distributors: Distributor[] = [];
   filteredDistributors: Distributor[] = [];
   searchQuery: string = '';
