@@ -293,15 +293,24 @@ export class HrDepartmentPage implements OnInit {
       .subscribe({
         next: (data: any[]) => {
           if (Array.isArray(data)) {
-            this.pendingHRApprovals = data.map(approval => ({
-              ...approval.user,
-              id: approval.id,
-              approvalStatus: approval.approvalStatus,
-              requestedOn: approval.requestedOn,
-              reviewComments: approval.reviewComments,
-              reviewedBy: approval.reviewedBy,
-              reviewedOn: approval.reviewedOn
-            }));
+            this.pendingHRApprovals = data.map(approval => {
+              // Handle both flat and nested structures
+              if (approval.user) {
+                // Nested structure: { user: { firstName, ... }, id, approvalStatus, ... }
+                return {
+                  ...approval.user,
+                  id: approval.id,
+                  approvalStatus: approval.approvalStatus,
+                  requestedOn: approval.requestedOn,
+                  reviewComments: approval.reviewComments,
+                  reviewedBy: approval.reviewedBy,
+                  reviewedOn: approval.reviewedOn
+                };
+              } else {
+                // Flat structure: { firstName, ..., id, approvalStatus, ... }
+                return approval;
+              }
+            });
           } else {
             this.pendingHRApprovals = [];
           }
