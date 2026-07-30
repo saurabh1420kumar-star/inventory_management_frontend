@@ -1,0 +1,43 @@
+<ion-page>
+  <ion-content class="ion-padding">
+    <div class="welcome-container">
+      <!-- Header Section -->
+      <div class="header-section">
+        <img src="assets/images/nayla.jpeg" alt="Nayla Logo" class="nayla-logo">
+        <h1 class="welcome-title">Welcome to Nayla</h1>
+      </div>
+
+      <!-- Main Message -->
+      <div class="message-section">
+        <div class="message-box">
+          <ion-icon name="information-circle-outline" class="info-icon"></ion-icon>
+          <p class="message-text">
+            Hello, <strong>{{ username }}</strong>!
+          </p>
+          <p class="status-text">
+            You do not have any feature for now.
+          </p>
+          <p class="description-text">
+            Your account has been created successfully, but you don't have access to any features yet.
+            Please contact your administrator to assign features to your account.
+          </p>
+        </div>
+      </div>
+
+      <!-- User Info -->
+      <div class="user-info-section">
+        <div class="info-row">
+          <span class="label">Role Type:</span>
+          <span class="value">{{ roleType || 'N/A' }}</span>
+        </div>
+      </div>
+
+      <!-- Footer -->
+      <div class="footer-section">
+        <p class="footer-text">
+          If you believe this is an error, please contact your system administrator.
+        </p>
+      </div>
+    </div>
+  </ion-content>
+</ion-page>

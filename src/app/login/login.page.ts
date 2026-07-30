@@ -96,6 +96,12 @@ export class LoginPage {
           'success'
         );
 
+        // Check if user has any features assigned
+        if (!this.acl.hasAnyFeature()) {
+          this.router.navigateByUrl('/no-features', { replaceUrl: true });
+          return;
+        }
+
         // Route salespersons/sales managers to Sales Dashboard
         // Check for various sales-related roles
         const salesRoles = [
@@ -109,7 +115,7 @@ export class LoginPage {
           'SALES_EXECUTIVE',
           'SALES_REP'
         ];
-        
+
         if (salesRoles.some(salesRole => role.includes(salesRole))) {
           this.router.navigateByUrl('/sales/sales-dashboard', { replaceUrl: true });
         } else if (!isMobile && !this.auth.hasFeature('DASHBOARD')) {

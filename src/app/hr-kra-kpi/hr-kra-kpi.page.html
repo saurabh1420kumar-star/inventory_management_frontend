@@ -134,7 +134,7 @@
                 </td>
                 <td class="px-4 sm:px-5 py-3.5">
                   <div class="font-semibold text-[13px] leading-tight flex items-center gap-1">
-                    <span [ngClass]="(entry.achievedValue ?? 0) < (entry.targetValue ?? 0) ? 'text-red-600 font-bold' : 'text-emerald-600 font-semibold'">
+                    <span [ngClass]="(entry.achievedValue ?? 0) < entry.targetValue ? 'text-red-600 font-bold' : 'text-emerald-600 font-semibold'">
                       {{ entry.achievedValue | number:'1.0-2' }}
                     </span>
                     <span class="text-slate-400">/</span>

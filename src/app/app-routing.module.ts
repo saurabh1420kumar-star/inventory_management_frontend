@@ -23,6 +23,11 @@ const routes: Routes = [
     loadChildren: () => import('./forgot-password/forgot-password.module').then(m => m.ForgotPasswordPageModule)
   },
   {
+    path: 'no-features',
+    loadComponent: () => import('./no-features/no-features.page').then(m => m.NoFeaturesPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: 'dashboard',
     loadChildren: () => import('./dashboard/dashboard.module').then(m => m.DashboardPageModule),
     canActivate: [AuthGuard, DashboardGuard] // Protected + DASHBOARD feature (web admins)

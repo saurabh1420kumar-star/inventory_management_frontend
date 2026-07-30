@@ -292,7 +292,28 @@ export class HrDepartmentPage implements OnInit {
     this.http.get<any[]>(`${environment.apiUrl}/hrmaster/pending-approvals`, { headers })
       .subscribe({
         next: (data: any[]) => {
-          this.pendingHRApprovals = Array.isArray(data) ? data : [];
+          if (Array.isArray(data)) {
+            this.pendingHRApprovals = data.map(approval => {
+              // Handle both flat and nested structures
+              if (approval.user) {
+                // Nested structure: { user: { firstName, ... }, id, approvalStatus, ... }
+                return {
+                  ...approval.user,
+                  id: approval.id,
+                  approvalStatus: approval.approvalStatus,
+                  requestedOn: approval.requestedOn,
+                  reviewComments: approval.reviewComments,
+                  reviewedBy: approval.reviewedBy,
+                  reviewedOn: approval.reviewedOn
+                };
+              } else {
+                // Flat structure: { firstName, ..., id, approvalStatus, ... }
+                return approval;
+              }
+            });
+          } else {
+            this.pendingHRApprovals = [];
+          }
           this.pendingHRApprovalsCount = this.pendingHRApprovals.length;
         },
         error: (err) => {
