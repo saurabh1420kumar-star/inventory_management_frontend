@@ -72,3 +72,6 @@ CLAUDE.md
 skills-lock.json
 .agents/skills/caveman/SKILL.md
 .agents/skills/caveman/README.md
+
+# Environment files
+src/environments/environment.ts
