@@ -9,7 +9,7 @@ import { Auth, CreateUserRequest } from '../services/auth';
 import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
 import { AclDirective } from '../acl/acl.directive';
-import { DesignationService, Designation } from '../services/designation.service';
+import { DesignationService, Designation, RoleApiItem } from '../services/designation.service';
 import { environment } from '../../environments/environment';
 
 interface Employee {
@@ -81,9 +81,9 @@ export class HrDepartmentPage implements OnInit {
   pendingHRApprovalsCount = 0;
   pendingHRApprovals: any[] = [];
 
-  // Available Role Types
-  roleTypes: RoleType[] = [
-    // { value: 'SUPER_ADMIN', label: 'Super Admin' },
+  // Available Role Types — loaded from GET /admin/roles/all; this is the fallback
+  // used only if that call fails (e.g. offline).
+  private readonly fallbackRoleTypes: RoleType[] = [
     { value: 'ADMIN', label: 'Admin' },
     { value: 'BUSINESS_DEV_MGR', label: 'Business Dev Manager' },
     { value: 'PLANT_MGR', label: 'Plant Manager' },
@@ -104,6 +104,12 @@ export class HrDepartmentPage implements OnInit {
     { value: 'PLANT_OFFICER', label: 'Plant Officer' },
     { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' }
   ];
+
+  /** Nicer display labels for known role types; anything else falls back to a humanized name. */
+  private readonly roleLabelOverrides: Record<string, string> =
+    this.fallbackRoleTypes.reduce((acc, r) => ({ ...acc, [r.value]: r.label }), {} as Record<string, string>);
+
+  roleTypes: RoleType[] = [...this.fallbackRoleTypes];
 
   // Available Blood Groups
   bloodGroups: string[] = ['A+', 'A-', 'B+', 'B-', 'AB+', 'AB-', 'O+', 'O-'];
@@ -218,6 +224,32 @@ export class HrDepartmentPage implements OnInit {
   ngOnInit() {
     this.loadUsers();
     this.loadPendingHRApprovals();
+    this.loadRoleTypes();
+  }
+
+  /** Populate the Role Type dropdowns from GET /admin/roles/all; keeps the built-in list on failure. */
+  loadRoleTypes(): void {
+    this.designationService.getAllRoles().subscribe({
+      next: (roles: RoleApiItem[]) => {
+        if (roles?.length) {
+          this.roleTypes = roles.map(r => ({
+            value: r.roleType,
+            label: this.roleLabelOverrides[r.roleType] || this.humanizeRoleType(r.roleType)
+          }));
+        }
+      },
+      error: () => {
+        // Keep this.fallbackRoleTypes already assigned to roleTypes.
+      }
+    });
+  }
+
+  /** Title-case fallback label for role types not in roleLabelOverrides, e.g. QUALITY_MGR -> Quality Manager. */
+  private humanizeRoleType(roleType: string): string {
+    return roleType
+      .split('_')
+      .map(word => word === 'MGR' ? 'Manager' : word.charAt(0) + word.slice(1).toLowerCase())
+      .join(' ');
   }
 
   get isAdmin(): boolean {

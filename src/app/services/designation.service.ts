@@ -13,24 +13,31 @@ export interface Designation {
   roleCategory?: 'USER' | 'SALES'; // Category: USER or SALES
 }
 
+export interface RoleApiItem {
+  id: number;
+  name: string;
+  roleType: string;
+  roleCategory: 'USER' | 'SALES';
+  description?: string;
+}
+
 /**
  * Source of truth for designations / roles shown in the HR "Create Designation"
- * modal and (potentially) role dropdowns.
+ * modal and Role Type dropdowns.
  *
  * Persistence strategy:
- * - Built-in designations (HR roles + sales-hierarchy roles) are bundled here.
- * - Roles returned by the backend roles-dropdown API are merged in when available.
- * - User-created designations are stored in localStorage FOR NOW. When the
- *   create-designation backend endpoint is ready, flip `USE_API` to true and the
- *   HTTP calls below take over — the component code does not need to change.
+ * - GET /admin/roles/all is the live source of truth, merged with a built-in
+ *   list (HR roles + sales hierarchy) as a fallback for offline use.
+ * - POST /admin/roles/create persists new designations to the backend; they
+ *   are also cached in localStorage so they appear instantly in the same session.
  */
 @Injectable({ providedIn: 'root' })
 export class DesignationService {
-  /** Flip to `true` once the backend designation endpoints exist. */
-  private readonly USE_API = false;
+  /** Live endpoint for creating a new role/designation. */
+  private readonly createUrl = `${environment.apiUrl}/admin/roles/create`;
 
-  /** Future REST base — GET (list) / POST (create). Adjust path to match backend. */
-  private readonly base = `${environment.apiUrl}/designations`;
+  /** Live endpoint listing every role/designation known to the backend. */
+  private readonly allRolesUrl = `${environment.apiUrl}/admin/roles/all`;
 
   private readonly STORAGE_KEY = 'custom_designations';
 
@@ -60,6 +67,10 @@ export class DesignationService {
     { value: 'PLANT_EXECUTIVE', label: 'Plant Executive' },
   ];
 
+  /** Nicer display labels for known role types; anything else falls back to a humanized name. */
+  private readonly labelMap: Record<string, string> =
+    this.builtIn.reduce((acc, d) => ({ ...acc, [d.value]: d.label }), {} as Record<string, string>);
+
   constructor(
     private http: HttpClient,
     private auth: Auth,
@@ -72,44 +83,49 @@ export class DesignationService {
   }
 
   /**
-   * Full, de-duplicated designation list: built-in + backend roles + custom.
-   * Falls back gracefully if the roles API is unavailable.
+   * Full, de-duplicated designation list sourced from GET /admin/roles/all
+   * (the same live API used for Role Type dropdowns), merged with the
+   * built-in list. Falls back to the sales-hierarchy roles dropdown, then to
+   * the built-in list alone, if the roles API is unavailable.
    */
   getDesignations(): Observable<Designation[]> {
-    if (this.USE_API) {
-      return this.http
-        .get<Designation[]>(this.base, { headers: this.getHeaders() })
-        .pipe(
-          map((apiList) => this.merge(apiList.map((d) => ({ value: d.value, label: d.label })))),
+    return this.getAllRoles().pipe(
+      map((roles) => this.merge(roles.map((r) => ({
+        value: r.roleType,
+        label: this.labelMap[r.roleType] || this.humanize(r.roleType),
+        roleCategory: r.roleCategory
+      })))),
+      catchError(() =>
+        this.salesHierarchy.getRolesDropdown().pipe(
+          map((roles: RoleOption[]) => this.merge(roles.map((r) => ({ value: r.value, label: r.label })))),
           catchError(() => of(this.merge([])))
-        );
-    }
-
-    // No dedicated designation API yet — enrich the built-in list with whatever
-    // the sales roles dropdown returns, then fall back if that call fails too.
-    return this.salesHierarchy.getRolesDropdown().pipe(
-      map((roles: RoleOption[]) => this.merge(roles.map((r) => ({ value: r.value, label: r.label })))),
-      catchError(() => of(this.merge([])))
+        )
+      )
     );
   }
 
-  /** Create a designation. Persists to localStorage now; POSTs once USE_API is on. */
+  /** Create a designation via POST /admin/roles/create, then cache it locally for the chip list. */
   addDesignation(label: string, roleCategory?: 'USER' | 'SALES'): Observable<Designation> {
     const clean = (label || '').trim();
     const designation: Designation = { value: this.toValue(clean), label: clean, custom: true, roleCategory };
 
-    if (this.USE_API) {
-      return this.http
-        .post<Designation>(this.base, { label: clean, value: designation.value, roleCategory }, { headers: this.getHeaders() })
-        .pipe(map((res) => ({ ...res, custom: true })));
-    }
+    return this.http
+      .post(this.createUrl, { roleType: designation.value, roleCategory }, { headers: this.getHeaders() })
+      .pipe(
+        map(() => {
+          const custom = this.getCustom();
+          if (!custom.some((c) => c.value === designation.value)) {
+            custom.push(designation);
+            this.saveCustom(custom);
+          }
+          return designation;
+        })
+      );
+  }
 
-    const custom = this.getCustom();
-    if (!custom.some((c) => c.value === designation.value)) {
-      custom.push(designation);
-      this.saveCustom(custom);
-    }
-    return of(designation);
+  /** Fetch every role/designation the backend knows about (used to populate Role Type dropdowns). */
+  getAllRoles(): Observable<RoleApiItem[]> {
+    return this.http.get<RoleApiItem[]>(this.allRolesUrl, { headers: this.getHeaders() });
   }
 
   /** True when a designation with this label/value already exists (built-in or custom). */
@@ -153,5 +169,13 @@ export class DesignationService {
       .toUpperCase()
       .replace(/[^A-Z0-9]+/g, '_')
       .replace(/^_+|_+$/g, '');
+  }
+
+  /** Title-case fallback label for role types not in labelMap, e.g. QUALITY_MGR -> Quality Manager. */
+  private humanize(value: string): string {
+    return value
+      .split('_')
+      .map((word) => (word === 'MGR' ? 'Manager' : word.charAt(0) + word.slice(1).toLowerCase()))
+      .join(' ');
   }
 }

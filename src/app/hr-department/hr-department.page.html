@@ -1278,14 +1278,14 @@
       <!-- Chips -->
       <div *ngIf="!isLoadingDesignations">
         <label class="block text-xs font-bold text-slate-500 uppercase tracking-wider mb-3">Existing Designations</label>
-        <div class="flex flex-wrap gap-2 mb-5 max-h-56 overflow-y-auto">
+        <div class="grid grid-cols-1 sm:grid-cols-2 md:grid-cols-3 gap-2 mb-5 max-h-56 overflow-y-auto pr-1 items-stretch">
           <span *ngFor="let d of filteredDesignations"
-            class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-sm font-semibold shadow-sm">
+            class="flex items-center justify-center text-center gap-1.5 px-3 py-1.5 rounded-lg bg-blue-500 text-white text-sm font-semibold shadow-sm whitespace-normal break-words leading-tight">
             {{ d.label }}
-            <ion-icon *ngIf="d.custom" name="sparkles-outline" class="text-xs opacity-80"></ion-icon>
+            <ion-icon *ngIf="d.custom" name="sparkles-outline" class="text-xs opacity-80 shrink-0"></ion-icon>
           </span>
           <span *ngIf="filteredDesignations.length === 0"
-            class="text-slate-400 text-sm py-2">No matching designation.</span>
+            class="col-span-full text-slate-400 text-sm py-2 text-center">No matching designation.</span>
         </div>
 
         <!-- Search / create -->
