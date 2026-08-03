@@ -526,68 +526,131 @@
 
   <!-- Monthly Report Modal -->
   <div *ngIf="showReportModal" class="kra-modal-backdrop" (click)="closeReportModal()">
-    <div class="kra-modal-card--compact" (click)="$event.stopPropagation()" style="width: min(760px, 100%);">
-      <div class="flex items-center justify-between mb-4">
-        <h2 class="text-teal-700 font-extrabold text-sm flex items-center gap-2 uppercase tracking-wide">
-          <ion-icon name="bar-chart-outline" class="text-base"></ion-icon>
-          Monthly KRA/KPI Report
-        </h2>
-        <button (click)="closeReportModal()" class="w-8 h-8 rounded-lg hover:bg-slate-100 text-slate-500" aria-label="Close">
-          <ion-icon name="close-outline"></ion-icon>
-        </button>
-      </div>
-
-      <div class="grid grid-cols-2 gap-3">
-        <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
-          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Month</label>
-          <select
-            [(ngModel)]="reportMonth"
-            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
-            <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
-          </select>
-        </div>
-        <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
-          <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Year</label>
-          <select
-            [(ngModel)]="reportYear"
-            class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
-            <option *ngFor="let y of reportYears" [value]="y">{{ y }}</option>
-          </select>
+    <div class="kra-report-modal" (click)="$event.stopPropagation()">
+      <!-- Gradient header -->
+      <div class="kra-report-header">
+        <div class="absolute top-0 right-0 -mr-16 -mt-16 w-52 h-52 rounded-full bg-white/10 blur-3xl"></div>
+        <div class="relative flex items-center justify-between gap-3">
+          <div class="flex items-center gap-3">
+            <div class="kra-report-header__icon">
+              <ion-icon name="bar-chart-outline"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-white text-lg font-extrabold tracking-tight">Monthly KRA/KPI Report</h2>
+              <p class="text-cyan-50 text-xs font-medium">Performance snapshot across the sales team.</p>
+            </div>
+          </div>
+          <button (click)="closeReportModal()" class="kra-report-header__close" aria-label="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
         </div>
       </div>
 
-      <div class="flex flex-wrap items-center gap-2 mt-3">
-        <button
-          (click)="getMonthlyReport()"
-          [disabled]="isLoadingReport"
-          class="h-[42px] px-5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
-          <ion-icon [name]="isLoadingReport ? 'hourglass-outline' : 'search-outline'" class="text-base"></ion-icon>
-          {{ isLoadingReport ? 'Fetching...' : 'Get Report' }}
-        </button>
-      </div>
+      <div class="p-5 flex-1 overflow-y-auto">
+        <div class="grid grid-cols-2 gap-3">
+          <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Month</label>
+            <select
+              [(ngModel)]="reportMonth"
+              class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+              <option *ngFor="let m of months" [value]="m.value">{{ m.label }}</option>
+            </select>
+          </div>
+          <div class="p-3 border border-slate-100 rounded-lg bg-slate-50/70">
+            <label class="block text-[11px] font-bold text-slate-500 uppercase tracking-wider mb-2">Year</label>
+            <select
+              [(ngModel)]="reportYear"
+              class="w-full px-3 py-2 rounded-lg border border-slate-200 bg-white text-slate-700 text-sm focus:outline-none focus:ring-2 focus:ring-emerald-300 focus:border-emerald-400">
+              <option *ngFor="let y of reportYears" [value]="y">{{ y }}</option>
+            </select>
+          </div>
+        </div>
 
-      <div *ngIf="reportFetched" class="mt-4 max-h-[45vh] overflow-y-auto border border-slate-100 rounded-lg">
-        <table class="w-full min-w-[520px]">
-          <thead>
-            <tr class="text-left text-[11px] uppercase tracking-wider text-teal-700 bg-slate-100/70 sticky top-0">
-              <th class="px-3 py-2 font-bold">Employee</th>
-              <th class="px-3 py-2 font-bold">Score</th>
-              <th class="px-3 py-2 font-bold">Grade</th>
-              <th class="px-3 py-2 font-bold">Meaning</th>
-            </tr>
-          </thead>
-          <tbody>
-            <tr *ngFor="let row of reportResults" class="border-b border-slate-100">
-              <td class="px-3 py-2 text-sm font-semibold text-slate-700">{{ row.employeeName }}</td>
-              <td class="px-3 py-2 text-sm text-teal-700 font-bold">{{ row.totalScore }}</td>
-              <td class="px-3 py-2 text-sm font-semibold">{{ row.finalGrade }}</td>
-              <td class="px-3 py-2 text-xs text-slate-500">{{ row.gradeMeaning }}</td>
-            </tr>
-            <tr *ngIf="!reportResults.length">
-              <td colspan="4" class="px-3 py-6 text-center text-slate-500 font-medium text-sm">No report data found for this period.</td>
-            </tr>
-          </tbody>
-        </table>
+        <div class="flex flex-wrap items-center gap-2 mt-3">
+          <button
+            (click)="getMonthlyReport()"
+            [disabled]="isLoadingReport"
+            class="h-[42px] px-5 rounded-lg bg-emerald-700 hover:bg-emerald-800 text-white font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-50 disabled:cursor-not-allowed">
+            <ion-icon [name]="isLoadingReport ? 'hourglass-outline' : 'search-outline'" class="text-base"></ion-icon>
+            {{ isLoadingReport ? 'Fetching...' : 'Get Report' }}
+          </button>
+          <button
+            (click)="exportReportAsPdf()"
+            [disabled]="!reportResults.length"
+            class="h-[42px] px-4 rounded-lg bg-white border border-orange-300 text-orange-600 hover:bg-orange-50 font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+            <ion-icon name="document-text-outline" class="text-base"></ion-icon>
+            PDF
+          </button>
+          <button
+            (click)="exportReportAsExcel()"
+            [disabled]="!reportResults.length"
+            class="h-[42px] px-4 rounded-lg bg-white border border-blue-300 text-blue-600 hover:bg-blue-50 font-bold text-sm transition-all flex items-center justify-center gap-2 whitespace-nowrap disabled:opacity-40 disabled:cursor-not-allowed">
+            <ion-icon name="document-outline" class="text-base"></ion-icon>
+            Excel
+          </button>
+        </div>
+
+        <ng-container *ngIf="reportFetched">
+          <!-- Summary stat cards -->
+          <div *ngIf="reportResults.length" class="grid grid-cols-3 gap-3 mt-5">
+            <div class="kra-stat-card kra-stat-card--emerald">
+              <ion-icon name="people-outline" class="kra-stat-card__icon"></ion-icon>
+              <div class="kra-stat-card__value">{{ reportResults.length }}</div>
+              <div class="kra-stat-card__label">Employees</div>
+            </div>
+            <div class="kra-stat-card kra-stat-card--cyan">
+              <ion-icon name="stats-chart-outline" class="kra-stat-card__icon"></ion-icon>
+              <div class="kra-stat-card__value">{{ reportAvgScore }}</div>
+              <div class="kra-stat-card__label">Avg Score</div>
+            </div>
+            <div class="kra-stat-card kra-stat-card--amber">
+              <ion-icon name="trophy-outline" class="kra-stat-card__icon"></ion-icon>
+              <div class="kra-stat-card__value">{{ reportTopPerformer?.totalScore ?? '-' }}</div>
+              <div class="kra-stat-card__label">{{ reportTopPerformer?.employeeName ?? 'Top Score' }}</div>
+            </div>
+          </div>
+
+          <div class="mt-4 max-h-[40vh] overflow-y-auto border border-slate-100 rounded-xl">
+            <table class="w-full min-w-[560px]">
+              <thead>
+                <tr class="text-left text-[11px] uppercase tracking-wider text-teal-700 bg-slate-100/70 sticky top-0">
+                  <th class="px-3 py-2.5 font-bold">Employee</th>
+                  <th class="px-3 py-2.5 font-bold">Score</th>
+                  <th class="px-3 py-2.5 font-bold">Grade</th>
+                  <th class="px-3 py-2.5 font-bold">Meaning</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of reportResults" class="border-b border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                  <td class="px-3 py-2.5">
+                    <div class="flex items-center gap-2.5">
+                      <div class="kra-avatar">{{ getInitials(row.employeeName) }}</div>
+                      <span class="text-sm font-semibold text-slate-700">{{ row.employeeName }}</span>
+                    </div>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <div class="flex items-center gap-2">
+                      <span class="text-sm font-bold text-teal-700 w-10">{{ row.totalScore }}</span>
+                      <div class="kra-score-bar">
+                        <div class="kra-score-bar__fill" [ngClass]="getGradeClass(row.finalGrade)" [style.width.%]="row.totalScore"></div>
+                      </div>
+                    </div>
+                  </td>
+                  <td class="px-3 py-2.5">
+                    <span class="kra-grade-badge" [ngClass]="getGradeClass(row.finalGrade)">{{ row.finalGrade }}</span>
+                  </td>
+                  <td class="px-3 py-2.5 text-xs text-slate-500 font-medium">{{ row.gradeMeaning }}</td>
+                </tr>
+                <tr *ngIf="!reportResults.length">
+                  <td colspan="4" class="px-3 py-10 text-center">
+                    <ion-icon name="document-text-outline" class="text-3xl text-slate-300 mb-1"></ion-icon>
+                    <div class="text-slate-500 font-medium text-sm">No report data found for this period.</div>
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </ng-container>
       </div>
     </div>
   </div>

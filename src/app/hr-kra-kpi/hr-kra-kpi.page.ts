@@ -898,6 +898,121 @@ export class HrKraKpiPage implements OnInit {
       });
   }
 
+  get reportAvgScore(): string {
+    if (!this.reportResults.length) {
+      return '0';
+    }
+    const sum = this.reportResults.reduce((total, row) => total + (row.totalScore || 0), 0);
+    return (sum / this.reportResults.length).toFixed(1);
+  }
+
+  get reportTopPerformer(): KraKpiMonthlyReport | null {
+    if (!this.reportResults.length) {
+      return null;
+    }
+    return this.reportResults.reduce((top, row) => (row.totalScore > top.totalScore ? row : top), this.reportResults[0]);
+  }
+
+  getInitials(name: string): string {
+    if (!name) {
+      return '-';
+    }
+    const parts = name.trim().split(/\s+/);
+    const initials = parts.length > 1 ? `${parts[0][0]}${parts[parts.length - 1][0]}` : parts[0].slice(0, 2);
+    return initials.toUpperCase();
+  }
+
+  getGradeClass(grade: string): string {
+    const normalized = (grade || '').trim().toUpperCase();
+    switch (normalized) {
+      case 'A':
+        return 'kra-grade-a';
+      case 'B':
+        return 'kra-grade-b';
+      case 'D':
+        return 'kra-grade-d';
+      case 'F':
+        return 'kra-grade-f';
+      default:
+        return 'kra-grade-c';
+    }
+  }
+
+  private getReportMonthLabel(): string {
+    const month = this.months.find((m) => m.value === this.reportMonth);
+    return `${month?.label || this.reportMonth}-${this.reportYear}`;
+  }
+
+  exportReportAsExcel(): void {
+    if (!this.reportResults.length) {
+      return;
+    }
+    try {
+      const rows = this.reportResults.map((row) => ({
+        Employee: row.employeeName,
+        Score: row.totalScore,
+        Grade: row.finalGrade,
+        Meaning: row.gradeMeaning,
+      }));
+
+      const worksheet = XLSX.utils.json_to_sheet(rows);
+      const workbook = XLSX.utils.book_new();
+      XLSX.utils.book_append_sheet(workbook, worksheet, 'Monthly Report');
+      worksheet['!cols'] = [{ wch: 25 }, { wch: 12 }, { wch: 10 }, { wch: 22 }];
+
+      const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
+      const blob = new Blob([buffer], {
+        type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+      });
+      this.downloadBlob(blob, `kra-kpi-report-${this.getReportMonthLabel()}.xlsx`);
+    } catch (error) {
+      console.error('Error exporting report Excel:', error);
+    }
+  }
+
+  exportReportAsPdf(): void {
+    if (!this.reportResults.length) {
+      return;
+    }
+    try {
+      const doc = new jsPDF({ orientation: 'portrait', unit: 'mm', format: 'a4' });
+      const rows = this.reportResults.map((row) => [
+        row.employeeName,
+        String(row.totalScore),
+        row.finalGrade,
+        row.gradeMeaning,
+      ]);
+
+      doc.setFontSize(16);
+      doc.setTextColor(15, 118, 110);
+      doc.text(`Monthly KRA/KPI Report - ${this.getReportMonthLabel()}`, 14, 16);
+
+      autoTable(doc, {
+        startY: 26,
+        head: [['Employee', 'Score', 'Grade', 'Meaning']],
+        body: rows,
+        theme: 'grid',
+        headStyles: {
+          fillColor: [15, 118, 110],
+          textColor: [255, 255, 255],
+          fontStyle: 'bold',
+          halign: 'center',
+        },
+        bodyStyles: {
+          textColor: [50, 50, 50],
+        },
+        alternateRowStyles: {
+          fillColor: [240, 248, 255],
+        },
+        margin: { top: 26, right: 14, bottom: 14, left: 14 },
+      });
+
+      doc.save(`kra-kpi-report-${this.getReportMonthLabel()}.pdf`);
+    } catch (error) {
+      console.error('Error exporting report PDF:', error);
+    }
+  }
+
   // Edit Weightage methods
   openEditWeightageForm(): void {
     this.showEditWeightageForm = true;
