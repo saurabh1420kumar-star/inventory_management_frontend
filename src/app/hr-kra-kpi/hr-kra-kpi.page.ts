@@ -109,6 +109,18 @@ interface SalesPerson {
   phone?: string;
 }
 
+interface KraKpiMonthlyReport {
+  id: number | null;
+  employeeId: number;
+  employeeName: string;
+  month: number;
+  year: number;
+  totalScore: number;
+  finalGrade: string;
+  gradeMeaning: string;
+  generatedAt: string | null;
+}
+
 interface KraMasterResponse {
   id: number;
   kpiCode: string;
@@ -185,6 +197,29 @@ export class HrKraKpiPage implements OnInit {
 
   // Export state
   showExportModal = false;
+
+  // Monthly Report modal state
+  showReportModal = false;
+  reportMonth = new Date().getMonth() + 1;
+  reportYear = new Date().getFullYear();
+  isLoadingReport = false;
+  reportFetched = false;
+  reportResults: KraKpiMonthlyReport[] = [];
+  months = [
+    { value: 1, label: 'January' },
+    { value: 2, label: 'February' },
+    { value: 3, label: 'March' },
+    { value: 4, label: 'April' },
+    { value: 5, label: 'May' },
+    { value: 6, label: 'June' },
+    { value: 7, label: 'July' },
+    { value: 8, label: 'August' },
+    { value: 9, label: 'September' },
+    { value: 10, label: 'October' },
+    { value: 11, label: 'November' },
+    { value: 12, label: 'December' },
+  ];
+  reportYears: number[] = Array.from({ length: 5 }, (_, i) => new Date().getFullYear() - 3 + i);
 
   // Edit Weightage modal state
   showEditWeightageForm = false;
@@ -831,6 +866,36 @@ export class HrKraKpiPage implements OnInit {
 
   closeExportModal(): void {
     this.showExportModal = false;
+  }
+
+  // Monthly Report methods
+  openReportModal(): void {
+    this.showReportModal = true;
+    this.reportFetched = false;
+    this.reportResults = [];
+  }
+
+  closeReportModal(): void {
+    this.showReportModal = false;
+  }
+
+  getMonthlyReport(): void {
+    this.isLoadingReport = true;
+    this.http
+      .get<KraKpiMonthlyReport[]>(`${environment.hrUrl}/admin/kra-kpi/report/month/${this.reportMonth}/${this.reportYear}`)
+      .subscribe({
+        next: (response: KraKpiMonthlyReport[]) => {
+          this.reportResults = Array.isArray(response) ? response : [];
+          this.reportFetched = true;
+          this.isLoadingReport = false;
+        },
+        error: (error) => {
+          console.error('Error fetching monthly report:', error);
+          this.reportResults = [];
+          this.reportFetched = true;
+          this.isLoadingReport = false;
+        },
+      });
   }
 
   // Edit Weightage methods
