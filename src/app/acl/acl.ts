@@ -75,6 +75,7 @@ export class Acl {
       ['ORDER_DETAILS', '/order-details'],
       ['DISPATCH', '/dispatch'],
       ['COMPLAINT', '/complaints'],
+      ['REPORTS', '/reports/mis-dashboard'],
       ['USER_RIGHTS', '/user-right'],
     ];
     const match = routeByFeature.find(([feature]) => this.can(feature));

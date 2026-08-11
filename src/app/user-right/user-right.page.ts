@@ -214,6 +214,14 @@ export class UserRightPage implements OnInit {
         ]
       },
       {
+        name: 'Reports',
+        icon: 'analytics-outline',
+        color: 'emerald',
+        modules: [
+          { featureKey: 'REPORTS', displayName: 'Reports', icon: 'analytics-outline', category: 'Reports', access: 'NONE' },
+        ]
+      },
+      {
         name: 'Administration',
         icon: 'settings-outline',
         color: 'slate',

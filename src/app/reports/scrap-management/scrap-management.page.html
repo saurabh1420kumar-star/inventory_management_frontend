@@ -1,0 +1,136 @@
+<app-report-hero
+  toolbarAccent="Scrap"
+  toolbarTitle="Management"
+  eyebrow="Waste & Recovery"
+  heroTitle="Scrap Management"
+  subtitle="Generation, disposal and sale across the scrap lifecycle"
+  icon="trash-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="smScrapType">Scrap Type</label>
+        <select id="smScrapType" [(ngModel)]="filters.scrapType">
+          <option value="all">All Types</option>
+          <option *ngFor="let t of scrapTypes" [value]="t">{{ t }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="smFrom">From Date</label>
+        <input id="smFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="smTo">To Date</label>
+        <input id="smTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="checkmark-circle-outline"></ion-icon> Apply
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <section class="report-panel">
+      <div class="report-tabs">
+        <button [class.active]="activeType === 'generation'" (click)="switchType('generation')">Scrap Generation</button>
+        <button [class.active]="activeType === 'disposal'" (click)="switchType('disposal')">Scrap Disposal</button>
+        <button [class.active]="activeType === 'sale'" (click)="switchType('sale')">Scrap Sale</button>
+      </div>
+
+      <div class="report-panel-header">
+        <h2 *ngIf="activeType === 'generation'">Scrap Generation</h2>
+        <h2 *ngIf="activeType === 'disposal'">Scrap Disposal</h2>
+        <h2 *ngIf="activeType === 'sale'">Scrap Sale</h2>
+        <div class="report-filter-actions">
+          <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+            <ion-icon name="grid-outline"></ion-icon> Export Excel
+          </button>
+          <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+            <ion-icon name="document-text-outline"></ion-icon> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+      <ng-container *ngIf="!isLoading">
+        <!-- SCRAP GENERATION -->
+        <div *ngIf="activeType === 'generation'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Date</th><th>Source</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Value</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedGenerationRows">
+                <td>{{ formatDisplayDate(row.date) }}</td>
+                <td>{{ row.source }}</td>
+                <td>{{ row.scrapType }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.uom }}</td>
+                <td>{{ formatCurrencyFull(row.value) }}</td>
+              </tr>
+              <tr *ngIf="pagedGenerationRows.length === 0"><td colspan="6" class="report-empty">No scrap generated for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SCRAP DISPOSAL -->
+        <div *ngIf="activeType === 'disposal'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Disposal Method</th><th>Disposed By</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedDisposalRows">
+                <td>{{ formatDisplayDate(row.date) }}</td>
+                <td>{{ row.scrapType }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.uom }}</td>
+                <td><span class="report-badge report-badge-blue">{{ row.method }}</span></td>
+                <td>{{ row.disposedBy }}</td>
+              </tr>
+              <tr *ngIf="pagedDisposalRows.length === 0"><td colspan="6" class="report-empty">No disposal records for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- SCRAP SALE -->
+        <div *ngIf="activeType === 'sale'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Buyer</th><th>Rate</th><th>Amount</th><th>Invoice No</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedSaleRows">
+                <td>{{ formatDisplayDate(row.date) }}</td>
+                <td>{{ row.scrapType }}</td>
+                <td>{{ row.quantity }}</td>
+                <td>{{ row.uom }}</td>
+                <td>{{ row.buyer }}</td>
+                <td>{{ formatCurrencyFull(row.rate) }}</td>
+                <td>{{ formatCurrencyFull(row.amount) }}</td>
+                <td>{{ row.invoiceNo }}</td>
+              </tr>
+              <tr *ngIf="pagedSaleRows.length === 0"><td colspan="8" class="report-empty">No scrap sales for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="report-table-footer">
+          <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+          <div class="report-pagination">
+            <button (click)="prevPage()" [disabled]="pager.page === 1">
+              <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+              <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+</app-report-hero>
