@@ -1,0 +1,187 @@
+<app-report-hero
+  toolbarAccent="Receivables"
+  toolbarTitle="& Collections"
+  eyebrow="Accounts Receivable"
+  heroTitle="Receivables &amp; Collections"
+  subtitle="Outstanding balances, ageing risk and collection activity"
+  icon="wallet-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="rcCustomer">Customer</label>
+        <select id="rcCustomer" [(ngModel)]="filters.customer">
+          <option value="all">All Customers</option>
+          <option *ngFor="let c of customers" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="rcAgeing">Ageing</label>
+        <select id="rcAgeing" [(ngModel)]="filters.ageing">
+          <option value="all">All Buckets</option>
+          <option value="0-30">0-30 Days</option>
+          <option value="31-60">31-60 Days</option>
+          <option value="61-90">61-90 Days</option>
+          <option value="90+">90+ Days</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="rcStatus">Status</label>
+        <select id="rcStatus" [(ngModel)]="filters.status">
+          <option value="all">All Statuses</option>
+          <option value="Healthy">Healthy</option>
+          <option value="Watch">Watch</option>
+          <option value="Overdue">Overdue</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="rcFrom">From Date</label>
+        <input id="rcFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="rcTo">To Date</label>
+        <input id="rcTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="stats-chart-outline"></ion-icon> View Report
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <div *ngIf="!isLoading" class="report-stats">
+      <div class="report-stat-card">
+        <div class="report-stat-icon report-stat-icon-blue"><ion-icon name="wallet-outline"></ion-icon></div>
+        <div>
+          <p class="report-stat-label">Total Outstanding</p>
+          <p class="report-stat-value">{{ formatCurrencyFull(totalOutstanding) }}</p>
+        </div>
+      </div>
+      <div class="report-stat-card">
+        <div class="report-stat-icon report-stat-icon-red"><ion-icon name="alert-circle-outline"></ion-icon></div>
+        <div>
+          <p class="report-stat-label">Overdue Amount</p>
+          <p class="report-stat-value">{{ formatCurrencyFull(overdueAmount) }}</p>
+        </div>
+      </div>
+      <div class="report-stat-card">
+        <div class="report-stat-icon report-stat-icon-green"><ion-icon name="checkmark-done-outline"></ion-icon></div>
+        <div>
+          <p class="report-stat-label">Collected (Period)</p>
+          <p class="report-stat-value">{{ formatCurrencyFull(collectedThisPeriod) }}</p>
+        </div>
+      </div>
+      <div class="report-stat-card">
+        <div class="report-stat-icon report-stat-icon-violet"><ion-icon name="time-outline"></ion-icon></div>
+        <div>
+          <p class="report-stat-label">Avg Days Sales Outstanding</p>
+          <p class="report-stat-value">{{ avgDso }} days</p>
+        </div>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <aside class="report-type-rail">
+        <p class="report-type-rail-title">Report Type</p>
+        <button [class.active]="activeType === 'outstanding'" (click)="switchType('outstanding')">Outstanding Summary</button>
+        <button [class.active]="activeType === 'ageing'" (click)="switchType('ageing')">Ageing Analysis</button>
+        <button [class.active]="activeType === 'collections'" (click)="switchType('collections')">Collections</button>
+      </aside>
+
+      <section class="report-panel">
+        <div class="report-panel-header">
+          <h2 *ngIf="activeType === 'outstanding'">Outstanding Summary</h2>
+          <h2 *ngIf="activeType === 'ageing'">Ageing Analysis</h2>
+          <h2 *ngIf="activeType === 'collections'">Collections</h2>
+          <div class="report-filter-actions">
+            <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+              <ion-icon name="grid-outline"></ion-icon> Export Excel
+            </button>
+            <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+        <ng-container *ngIf="!isLoading">
+          <!-- OUTSTANDING SUMMARY -->
+          <div *ngIf="activeType === 'outstanding'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Customer</th><th>Region</th><th>Invoices</th><th>Outstanding</th><th>Days Overdue</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedAgeingRows">
+                  <td>{{ row.customer }}</td>
+                  <td>{{ row.region }}</td>
+                  <td>{{ row.invoices }}</td>
+                  <td>{{ formatCurrencyFull(row.outstanding) }}</td>
+                  <td>{{ row.daysOverdue }}</td>
+                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
+                </tr>
+                <tr *ngIf="pagedAgeingRows.length === 0"><td colspan="6" class="report-empty">No outstanding balances match these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- AGEING ANALYSIS -->
+          <div *ngIf="activeType === 'ageing'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Customer</th><th>0-30 Days</th><th>31-60 Days</th><th>61-90 Days</th><th>90+ Days</th><th>Total Outstanding</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedAgeingRows">
+                  <td>{{ row.customer }}</td>
+                  <td>{{ formatCurrencyFull(row.b0_30) }}</td>
+                  <td>{{ formatCurrencyFull(row.b31_60) }}</td>
+                  <td>{{ formatCurrencyFull(row.b61_90) }}</td>
+                  <td>{{ formatCurrencyFull(row.b90plus) }}</td>
+                  <td>{{ formatCurrencyFull(row.outstanding) }}</td>
+                </tr>
+                <tr *ngIf="pagedAgeingRows.length === 0"><td colspan="6" class="report-empty">No ageing data matches these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- COLLECTIONS -->
+          <div *ngIf="activeType === 'collections'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Date</th><th>Customer</th><th>Invoice No</th><th>Amount Collected</th><th>Mode</th><th>Reference No</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedCollectionRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.customer }}</td>
+                  <td>{{ row.invoiceNo }}</td>
+                  <td>{{ formatCurrencyFull(row.amountCollected) }}</td>
+                  <td>{{ row.mode }}</td>
+                  <td>{{ row.referenceNo }}</td>
+                </tr>
+                <tr *ngIf="pagedCollectionRows.length === 0"><td colspan="6" class="report-empty">No collections recorded in this range</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-table-footer">
+            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+            <div class="report-pagination">
+              <button (click)="prevPage()" [disabled]="pager.page === 1">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+</app-report-hero>

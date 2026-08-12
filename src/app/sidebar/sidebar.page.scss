@@ -142,6 +142,59 @@
             transition: color 0.15s ease;
           }
         }
+
+        .report-subgroup {
+          margin-bottom: 4px;
+
+          .report-subgroup-header {
+            display: flex;
+            align-items: center;
+            gap: 12px;
+            padding: 0 12px;
+            min-height: 38px;
+            border-radius: 6px;
+            cursor: pointer;
+            user-select: none;
+            font-size: 13px;
+            font-weight: 400;
+            transition: background-color 0.15s ease, color 0.15s ease;
+
+            &:hover {
+              background: rgba(16, 185, 129, 0.08);
+            }
+
+            .report-subgroup-icon {
+              font-size: 18px;
+              opacity: 0.85;
+            }
+
+            .report-subgroup-label {
+              flex: 1;
+            }
+
+            .report-subgroup-chevron {
+              font-size: 14px;
+              opacity: 0.5;
+              transition: transform 0.2s ease;
+            }
+          }
+
+          .report-subgroup-content {
+            max-height: 0;
+            overflow: hidden;
+            transition: max-height 0.25s ease;
+            padding-left: 22px;
+
+            &.open {
+              max-height: 400px;
+              margin-top: 2px;
+            }
+
+            ion-item {
+              font-size: 13px;
+            }
+          }
+        }
       }
     }
   }
