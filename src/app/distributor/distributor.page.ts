@@ -1,8 +1,10 @@
 ﻿import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
+import { debounceTime, distinctUntilChanged } from 'rxjs/operators';
 import {
   addOutline,
   searchOutline,
@@ -112,6 +114,9 @@ export class DistributorPage implements OnInit {
   // Location data
   readonly stateOptions = Object.keys(INDIA_LOCATION_DATA).sort();
   filteredDistricts: { district: string; pincode: string }[] = [];
+  cityOptions: string[] = [];
+  isLookingUpPincode: boolean = false;
+  private lastGeneratedLocationLine: string = '';
 
   // Modal states
   showAddModal: boolean = false;
@@ -146,6 +151,7 @@ export class DistributorPage implements OnInit {
   legalModalTitle: string = '';
 
   private haptic = inject(HapticService);
+  private http = inject(HttpClient);
 
   constructor(
     private fb: FormBuilder,
@@ -216,7 +222,8 @@ export class DistributorPage implements OnInit {
 
     this.distributorForm.get('state')?.valueChanges.subscribe((state: string) => {
       this.filteredDistricts = state ? (INDIA_LOCATION_DATA[state] || []) : [];
-      this.distributorForm.patchValue({ district: '', pincode: '' }, { emitEvent: false });
+      this.cityOptions = [];
+      this.distributorForm.patchValue({ district: '', pincode: '', city: '' }, { emitEvent: false });
     });
 
     this.distributorForm.get('district')?.valueChanges.subscribe((district: string) => {
@@ -225,23 +232,137 @@ export class DistributorPage implements OnInit {
         this.distributorForm.patchValue({ pincode: found.pincode }, { emitEvent: false });
       }
     });
+
+    // Only look up the pincode once the user has finished typing all 6 digits
+    // and paused for a moment — avoids firing mid-edit or on every keystroke.
+    this.distributorForm.get('pincode')?.valueChanges.pipe(
+      debounceTime(400),
+      distinctUntilChanged()
+    ).subscribe((value: string) => {
+      const pincode = (value ?? '').toString().replace(/\D/g, '');
+      if (pincode.length === 6) {
+        this.lookupPincode(pincode);
+      }
+    });
   }
 
   onPincodeInput(event: any) {
     const pincode = (event.detail?.value ?? '').toString().replace(/\D/g, '');
-    if (pincode.length === 6) {
-      const result = findLocationByPincode(pincode);
-      if (result) {
-        this.filteredDistricts = INDIA_LOCATION_DATA[result.state] || [];
+    if (pincode.length === 0) {
+      this.filteredDistricts = [];
+      this.cityOptions = [];
+      this.distributorForm.patchValue({ state: '', district: '', city: '' }, { emitEvent: false });
+      this.lastGeneratedLocationLine = '';
+    }
+  }
+
+  private lookupPincode(pincode: string) {
+    this.isLookingUpPincode = true;
+    this.http.get<any[]>(`https://api.postalpincode.in/pincode/${pincode}`).subscribe({
+      next: (response) => {
+        this.isLookingUpPincode = false;
+        const postOffices: any[] = response?.[0]?.Status === 'Success' ? (response[0].PostOffice || []) : [];
+        const postOffice = postOffices[0];
+        if (!postOffice) {
+          // Fall back to the static approximation table if the live API has no record
+          const fallback = findLocationByPincode(pincode);
+          if (fallback) {
+            this.filteredDistricts = INDIA_LOCATION_DATA[fallback.state] || [];
+            this.cityOptions = [];
+            this.distributorForm.patchValue(
+              { state: fallback.state, district: fallback.district, city: '' },
+              { emitEvent: false }
+            );
+          }
+          return;
+        }
+
+        const apiState: string = postOffice.State || '';
+        const apiDistrict: string = postOffice.District || postOffice.Block || postOffice.Name || '';
+
+        const matchedState = this.stateOptions.find(
+          s => s.toLowerCase() === apiState.toLowerCase()
+        ) || apiState;
+
+        const districtsForState = [...(INDIA_LOCATION_DATA[matchedState] || [])];
+        const matchedDistrict = districtsForState.find(
+          d => d.district.toLowerCase() === apiDistrict.toLowerCase()
+        )?.district
+          || districtsForState.find(
+            d => apiDistrict.toLowerCase().includes(d.district.toLowerCase()) ||
+                 d.district.toLowerCase().includes(apiDistrict.toLowerCase())
+          )?.district
+          || apiDistrict;
+
+        // Ensure the resolved district appears as a selectable option even if it
+        // isn't present in the static approximation table for this state.
+        if (apiDistrict && !districtsForState.some(d => d.district === matchedDistrict)) {
+          districtsForState.push({ district: matchedDistrict, pincode });
+        }
+
+        // City/locality options: a pincode can cover multiple post-office localities
+        this.cityOptions = Array.from(
+          new Set(postOffices.map(po => (po.Name || '').toString().trim()).filter(Boolean))
+        );
+        const resolvedCity = this.cityOptions.length === 1 ? this.cityOptions[0] : '';
+
+        this.filteredDistricts = districtsForState;
         this.distributorForm.patchValue(
-          { state: result.state, district: result.district },
+          { state: matchedState, district: matchedDistrict, city: resolvedCity },
           { emitEvent: false }
         );
+
+        this.applyAddressFromLocation();
+      },
+      error: () => {
+        this.isLookingUpPincode = false;
+        // Network/API failure: fall back to the static approximation table
+        const fallback = findLocationByPincode(pincode);
+        if (fallback) {
+          this.filteredDistricts = INDIA_LOCATION_DATA[fallback.state] || [];
+          this.cityOptions = [];
+          this.distributorForm.patchValue(
+            { state: fallback.state, district: fallback.district, city: '' },
+            { emitEvent: false }
+          );
+        }
       }
-    } else if (pincode.length === 0) {
-      this.filteredDistricts = [];
-      this.distributorForm.patchValue({ state: '', district: '' }, { emitEvent: false });
+    });
+  }
+
+  onCityChange(event: any) {
+    const city = event.detail?.value ?? '';
+    this.distributorForm.patchValue({ city }, { emitEvent: false });
+    this.applyAddressFromLocation();
+  }
+
+  // Appends "City, District, State - Pincode" to the address field once the
+  // location is resolved, without duplicating it or clobbering user-typed text.
+  private applyAddressFromLocation() {
+    const { city, district, state, pincode } = this.distributorForm.value;
+    const locationParts = [city, district, state].filter(Boolean);
+    if (locationParts.length === 0) {
+      return;
     }
+    let locationLine = locationParts.join(', ');
+    if (pincode) {
+      locationLine += ` - ${pincode}`;
+    }
+
+    const addressControl = this.distributorForm.get('address');
+    const currentAddress: string = (addressControl?.value || '').toString();
+
+    // Remove exactly the line we appended last time (tracked by reference, not
+    // guessed by content) so switching to a new pincode never leaves stale lines behind.
+    const lines = currentAddress.split('\n');
+    const baseAddress = (this.lastGeneratedLocationLine
+      ? lines.filter(line => line.trim() !== this.lastGeneratedLocationLine.trim())
+      : lines
+    ).join('\n').trim();
+
+    const newAddress = baseAddress ? `${baseAddress}\n${locationLine}` : locationLine;
+    addressControl?.patchValue(newAddress, { emitEvent: false });
+    this.lastGeneratedLocationLine = locationLine;
   }
 
   // Fetch key persons from API based on selected role
@@ -291,6 +412,7 @@ export class DistributorPage implements OnInit {
       bankGuaranteeExpiryDate: [''],
       state: [''],
       district: [''],
+      city: [''],
       pincode: ['']
     });
   }
@@ -525,6 +647,7 @@ export class DistributorPage implements OnInit {
     this.editingSalesPersonRoleType = '';
     this.distributorForm.reset();
     this.distributorForm.patchValue({ username: '', password: '' });
+    this.resetLocationLookupState();
     this.showAddModal = true;
   }
 
@@ -533,6 +656,15 @@ export class DistributorPage implements OnInit {
     this.showAddModal = false;
     this.editingSalesPersonRoleType = '';
     this.distributorForm.reset();
+    this.resetLocationLookupState();
+  }
+
+  // Clears pincode-lookup UI state so a fresh form doesn't carry over
+  // a previous distributor's district/city options or address suffix.
+  private resetLocationLookupState() {
+    this.filteredDistricts = [];
+    this.cityOptions = [];
+    this.lastGeneratedLocationLine = '';
   }
 
   // API Method 2: Get Distributor by ID (when opening details)
@@ -597,6 +729,7 @@ export class DistributorPage implements OnInit {
       setTimeout(() => {
         const dist = this.selectedDistributor!;
 
+        this.resetLocationLookupState();
         // Pre-populate filteredDistricts from state so district dropdown is ready
         if (dist.state) {
           this.filteredDistricts = INDIA_LOCATION_DATA[dist.state] || [];
@@ -743,6 +876,7 @@ export class DistributorPage implements OnInit {
   cancelEdit() {
     this.isEditing = false;
     this.distributorForm.reset();
+    this.resetLocationLookupState();
   }
 
   // Helper method to extract error message from API response
