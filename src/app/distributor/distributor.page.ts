@@ -1,5 +1,6 @@
 ﻿import { CommonModule } from '@angular/common';
 import { ChangeDetectorRef, Component, OnInit, inject } from '@angular/core';
+import { HttpClient } from '@angular/common/http';
 import { FormBuilder, FormGroup, FormsModule, ReactiveFormsModule, Validators } from '@angular/forms';
 import { IonicModule, ModalController, ToastController, AlertController } from '@ionic/angular';
 import { addIcons } from 'ionicons';
@@ -112,6 +113,7 @@ export class DistributorPage implements OnInit {
   // Location data
   readonly stateOptions = Object.keys(INDIA_LOCATION_DATA).sort();
   filteredDistricts: { district: string; pincode: string }[] = [];
+  isLookingUpPincode: boolean = false;
 
   // Modal states
   showAddModal: boolean = false;
@@ -146,6 +148,7 @@ export class DistributorPage implements OnInit {
   legalModalTitle: string = '';
 
   private haptic = inject(HapticService);
+  private http = inject(HttpClient);
 
   constructor(
     private fb: FormBuilder,
@@ -230,18 +233,74 @@ export class DistributorPage implements OnInit {
   onPincodeInput(event: any) {
     const pincode = (event.detail?.value ?? '').toString().replace(/\D/g, '');
     if (pincode.length === 6) {
-      const result = findLocationByPincode(pincode);
-      if (result) {
-        this.filteredDistricts = INDIA_LOCATION_DATA[result.state] || [];
-        this.distributorForm.patchValue(
-          { state: result.state, district: result.district },
-          { emitEvent: false }
-        );
-      }
+      this.lookupPincode(pincode);
     } else if (pincode.length === 0) {
       this.filteredDistricts = [];
       this.distributorForm.patchValue({ state: '', district: '' }, { emitEvent: false });
     }
+  }
+
+  private lookupPincode(pincode: string) {
+    this.isLookingUpPincode = true;
+    this.http.get<any[]>(`https://api.postalpincode.in/pincode/${pincode}`).subscribe({
+      next: (response) => {
+        this.isLookingUpPincode = false;
+        const postOffice = response?.[0]?.Status === 'Success' ? response[0].PostOffice?.[0] : null;
+        if (!postOffice) {
+          // Fall back to the static approximation table if the live API has no record
+          const fallback = findLocationByPincode(pincode);
+          if (fallback) {
+            this.filteredDistricts = INDIA_LOCATION_DATA[fallback.state] || [];
+            this.distributorForm.patchValue(
+              { state: fallback.state, district: fallback.district },
+              { emitEvent: false }
+            );
+          }
+          return;
+        }
+
+        const apiState: string = postOffice.State || '';
+        const apiDistrict: string = postOffice.District || postOffice.Block || postOffice.Name || '';
+
+        const matchedState = this.stateOptions.find(
+          s => s.toLowerCase() === apiState.toLowerCase()
+        ) || apiState;
+
+        const districtsForState = [...(INDIA_LOCATION_DATA[matchedState] || [])];
+        const matchedDistrict = districtsForState.find(
+          d => d.district.toLowerCase() === apiDistrict.toLowerCase()
+        )?.district
+          || districtsForState.find(
+            d => apiDistrict.toLowerCase().includes(d.district.toLowerCase()) ||
+                 d.district.toLowerCase().includes(apiDistrict.toLowerCase())
+          )?.district
+          || apiDistrict;
+
+        // Ensure the resolved district appears as a selectable option even if it
+        // isn't present in the static approximation table for this state.
+        if (apiDistrict && !districtsForState.some(d => d.district === matchedDistrict)) {
+          districtsForState.push({ district: matchedDistrict, pincode });
+        }
+
+        this.filteredDistricts = districtsForState;
+        this.distributorForm.patchValue(
+          { state: matchedState, district: matchedDistrict },
+          { emitEvent: false }
+        );
+      },
+      error: () => {
+        this.isLookingUpPincode = false;
+        // Network/API failure: fall back to the static approximation table
+        const fallback = findLocationByPincode(pincode);
+        if (fallback) {
+          this.filteredDistricts = INDIA_LOCATION_DATA[fallback.state] || [];
+          this.distributorForm.patchValue(
+            { state: fallback.state, district: fallback.district },
+            { emitEvent: false }
+          );
+        }
+      }
+    });
   }
 
   // Fetch key persons from API based on selected role

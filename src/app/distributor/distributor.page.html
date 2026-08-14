@@ -493,6 +493,7 @@
                 (ionInput)="onPincodeInput($event)"
                 class="custom-input"
               ></ion-input>
+              <div *ngIf="isLookingUpPincode" class="text-xs text-slate-400 mt-1">Looking up location…</div>
             </div>
           </div>
         </div>
@@ -1292,6 +1293,7 @@
                 (ionInput)="onPincodeInput($event)"
                 class="custom-input"
               ></ion-input>
+              <div *ngIf="isLookingUpPincode" class="text-xs text-slate-400 mt-1">Looking up location…</div>
             </div>
           </div>
         </div>
