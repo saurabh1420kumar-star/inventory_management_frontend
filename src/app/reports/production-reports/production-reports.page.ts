@@ -2,9 +2,11 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
   FINISHED_PRODUCTS, RAW_MATERIALS, PLANTS,
@@ -59,6 +61,29 @@ interface CostRow {
   costPerUnit: number;
 }
 
+// GET /api/reports/production/log — Excel #13 Production Report
+function mapProductionRow(raw: any): ProductionRow {
+  return {
+    date: raw.date ?? raw.productionDate ?? '',
+    product: raw.product ?? raw.productName ?? raw.finishedProductName ?? '—',
+    batchNo: raw.batchNo ?? raw.batchNumber ?? '—',
+    qtyProduced: Number(raw.qtyProduced ?? raw.quantityProduced ?? raw.quantity ?? 0),
+    uom: raw.uom ?? raw.unit ?? 'PCS',
+  };
+}
+
+// GET /api/reports/production/bom-consumption — Excel #15 Material Consumption
+function mapConsumptionRow(raw: any): ConsumptionRow {
+  return {
+    date: raw.date ?? raw.consumptionDate ?? raw.productionDate ?? '',
+    rawMaterial: raw.rawMaterial ?? raw.rawMaterialName ?? raw.materialName ?? '—',
+    batchConsumed: raw.batchConsumed ?? raw.batchNo ?? raw.lotNumber ?? '—',
+    qtyConsumed: Number(raw.qtyConsumed ?? raw.quantityConsumed ?? raw.actualQty ?? raw.quantity ?? 0),
+    uom: raw.uom ?? raw.unit ?? 'KG',
+    product: raw.product ?? raw.productName ?? raw.finishedProductName ?? '—',
+  };
+}
+
 @Component({
   selector: 'app-production-reports',
   templateUrl: './production-reports.page.html',
@@ -71,6 +96,7 @@ export class ProductionReportsPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   plants = PLANTS;
   products = FINISHED_PRODUCTS;
@@ -105,51 +131,30 @@ export class ProductionReportsPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildProductionRows();
-      this.buildBomRows();
-      this.buildConsumptionRows();
-      this.buildCostRows();
+
+    // BOM (recipe) and Production Cost have no backend report endpoint yet (Excel #17 is Category 3
+    // in REPORTS_README.md) — those two tabs stay on deterministic mock data.
+    this.buildBomRows();
+    this.buildCostRows();
+
+    const commonParams = { plant: this.filters.plant, product: this.filters.product, dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
+
+    forkJoin({
+      production: this.reportsService.getProductionLog(commonParams),
+      consumption: this.reportsService.getBomConsumption(commonParams),
+    }).subscribe(({ production, consumption }) => {
+      this.productionRows = production.map(mapProductionRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.consumptionRows = consumption.map(mapConsumptionRow).sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private uomFor(rng: () => number, product: string): string {
-    if (product.includes('1L') || product.includes('200ml')) return 'LTR';
-    if (product.includes('kg')) return 'KG';
-    return pick(rng, UOMS);
-  }
-
-  private buildProductionRows() {
-    const productPool = this.filters.product === 'all' ? this.products : [this.filters.product];
-    const rng = seededRandom('production|' + JSON.stringify(this.filters));
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(16 + rng() * 34);
-    let counter = 1;
-
-    const rows: ProductionRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const product = pick(rng, productPool);
-      const date = new Date(start + rng() * span);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        product,
-        batchNo: `FG-BATCH-${String(200 + counter++)}`,
-        qtyProduced: Math.round(300 + rng() * 1800),
-        uom: this.uomFor(rng, product),
-      });
-    }
-    this.productionRows = rows.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   private buildBomRows() {
@@ -170,29 +175,6 @@ export class ProductionReportsPage implements OnInit {
       });
     });
     this.bomRows = rows;
-  }
-
-  private buildConsumptionRows() {
-    const productPool = this.filters.product === 'all' ? this.products : [this.filters.product];
-    const rng = seededRandom('consumption|' + JSON.stringify(this.filters));
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(14 + rng() * 30);
-
-    const rows: ConsumptionRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        rawMaterial: pick(rng, RAW_MATERIALS),
-        batchConsumed: `RM-BATCH-${100 + Math.floor(rng() * 4)}`,
-        qtyConsumed: Math.round(50 + rng() * 500),
-        uom: pick(rng, ['KG', 'LTR', 'PCS']),
-        product: pick(rng, productPool),
-      });
-    }
-    this.consumptionRows = rows.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   private buildCostRows() {

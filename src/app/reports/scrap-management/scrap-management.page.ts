@@ -2,22 +2,21 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
 
 type ReportType = 'generation' | 'disposal' | 'sale';
 
-const SCRAP_SOURCES = ['Production Line 1', 'Production Line 2', 'Packing Line', 'Bottling Line'];
 const SCRAP_TYPES = ['Raw Material Scrap', 'Packing Scrap', 'Process Scrap', 'Rejected FG', 'Plastic Waste'];
-const DISPOSAL_METHODS = ['Recycled', 'Landfill', 'Incinerated', 'Vendor Pickup'];
-const BUYERS = ['GreenCycle Recyclers', 'Metro Scrap Traders', 'EcoWaste Solutions', 'Bharat Scrap Co.'];
 
 interface Filters {
   scrapType: string;
@@ -54,6 +53,46 @@ interface SaleRow {
   invoiceNo: string;
 }
 
+// GET /api/reports/scrap/lifecycle — Excel #36 Scrap Generation
+function mapGenerationRow(raw: any): GenerationRow {
+  return {
+    date: raw.date ?? raw.generatedDate ?? raw.generationDate ?? '',
+    source: raw.source ?? raw.sourceLocation ?? raw.productionLine ?? '—',
+    scrapType: raw.scrapType ?? raw.type ?? '—',
+    quantity: Number(raw.quantity ?? raw.qty ?? 0),
+    uom: raw.uom ?? raw.unit ?? 'KG',
+    value: Number(raw.value ?? raw.estimatedValue ?? 0),
+  };
+}
+
+// GET /api/reports/scrap/disposal-status — Excel #37 Scrap Disposal
+function mapDisposalRow(raw: any): DisposalRow {
+  return {
+    date: raw.date ?? raw.disposalDate ?? '',
+    scrapType: raw.scrapType ?? raw.type ?? '—',
+    quantity: Number(raw.quantity ?? raw.qty ?? 0),
+    uom: raw.uom ?? raw.unit ?? 'KG',
+    method: raw.method ?? raw.disposalMethod ?? '—',
+    disposedBy: raw.disposedBy ?? raw.handledBy ?? '—',
+  };
+}
+
+// GET /api/reports/scrap/revenue — Excel #38 Scrap Sale
+function mapSaleRow(raw: any): SaleRow {
+  const quantity = Number(raw.quantity ?? raw.qty ?? 0);
+  const rate = Number(raw.rate ?? raw.unitRate ?? 0);
+  return {
+    date: raw.date ?? raw.saleDate ?? '',
+    scrapType: raw.scrapType ?? raw.type ?? '—',
+    quantity,
+    uom: raw.uom ?? raw.unit ?? 'KG',
+    buyer: raw.buyer ?? raw.buyerName ?? '—',
+    rate,
+    amount: Number(raw.amount ?? raw.totalAmount ?? quantity * rate),
+    invoiceNo: raw.invoiceNo ?? raw.invoiceNumber ?? '—',
+  };
+}
+
 @Component({
   selector: 'app-scrap-management',
   templateUrl: './scrap-management.page.html',
@@ -66,6 +105,7 @@ export class ScrapManagementReportPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   scrapTypes = SCRAP_TYPES;
 
@@ -98,99 +138,27 @@ export class ScrapManagementReportPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildGenerationRows();
-      this.buildDisposalRows();
-      this.buildSaleRows();
+
+    const params = { scrapType: this.filters.scrapType, dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
+
+    forkJoin({
+      generation: this.reportsService.getScrapLifecycle(params),
+      disposal: this.reportsService.getScrapDisposalStatus(params),
+      sale: this.reportsService.getScrapRevenue(params),
+    }).subscribe(({ generation, disposal, sale }) => {
+      this.generationRows = generation.map(mapGenerationRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.disposalRows = disposal.map(mapDisposalRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.saleRows = sale.map(mapSaleRow).sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private typePool(): string[] {
-    return this.filters.scrapType === 'all' ? SCRAP_TYPES : [this.filters.scrapType];
-  }
-
-  private dateSpan(): { start: number; span: number } {
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    return { start, span: Math.max(end - start, 86400000) };
-  }
-
-  private buildGenerationRows() {
-    const rng = seededRandom('generation|' + JSON.stringify(this.filters));
-    const { start, span } = this.dateSpan();
-    const typePool = this.typePool();
-    const n = Math.round(60 + rng() * 130);
-
-    const rows: GenerationRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      const quantity = Math.round(5 + rng() * 60);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        source: pick(rng, SCRAP_SOURCES),
-        scrapType: pick(rng, typePool),
-        quantity,
-        uom: rng() > 0.5 ? 'KG' : 'PCS',
-        value: Math.round(quantity * (5 + rng() * 25)),
-      });
-    }
-    this.generationRows = rows.sort((a, b) => b.date.localeCompare(a.date));
-  }
-
-  private buildDisposalRows() {
-    const rng = seededRandom('disposal|' + JSON.stringify(this.filters));
-    const { start, span } = this.dateSpan();
-    const typePool = this.typePool();
-    const n = Math.round(30 + rng() * 70);
-
-    const rows: DisposalRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        scrapType: pick(rng, typePool),
-        quantity: Math.round(5 + rng() * 50),
-        uom: rng() > 0.5 ? 'KG' : 'PCS',
-        method: pick(rng, DISPOSAL_METHODS),
-        disposedBy: pick(rng, ['Housekeeping Team', 'Store Team', 'EHS Officer']),
-      });
-    }
-    this.disposalRows = rows.sort((a, b) => b.date.localeCompare(a.date));
-  }
-
-  private buildSaleRows() {
-    const rng = seededRandom('sale|' + JSON.stringify(this.filters));
-    const { start, span } = this.dateSpan();
-    const typePool = this.typePool();
-    const n = Math.round(20 + rng() * 50);
-    let counter = 1;
-
-    const rows: SaleRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      const quantity = Math.round(20 + rng() * 200);
-      const rate = Math.round(6 + rng() * 20);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        scrapType: pick(rng, typePool),
-        quantity,
-        uom: rng() > 0.5 ? 'KG' : 'PCS',
-        buyer: pick(rng, BUYERS),
-        rate,
-        amount: quantity * rate,
-        invoiceNo: `SCR-${date.getFullYear().toString().slice(2)}${String(date.getMonth() + 1).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
-      });
-    }
-    this.saleRows = rows.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   get activeRowCount(): number {

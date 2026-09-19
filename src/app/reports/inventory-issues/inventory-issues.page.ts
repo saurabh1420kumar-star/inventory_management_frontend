@@ -2,13 +2,14 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  EMPLOYEES, DEALERS, DISTRIBUTORS,
-  seededRandom, pick, toDateInputValue, formatDisplayDate,
+  toDateInputValue, formatDisplayDate,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
@@ -18,6 +19,8 @@ type IssueCategory = 'Promotional' | 'Spare Parts';
 type IssueTypeFilter = 'all' | IssueCategory;
 type IssuedToType = 'Employee' | 'Dealer' | 'Distributor';
 type IssuedToFilter = 'all' | IssuedToType;
+
+const KNOWN_RECIPIENT_TYPES: IssuedToType[] = ['Employee', 'Dealer', 'Distributor'];
 
 interface Filters {
   issueType: IssueTypeFilter;
@@ -37,8 +40,25 @@ interface IssueRow {
   uom: string;
 }
 
-const PROMO_ITEMS = ['Cap', 'T-Shirt', 'Umbrella', 'Standee', 'Banner', 'Keychain', 'Visiting Card Box'];
-const SPARE_ITEMS = ['Bottle Nozzle', 'Filling Gasket', 'Conveyor Belt', 'Capping Filter', 'Pressure Valve', 'Sensor Unit'];
+function normalizeRecipientType(raw: unknown): IssuedToType {
+  const text = String(raw ?? 'Employee').trim();
+  const titleCase = (text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()) as IssuedToType;
+  return KNOWN_RECIPIENT_TYPES.includes(titleCase) ? titleCase : 'Employee';
+}
+
+// GET /api/reports/inventory-issues/by-type?itemType=PROMOTIONAL_ITEMS|SPARE_PARTS — Excel #34 / #35
+function mapIssueRow(raw: any, category: IssueCategory): IssueRow {
+  return {
+    issueNo: raw.issueNo ?? raw.issueNumber ?? '—',
+    issueDate: raw.issueDate ?? raw.date ?? raw.issuedDate ?? '',
+    category,
+    issuedToType: normalizeRecipientType(raw.issuedToType ?? raw.recipientType),
+    issuedToName: raw.issuedToName ?? raw.recipientName ?? raw.issuedTo ?? '—',
+    item: raw.item ?? raw.itemName ?? '—',
+    qty: Number(raw.qty ?? raw.quantity ?? 0),
+    uom: raw.uom ?? raw.unit ?? 'PCS',
+  };
+}
 
 @Component({
   selector: 'app-inventory-issues',
@@ -52,6 +72,7 @@ export class InventoryIssuesReportPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   filters: Filters = this.buildDefaultFilters();
   isLoading = false;
@@ -80,54 +101,36 @@ export class InventoryIssuesReportPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildIssueRows();
+
+    const dateParams = { dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
+
+    forkJoin({
+      promotional: this.reportsService.getInventoryIssuesByType('PROMOTIONAL_ITEMS', dateParams),
+      spareParts: this.reportsService.getInventoryIssuesByType('SPARE_PARTS', dateParams),
+    }).subscribe(({ promotional, spareParts }) => {
+      let rows: IssueRow[] = [
+        ...promotional.map(r => mapIssueRow(r, 'Promotional')),
+        ...spareParts.map(r => mapIssueRow(r, 'Spare Parts')),
+      ];
+
+      if (this.filters.issueType !== 'all') {
+        rows = rows.filter(r => r.category === this.filters.issueType);
+      }
+      if (this.filters.issuedToType !== 'all') {
+        rows = rows.filter(r => r.issuedToType === this.filters.issuedToType);
+      }
+
+      this.issueRows = rows.sort((a, b) => b.issueDate.localeCompare(a.issueDate));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private nameFor(rng: () => number, type: IssuedToType): string {
-    if (type === 'Employee') return pick(rng, EMPLOYEES);
-    if (type === 'Dealer') return pick(rng, DEALERS);
-    return pick(rng, DISTRIBUTORS);
-  }
-
-  private buildIssueRows() {
-    const rng = seededRandom('issues|' + JSON.stringify(this.filters));
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(120 + rng() * 260);
-    const typePool: IssuedToType[] = this.filters.issuedToType === 'all' ? ['Employee', 'Dealer', 'Distributor'] : [this.filters.issuedToType];
-    let counter = 1;
-
-    const rows: IssueRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      const category: IssueCategory = rng() > 0.5 ? 'Promotional' : 'Spare Parts';
-      const issuedToType = pick(rng, typePool);
-      rows.push({
-        issueNo: `IS-${date.getFullYear().toString().slice(2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
-        issueDate: date.toISOString().slice(0, 10),
-        category,
-        issuedToType,
-        issuedToName: this.nameFor(rng, issuedToType),
-        item: category === 'Promotional' ? pick(rng, PROMO_ITEMS) : pick(rng, SPARE_ITEMS),
-        qty: 1 + Math.floor(rng() * 100),
-        uom: rng() > 0.6 ? 'PCS' : rng() > 0.3 ? 'KG' : 'SET',
-      });
-    }
-
-    const filtered = this.filters.issueType === 'all' ? rows : rows.filter(r => r.category === this.filters.issueType);
-    this.issueRows = filtered.sort((a, b) => b.issueDate.localeCompare(a.issueDate));
   }
 
   get promotionalRows(): IssueRow[] { return this.issueRows.filter(r => r.category === 'Promotional'); }

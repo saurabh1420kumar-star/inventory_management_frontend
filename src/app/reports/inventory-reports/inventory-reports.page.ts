@@ -2,13 +2,15 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  RAW_MATERIALS, FINISHED_PRODUCTS, WAREHOUSES,
-  seededRandom, pick, toDateInputValue, formatCurrencyFull,
+  WAREHOUSES,
+  toDateInputValue, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
@@ -21,12 +23,6 @@ interface Filters {
   category: 'all' | Category;
   warehouse: string;
   asOfDate: string;
-}
-
-interface CatalogItem {
-  name: string;
-  category: Category;
-  reorderLevel: number;
 }
 
 interface StockRow {
@@ -55,17 +51,35 @@ interface ReorderRow {
   status: Status;
 }
 
-const MACHINE_PARTS = ['Filling Nozzle Set', 'Conveyor Belt', 'Capping Head', 'Sensor Module', 'Drive Motor'];
-const PROMOTIONAL_ITEMS = ['Branded Cap', 'Standee', 'Banner', 'Umbrella', 'T-Shirt'];
-const SCRAP_ITEMS = ['Raw Material Scrap', 'Packing Scrap', 'Rejected FG', 'Plastic Waste'];
+// GET /api/reports/inventory/snapshot — Excel #3 Current Stock Report (⚠️ warehouse field may be missing per REPORTS_README.md)
+function mapStockRow(raw: any): StockRow {
+  const qtyOnHand = Number(raw.qtyOnHand ?? raw.quantity ?? raw.qty ?? raw.stockQty ?? 0);
+  const unitValue = Number(raw.unitValue ?? raw.unitPrice ?? raw.rate ?? raw.costPrice ?? 0);
+  return {
+    item: raw.item ?? raw.itemName ?? raw.materialName ?? raw.productName ?? raw.name ?? '—',
+    category: (raw.category ?? raw.itemCategory ?? 'Raw Material') as Category,
+    warehouse: raw.warehouse ?? raw.warehouseName ?? raw.warehouseId ?? '—',
+    qtyOnHand,
+    unitValue,
+    totalValue: Number(raw.totalValue ?? qtyOnHand * unitValue),
+  };
+}
 
-const CATALOG: CatalogItem[] = [
-  ...RAW_MATERIALS.map(name => ({ name, category: 'Raw Material' as Category, reorderLevel: 200 })),
-  ...FINISHED_PRODUCTS.map(name => ({ name, category: 'Finished Goods' as Category, reorderLevel: 150 })),
-  ...MACHINE_PARTS.map(name => ({ name, category: 'Machine Parts' as Category, reorderLevel: 10 })),
-  ...PROMOTIONAL_ITEMS.map(name => ({ name, category: 'Promotional Items' as Category, reorderLevel: 50 })),
-  ...SCRAP_ITEMS.map(name => ({ name, category: 'Scrap' as Category, reorderLevel: 0 })),
-];
+// GET /api/reports/inventory/low-stock — Excel #7 Minimum Stock Alert
+function mapReorderRow(raw: any): ReorderRow {
+  const currentQty = Number(raw.currentQty ?? raw.qtyOnHand ?? raw.quantity ?? 0);
+  const reorderLevel = Number(raw.reorderLevel ?? raw.minStockLevel ?? raw.minimumStock ?? 0);
+  const shortfall = Number(raw.shortfall ?? Math.max(0, reorderLevel - currentQty));
+  const status: Status = raw.status ?? (currentQty < reorderLevel * 0.5 ? 'Critical' : currentQty < reorderLevel ? 'Low' : 'OK');
+  return {
+    item: raw.item ?? raw.itemName ?? raw.materialName ?? raw.name ?? '—',
+    category: (raw.category ?? raw.itemCategory ?? 'Raw Material') as Category,
+    currentQty,
+    reorderLevel,
+    shortfall,
+    status,
+  };
+}
 
 @Component({
   selector: 'app-inventory-reports',
@@ -79,6 +93,7 @@ export class InventoryReportsPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   categories: Category[] = ['Raw Material', 'Finished Goods', 'Machine Parts', 'Promotional Items', 'Scrap'];
   warehouses = WAREHOUSES;
@@ -109,43 +124,27 @@ export class InventoryReportsPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildStockRows();
+
+    const snapshotParams = { category: this.filters.category, warehouse: this.filters.warehouse, asOfDate: this.filters.asOfDate };
+    const lowStockParams = { category: this.filters.category, warehouse: this.filters.warehouse };
+
+    forkJoin({
+      snapshot: this.reportsService.getInventorySnapshot(snapshotParams),
+      lowStock: this.reportsService.getLowStock(lowStockParams),
+    }).subscribe(({ snapshot, lowStock }) => {
+      this.stockRows = snapshot.map(mapStockRow).sort((a, b) => b.totalValue - a.totalValue);
+      this.reorderRows = lowStock.map(mapReorderRow).sort((a, b) => b.shortfall - a.shortfall);
       this.buildCategoryRows();
-      this.buildReorderRows();
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private catalogPool(): CatalogItem[] {
-    return this.filters.category === 'all' ? CATALOG : CATALOG.filter(c => c.category === this.filters.category);
-  }
-
-  private buildStockRows() {
-    const warehousePool = this.filters.warehouse === 'all' ? this.warehouses : [this.filters.warehouse];
-    this.stockRows = this.catalogPool().map(entry => {
-      const rng = seededRandom(`stock|${entry.name}|${this.filters.asOfDate}`);
-      const qtyOnHand = Math.round(entry.reorderLevel * (0.4 + rng() * 2.2)) || Math.round(50 + rng() * 400);
-      const unitValue = entry.category === 'Machine Parts' ? Math.round(800 + rng() * 4000)
-        : entry.category === 'Scrap' ? Math.round(5 + rng() * 20)
-        : Math.round(30 + rng() * 220);
-      return {
-        item: entry.name,
-        category: entry.category,
-        warehouse: pick(rng, warehousePool),
-        qtyOnHand,
-        unitValue,
-        totalValue: qtyOnHand * unitValue,
-      };
-    }).sort((a, b) => b.totalValue - a.totalValue);
   }
 
   private buildCategoryRows() {
@@ -162,20 +161,6 @@ export class InventoryReportsPage implements OnInit {
       totalValue: rows.reduce((s, r) => s + r.totalValue, 0),
       sharePct: (rows.reduce((s, r) => s + r.totalValue, 0) / totalValue) * 100,
     })).sort((a, b) => b.totalValue - a.totalValue);
-  }
-
-  private buildReorderRows() {
-    const rows: ReorderRow[] = this.catalogPool()
-      .filter(entry => entry.reorderLevel > 0)
-      .map(entry => {
-        const stock = this.stockRows.find(r => r.item === entry.name);
-        const currentQty = stock?.qtyOnHand ?? 0;
-        const shortfall = Math.max(0, entry.reorderLevel - currentQty);
-        const status: Status = currentQty < entry.reorderLevel * 0.5 ? 'Critical' : currentQty < entry.reorderLevel ? 'Low' : 'OK';
-        return { item: entry.name, category: entry.category, currentQty, reorderLevel: entry.reorderLevel, shortfall, status };
-      })
-      .filter(r => r.status !== 'OK');
-    this.reorderRows = rows.sort((a, b) => b.shortfall - a.shortfall);
   }
 
   get activeRowCount(): number {

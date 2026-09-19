@@ -5,10 +5,11 @@ import { IonicModule } from '@ionic/angular';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  DEALERS, SALESMEN,
-  seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull, daysBetween,
+  DEALERS,
+  toDateInputValue, formatDisplayDate, formatCurrencyFull, daysBetween,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
@@ -18,6 +19,7 @@ type OrderStatus = 'Pending' | 'Approved' | 'Dispatched' | 'Delivered' | 'Cancel
 type StatusFilter = 'all' | OrderStatus;
 
 const STAGES: OrderStatus[] = ['Pending', 'Approved', 'Dispatched', 'Delivered'];
+const KNOWN_STATUSES: OrderStatus[] = ['Pending', 'Approved', 'Dispatched', 'Delivered', 'Cancelled'];
 
 interface Filters {
   status: StatusFilter;
@@ -37,6 +39,28 @@ interface OrderRow {
   requestedBy: string;
 }
 
+function normalizeStatus(raw: unknown): OrderStatus {
+  const text = String(raw ?? 'Pending').trim();
+  const titleCase = (text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()) as OrderStatus;
+  return KNOWN_STATUSES.includes(titleCase) ? titleCase : 'Pending';
+}
+
+// GET /api/reports/sales-orders/grid — Excel #26 Sales Order Status
+// Note: REPORTS_README.md flags a backend bug (Fix 3) where status-count totals are inconsistent
+// when filtered by distributorId — this page only consumes the row grid, not a separate count widget.
+function mapOrderRow(raw: any): OrderRow {
+  return {
+    orderNo: raw.orderNo ?? raw.orderNumber ?? raw.soNumber ?? '—',
+    date: raw.date ?? raw.orderDate ?? raw.createdAt ?? '',
+    customer: raw.customer ?? raw.customerName ?? raw.distributorName ?? '—',
+    status: normalizeStatus(raw.status),
+    items: Number(raw.items ?? raw.itemCount ?? raw.totalItems ?? 0),
+    amount: Number(raw.amount ?? raw.totalAmount ?? 0),
+    expectedDelivery: raw.expectedDelivery ?? raw.expectedDeliveryDate ?? '',
+    requestedBy: raw.requestedBy ?? raw.salesmanName ?? raw.createdBy ?? '—',
+  };
+}
+
 @Component({
   selector: 'app-sales-orders',
   templateUrl: './sales-orders.page.html',
@@ -49,6 +73,7 @@ export class SalesOrdersReportPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   stages = STAGES;
   customers = DEALERS;
@@ -80,54 +105,24 @@ export class SalesOrdersReportPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildOrderRows();
+
+    this.reportsService.getSalesOrdersGrid({
+      status: this.filters.status === 'all' ? undefined : this.filters.status.toUpperCase(),
+      distributorId: this.filters.customer,
+      dateFrom: this.filters.dateFrom,
+      dateTo: this.filters.dateTo,
+    }).subscribe(rows => {
+      this.orderRows = rows.map(mapOrderRow).sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private rollStatus(roll: number): OrderStatus {
-    const thresholds: [number, OrderStatus][] = [[0.15, 'Pending'], [0.32, 'Approved'], [0.5, 'Dispatched'], [0.92, 'Delivered']];
-    const match = thresholds.find(([cutoff]) => roll < cutoff);
-    return match ? match[1] : 'Cancelled';
-  }
-
-  private buildOrderRows() {
-    const rng = seededRandom('orders|' + JSON.stringify(this.filters));
-    const customerPool = this.filters.customer === 'all' ? this.customers : [this.filters.customer];
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(60 + rng() * 140);
-    let counter = 1;
-
-    const rows: OrderRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      const status = this.rollStatus(rng());
-      const expected = new Date(date.getTime() + (4 + rng() * 6) * 86400000);
-      rows.push({
-        orderNo: `SO-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
-        date: date.toISOString().slice(0, 10),
-        customer: pick(rng, customerPool),
-        status,
-        items: 1 + Math.floor(rng() * 8),
-        amount: Math.round(4000 + rng() * 180000),
-        expectedDelivery: expected.toISOString().slice(0, 10),
-        requestedBy: pick(rng, SALESMEN),
-      });
-    }
-
-    const filtered = this.filters.status === 'all' ? rows : rows.filter(r => r.status === this.filters.status);
-    this.orderRows = filtered.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   get pendingRows(): OrderRow[] {

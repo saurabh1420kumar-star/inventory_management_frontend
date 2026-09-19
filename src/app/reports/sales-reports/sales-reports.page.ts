@@ -2,12 +2,14 @@ import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
+import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  FINISHED_PRODUCTS, DEALERS, DISTRIBUTORS, SALESMEN, REGIONS,
+  DEALERS, DISTRIBUTORS, SALESMEN, REGIONS,
   seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
@@ -66,6 +68,63 @@ interface SalesmanRow extends PartyRow {
   achievementPct: number;
 }
 
+// GET /api/reports/sales/invoice-grid — Excel #19 Sales Register
+function mapInvoiceRow(raw: any): InvoiceRow {
+  const qty = Number(raw.qty ?? raw.quantity ?? 0);
+  const rate = Number(raw.rate ?? raw.unitPrice ?? raw.price ?? 0);
+  return {
+    invoiceNo: raw.invoiceNo ?? raw.invoiceNumber ?? '—',
+    date: raw.date ?? raw.invoiceDate ?? raw.createdAt ?? '',
+    customer: raw.customer ?? raw.customerName ?? raw.distributorName ?? '—',
+    product: raw.product ?? raw.productName ?? raw.itemName ?? '—',
+    qty,
+    rate,
+    amount: Number(raw.amount ?? raw.totalAmount ?? qty * rate),
+    dealer: raw.dealer ?? raw.dealerName ?? '—',
+    distributor: raw.distributor ?? raw.distributorName ?? raw.customer ?? raw.customerName ?? '—',
+    salesman: raw.salesman ?? raw.salesmanName ?? raw.salespersonName ?? '—',
+  };
+}
+
+// Shared by Excel #21 (by-product) and #27 (top-products) — same row shape.
+function mapProductRows(rawList: any[]): ProductRow[] {
+  const base = rawList.map(raw => ({
+    product: raw.product ?? raw.productName ?? raw.itemName ?? '—',
+    qtySold: Number(raw.qtySold ?? raw.qty ?? raw.quantity ?? raw.totalQty ?? 0),
+    revenue: Number(raw.revenue ?? raw.totalRevenue ?? raw.totalSales ?? raw.amount ?? 0),
+    sharePctRaw: raw.sharePct,
+  }));
+  const total = base.reduce((s, r) => s + r.revenue, 0) || 1;
+  return base
+    .sort((a, b) => b.revenue - a.revenue)
+    .map((r, i) => ({
+      rank: i + 1,
+      product: r.product,
+      qtySold: r.qtySold,
+      revenue: r.revenue,
+      sharePct: Number(r.sharePctRaw ?? (r.revenue / total) * 100),
+    }));
+}
+
+// GET /api/reports/sales/by-distributor — Excel #22 Distributor Wise Sales
+function mapPartyRow(raw: any): PartyRow {
+  return {
+    name: raw.name ?? raw.distributorName ?? raw.dealerName ?? '—',
+    region: raw.region ?? '—',
+    orders: Number(raw.orders ?? raw.orderCount ?? raw.invoiceCount ?? 0),
+    qty: Number(raw.qty ?? raw.totalQty ?? raw.quantity ?? 0),
+    revenue: Number(raw.revenue ?? raw.totalRevenue ?? raw.totalSales ?? raw.amount ?? 0),
+  };
+}
+
+// GET /api/reports/sales-orders/salesman-performance — Excel #28
+function mapSalesmanRow(raw: any): SalesmanRow {
+  return {
+    ...mapPartyRow(raw),
+    achievementPct: Number(raw.achievementPct ?? raw.achievementPercent ?? raw.targetAchievementPct ?? 0),
+  };
+}
+
 @Component({
   selector: 'app-sales-reports',
   templateUrl: './sales-reports.page.html',
@@ -78,6 +137,7 @@ export class SalesReportsPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   dealers = DEALERS;
   distributors = DISTRIBUTORS;
@@ -121,18 +181,31 @@ export class SalesReportsPage implements OnInit {
   applyFilters() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildInvoiceRows();
+
+    // Dealer Wise Sales (Excel #23) has no backend endpoint yet (REPORTS_README.md Category 3) —
+    // that tab stays on deterministic mock data until a dealer-grouped query exists.
+    this.buildDealerRows();
+
+    const dateParams = { dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
+
+    forkJoin({
+      invoices: this.reportsService.getInvoiceGrid({ ...dateParams, dealer: this.filters.dealer, distributor: this.filters.distributor, salesman: this.filters.salesman }),
+      byProduct: this.reportsService.getSalesByProduct(dateParams),
+      byDistributor: this.reportsService.getSalesByDistributor({ ...dateParams, distributorId: this.filters.distributor }),
+      topProducts: this.reportsService.getTopProducts(dateParams),
+      salesmanPerf: this.reportsService.getSalesmanPerformance(dateParams),
+    }).subscribe(({ invoices, byProduct, byDistributor, topProducts, salesmanPerf }) => {
+      this.invoiceRows = invoices.map(mapInvoiceRow).sort((a, b) => b.date.localeCompare(a.date));
       this.computeStats();
       this.buildSummaryRows();
-      this.buildProductRows();
-      this.buildDistributorRows();
-      this.buildDealerRows();
-      this.buildSalesmanRows();
+      this.productRows = mapProductRows(byProduct);
+      this.distributorRows = byDistributor.map(mapPartyRow).sort((a, b) => b.revenue - a.revenue);
+      this.topProductRows = mapProductRows(topProducts);
+      this.salesmanRows = salesmanPerf.map(mapSalesmanRow).sort((a, b) => b.revenue - a.revenue);
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
@@ -161,41 +234,6 @@ export class SalesReportsPage implements OnInit {
     return pick(rng, REGIONS);
   }
 
-  private buildInvoiceRows() {
-    const rng = seededRandom('invoices|' + JSON.stringify(this.filters));
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(140 + rng() * 260);
-
-    const dealerPool = this.filters.dealer === 'all' ? this.dealers : [this.filters.dealer];
-    const distributorPool = this.filters.distributor === 'all' ? this.distributors : [this.filters.distributor];
-    const salesmanPool = this.filters.salesman === 'all' ? this.salesmen : [this.filters.salesman];
-
-    let counter = 1;
-    const rows: InvoiceRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      const product = pick(rng, FINISHED_PRODUCTS);
-      const qty = Math.round(20 + rng() * 500);
-      const rate = Math.round(80 + rng() * 420);
-      const distributor = pick(rng, distributorPool);
-      rows.push({
-        invoiceNo: `INV-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
-        date: date.toISOString().slice(0, 10),
-        customer: distributor,
-        product,
-        qty,
-        rate,
-        amount: qty * rate,
-        dealer: pick(rng, dealerPool),
-        distributor,
-        salesman: pick(rng, salesmanPool),
-      });
-    }
-    this.invoiceRows = rows.sort((a, b) => b.date.localeCompare(a.date));
-  }
-
   private computeStats() {
     this.totalSales = this.invoiceRows.reduce((s, r) => s + r.amount, 0);
     this.totalInvoices = this.invoiceRows.length;
@@ -203,6 +241,9 @@ export class SalesReportsPage implements OnInit {
     this.avgInvoiceValue = this.totalInvoices ? this.totalSales / this.totalInvoices : 0;
   }
 
+  // Sales Summary (Excel #20) is built by grouping the real invoice-grid rows on the selected
+  // dimension client-side, rather than calling /sales/monthly-trend directly — that endpoint only
+  // aggregates by month, while this tab's groupBy selector also supports product/dealer/distributor/salesman.
   private buildSummaryRows() {
     const keyFn: Record<GroupBy, (r: InvoiceRow) => string> = {
       none: r => new Date(r.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
@@ -223,54 +264,14 @@ export class SalesReportsPage implements OnInit {
       : rows.sort((a, b) => b.totalSales - a.totalSales);
   }
 
-  private productBreakdown(): ProductRow[] {
-    const groups = this.groupInvoices(this.invoiceRows, r => r.product);
-    const total = this.totalSales || 1;
-    return Array.from(groups.entries())
-      .map(([product, grp]) => ({
-        rank: 0,
-        product,
-        qtySold: grp.reduce((s, r) => s + r.qty, 0),
-        revenue: grp.reduce((s, r) => s + r.amount, 0),
-        sharePct: 0,
-      }))
-      .map(r => ({ ...r, sharePct: (r.revenue / total) * 100 }))
-      .sort((a, b) => b.revenue - a.revenue)
-      .map((r, i) => ({ ...r, rank: i + 1 }));
-  }
-
-  private buildProductRows() {
-    this.productRows = this.productBreakdown();
-    this.topProductRows = this.productBreakdown().slice(0, 5);
-  }
-
-  private partyBreakdown(keyFn: (r: InvoiceRow) => string): PartyRow[] {
-    const groups = this.groupInvoices(this.invoiceRows, keyFn);
-    return Array.from(groups.entries())
-      .map(([name, grp]) => ({
-        name,
-        region: this.regionFor(name),
-        orders: grp.length,
-        qty: grp.reduce((s, r) => s + r.qty, 0),
-        revenue: grp.reduce((s, r) => s + r.amount, 0),
-      }))
-      .sort((a, b) => b.revenue - a.revenue);
-  }
-
-  private buildDistributorRows() {
-    this.distributorRows = this.partyBreakdown(r => r.distributor);
-  }
-
   private buildDealerRows() {
-    this.dealerRows = this.partyBreakdown(r => r.dealer);
-  }
-
-  private buildSalesmanRows() {
-    this.salesmanRows = this.partyBreakdown(r => r.salesman).map(row => {
-      const rng = seededRandom('target|' + row.name);
-      const target = row.revenue * (0.75 + rng() * 0.4);
-      return { ...row, achievementPct: Math.min(150, Math.round((row.revenue / target) * 100)) };
-    });
+    const rng = seededRandom('dealer|' + JSON.stringify(this.filters));
+    const dealerPool = this.filters.dealer === 'all' ? this.dealers : [this.filters.dealer];
+    this.dealerRows = dealerPool.map(name => {
+      const orders = 2 + Math.floor(rng() * 20);
+      const qty = Math.round(50 + rng() * 4000);
+      return { name, region: this.regionFor(name), orders, qty, revenue: Math.round(qty * (80 + rng() * 300)) };
+    }).sort((a, b) => b.revenue - a.revenue);
   }
 
   get activeRowCount(): number {

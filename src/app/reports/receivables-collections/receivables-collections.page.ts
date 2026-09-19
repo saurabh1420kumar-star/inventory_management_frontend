@@ -5,6 +5,7 @@ import { IonicModule } from '@ionic/angular';
 import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
+import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
   DEALERS,
@@ -50,6 +51,18 @@ interface CollectionRow {
 
 const COLLECTION_MODES = ['Bank Transfer', 'Cheque', 'UPI', 'Cash'];
 
+// GET /api/reports/receivables/collection-history — Excel #25 Collection Report
+function mapCollectionRow(raw: any): CollectionRow {
+  return {
+    date: raw.date ?? raw.paymentDate ?? raw.collectionDate ?? '',
+    customer: raw.customer ?? raw.customerName ?? raw.distributorName ?? '—',
+    invoiceNo: raw.invoiceNo ?? raw.invoiceNumber ?? '—',
+    amountCollected: Number(raw.amountCollected ?? raw.amount ?? raw.paidAmount ?? 0),
+    mode: raw.mode ?? raw.paymentMode ?? raw.paymentMethod ?? '—',
+    referenceNo: raw.referenceNo ?? raw.referenceNumber ?? raw.transactionRef ?? '—',
+  };
+}
+
 @Component({
   selector: 'app-receivables-collections',
   templateUrl: './receivables-collections.page.html',
@@ -62,6 +75,7 @@ export class ReceivablesCollectionsPage implements OnInit {
   private downloadService = inject(DownloadService);
   private toast = inject(Toast);
   private haptic = inject(HapticService);
+  private reportsService = inject(ReportsService);
 
   customers = DEALERS;
 
@@ -98,14 +112,23 @@ export class ReceivablesCollectionsPage implements OnInit {
   viewReport() {
     this.haptic.selectionChanged();
     this.isLoading = true;
-    setTimeout(() => {
-      this.buildAgeingRows();
-      this.buildCollectionRows();
+
+    // Outstanding Receivable (Excel #24) returns empty from the backend today — REPORTS_README.md
+    // Category 2 lists it as missing daysOverdue/status/region/invoiceCount. Both the "outstanding"
+    // and "ageing" tabs (which share this data) stay on mock data until that's fixed.
+    this.buildAgeingRows();
+
+    this.reportsService.getCollectionHistory({
+      dateFrom: this.filters.dateFrom,
+      dateTo: this.filters.dateTo,
+      distributorId: this.filters.customer,
+    }).subscribe(rows => {
+      this.collectionRows = rows.map(mapCollectionRow).sort((a, b) => b.date.localeCompare(a.date));
       this.computeStats();
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
-    }, 300);
+    });
   }
 
   switchType(type: ReportType) {
@@ -150,30 +173,6 @@ export class ReceivablesCollectionsPage implements OnInit {
     }
 
     this.ageingRows = rows.sort((a, b) => b.outstanding - a.outstanding);
-  }
-
-  private buildCollectionRows() {
-    const rng = seededRandom('collections|' + JSON.stringify(this.filters));
-    const customerPool = this.filters.customer === 'all' ? this.customers : [this.filters.customer];
-    const start = new Date(this.filters.dateFrom).getTime();
-    const end = new Date(this.filters.dateTo).getTime();
-    const span = Math.max(end - start, 86400000);
-    const n = Math.round(24 + rng() * 60);
-    let counter = 1;
-
-    const rows: CollectionRow[] = [];
-    for (let i = 0; i < n; i++) {
-      const date = new Date(start + rng() * span);
-      rows.push({
-        date: date.toISOString().slice(0, 10),
-        customer: pick(rng, customerPool),
-        invoiceNo: `INV-${date.getFullYear()}${String(date.getMonth() + 1).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
-        amountCollected: Math.round(5000 + rng() * 85000),
-        mode: pick(rng, COLLECTION_MODES),
-        referenceNo: `REF-${Math.floor(100000 + rng() * 899999)}`,
-      });
-    }
-    this.collectionRows = rows.sort((a, b) => b.date.localeCompare(a.date));
   }
 
   private computeStats() {
