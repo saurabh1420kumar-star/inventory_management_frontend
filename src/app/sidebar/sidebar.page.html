@@ -231,6 +231,130 @@
           <ion-label>Manage Complaints</ion-label>
         </ion-item>
 
+        <!-- ===== REPORTS (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
+          <ion-accordion-group *appAcl="'REPORTS'">
+            <ion-accordion>
+              <ion-item slot="header" button>
+                <ion-icon name="analytics-outline" slot="start"></ion-icon>
+                <ion-label>Reports</ion-label>
+              </ion-item>
+
+              <div slot="content">
+                <!-- MIS sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('mis')">
+                    <ion-icon name="stats-chart-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">MIS</span>
+                    <ion-icon [name]="openReportGroup === 'mis' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'mis'">
+                    <ion-item routerLink="/reports/mis-dashboard" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="stats-chart-outline" slot="start"></ion-icon>
+                      <ion-label>MIS Dashboard</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <!-- Inventory sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('inventory')">
+                    <ion-icon name="cube-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">Inventory</span>
+                    <ion-icon [name]="openReportGroup === 'inventory' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'inventory'">
+                    <ion-item routerLink="/reports/inventory-reports" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="file-tray-full-outline" slot="start"></ion-icon>
+                      <ion-label>Inventory Reports</ion-label>
+                    </ion-item>
+                    <ion-item routerLink="/reports/stock-movement" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="swap-vertical-outline" slot="start"></ion-icon>
+                      <ion-label>Stock Movement</ion-label>
+                    </ion-item>
+                    <ion-item routerLink="/reports/batch-management" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="layers-outline" slot="start"></ion-icon>
+                      <ion-label>Batch Management</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <!-- Production sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('production')">
+                    <ion-icon name="construct-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">Production</span>
+                    <ion-icon [name]="openReportGroup === 'production' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'production'">
+                    <ion-item routerLink="/reports/production-reports" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="construct-outline" slot="start"></ion-icon>
+                      <ion-label>Production Reports</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <!-- Sales sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('sales')">
+                    <ion-icon name="trending-up-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">Sales</span>
+                    <ion-icon [name]="openReportGroup === 'sales' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'sales'">
+                    <ion-item routerLink="/reports/sales-reports" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="trending-up-outline" slot="start"></ion-icon>
+                      <ion-label>Sales Reports</ion-label>
+                    </ion-item>
+                    <ion-item routerLink="/reports/receivables-collections" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="cash-outline" slot="start"></ion-icon>
+                      <ion-label>Receivables & Collections</ion-label>
+                    </ion-item>
+                    <ion-item routerLink="/reports/sales-orders" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="receipt-outline" slot="start"></ion-icon>
+                      <ion-label>Sales Orders</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <!-- Logistics sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('logistics')">
+                    <ion-icon name="navigate-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">Logistics</span>
+                    <ion-icon [name]="openReportGroup === 'logistics' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'logistics'">
+                    <ion-item routerLink="/reports/dispatch-delivery" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="car-outline" slot="start"></ion-icon>
+                      <ion-label>Dispatch & Delivery</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+
+                <!-- Inventory Operations sub-group -->
+                <div class="report-subgroup">
+                  <div class="report-subgroup-header" (click)="toggleReportGroup('inventory-ops')">
+                    <ion-icon name="settings-outline" class="report-subgroup-icon"></ion-icon>
+                    <span class="report-subgroup-label">Inventory Operations</span>
+                    <ion-icon [name]="openReportGroup === 'inventory-ops' ? 'chevron-up-outline' : 'chevron-down-outline'" class="report-subgroup-chevron"></ion-icon>
+                  </div>
+                  <div class="report-subgroup-content" [class.open]="openReportGroup === 'inventory-ops'">
+                    <ion-item routerLink="/reports/inventory-issues" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="alert-circle-outline" slot="start"></ion-icon>
+                      <ion-label>Inventory Issues</ion-label>
+                    </ion-item>
+                    <ion-item routerLink="/reports/scrap-management" routerLinkActive="active" (click)="onMenuItemClick()">
+                      <ion-icon name="trash-outline" slot="start"></ion-icon>
+                      <ion-label>Scrap Management</ion-label>
+                    </ion-item>
+                  </div>
+                </div>
+              </div>
+            </ion-accordion>
+          </ion-accordion-group>
+        </ng-container>
+
         <!-- ===== USER RIGHTS ===== -->
         <ng-container *ngIf="isDesktop || isAdmin">
           <ion-item *appAcl="'USER_RIGHTS'" routerLink="/user-right" routerLinkActive="active" (click)="onMenuItemClick()">

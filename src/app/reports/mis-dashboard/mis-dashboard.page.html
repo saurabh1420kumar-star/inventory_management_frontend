@@ -1,0 +1,375 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+    <ion-buttons slot="start">
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
+      <span class="text-emerald-500">MIS</span> Dashboard
+    </ion-title>
+    <ion-buttons slot="end">
+      <span class="hidden sm:inline text-[0.65rem] text-slate-400 mr-2">Updated {{ lastUpdated | date:'d MMM, h:mm a' }}</span>
+      <ion-button (click)="refresh()" [disabled]="isLoading" fill="clear">
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-slate-500" [class.animate-spin]="isLoading"></ion-icon>
+      </ion-button>
+    </ion-buttons>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content class="bg-slate-50">
+  <div class="min-h-screen bg-gradient-to-br from-slate-50 via-blue-50/30 to-emerald-50/20 pb-20">
+    <div class="max-w-7xl mx-auto px-3 sm:px-5 py-4 sm:py-6">
+
+      <!-- HERO BANNER -->
+      <div class="bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-600 rounded-2xl shadow-xl overflow-hidden mb-5 relative">
+        <div class="absolute inset-0 opacity-15" style="background-image: radial-gradient(circle at 85% 15%, #ffffff 0%, transparent 45%), radial-gradient(circle at 5% 85%, #a7f3d0 0%, transparent 40%);"></div>
+        <div class="relative px-5 py-5 flex flex-col sm:flex-row sm:items-center sm:justify-between gap-2">
+          <div>
+            <p class="text-emerald-100 text-xs font-semibold uppercase tracking-widest mb-1">Management Information System</p>
+            <h1 class="text-white text-xl sm:text-2xl font-bold tracking-tight leading-tight drop-shadow-sm">MIS Dashboard</h1>
+            <p class="text-emerald-100 text-xs mt-1">Sales · Purchase · Inventory · Receivables — {{ filters.fy }}</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- FILTER BAR -->
+      <div class="bg-white rounded-xl shadow-sm border border-slate-100 p-4 mb-5">
+        <div class="flex items-center gap-2 mb-3">
+          <ion-icon name="options-outline" class="text-emerald-500 text-base"></ion-icon>
+          <h2 class="text-xs font-bold uppercase tracking-wider text-slate-500">Filters</h2>
+        </div>
+        <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-3 items-end">
+          <div>
+            <label for="misDateFrom" class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400 mb-1">From</label>
+            <input id="misDateFrom" type="date" [(ngModel)]="filters.dateFrom" (change)="onFilterChange()"
+                   class="w-full h-9 px-2 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label for="misDateTo" class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400 mb-1">To</label>
+            <input id="misDateTo" type="date" [(ngModel)]="filters.dateTo" (change)="onFilterChange()"
+                   class="w-full h-9 px-2 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent" />
+          </div>
+          <div>
+            <label for="misFy" class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400 mb-1">Financial Year</label>
+            <select id="misFy" [(ngModel)]="filters.fy" (change)="onFyChange()"
+                    class="w-full h-9 px-2 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+              <option *ngFor="let fy of fyOptions" [value]="fy">{{ fy }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="misRegion" class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400 mb-1">Region</label>
+            <select id="misRegion" [(ngModel)]="filters.region" (change)="onFilterChange()"
+                    class="w-full h-9 px-2 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+              <option value="all">All Regions</option>
+              <option *ngFor="let r of regions" [value]="r">{{ r }}</option>
+            </select>
+          </div>
+          <div>
+            <label for="misDistributor" class="block text-[0.65rem] font-semibold uppercase tracking-wide text-slate-400 mb-1">Distributor</label>
+            <select id="misDistributor" [(ngModel)]="filters.distributorId" (change)="onFilterChange()"
+                    class="w-full h-9 px-2 rounded-lg border border-slate-200 text-xs text-slate-700 bg-white focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent">
+              <option value="all">All Distributors</option>
+              <option *ngFor="let d of distributors" [value]="d.id">{{ d.name }}</option>
+            </select>
+          </div>
+          <div>
+            <button (click)="resetFilters()"
+                    class="w-full h-9 px-3 rounded-lg border border-slate-200 text-xs font-semibold text-slate-600 hover:bg-slate-50 transition-colors flex items-center justify-center gap-1">
+              <ion-icon name="refresh-outline" class="text-sm"></ion-icon>
+              Reset
+            </button>
+          </div>
+        </div>
+      </div>
+
+      <!-- LOADING SKELETON -->
+      <div *ngIf="isLoading" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div *ngFor="let i of [1,2,3,4]" class="bg-white rounded-xl h-28 animate-pulse border border-slate-100"></div>
+      </div>
+
+      <!-- KPI STATS CARDS -->
+      <div *ngIf="!isLoading" class="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-5">
+        <div *ngFor="let card of kpiCards"
+             class="bg-white rounded-xl p-4 shadow-sm hover:shadow-md transition-all duration-200 group"
+             [ngClass]="card.borderClass">
+          <div class="flex items-start justify-between mb-3">
+            <div class="w-9 h-9 rounded-lg flex items-center justify-center group-hover:scale-110 transition-transform" [ngClass]="card.iconBg">
+              <ion-icon [name]="card.icon" [ngClass]="card.iconColor" class="text-lg"></ion-icon>
+            </div>
+            <span class="text-[0.65rem] font-bold px-2 py-0.5 rounded-md inline-flex items-center gap-0.5" [ngClass]="changeBadgeClass(card.change)">
+              <ion-icon [name]="card.change >= 0 ? 'caret-up' : 'caret-down'" class="text-[0.65rem]"></ion-icon>
+              {{ formatChange(card.change) }}
+            </span>
+          </div>
+          <p class="text-slate-400 text-[0.65rem] font-bold uppercase tracking-wider mb-0.5">{{ card.label }}</p>
+          <p class="text-xl font-bold text-slate-800 leading-tight">{{ card.value }}</p>
+          <p class="text-slate-400 text-[0.6rem] mt-1">vs last month</p>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 1: Sales vs Target + Top Products -->
+      <div *ngIf="!isLoading" class="grid grid-cols-1 lg:grid-cols-3 gap-4 mb-5">
+
+        <div class="lg:col-span-2 bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+            <div class="w-7 h-7 bg-emerald-50 rounded-lg flex items-center justify-center">
+              <ion-icon name="bar-chart-outline" class="text-emerald-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800">Sales vs Target (MTD)</h2>
+              <p class="text-slate-400 text-[0.6rem]">Weekly target vs actual, month to date</p>
+            </div>
+          </div>
+          <div class="p-3">
+            <apx-chart
+              *ngIf="salesVsTargetOptions"
+              [series]="salesVsTargetOptions.series!"
+              [chart]="salesVsTargetOptions.chart!"
+              [xaxis]="salesVsTargetOptions.xaxis!"
+              [yaxis]="salesVsTargetOptions.yaxis!"
+              [colors]="salesVsTargetOptions.colors!"
+              [dataLabels]="salesVsTargetOptions.dataLabels!"
+              [plotOptions]="salesVsTargetOptions.plotOptions!"
+              [legend]="salesVsTargetOptions.legend!"
+              [grid]="salesVsTargetOptions.grid!"
+              [tooltip]="salesVsTargetOptions.tooltip!"
+            ></apx-chart>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+            <div class="w-7 h-7 bg-blue-50 rounded-lg flex items-center justify-center">
+              <ion-icon name="podium-outline" class="text-blue-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800">Top 5 Products (Sales Value)</h2>
+              <p class="text-slate-400 text-[0.6rem]">Ranked by revenue</p>
+            </div>
+          </div>
+          <div class="p-3">
+            <apx-chart
+              *ngIf="topProductsOptions"
+              [series]="topProductsOptions.series!"
+              [chart]="topProductsOptions.chart!"
+              [xaxis]="topProductsOptions.xaxis!"
+              [yaxis]="topProductsOptions.yaxis!"
+              [colors]="topProductsOptions.colors!"
+              [dataLabels]="topProductsOptions.dataLabels!"
+              [plotOptions]="topProductsOptions.plotOptions!"
+              [legend]="topProductsOptions.legend!"
+              [grid]="topProductsOptions.grid!"
+              [tooltip]="topProductsOptions.tooltip!"
+            ></apx-chart>
+          </div>
+        </div>
+      </div>
+
+      <!-- CHARTS ROW 2: Stock by Category + Receivable Aging -->
+      <div *ngIf="!isLoading" class="grid grid-cols-1 lg:grid-cols-2 gap-4 mb-5">
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+            <div class="w-7 h-7 bg-violet-50 rounded-lg flex items-center justify-center">
+              <ion-icon name="cube-outline" class="text-violet-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800">Stock Value by Category</h2>
+              <p class="text-slate-400 text-[0.6rem]">Current inventory breakdown</p>
+            </div>
+          </div>
+          <div class="p-3">
+            <apx-chart
+              *ngIf="stockCategoryOptions"
+              [series]="stockCategoryOptions.series!"
+              [chart]="stockCategoryOptions.chart!"
+              [xaxis]="stockCategoryOptions.xaxis!"
+              [yaxis]="stockCategoryOptions.yaxis!"
+              [colors]="stockCategoryOptions.colors!"
+              [dataLabels]="stockCategoryOptions.dataLabels!"
+              [plotOptions]="stockCategoryOptions.plotOptions!"
+              [legend]="stockCategoryOptions.legend!"
+              [grid]="stockCategoryOptions.grid!"
+              [tooltip]="stockCategoryOptions.tooltip!"
+            ></apx-chart>
+          </div>
+        </div>
+
+        <div class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+          <div class="px-4 py-3 border-b border-slate-100 flex items-center gap-2">
+            <div class="w-7 h-7 bg-amber-50 rounded-lg flex items-center justify-center">
+              <ion-icon name="wallet-outline" class="text-amber-500 text-sm"></ion-icon>
+            </div>
+            <div>
+              <h2 class="text-sm font-bold text-slate-800">Outstanding Receivable Aging</h2>
+              <p class="text-slate-400 text-[0.6rem]">By days outstanding</p>
+            </div>
+          </div>
+          <div class="p-3">
+            <apx-chart
+              *ngIf="agingOptions"
+              [series]="agingOptions.series!"
+              [chart]="agingOptions.chart!"
+              [labels]="agingOptions.labels!"
+              [colors]="agingOptions.colors!"
+              [legend]="agingOptions.legend!"
+              [plotOptions]="agingOptions.plotOptions!"
+              [dataLabels]="agingOptions.dataLabels!"
+              [responsive]="agingOptions.responsive!"
+              [tooltip]="agingOptions.tooltip!"
+            ></apx-chart>
+          </div>
+        </div>
+      </div>
+
+      <!-- DRILL-DOWN TABLES -->
+      <div *ngIf="!isLoading" class="bg-white rounded-xl shadow-sm border border-slate-100 overflow-hidden">
+        <div class="px-4 py-3 border-b border-slate-100 flex flex-wrap items-center justify-between gap-3">
+          <div class="flex items-center gap-1 bg-slate-50 border border-slate-200 rounded-lg p-0.5">
+            <button (click)="switchTab('products')"
+                    class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors"
+                    [class.bg-white]="activeTab === 'products'" [class.shadow-sm]="activeTab === 'products'"
+                    [class.text-emerald-600]="activeTab === 'products'" [class.text-slate-500]="activeTab !== 'products'">Top Products</button>
+            <button (click)="switchTab('region')"
+                    class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors"
+                    [class.bg-white]="activeTab === 'region'" [class.shadow-sm]="activeTab === 'region'"
+                    [class.text-emerald-600]="activeTab === 'region'" [class.text-slate-500]="activeTab !== 'region'">Region-wise</button>
+            <button (click)="switchTab('receivables')"
+                    class="px-3 py-1.5 rounded-md text-xs font-semibold transition-colors"
+                    [class.bg-white]="activeTab === 'receivables'" [class.shadow-sm]="activeTab === 'receivables'"
+                    [class.text-emerald-600]="activeTab === 'receivables'" [class.text-slate-500]="activeTab !== 'receivables'">Outstanding by Distributor</button>
+          </div>
+
+          <div class="flex items-center gap-2">
+            <div class="relative">
+              <ion-icon name="search-outline" class="absolute left-2.5 top-1/2 -translate-y-1/2 text-slate-400 text-sm"></ion-icon>
+              <input type="text" [(ngModel)]="tableSearch" placeholder="Search..." aria-label="Search table"
+                     class="h-8 pl-8 pr-3 rounded-lg border border-slate-200 text-xs text-slate-700 focus:outline-none focus:ring-2 focus:ring-emerald-400 focus:border-transparent w-32 sm:w-44" />
+            </div>
+            <button (click)="exportExcel()"
+                    class="h-8 px-3 flex items-center gap-1.5 rounded-lg border border-emerald-200 text-emerald-600 text-xs font-semibold whitespace-nowrap hover:bg-emerald-50 transition-colors">
+              <ion-icon name="grid-outline" class="text-sm"></ion-icon> Export Excel
+            </button>
+            <button (click)="exportPdf()"
+                    class="h-8 px-3 flex items-center gap-1.5 rounded-lg border border-rose-200 text-rose-600 text-xs font-semibold whitespace-nowrap hover:bg-rose-50 transition-colors">
+              <ion-icon name="document-text-outline" class="text-sm"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <!-- TOP PRODUCTS TABLE -->
+        <div *ngIf="activeTab === 'products'" class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">#</th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('products','name')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Product <ion-icon [name]="sortIcon('products','name')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Category</th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('products','unitsSold')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Units Sold <ion-icon [name]="sortIcon('products','unitsSold')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('products','revenue')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Revenue <ion-icon [name]="sortIcon('products','revenue')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('products','share')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Share <ion-icon [name]="sortIcon('products','share')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredProductRows; let i = index" [class.bg-slate-50/50]="i % 2 !== 0" class="border-t border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                <td class="px-4 py-3 text-xs font-semibold text-slate-400">{{ row.rank }}</td>
+                <td class="px-4 py-3 text-xs font-semibold text-slate-700">{{ row.name }}</td>
+                <td class="px-4 py-3 text-xs text-slate-500">{{ row.category }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ row.unitsSold.toLocaleString('en-IN') }}</td>
+                <td class="px-4 py-3 text-xs font-bold text-slate-800 text-right">{{ formatCurrencyFull(row.revenue) }}</td>
+                <td class="px-4 py-3 text-right">
+                  <span class="text-xs font-bold text-emerald-700 bg-emerald-100 px-2 py-0.5 rounded-md">{{ row.share.toFixed(1) }}%</span>
+                </td>
+              </tr>
+              <tr *ngIf="filteredProductRows.length === 0"><td colspan="6" class="px-4 py-8 text-center text-slate-300 text-xs">No matching products</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- REGION-WISE TABLE -->
+        <div *ngIf="activeTab === 'region'" class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','region')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Region <ion-icon [name]="sortIcon('region','region')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','sales')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Sales <ion-icon [name]="sortIcon('region','sales')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','purchase')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Purchase <ion-icon [name]="sortIcon('region','purchase')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','stockValue')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Stock Value <ion-icon [name]="sortIcon('region','stockValue')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','receivable')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Receivable <ion-icon [name]="sortIcon('region','receivable')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('region','orders')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Orders <ion-icon [name]="sortIcon('region','orders')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredRegionRows; let i = index" [class.bg-slate-50/50]="i % 2 !== 0" class="border-t border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                <td class="px-4 py-3 text-xs font-semibold text-slate-700">{{ row.region }}</td>
+                <td class="px-4 py-3 text-xs font-bold text-slate-800 text-right">{{ formatCurrencyFull(row.sales) }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ formatCurrencyFull(row.purchase) }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ formatCurrencyFull(row.stockValue) }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ formatCurrencyFull(row.receivable) }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ row.orders.toLocaleString('en-IN') }}</td>
+              </tr>
+              <tr *ngIf="filteredRegionRows.length === 0"><td colspan="6" class="px-4 py-8 text-center text-slate-300 text-xs">No matching regions</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- OUTSTANDING BY DISTRIBUTOR TABLE -->
+        <div *ngIf="activeTab === 'receivables'" class="overflow-x-auto">
+          <table class="w-full text-sm">
+            <thead>
+              <tr class="bg-slate-50">
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('receivables','distributor')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Distributor <ion-icon [name]="sortIcon('receivables','distributor')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-left text-xs font-bold text-slate-500 uppercase tracking-wider">Region</th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('receivables','invoices')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Invoices <ion-icon [name]="sortIcon('receivables','invoices')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('receivables','outstanding')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Outstanding <ion-icon [name]="sortIcon('receivables','outstanding')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">
+                  <button type="button" (click)="sortBy('receivables','daysOverdue')" class="inline-flex items-center gap-1 hover:text-slate-700 transition-colors">Days Overdue <ion-icon [name]="sortIcon('receivables','daysOverdue')" class="align-middle text-xs"></ion-icon></button>
+                </th>
+                <th class="px-4 py-3 text-right text-xs font-bold text-slate-500 uppercase tracking-wider">Status</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr *ngFor="let row of filteredReceivableRows; let i = index" [class.bg-slate-50/50]="i % 2 !== 0" class="border-t border-slate-100 hover:bg-emerald-50/40 transition-colors">
+                <td class="px-4 py-3 text-xs font-semibold text-slate-700">{{ row.distributor }}</td>
+                <td class="px-4 py-3 text-xs text-slate-500">{{ row.region }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ row.invoices }}</td>
+                <td class="px-4 py-3 text-xs font-bold text-slate-800 text-right">{{ formatCurrencyFull(row.outstanding) }}</td>
+                <td class="px-4 py-3 text-xs text-slate-600 text-right">{{ row.daysOverdue }}</td>
+                <td class="px-4 py-3 text-right">
+                  <span class="text-xs font-bold px-2 py-0.5 rounded-md" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="filteredReceivableRows.length === 0"><td colspan="6" class="px-4 py-8 text-center text-slate-300 text-xs">No matching distributors</td></tr>
+            </tbody>
+          </table>
+        </div>
+      </div>
+
+    </div>
+  </div>
+</ion-content>

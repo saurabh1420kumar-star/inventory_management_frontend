@@ -1,0 +1,203 @@
+<app-report-hero
+  toolbarAccent="Dispatch"
+  toolbarTitle="& Delivery"
+  eyebrow="Logistics"
+  heroTitle="Dispatch &amp; Delivery"
+  subtitle="Vehicle-wise dispatch tracking and proof-of-delivery confirmation"
+  icon="car-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="ddFrom">From Date</label>
+        <input id="ddFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="ddTo">To Date</label>
+        <input id="ddTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-field">
+        <label for="ddVehicle">Vehicle</label>
+        <select id="ddVehicle" [(ngModel)]="filters.vehicle">
+          <option value="all">All Vehicles</option>
+          <option *ngFor="let v of vehicles" [value]="v">{{ v }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="ddRoute">Route</label>
+        <select id="ddRoute" [(ngModel)]="filters.route">
+          <option value="all">All Routes</option>
+          <option *ngFor="let r of routes" [value]="r">{{ r }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="ddStatus">Status</label>
+        <select id="ddStatus" [(ngModel)]="filters.status">
+          <option value="all">All Statuses</option>
+          <option value="Pending">Pending</option>
+          <option value="In-Transit">In-Transit</option>
+          <option value="Delivered">Delivered</option>
+        </select>
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="checkmark-circle-outline"></ion-icon> Apply
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <section class="report-panel">
+      <div class="report-tabs">
+        <button [class.active]="activeType === 'register'" (click)="switchType('register')">Dispatch Register</button>
+        <button [class.active]="activeType === 'status'" (click)="switchType('status')">Delivery Status</button>
+        <button [class.active]="activeType === 'pending'" (click)="switchType('pending')">Pending Dispatch</button>
+        <button [class.active]="activeType === 'vehicle'" (click)="switchType('vehicle')">Vehicle Wise Dispatch</button>
+        <button [class.active]="activeType === 'confirmation'" (click)="switchType('confirmation')">Delivery Confirmation</button>
+      </div>
+
+      <div class="report-panel-header">
+        <h2 *ngIf="activeType === 'register'">Dispatch Register</h2>
+        <h2 *ngIf="activeType === 'status'">Delivery Status</h2>
+        <h2 *ngIf="activeType === 'pending'">Pending Dispatch</h2>
+        <h2 *ngIf="activeType === 'vehicle'">Vehicle Wise Dispatch</h2>
+        <h2 *ngIf="activeType === 'confirmation'">Delivery Confirmation</h2>
+        <div class="report-filter-actions">
+          <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+            <ion-icon name="grid-outline"></ion-icon> Export Excel
+          </button>
+          <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+            <ion-icon name="document-text-outline"></ion-icon> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+      <ng-container *ngIf="!isLoading">
+        <!-- DISPATCH REGISTER -->
+        <div *ngIf="activeType === 'register'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Challan No</th><th>Dispatch Date</th><th>Vehicle No</th><th>Customer</th><th>Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedDispatchRows">
+                <td>{{ row.challanNo }}</td>
+                <td>{{ formatDisplayDate(row.dispatchDate) }}</td>
+                <td>{{ row.vehicleNo }}</td>
+                <td>{{ row.customer }}</td>
+                <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
+              </tr>
+              <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="5" class="report-empty">No dispatches found for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DELIVERY STATUS -->
+        <div *ngIf="activeType === 'status'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Challan No</th><th>Customer</th><th>Route</th><th>Dispatch Date</th><th>Workflow</th><th>Expected Delivery</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedDispatchRows">
+                <td>{{ row.challanNo }}</td>
+                <td>{{ row.customer }}</td>
+                <td>{{ row.route }}</td>
+                <td>{{ formatDisplayDate(row.dispatchDate) }}</td>
+                <td>
+                  <div class="report-workflow">
+                    <ng-container *ngFor="let stage of stages; let i = index">
+                      <span class="report-workflow-step"
+                            [class.done]="i < stageIndex(row.status)"
+                            [class.current]="i === stageIndex(row.status)"
+                            [title]="stage"></span>
+                      <span *ngIf="i < stages.length - 1" class="report-workflow-line" [class.done]="i < stageIndex(row.status)"></span>
+                    </ng-container>
+                  </div>
+                </td>
+                <td>{{ formatDisplayDate(row.expectedDelivery) }}</td>
+              </tr>
+              <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="6" class="report-empty">No dispatches found for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- PENDING DISPATCH -->
+        <div *ngIf="activeType === 'pending'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Challan No</th><th>Customer</th><th>Items</th><th>Amount</th><th>Ready Since</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedPendingRows">
+                <td>{{ row.challanNo }}</td>
+                <td>{{ row.customer }}</td>
+                <td>{{ row.items }}</td>
+                <td>{{ formatCurrencyFull(row.amount) }}</td>
+                <td>
+                  <span class="report-badge" [ngClass]="daysReady(row.dispatchDate) > 2 ? 'report-badge-red' : 'report-badge-amber'">{{ daysReady(row.dispatchDate) }} days</span>
+                </td>
+              </tr>
+              <tr *ngIf="pagedPendingRows.length === 0"><td colspan="5" class="report-empty">Nothing pending dispatch</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- VEHICLE WISE DISPATCH -->
+        <div *ngIf="activeType === 'vehicle'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Vehicle No</th><th>Driver</th><th>Route</th><th>Trips</th><th>Total Deliveries</th><th>On-Time %</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedVehicleRows">
+                <td>{{ row.vehicleNo }}</td>
+                <td>{{ row.driver }}</td>
+                <td>{{ row.route }}</td>
+                <td>{{ row.trips }}</td>
+                <td>{{ row.totalDeliveries }}</td>
+                <td>
+                  <span class="report-badge" [ngClass]="row.onTimePct >= 90 ? 'report-badge-green' : 'report-badge-amber'">{{ row.onTimePct }}%</span>
+                </td>
+              </tr>
+              <tr *ngIf="pagedVehicleRows.length === 0"><td colspan="6" class="report-empty">No vehicle activity found for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <!-- DELIVERY CONFIRMATION -->
+        <div *ngIf="activeType === 'confirmation'" class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Challan No</th><th>Customer</th><th>Delivered Date</th><th>Received By</th><th>POD Status</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedDeliveredRows">
+                <td>{{ row.challanNo }}</td>
+                <td>{{ row.customer }}</td>
+                <td>{{ formatDisplayDate(row.deliveredDate!) }}</td>
+                <td>{{ row.receivedBy }}</td>
+                <td>
+                  <span class="report-badge" [ngClass]="row.podConfirmed ? 'report-badge-green' : 'report-badge-amber'">{{ row.podConfirmed ? 'Confirmed' : 'Pending' }}</span>
+                </td>
+              </tr>
+              <tr *ngIf="pagedDeliveredRows.length === 0"><td colspan="5" class="report-empty">No confirmed deliveries in this range</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="report-table-footer">
+          <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+          <div class="report-pagination">
+            <button (click)="prevPage()" [disabled]="pager.page === 1">
+              <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+              <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+</app-report-hero>

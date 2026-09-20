@@ -1,0 +1,475 @@
+// Shared layout for data-driven report pages (filters + report-type rail + grid)
+.report-workspace {
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.report-workspace-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-bottom: 18px;
+
+  h1 {
+    font-size: 22px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ion-text-color, #111827);
+  }
+}
+
+.report-filters {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 14px;
+  align-items: flex-end;
+  padding: 16px;
+  border-radius: 14px;
+  background: var(--ion-card-background, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  margin-bottom: 18px;
+}
+
+.report-filter-field {
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+  min-width: 150px;
+  flex: 1 1 150px;
+
+  label {
+    font-size: 11px;
+    font-weight: 600;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    color: var(--ion-color-medium, #6b7280);
+  }
+
+  select,
+  input[type="date"] {
+    height: 38px;
+    padding: 0 10px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: var(--ion-background-color, #fff);
+    color: var(--ion-text-color, #111827);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease;
+
+    &:focus {
+      border-color: var(--ion-color-primary, #10b981);
+    }
+  }
+}
+
+.report-filter-actions {
+  display: flex;
+  gap: 10px;
+  flex: 0 0 auto;
+}
+
+.report-btn {
+  height: 38px;
+  padding: 0 18px;
+  border-radius: 8px;
+  border: none;
+  font-size: 13px;
+  font-weight: 600;
+  cursor: pointer;
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  transition: filter 0.15s ease, transform 0.1s ease;
+
+  &:active { transform: translateY(1px); }
+
+  ion-icon { font-size: 16px; }
+}
+
+.report-btn-primary {
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  color: #fff;
+
+  &:hover { filter: brightness(1.05); }
+}
+
+.report-btn-outline {
+  background: transparent;
+  border: 1px solid rgba(0, 0, 0, 0.14);
+  color: var(--ion-text-color, #111827);
+
+  &:hover { background: rgba(0, 0, 0, 0.04); }
+}
+
+.report-btn-excel {
+  color: #15803d;
+  border-color: rgba(21, 128, 61, 0.35);
+  &:hover { background: rgba(21, 128, 61, 0.08); }
+}
+
+.report-btn-pdf {
+  color: #b91c1c;
+  border-color: rgba(185, 28, 28, 0.35);
+  &:hover { background: rgba(185, 28, 28, 0.08); }
+}
+
+.report-body {
+  display: flex;
+  gap: 18px;
+  align-items: flex-start;
+}
+
+.report-type-rail {
+  flex: 0 0 220px;
+  border-radius: 14px;
+  background: var(--ion-card-background, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: hidden;
+
+  .report-type-rail-title {
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--ion-color-medium, #6b7280);
+    padding: 12px 14px 8px;
+  }
+
+  button {
+    display: block;
+    width: 100%;
+    text-align: left;
+    background: transparent;
+    border: none;
+    border-left: 3px solid transparent;
+    padding: 10px 14px;
+    font-size: 13px;
+    color: var(--ion-text-color, #111827);
+    cursor: pointer;
+    transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
+
+    &:hover {
+      background: rgba(16, 185, 129, 0.06);
+    }
+
+    &.active {
+      background: rgba(16, 185, 129, 0.1);
+      border-left-color: #10b981;
+      color: #059669;
+      font-weight: 700;
+    }
+  }
+}
+
+.report-panel {
+  flex: 1;
+  min-width: 0;
+  border-radius: 14px;
+  background: var(--ion-card-background, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  padding: 16px;
+}
+
+.report-panel-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin-bottom: 14px;
+
+  h2 {
+    font-size: 15px;
+    font-weight: 700;
+    margin: 0;
+    color: var(--ion-text-color, #111827);
+  }
+}
+
+.report-table-scroll {
+  overflow-x: auto;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+table.report-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 13px;
+  min-width: 640px;
+
+  thead {
+    background: rgba(16, 185, 129, 0.08);
+
+    th {
+      text-align: left;
+      padding: 10px 14px;
+      font-weight: 700;
+      font-size: 11px;
+      text-transform: uppercase;
+      letter-spacing: 0.03em;
+      color: #047857;
+      white-space: nowrap;
+    }
+  }
+
+  tbody {
+    tr {
+      border-top: 1px solid rgba(0, 0, 0, 0.06);
+      transition: background-color 0.12s ease;
+
+      &:hover { background: rgba(16, 185, 129, 0.04); }
+    }
+
+    td {
+      padding: 10px 14px;
+      color: var(--ion-text-color, #111827);
+      white-space: nowrap;
+    }
+  }
+}
+
+.report-badge {
+  display: inline-flex;
+  align-items: center;
+  padding: 3px 10px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 700;
+}
+
+.report-badge-green { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.report-badge-amber { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.report-badge-red { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+.report-badge-gray { background: rgba(107, 114, 128, 0.12); color: #4b5563; }
+.report-badge-blue { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+
+.report-table-footer {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-top: 10px;
+  font-size: 12px;
+  color: var(--ion-color-medium, #6b7280);
+}
+
+.report-empty {
+  text-align: center;
+  padding: 40px 20px;
+  color: var(--ion-color-medium, #6b7280);
+  font-size: 13px;
+}
+
+@media (max-width: 860px) {
+  .report-body {
+    flex-direction: column;
+  }
+
+  .report-type-rail {
+    flex: 1 1 auto;
+    width: 100%;
+    display: flex;
+    overflow-x: auto;
+
+    .report-type-rail-title { display: none; }
+
+    button {
+      flex: 0 0 auto;
+      border-left: none;
+      border-bottom: 3px solid transparent;
+      white-space: nowrap;
+
+      &.active {
+        border-bottom-color: #10b981;
+      }
+    }
+  }
+}
+
+// ── Horizontal report-type tabs (pill bar, used instead of the side rail) ─
+.report-tabs {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px;
+  padding: 4px;
+  border-radius: 12px;
+  background: rgba(0, 0, 0, 0.04);
+  margin-bottom: 16px;
+
+  button {
+    padding: 8px 14px;
+    border-radius: 9px;
+    border: none;
+    background: transparent;
+    font-size: 12px;
+    font-weight: 600;
+    color: var(--ion-color-medium, #6b7280);
+    cursor: pointer;
+    white-space: nowrap;
+    transition: background-color 0.15s ease, color 0.15s ease, box-shadow 0.15s ease;
+
+    &:hover { color: var(--ion-text-color, #111827); }
+
+    &.active {
+      background: var(--ion-card-background, #fff);
+      color: #059669;
+      box-shadow: 0 1px 4px rgba(0, 0, 0, 0.08);
+    }
+  }
+}
+
+// ── Stat cards (summary row above a report's table) ──────────────────────
+.report-stats {
+  display: grid;
+  grid-template-columns: repeat(2, 1fr);
+  gap: 12px;
+  margin-bottom: 18px;
+
+  @media (min-width: 640px) {
+    grid-template-columns: repeat(4, 1fr);
+  }
+}
+
+.report-stat-card {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  padding: 14px 16px;
+  border-radius: 14px;
+  background: var(--ion-card-background, #fff);
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+}
+
+.report-stat-icon {
+  width: 40px;
+  height: 40px;
+  border-radius: 10px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+
+  ion-icon { font-size: 18px; }
+}
+
+.report-stat-icon-blue { background: rgba(59, 130, 246, 0.12); color: #1d4ed8; }
+.report-stat-icon-green { background: rgba(16, 185, 129, 0.12); color: #047857; }
+.report-stat-icon-amber { background: rgba(245, 158, 11, 0.14); color: #b45309; }
+.report-stat-icon-violet { background: rgba(139, 92, 246, 0.12); color: #6d28d9; }
+.report-stat-icon-red { background: rgba(239, 68, 68, 0.12); color: #b91c1c; }
+
+.report-stat-label {
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.03em;
+  color: var(--ion-color-medium, #6b7280);
+  margin: 0 0 2px;
+}
+
+.report-stat-value {
+  font-size: 18px;
+  font-weight: 700;
+  color: var(--ion-text-color, #111827);
+  margin: 0;
+}
+
+// ── Pagination ─────────────────────────────────────────────────────────
+.report-pagination {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+
+  button {
+    min-width: 28px;
+    height: 28px;
+    padding: 0 6px;
+    border-radius: 6px;
+    border: 1px solid rgba(0, 0, 0, 0.1);
+    background: var(--ion-background-color, #fff);
+    color: var(--ion-text-color, #111827);
+    font-size: 12px;
+    cursor: pointer;
+    transition: background-color 0.15s ease, color 0.15s ease;
+
+    &:hover:not(:disabled) { background: rgba(16, 185, 129, 0.08); }
+    &:disabled { opacity: 0.4; cursor: not-allowed; }
+
+    &.active {
+      background: #10b981;
+      border-color: #10b981;
+      color: #fff;
+      font-weight: 700;
+    }
+  }
+
+  .report-pagination-ellipsis {
+    padding: 0 4px;
+    color: var(--ion-color-medium, #9ca3af);
+    font-size: 12px;
+  }
+}
+
+// ── Batch lifecycle progress bar ──────────────────────────────────────────
+.report-lifecycle {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  min-width: 120px;
+
+  .report-lifecycle-track {
+    position: relative;
+    flex: 1;
+    height: 6px;
+    border-radius: 999px;
+    background: rgba(0, 0, 0, 0.08);
+    overflow: hidden;
+  }
+
+  .report-lifecycle-fill {
+    height: 100%;
+    border-radius: 999px;
+    transition: width 0.2s ease;
+  }
+
+  .report-lifecycle-label {
+    font-size: 10px;
+    font-weight: 700;
+    white-space: nowrap;
+  }
+}
+
+// ── Order workflow stepper ────────────────────────────────────────────────
+.report-workflow {
+  display: flex;
+  align-items: center;
+  gap: 2px;
+
+  .report-workflow-step {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+
+    &.done { background: #10b981; }
+    &.current { background: #3b82f6; box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.18); }
+    &.cancelled { background: #ef4444; }
+  }
+
+  .report-workflow-line {
+    width: 12px;
+    height: 2px;
+    background: rgba(0, 0, 0, 0.12);
+    flex-shrink: 0;
+
+    &.done { background: #10b981; }
+  }
+}

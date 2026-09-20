@@ -1,0 +1,25 @@
+:host {
+  ion-content {
+    --background: transparent;
+  }
+}
+
+table.w-full {
+  th, td {
+    white-space: nowrap;
+  }
+}
+
+input[type="date"] {
+  color-scheme: light;
+}
+
+::-webkit-scrollbar {
+  height: 6px;
+  width: 6px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(16, 185, 129, 0.25);
+  border-radius: 999px;
+}

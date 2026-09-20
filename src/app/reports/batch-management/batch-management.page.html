@@ -1,0 +1,187 @@
+<app-report-hero
+  toolbarAccent="Batch"
+  toolbarTitle="Management"
+  eyebrow="Production Traceability"
+  heroTitle="Batch Management"
+  subtitle="Lot tracking, production runs and finished-goods batches"
+  icon="cube-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="bmItem">Item</label>
+        <select id="bmItem" [(ngModel)]="filters.item">
+          <option value="all">All Items</option>
+          <option *ngFor="let i of items" [value]="i">{{ i }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="bmBatch">Batch No</label>
+        <select id="bmBatch" [(ngModel)]="filters.batchNo">
+          <option value="all">All Batches</option>
+          <option *ngFor="let b of batchCodes" [value]="b">{{ b }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="bmFrom">From Date</label>
+        <input id="bmFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="bmTo">To Date</label>
+        <input id="bmTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="stats-chart-outline"></ion-icon> View Report
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <aside class="report-type-rail">
+        <p class="report-type-rail-title">Report Type</p>
+        <button [class.active]="activeType === 'lot'" (click)="switchType('lot')">Batch / Lot Tracking</button>
+        <button [class.active]="activeType === 'production'" (click)="switchType('production')">Batch Production</button>
+        <button [class.active]="activeType === 'fg'" (click)="switchType('fg')">FG Batch Report</button>
+      </aside>
+
+      <section class="report-panel">
+        <div class="report-panel-header">
+          <h2 *ngIf="activeType === 'lot'">Batch / Lot Tracking</h2>
+          <h2 *ngIf="activeType === 'production'">Batch Production</h2>
+          <h2 *ngIf="activeType === 'fg'">FG Batch Report</h2>
+          <div class="report-filter-actions">
+            <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+              <ion-icon name="grid-outline"></ion-icon> Export Excel
+            </button>
+            <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+        <ng-container *ngIf="!isLoading">
+          <!-- BATCH / LOT TRACKING -->
+          <div *ngIf="activeType === 'lot'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Batch No</th>
+                  <th>Item Name</th>
+                  <th>Mfg Date</th>
+                  <th>Expiry Date</th>
+                  <th>Opening Qty</th>
+                  <th>Inward</th>
+                  <th>Outward</th>
+                  <th>Closing Qty</th>
+                  <th>Lifecycle</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedLotRows">
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ row.itemName }}</td>
+                  <td>{{ formatDisplayDate(row.mfgDate) }}</td>
+                  <td>{{ formatDisplayDate(row.expiryDate) }}</td>
+                  <td>{{ row.openingQty }}</td>
+                  <td>{{ row.inward }}</td>
+                  <td>{{ row.outward }}</td>
+                  <td>{{ row.closingQty }}</td>
+                  <td>
+                    <div class="report-lifecycle">
+                      <span class="report-lifecycle-track">
+                        <span class="report-lifecycle-fill"
+                              [style.width.%]="row.elapsedPct"
+                              [style.background]="row.lifecycleStatus === 'good' ? '#10b981' : row.lifecycleStatus === 'warning' ? '#f59e0b' : '#ef4444'"></span>
+                      </span>
+                      <span class="report-lifecycle-label"
+                            [style.color]="row.lifecycleStatus === 'good' ? '#047857' : row.lifecycleStatus === 'warning' ? '#b45309' : '#b91c1c'">{{ row.elapsedPct }}%</span>
+                    </div>
+                  </td>
+                </tr>
+                <tr *ngIf="pagedLotRows.length === 0"><td colspan="9" class="report-empty">No batches found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- BATCH PRODUCTION -->
+          <div *ngIf="activeType === 'production'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Batch No</th>
+                  <th>Product</th>
+                  <th>Production Date</th>
+                  <th>Qty Produced</th>
+                  <th>Yield %</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedProductionRows">
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ row.product }}</td>
+                  <td>{{ formatDisplayDate(row.productionDate) }}</td>
+                  <td>{{ row.qtyProduced.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.yieldPct }}%</td>
+                  <td><span class="report-badge" [ngClass]="productionStatusBadgeClass(row.status)">{{ row.status }}</span></td>
+                </tr>
+                <tr *ngIf="pagedProductionRows.length === 0"><td colspan="6" class="report-empty">No production runs found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- FG BATCH REPORT -->
+          <div *ngIf="activeType === 'fg'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Batch No</th>
+                  <th>Finished Good</th>
+                  <th>Mfg Date</th>
+                  <th>Expiry Date</th>
+                  <th>Qty Available</th>
+                  <th>Warehouse</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedFgRows">
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ row.finishedGood }}</td>
+                  <td>{{ formatDisplayDate(row.mfgDate) }}</td>
+                  <td>{{ formatDisplayDate(row.expiryDate) }}</td>
+                  <td>{{ row.qtyAvailable.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.warehouse }}</td>
+                </tr>
+                <tr *ngIf="pagedFgRows.length === 0"><td colspan="6" class="report-empty">No finished-good batches found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-table-footer">
+            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+            <div class="report-pagination">
+              <button (click)="prevPage()" [disabled]="pager.page === 1">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+</app-report-hero>

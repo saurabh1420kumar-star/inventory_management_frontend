@@ -1,0 +1,172 @@
+<app-report-hero
+  toolbarAccent="Production"
+  toolbarTitle="Reports"
+  eyebrow="Manufacturing"
+  heroTitle="Production Reports"
+  subtitle="Output, BOM, material consumption and costing by plant"
+  icon="cog-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="prPlant">Plant</label>
+        <select id="prPlant" [(ngModel)]="filters.plant">
+          <option value="all">All Plants</option>
+          <option *ngFor="let p of plants" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="prProduct">Product</label>
+        <select id="prProduct" [(ngModel)]="filters.product">
+          <option value="all">All Products</option>
+          <option *ngFor="let p of products" [value]="p">{{ p }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="prFrom">From Date</label>
+        <input id="prFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="prTo">To Date</label>
+        <input id="prTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="stats-chart-outline"></ion-icon> View Report
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <aside class="report-type-rail">
+        <p class="report-type-rail-title">Report Type</p>
+        <button [class.active]="activeType === 'production'" (click)="switchType('production')">Production Report</button>
+        <button [class.active]="activeType === 'bom'" (click)="switchType('bom')">BOM Report</button>
+        <button [class.active]="activeType === 'consumption'" (click)="switchType('consumption')">Material Consumption</button>
+        <button [class.active]="activeType === 'cost'" (click)="switchType('cost')">Production Cost Report</button>
+      </aside>
+
+      <section class="report-panel">
+        <div class="report-panel-header">
+          <h2 *ngIf="activeType === 'production'">Daily Production Summary</h2>
+          <h2 *ngIf="activeType === 'bom'">Bill of Materials</h2>
+          <h2 *ngIf="activeType === 'consumption'">Material Consumption</h2>
+          <h2 *ngIf="activeType === 'cost'">Production Cost Report</h2>
+          <div class="report-filter-actions">
+            <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+              <ion-icon name="grid-outline"></ion-icon> Export Excel
+            </button>
+            <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+        <ng-container *ngIf="!isLoading">
+          <!-- PRODUCTION REPORT -->
+          <div *ngIf="activeType === 'production'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Date</th><th>Product</th><th>Batch No</th><th>Quantity Produced</th><th>UOM</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedProductionRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.product }}</td>
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ row.qtyProduced.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.uom }}</td>
+                </tr>
+                <tr *ngIf="pagedProductionRows.length === 0"><td colspan="5" class="report-empty">No production runs found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- BOM REPORT -->
+          <div *ngIf="activeType === 'bom'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Product</th><th>Component</th><th>Qty Required / Unit</th><th>UOM</th><th>Batch No</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedBomRows">
+                  <td>{{ row.product }}</td>
+                  <td>{{ row.component }}</td>
+                  <td>{{ row.qtyPerUnit }}</td>
+                  <td>{{ row.uom }}</td>
+                  <td>{{ row.batchNo }}</td>
+                </tr>
+                <tr *ngIf="pagedBomRows.length === 0"><td colspan="5" class="report-empty">No BOM entries found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- MATERIAL CONSUMPTION -->
+          <div *ngIf="activeType === 'consumption'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Date</th><th>Raw Material</th><th>Batch Consumed</th><th>Qty Consumed</th><th>UOM</th><th>Product</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedConsumptionRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.rawMaterial }}</td>
+                  <td>{{ row.batchConsumed }}</td>
+                  <td>{{ row.qtyConsumed.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.uom }}</td>
+                  <td>{{ row.product }}</td>
+                </tr>
+                <tr *ngIf="pagedConsumptionRows.length === 0"><td colspan="6" class="report-empty">No material consumption found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PRODUCTION COST REPORT -->
+          <div *ngIf="activeType === 'cost'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Date</th><th>Product</th><th>Batch No</th><th>Material Cost</th><th>Labor Cost</th><th>Overhead</th><th>Total Cost</th><th>Cost / Unit</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedCostRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.product }}</td>
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ formatCurrencyFull(row.materialCost) }}</td>
+                  <td>{{ formatCurrencyFull(row.laborCost) }}</td>
+                  <td>{{ formatCurrencyFull(row.overhead) }}</td>
+                  <td>{{ formatCurrencyFull(row.totalCost) }}</td>
+                  <td>{{ formatCurrencyFull(row.costPerUnit) }}</td>
+                </tr>
+                <tr *ngIf="pagedCostRows.length === 0"><td colspan="8" class="report-empty">No cost data found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-table-footer">
+            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+            <div class="report-pagination">
+              <button (click)="prevPage()" [disabled]="pager.page === 1">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+</app-report-hero>

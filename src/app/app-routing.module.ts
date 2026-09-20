@@ -170,6 +170,61 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'reports/mis-dashboard',
+    loadComponent: () => import('./reports/mis-dashboard/mis-dashboard.page').then(m => m.MisDashboardPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/inventory-reports',
+    loadComponent: () => import('./reports/inventory-reports/inventory-reports.page').then(m => m.InventoryReportsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/stock-movement',
+    loadComponent: () => import('./reports/stock-movement/stock-movement.page').then(m => m.StockMovementPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/batch-management',
+    loadComponent: () => import('./reports/batch-management/batch-management.page').then(m => m.BatchManagementPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/production-reports',
+    loadComponent: () => import('./reports/production-reports/production-reports.page').then(m => m.ProductionReportsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/sales-reports',
+    loadComponent: () => import('./reports/sales-reports/sales-reports.page').then(m => m.SalesReportsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/receivables-collections',
+    loadComponent: () => import('./reports/receivables-collections/receivables-collections.page').then(m => m.ReceivablesCollectionsPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/sales-orders',
+    loadComponent: () => import('./reports/sales-orders/sales-orders.page').then(m => m.SalesOrdersReportPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/dispatch-delivery',
+    loadComponent: () => import('./reports/dispatch-delivery/dispatch-delivery.page').then(m => m.DispatchDeliveryReportPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/inventory-issues',
+    loadComponent: () => import('./reports/inventory-issues/inventory-issues.page').then(m => m.InventoryIssuesReportPage),
+    canActivate: [AuthGuard]
+  },
+  {
+    path: 'reports/scrap-management',
+    loadComponent: () => import('./reports/scrap-management/scrap-management.page').then(m => m.ScrapManagementReportPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }

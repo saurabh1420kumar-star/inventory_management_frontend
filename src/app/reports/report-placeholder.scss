@@ -1,0 +1,62 @@
+// Shared visual style for report placeholder pages
+.report-placeholder {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-height: calc(100vh - 120px);
+  padding: 24px;
+}
+
+.report-placeholder-card {
+  width: 100%;
+  max-width: 480px;
+  text-align: center;
+  padding: 48px 32px;
+  border-radius: 20px;
+  background: var(--ion-card-background, #fff);
+  box-shadow: 0 4px 24px rgba(0, 0, 0, 0.06);
+  border: 1px solid rgba(0, 0, 0, 0.05);
+}
+
+.report-placeholder-icon {
+  width: 72px;
+  height: 72px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 20px;
+  background: linear-gradient(135deg, rgba(16, 185, 129, 0.15), rgba(59, 130, 246, 0.15));
+
+  ion-icon {
+    font-size: 34px;
+    color: var(--ion-color-primary, #10b981);
+  }
+}
+
+.report-placeholder-title {
+  font-size: 20px;
+  font-weight: 700;
+  margin: 0 0 8px;
+  color: var(--ion-text-color, #111827);
+}
+
+.report-placeholder-desc {
+  font-size: 14px;
+  color: var(--ion-color-medium, #6b7280);
+  line-height: 1.6;
+  margin: 0 0 20px;
+}
+
+.report-placeholder-badge {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 6px 14px;
+  border-radius: 999px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #b45309;
+  background: rgba(245, 158, 11, 0.12);
+  border: 1px solid rgba(245, 158, 11, 0.3);
+}

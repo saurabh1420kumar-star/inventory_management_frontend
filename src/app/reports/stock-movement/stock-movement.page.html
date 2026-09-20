@@ -1,0 +1,173 @@
+<app-report-hero
+  toolbarAccent="Stock"
+  toolbarTitle="Movement"
+  eyebrow="Inventory Operations"
+  heroTitle="Stock Movement"
+  subtitle="Ledger, supplier inward and material receipts across warehouses"
+  icon="swap-horizontal-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="smItem">Item</label>
+        <select id="smItem" [(ngModel)]="filters.item">
+          <option value="all">All Items</option>
+          <option *ngFor="let i of items" [value]="i">{{ i }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="smWarehouse">Warehouse</label>
+        <select id="smWarehouse" [(ngModel)]="filters.warehouse">
+          <option value="all">All Warehouses</option>
+          <option *ngFor="let w of warehouses" [value]="w">{{ w }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="smFrom">From Date</label>
+        <input id="smFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="smTo">To Date</label>
+        <input id="smTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="stats-chart-outline"></ion-icon> View Report
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <aside class="report-type-rail">
+        <p class="report-type-rail-title">Report Type</p>
+        <button [class.active]="activeType === 'ledger'" (click)="switchType('ledger')">Stock Ledger</button>
+        <button [class.active]="activeType === 'supplier'" (click)="switchType('supplier')">Supplier Wise Inward</button>
+        <button [class.active]="activeType === 'material'" (click)="switchType('material')">Material Inward</button>
+      </aside>
+
+      <section class="report-panel">
+        <div class="report-panel-header">
+          <h2 *ngIf="activeType === 'ledger'">Stock Ledger</h2>
+          <h2 *ngIf="activeType === 'supplier'">Supplier Wise Inward</h2>
+          <h2 *ngIf="activeType === 'material'">Material Inward</h2>
+          <div class="report-filter-actions">
+            <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+              <ion-icon name="grid-outline"></ion-icon> Export Excel
+            </button>
+            <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+        <ng-container *ngIf="!isLoading">
+          <!-- STOCK LEDGER -->
+          <div *ngIf="activeType === 'ledger'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Voucher No</th>
+                  <th>Type</th>
+                  <th>Party / Ref No</th>
+                  <th>Inward Qty</th>
+                  <th>Outward Qty</th>
+                  <th>Balance Qty</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedLedgerRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.voucherNo }}</td>
+                  <td><span class="report-badge" [ngClass]="typeBadgeClass(row.type)">{{ row.type }}</span></td>
+                  <td>{{ row.party }}</td>
+                  <td>{{ row.inwardQty || '—' }}</td>
+                  <td>{{ row.outwardQty || '—' }}</td>
+                  <td>{{ row.balanceQty }}</td>
+                </tr>
+                <tr *ngIf="pagedLedgerRows.length === 0"><td colspan="7" class="report-empty">No stock movement in this range</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- SUPPLIER WISE INWARD -->
+          <div *ngIf="activeType === 'supplier'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Supplier</th>
+                  <th>Receipts</th>
+                  <th>Total Qty Received</th>
+                  <th>Last Receipt</th>
+                  <th>Top Item</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedSupplierRows">
+                  <td>{{ row.supplier }}</td>
+                  <td>{{ row.receipts }}</td>
+                  <td>{{ row.totalQty.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatDisplayDate(row.lastReceipt) }}</td>
+                  <td>{{ row.topItem }}</td>
+                </tr>
+                <tr *ngIf="pagedSupplierRows.length === 0"><td colspan="5" class="report-empty">No supplier receipts in this range</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- MATERIAL INWARD -->
+          <div *ngIf="activeType === 'material'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Item</th>
+                  <th>Batch No</th>
+                  <th>Supplier</th>
+                  <th>Qty Received</th>
+                  <th>Voucher No</th>
+                  <th>Warehouse</th>
+                </tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedMaterialRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.item }}</td>
+                  <td>{{ row.batchNo }}</td>
+                  <td>{{ row.supplier }}</td>
+                  <td>{{ row.qty.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.voucherNo }}</td>
+                  <td>{{ row.warehouse }}</td>
+                </tr>
+                <tr *ngIf="pagedMaterialRows.length === 0"><td colspan="7" class="report-empty">No material inward in this range</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-table-footer">
+            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+            <div class="report-pagination">
+              <button (click)="prevPage()" [disabled]="pager.page === 1">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+</app-report-hero>

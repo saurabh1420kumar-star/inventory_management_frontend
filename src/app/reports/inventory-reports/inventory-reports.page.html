@@ -1,0 +1,139 @@
+<app-report-hero
+  toolbarAccent="Inventory"
+  toolbarTitle="Reports"
+  eyebrow="Inventory Operations"
+  heroTitle="Inventory Reports"
+  subtitle="Stock valuation, category breakdown and reorder alerts"
+  icon="file-tray-stacked-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="irCategory">Category</label>
+        <select id="irCategory" [(ngModel)]="filters.category">
+          <option value="all">All Categories</option>
+          <option *ngFor="let c of categories" [value]="c">{{ c }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="irWarehouse">Warehouse</label>
+        <select id="irWarehouse" [(ngModel)]="filters.warehouse">
+          <option value="all">All Warehouses</option>
+          <option *ngFor="let w of warehouses" [value]="w">{{ w }}</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="irAsOf">As Of Date</label>
+        <input id="irAsOf" type="date" [(ngModel)]="filters.asOfDate" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="stats-chart-outline"></ion-icon> View Report
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <div class="report-body">
+      <aside class="report-type-rail">
+        <p class="report-type-rail-title">Report Type</p>
+        <button [class.active]="activeType === 'summary'" (click)="switchType('summary')">Stock Summary</button>
+        <button [class.active]="activeType === 'category'" (click)="switchType('category')">Category Wise Valuation</button>
+        <button [class.active]="activeType === 'reorder'" (click)="switchType('reorder')">Low Stock / Reorder</button>
+      </aside>
+
+      <section class="report-panel">
+        <div class="report-panel-header">
+          <h2 *ngIf="activeType === 'summary'">Stock Summary</h2>
+          <h2 *ngIf="activeType === 'category'">Category Wise Valuation</h2>
+          <h2 *ngIf="activeType === 'reorder'">Low Stock / Reorder Report</h2>
+          <div class="report-filter-actions">
+            <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+              <ion-icon name="grid-outline"></ion-icon> Export Excel
+            </button>
+            <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+              <ion-icon name="document-text-outline"></ion-icon> Export PDF
+            </button>
+          </div>
+        </div>
+
+        <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+        <ng-container *ngIf="!isLoading">
+          <!-- STOCK SUMMARY -->
+          <div *ngIf="activeType === 'summary'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Item</th><th>Category</th><th>Warehouse</th><th>Qty on Hand</th><th>Unit Value</th><th>Total Value</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedStockRows">
+                  <td>{{ row.item }}</td>
+                  <td>{{ row.category }}</td>
+                  <td>{{ row.warehouse }}</td>
+                  <td>{{ row.qtyOnHand.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatCurrencyFull(row.unitValue) }}</td>
+                  <td>{{ formatCurrencyFull(row.totalValue) }}</td>
+                </tr>
+                <tr *ngIf="pagedStockRows.length === 0"><td colspan="6" class="report-empty">No stock found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- CATEGORY WISE VALUATION -->
+          <div *ngIf="activeType === 'category'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Category</th><th>Items</th><th>Total Qty</th><th>Total Value</th><th>Share</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedCategoryRows">
+                  <td>{{ row.category }}</td>
+                  <td>{{ row.items }}</td>
+                  <td>{{ row.totalQty.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatCurrencyFull(row.totalValue) }}</td>
+                  <td><span class="report-badge report-badge-blue">{{ row.sharePct.toFixed(1) }}%</span></td>
+                </tr>
+                <tr *ngIf="pagedCategoryRows.length === 0"><td colspan="5" class="report-empty">No category data for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- LOW STOCK / REORDER -->
+          <div *ngIf="activeType === 'reorder'" class="report-table-scroll">
+            <table class="report-table">
+              <thead><tr><th>Item</th><th>Category</th><th>Current Qty</th><th>Reorder Level</th><th>Shortfall</th><th>Status</th></tr></thead>
+              <tbody>
+                <tr *ngFor="let row of pagedReorderRows">
+                  <td>{{ row.item }}</td>
+                  <td>{{ row.category }}</td>
+                  <td>{{ row.currentQty.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.reorderLevel.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.shortfall.toLocaleString('en-IN') }}</td>
+                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
+                </tr>
+                <tr *ngIf="pagedReorderRows.length === 0"><td colspan="6" class="report-empty">All items are above their reorder level</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <div class="report-table-footer">
+            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
+            <div class="report-pagination">
+              <button (click)="prevPage()" [disabled]="pager.page === 1">
+                <ion-icon name="chevron-back-outline"></ion-icon>
+              </button>
+              <ng-container *ngFor="let p of pageNumbers">
+                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+              </ng-container>
+              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+                <ion-icon name="chevron-forward-outline"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </ng-container>
+      </section>
+    </div>
+
+</app-report-hero>

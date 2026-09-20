@@ -1,0 +1,108 @@
+<app-report-hero
+  toolbarAccent="Inventory"
+  toolbarTitle="Issues"
+  eyebrow="Inventory Operations"
+  heroTitle="Inventory Issues"
+  subtitle="Promotional and spare-parts issue history by employee, dealer or distributor"
+  icon="archive-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="viewReport()">
+
+    <div class="report-filters">
+      <div class="report-filter-field">
+        <label for="iiType">Issue Type</label>
+        <select id="iiType" [(ngModel)]="filters.issueType">
+          <option value="all">All Types</option>
+          <option value="Promotional">Promotional</option>
+          <option value="Spare Parts">Spare Parts</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="iiIssuedTo">Issued To</label>
+        <select id="iiIssuedTo" [(ngModel)]="filters.issuedToType">
+          <option value="all">Employee / Dealer / Distributor</option>
+          <option value="Employee">Employee</option>
+          <option value="Dealer">Dealer</option>
+          <option value="Distributor">Distributor</option>
+        </select>
+      </div>
+      <div class="report-filter-field">
+        <label for="iiFrom">From Date</label>
+        <input id="iiFrom" type="date" [(ngModel)]="filters.dateFrom" />
+      </div>
+      <div class="report-filter-field">
+        <label for="iiTo">To Date</label>
+        <input id="iiTo" type="date" [(ngModel)]="filters.dateTo" />
+      </div>
+      <div class="report-filter-actions">
+        <button class="report-btn report-btn-primary" (click)="viewReport()">
+          <ion-icon name="checkmark-circle-outline"></ion-icon> Apply
+        </button>
+        <button class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Reset
+        </button>
+      </div>
+    </div>
+
+    <section class="report-panel">
+      <div class="report-tabs">
+        <button [class.active]="activeType === 'promotional'" (click)="switchType('promotional')">Promotional Issue</button>
+        <button [class.active]="activeType === 'spareParts'" (click)="switchType('spareParts')">Spare Parts Issue</button>
+        <button [class.active]="activeType === 'history'" (click)="switchType('history')">Issue History</button>
+      </div>
+
+      <div class="report-panel-header">
+        <h2 *ngIf="activeType === 'promotional'">Promotional Issue</h2>
+        <h2 *ngIf="activeType === 'spareParts'">Spare Parts Issue</h2>
+        <h2 *ngIf="activeType === 'history'">Issue History</h2>
+        <div class="report-filter-actions">
+          <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
+            <ion-icon name="grid-outline"></ion-icon> Export Excel
+          </button>
+          <button class="report-btn report-btn-outline report-btn-pdf" (click)="exportPdf()">
+            <ion-icon name="document-text-outline"></ion-icon> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div *ngIf="isLoading" class="report-empty">Loading…</div>
+
+      <ng-container *ngIf="!isLoading">
+        <div class="report-table-scroll">
+          <table class="report-table">
+            <thead><tr><th>Issue No</th><th>Issue Date</th><th>Category</th><th>Issued To</th><th>Item</th><th>Qty</th><th>UOM</th></tr></thead>
+            <tbody>
+              <tr *ngFor="let row of pagedRows">
+                <td>{{ row.issueNo }}</td>
+                <td>{{ formatDisplayDate(row.issueDate) }}</td>
+                <td><span class="report-badge" [ngClass]="categoryBadgeClass(row.category)">{{ row.category }}</span></td>
+                <td>{{ row.issuedToType }} - {{ row.issuedToName }}</td>
+                <td>{{ row.item }}</td>
+                <td>{{ row.qty }}</td>
+                <td>{{ row.uom }}</td>
+              </tr>
+              <tr *ngIf="pagedRows.length === 0"><td colspan="7" class="report-empty">No issues found for these filters</td></tr>
+            </tbody>
+          </table>
+        </div>
+
+        <div class="report-table-footer">
+          <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRows.length }} items</span>
+          <div class="report-pagination">
+            <button (click)="prevPage()" [disabled]="pager.page === 1">
+              <ion-icon name="chevron-back-outline"></ion-icon>
+            </button>
+            <ng-container *ngFor="let p of pageNumbers">
+              <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+              <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+            </ng-container>
+            <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
+              <ion-icon name="chevron-forward-outline"></ion-icon>
+            </button>
+          </div>
+        </div>
+      </ng-container>
+    </section>
+
+</app-report-hero>
