@@ -13,16 +13,13 @@ import {
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
 
-type ReportType = 'register' | 'status' | 'pending' | 'vehicle' | 'confirmation';
+type ReportType = 'register' | 'pending' | 'confirmation';
 type DispatchStatus = 'Pending' | 'In-Transit' | 'Delivered';
 type StatusFilter = 'all' | DispatchStatus;
-
-const STAGES: DispatchStatus[] = ['Pending', 'In-Transit', 'Delivered'];
 
 interface Filters {
   dateFrom: string;
   dateTo: string;
-  vehicle: string;
   route: string;
   status: StatusFilter;
 }
@@ -43,15 +40,6 @@ interface DispatchRow {
   podConfirmed: boolean;
 }
 
-interface VehicleRow {
-  vehicleNo: string;
-  driver: string;
-  route: string;
-  trips: number;
-  totalDeliveries: number;
-  onTimePct: number;
-}
-
 @Component({
   selector: 'app-dispatch-delivery',
   templateUrl: './dispatch-delivery.page.html',
@@ -65,8 +53,6 @@ export class DispatchDeliveryReportPage implements OnInit {
   private toast = inject(Toast);
   private haptic = inject(HapticService);
 
-  stages = STAGES;
-  vehicles = VEHICLES;
   routes = ROUTES;
 
   filters: Filters = this.buildDefaultFilters();
@@ -76,7 +62,6 @@ export class DispatchDeliveryReportPage implements OnInit {
   pager: Pager = { page: 1, pageSize: 5 };
 
   dispatchRows: DispatchRow[] = [];
-  vehicleRows: VehicleRow[] = [];
 
   ngOnInit() {
     this.viewReport();
@@ -86,7 +71,7 @@ export class DispatchDeliveryReportPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 14);
-    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), vehicle: 'all', route: 'all', status: 'all' };
+    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), route: 'all', status: 'all' };
   }
 
   resetFilters() {
@@ -99,7 +84,6 @@ export class DispatchDeliveryReportPage implements OnInit {
     this.isLoading = true;
     setTimeout(() => {
       this.buildDispatchRows();
-      this.buildVehicleRows();
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
@@ -114,7 +98,6 @@ export class DispatchDeliveryReportPage implements OnInit {
 
   private buildDispatchRows() {
     const rng = seededRandom('dispatch|' + JSON.stringify(this.filters));
-    const vehiclePool = this.filters.vehicle === 'all' ? this.vehicles : [this.filters.vehicle];
     const routePool = this.filters.route === 'all' ? this.routes : [this.filters.route];
     const start = new Date(this.filters.dateFrom).getTime();
     const end = new Date(this.filters.dateTo).getTime();
@@ -132,7 +115,7 @@ export class DispatchDeliveryReportPage implements OnInit {
       rows.push({
         challanNo: `CH-${date.getFullYear().toString().slice(2)}${String(date.getMonth() + 1).padStart(2, '0')}${String(date.getDate()).padStart(2, '0')}-${String(counter++).padStart(3, '0')}`,
         dispatchDate: date.toISOString().slice(0, 10),
-        vehicleNo: pick(rng, vehiclePool),
+        vehicleNo: pick(rng, VEHICLES),
         driver: pick(rng, DRIVERS),
         route: pick(rng, routePool),
         customer: pick(rng, DEALERS),
@@ -150,31 +133,11 @@ export class DispatchDeliveryReportPage implements OnInit {
     this.dispatchRows = filtered.sort((a, b) => b.dispatchDate.localeCompare(a.dispatchDate));
   }
 
-  private buildVehicleRows() {
-    const rng = seededRandom('vehicles|' + JSON.stringify(this.filters));
-    const vehiclePool = this.filters.vehicle === 'all' ? this.vehicles : [this.filters.vehicle];
-    this.vehicleRows = vehiclePool.map(vehicleNo => {
-      const rows = this.dispatchRows.filter(r => r.vehicleNo === vehicleNo);
-      return {
-        vehicleNo,
-        driver: rows[0]?.driver ?? pick(rng, DRIVERS),
-        route: rows[0]?.route ?? pick(rng, this.routes),
-        trips: rows.length,
-        totalDeliveries: rows.filter(r => r.status === 'Delivered').length,
-        onTimePct: Math.round(78 + rng() * 20),
-      };
-    }).sort((a, b) => b.trips - a.trips);
-  }
-
   get pendingRows(): DispatchRow[] { return this.dispatchRows.filter(r => r.status === 'Pending'); }
   get deliveredRows(): DispatchRow[] { return this.dispatchRows.filter(r => r.status === 'Delivered'); }
 
   daysReady(dateStr: string): number {
     return daysBetween(new Date(dateStr), new Date());
-  }
-
-  stageIndex(status: DispatchStatus): number {
-    return STAGES.indexOf(status);
   }
 
   statusBadgeClass(status: DispatchStatus): string {
@@ -186,14 +149,12 @@ export class DispatchDeliveryReportPage implements OnInit {
   get activeRowCount(): number {
     if (this.activeType === 'pending') return this.pendingRows.length;
     if (this.activeType === 'confirmation') return this.deliveredRows.length;
-    if (this.activeType === 'vehicle') return this.vehicleRows.length;
     return this.dispatchRows.length;
   }
 
   get pagedDispatchRows(): DispatchRow[] { return paginate(this.dispatchRows, this.pager); }
   get pagedPendingRows(): DispatchRow[] { return paginate(this.pendingRows, this.pager); }
   get pagedDeliveredRows(): DispatchRow[] { return paginate(this.deliveredRows, this.pager); }
-  get pagedVehicleRows(): VehicleRow[] { return paginate(this.vehicleRows, this.pager); }
 
   get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
   get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
@@ -207,23 +168,11 @@ export class DispatchDeliveryReportPage implements OnInit {
   formatCurrencyFull = formatCurrencyFull;
 
   private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
-    if (this.activeType === 'status') {
-      const headers = ['Challan No', 'Customer', 'Route', 'Dispatch Date', 'Status', 'Expected Delivery'];
-      const rows = this.dispatchRows.map(r => [r.challanNo, r.customer, r.route, formatDisplayDate(r.dispatchDate), r.status, formatDisplayDate(r.expectedDelivery)]);
-      const jsonRows = this.dispatchRows.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, Route: r.route, 'Dispatch Date': r.dispatchDate, Status: r.status, 'Expected Delivery': r.expectedDelivery }));
-      return { headers, rows, jsonRows, title: 'Delivery Status' };
-    }
     if (this.activeType === 'pending') {
       const headers = ['Challan No', 'Customer', 'Items', 'Amount', 'Ready Since (days)'];
       const rows = this.pendingRows.map(r => [r.challanNo, r.customer, r.items, formatCurrencyFull(r.amount), this.daysReady(r.dispatchDate)]);
       const jsonRows = this.pendingRows.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, Items: r.items, Amount: r.amount, 'Ready Since (days)': this.daysReady(r.dispatchDate) }));
       return { headers, rows, jsonRows, title: 'Pending Dispatch' };
-    }
-    if (this.activeType === 'vehicle') {
-      const headers = ['Vehicle No', 'Driver', 'Route', 'Trips', 'Total Deliveries', 'On-Time %'];
-      const rows = this.vehicleRows.map(r => [r.vehicleNo, r.driver, r.route, r.trips, r.totalDeliveries, r.onTimePct + '%']);
-      const jsonRows = this.vehicleRows.map(r => ({ 'Vehicle No': r.vehicleNo, Driver: r.driver, Route: r.route, Trips: r.trips, 'Total Deliveries': r.totalDeliveries, 'On-Time %': r.onTimePct }));
-      return { headers, rows, jsonRows, title: 'Vehicle Wise Dispatch' };
     }
     if (this.activeType === 'confirmation') {
       const headers = ['Challan No', 'Customer', 'Delivered Date', 'Received By', 'POD Status'];

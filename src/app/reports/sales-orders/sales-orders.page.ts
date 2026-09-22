@@ -15,11 +15,10 @@ import {
 } from '../report-shared';
 
 type ReportType = 'all' | 'pending' | 'dispatch';
-type OrderStatus = 'Pending' | 'Approved' | 'Dispatched' | 'Delivered' | 'Cancelled';
+type OrderStatus = 'Pending' | 'Approved' | 'In Progress' | 'Dispatched' | 'Delivered' | 'Cancelled';
 type StatusFilter = 'all' | OrderStatus;
 
-const STAGES: OrderStatus[] = ['Pending', 'Approved', 'Dispatched', 'Delivered'];
-const KNOWN_STATUSES: OrderStatus[] = ['Pending', 'Approved', 'Dispatched', 'Delivered', 'Cancelled'];
+const KNOWN_STATUSES: OrderStatus[] = ['Pending', 'Approved', 'In Progress', 'Dispatched', 'Delivered', 'Cancelled'];
 
 interface Filters {
   status: StatusFilter;
@@ -35,13 +34,14 @@ interface OrderRow {
   status: OrderStatus;
   items: number;
   amount: number;
-  expectedDelivery: string;
   requestedBy: string;
 }
 
+// Backend statuses are upper-snake-case (e.g. "IN_PROGRESS") — normalize to "In Progress" and
+// match against the known Title Case vocabulary instead of just capitalizing the first letter.
 function normalizeStatus(raw: unknown): OrderStatus {
-  const text = String(raw ?? 'Pending').trim();
-  const titleCase = (text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()) as OrderStatus;
+  const text = String(raw ?? 'Pending').trim().replace(/_/g, ' ');
+  const titleCase = text.toLowerCase().replace(/\b\w/g, (c) => c.toUpperCase()) as OrderStatus;
   return KNOWN_STATUSES.includes(titleCase) ? titleCase : 'Pending';
 }
 
@@ -53,10 +53,9 @@ function mapOrderRow(raw: any): OrderRow {
     orderNo: raw.orderNo ?? raw.orderNumber ?? raw.soNumber ?? '—',
     date: raw.date ?? raw.orderDate ?? raw.createdAt ?? '',
     customer: raw.customer ?? raw.customerName ?? raw.distributorName ?? '—',
-    status: normalizeStatus(raw.status),
+    status: normalizeStatus(raw.currentStatus ?? raw.status),
     items: Number(raw.items ?? raw.itemCount ?? raw.totalItems ?? 0),
     amount: Number(raw.amount ?? raw.totalAmount ?? 0),
-    expectedDelivery: raw.expectedDelivery ?? raw.expectedDeliveryDate ?? '',
     requestedBy: raw.requestedBy ?? raw.salesmanName ?? raw.createdBy ?? '—',
   };
 }
@@ -75,7 +74,6 @@ export class SalesOrdersReportPage implements OnInit {
   private haptic = inject(HapticService);
   private reportsService = inject(ReportsService);
 
-  stages = STAGES;
   customers = DEALERS;
 
   filters: Filters = this.buildDefaultFilters();
@@ -159,14 +157,11 @@ export class SalesOrdersReportPage implements OnInit {
   prevPage() { if (this.pager.page > 1) this.pager.page--; }
   nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
 
-  stageIndex(status: OrderStatus): number {
-    return STAGES.indexOf(status);
-  }
-
   statusBadgeClass(status: OrderStatus): string {
     if (status === 'Delivered') return 'report-badge-green';
     if (status === 'Dispatched') return 'report-badge-blue';
     if (status === 'Approved') return 'report-badge-blue';
+    if (status === 'In Progress') return 'report-badge-blue';
     if (status === 'Cancelled') return 'report-badge-red';
     return 'report-badge-amber';
   }
@@ -187,9 +182,9 @@ export class SalesOrdersReportPage implements OnInit {
       const jsonRows = this.dispatchRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Items: r.items, Amount: r.amount, 'Dispatch Status': this.dispatchStatusLabel(r.status) }));
       return { headers, rows, jsonRows, title: 'Dispatch Queue' };
     }
-    const headers = ['Order No', 'Date', 'Customer', 'Status', 'Items', 'Amount', 'Expected Delivery'];
-    const rows = this.orderRows.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.status, r.items, formatCurrencyFull(r.amount), formatDisplayDate(r.expectedDelivery)]);
-    const jsonRows = this.orderRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Status: r.status, Items: r.items, Amount: r.amount, 'Expected Delivery': r.expectedDelivery }));
+    const headers = ['Order No', 'Date', 'Customer', 'Status', 'Amount'];
+    const rows = this.orderRows.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.status, formatCurrencyFull(r.amount)]);
+    const jsonRows = this.orderRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Status: r.status, Amount: r.amount }));
     return { headers, rows, jsonRows, title: 'Sales Orders' };
   }
 

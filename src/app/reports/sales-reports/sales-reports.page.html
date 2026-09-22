@@ -39,14 +39,14 @@
         <label for="srDistributor">Distributor</label>
         <select id="srDistributor" [(ngModel)]="filters.distributor">
           <option value="all">All Distributors</option>
-          <option *ngFor="let d of distributors" [value]="d">{{ d }}</option>
+          <option *ngFor="let d of distributors" [value]="d.id">{{ d.name }}</option>
         </select>
       </div>
       <div class="report-filter-field">
-        <label for="srSalesman">Salesman</label>
-        <select id="srSalesman" [(ngModel)]="filters.salesman">
-          <option value="all">All Salesmen</option>
-          <option *ngFor="let s of salesmen" [value]="s">{{ s }}</option>
+        <label for="srSalesperson">Salesperson</label>
+        <select id="srSalesperson" [(ngModel)]="filters.salesperson">
+          <option value="all">All Salespersons</option>
+          <option *ngFor="let s of salespersons" [value]="s.id">{{ s.name }}</option>
         </select>
       </div>
       <div class="report-filter-actions">
@@ -98,7 +98,6 @@
         <button [class.active]="activeType === 'product'" (click)="switchType('product')">Product Wise Sales</button>
         <button [class.active]="activeType === 'distributor'" (click)="switchType('distributor')">Distributor Wise Sales</button>
         <button [class.active]="activeType === 'dealer'" (click)="switchType('dealer')">Dealer Wise Sales</button>
-        <button [class.active]="activeType === 'top'" (click)="switchType('top')">Top Selling Products</button>
         <button [class.active]="activeType === 'salesman'" (click)="switchType('salesman')">Salesman Performance</button>
       </aside>
 
@@ -109,7 +108,6 @@
           <h2 *ngIf="activeType === 'product'">Product Wise Sales</h2>
           <h2 *ngIf="activeType === 'distributor'">Distributor Wise Sales</h2>
           <h2 *ngIf="activeType === 'dealer'">Dealer Wise Sales</h2>
-          <h2 *ngIf="activeType === 'top'">Top Selling Products</h2>
           <h2 *ngIf="activeType === 'salesman'">Salesman Performance</h2>
           <div class="report-filter-actions">
             <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
@@ -127,18 +125,16 @@
           <!-- SALES REGISTER -->
           <div *ngIf="activeType === 'register'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Product</th><th>Qty</th><th>Rate</th><th>Amount</th></tr></thead>
+              <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Invoice Status</th><th>Amount</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedInvoiceRows">
                   <td>{{ row.invoiceNo }}</td>
                   <td>{{ formatDisplayDate(row.date) }}</td>
                   <td>{{ row.customer }}</td>
-                  <td>{{ row.product }}</td>
-                  <td>{{ row.qty }}</td>
-                  <td>{{ formatCurrencyFull(row.rate) }}</td>
-                  <td>{{ formatCurrencyFull(row.amount) }}</td>
+                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.invoiceStatus)">{{ row.invoiceStatus }}</span></td>
+                  <td>{{ formatCurrencyFull(row.grandTotal) }}</td>
                 </tr>
-                <tr *ngIf="pagedInvoiceRows.length === 0"><td colspan="7" class="report-empty">No invoices found for these filters</td></tr>
+                <tr *ngIf="pagedInvoiceRows.length === 0"><td colspan="5" class="report-empty">No invoices found for these filters</td></tr>
               </tbody>
             </table>
           </div>
@@ -211,39 +207,18 @@
             </table>
           </div>
 
-          <!-- TOP SELLING PRODUCTS -->
-          <div *ngIf="activeType === 'top'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Rank</th><th>Product</th><th>Qty Sold</th><th>Revenue</th><th>Share</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedTopProductRows">
-                  <td>{{ row.rank }}</td>
-                  <td>{{ row.product }}</td>
-                  <td>{{ row.qtySold.toLocaleString('en-IN') }}</td>
-                  <td>{{ formatCurrencyFull(row.revenue) }}</td>
-                  <td><span class="report-badge report-badge-blue">{{ row.sharePct.toFixed(1) }}%</span></td>
-                </tr>
-                <tr *ngIf="pagedTopProductRows.length === 0"><td colspan="5" class="report-empty">No product sales found for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
-
           <!-- SALESMAN PERFORMANCE -->
           <div *ngIf="activeType === 'salesman'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Salesman</th><th>Region</th><th>Orders</th><th>Qty</th><th>Revenue</th><th>Achievement</th></tr></thead>
+              <thead><tr><th>Salesman</th><th>Orders</th><th>Qty</th><th>Revenue</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedSalesmanRows">
                   <td>{{ row.name }}</td>
-                  <td>{{ row.region }}</td>
                   <td>{{ row.orders }}</td>
                   <td>{{ row.qty.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.revenue) }}</td>
-                  <td>
-                    <span class="report-badge" [ngClass]="row.achievementPct >= 100 ? 'report-badge-green' : row.achievementPct >= 80 ? 'report-badge-amber' : 'report-badge-red'">{{ row.achievementPct }}%</span>
-                  </td>
                 </tr>
-                <tr *ngIf="pagedSalesmanRows.length === 0"><td colspan="6" class="report-empty">No salesman data found for these filters</td></tr>
+                <tr *ngIf="pagedSalesmanRows.length === 0"><td colspan="4" class="report-empty">No salesman data found for these filters</td></tr>
               </tbody>
             </table>
           </div>

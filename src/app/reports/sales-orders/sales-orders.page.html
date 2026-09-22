@@ -75,31 +75,16 @@
           <!-- ALL ORDERS -->
           <div *ngIf="activeType === 'all'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Status</th><th>Workflow</th><th>Items</th><th>Amount</th><th>Expected Delivery</th></tr></thead>
+              <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Status</th><th>Amount</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedOrderRows">
                   <td>{{ row.orderNo }}</td>
                   <td>{{ formatDisplayDate(row.date) }}</td>
                   <td>{{ row.customer }}</td>
                   <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
-                  <td>
-                    <div class="report-workflow">
-                      <ng-container *ngFor="let stage of stages; let i = index">
-                        <span class="report-workflow-step"
-                              [class.done]="row.status !== 'Cancelled' && i < stageIndex(row.status)"
-                              [class.current]="row.status !== 'Cancelled' && i === stageIndex(row.status)"
-                              [class.cancelled]="row.status === 'Cancelled'"
-                              [title]="stage"></span>
-                        <span *ngIf="i < stages.length - 1" class="report-workflow-line"
-                              [class.done]="row.status !== 'Cancelled' && i < stageIndex(row.status)"></span>
-                      </ng-container>
-                    </div>
-                  </td>
-                  <td>{{ row.items }}</td>
                   <td>{{ formatCurrencyFull(row.amount) }}</td>
-                  <td>{{ formatDisplayDate(row.expectedDelivery) }}</td>
                 </tr>
-                <tr *ngIf="pagedOrderRows.length === 0"><td colspan="8" class="report-empty">No orders found for these filters</td></tr>
+                <tr *ngIf="pagedOrderRows.length === 0"><td colspan="5" class="report-empty">No orders found for these filters</td></tr>
               </tbody>
             </table>
           </div>

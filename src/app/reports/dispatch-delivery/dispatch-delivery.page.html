@@ -19,16 +19,9 @@
         <input id="ddTo" type="date" [(ngModel)]="filters.dateTo" />
       </div>
       <div class="report-filter-field">
-        <label for="ddVehicle">Vehicle</label>
-        <select id="ddVehicle" [(ngModel)]="filters.vehicle">
-          <option value="all">All Vehicles</option>
-          <option *ngFor="let v of vehicles" [value]="v">{{ v }}</option>
-        </select>
-      </div>
-      <div class="report-filter-field">
-        <label for="ddRoute">Route</label>
+        <label for="ddRoute">Region</label>
         <select id="ddRoute" [(ngModel)]="filters.route">
-          <option value="all">All Routes</option>
+          <option value="all">All Regions</option>
           <option *ngFor="let r of routes" [value]="r">{{ r }}</option>
         </select>
       </div>
@@ -54,17 +47,13 @@
     <section class="report-panel">
       <div class="report-tabs">
         <button [class.active]="activeType === 'register'" (click)="switchType('register')">Dispatch Register</button>
-        <button [class.active]="activeType === 'status'" (click)="switchType('status')">Delivery Status</button>
         <button [class.active]="activeType === 'pending'" (click)="switchType('pending')">Pending Dispatch</button>
-        <button [class.active]="activeType === 'vehicle'" (click)="switchType('vehicle')">Vehicle Wise Dispatch</button>
         <button [class.active]="activeType === 'confirmation'" (click)="switchType('confirmation')">Delivery Confirmation</button>
       </div>
 
       <div class="report-panel-header">
         <h2 *ngIf="activeType === 'register'">Dispatch Register</h2>
-        <h2 *ngIf="activeType === 'status'">Delivery Status</h2>
         <h2 *ngIf="activeType === 'pending'">Pending Dispatch</h2>
-        <h2 *ngIf="activeType === 'vehicle'">Vehicle Wise Dispatch</h2>
         <h2 *ngIf="activeType === 'confirmation'">Delivery Confirmation</h2>
         <div class="report-filter-actions">
           <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
@@ -96,34 +85,6 @@
           </table>
         </div>
 
-        <!-- DELIVERY STATUS -->
-        <div *ngIf="activeType === 'status'" class="report-table-scroll">
-          <table class="report-table">
-            <thead><tr><th>Challan No</th><th>Customer</th><th>Route</th><th>Dispatch Date</th><th>Workflow</th><th>Expected Delivery</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let row of pagedDispatchRows">
-                <td>{{ row.challanNo }}</td>
-                <td>{{ row.customer }}</td>
-                <td>{{ row.route }}</td>
-                <td>{{ formatDisplayDate(row.dispatchDate) }}</td>
-                <td>
-                  <div class="report-workflow">
-                    <ng-container *ngFor="let stage of stages; let i = index">
-                      <span class="report-workflow-step"
-                            [class.done]="i < stageIndex(row.status)"
-                            [class.current]="i === stageIndex(row.status)"
-                            [title]="stage"></span>
-                      <span *ngIf="i < stages.length - 1" class="report-workflow-line" [class.done]="i < stageIndex(row.status)"></span>
-                    </ng-container>
-                  </div>
-                </td>
-                <td>{{ formatDisplayDate(row.expectedDelivery) }}</td>
-              </tr>
-              <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="6" class="report-empty">No dispatches found for these filters</td></tr>
-            </tbody>
-          </table>
-        </div>
-
         <!-- PENDING DISPATCH -->
         <div *ngIf="activeType === 'pending'" class="report-table-scroll">
           <table class="report-table">
@@ -139,26 +100,6 @@
                 </td>
               </tr>
               <tr *ngIf="pagedPendingRows.length === 0"><td colspan="5" class="report-empty">Nothing pending dispatch</td></tr>
-            </tbody>
-          </table>
-        </div>
-
-        <!-- VEHICLE WISE DISPATCH -->
-        <div *ngIf="activeType === 'vehicle'" class="report-table-scroll">
-          <table class="report-table">
-            <thead><tr><th>Vehicle No</th><th>Driver</th><th>Route</th><th>Trips</th><th>Total Deliveries</th><th>On-Time %</th></tr></thead>
-            <tbody>
-              <tr *ngFor="let row of pagedVehicleRows">
-                <td>{{ row.vehicleNo }}</td>
-                <td>{{ row.driver }}</td>
-                <td>{{ row.route }}</td>
-                <td>{{ row.trips }}</td>
-                <td>{{ row.totalDeliveries }}</td>
-                <td>
-                  <span class="report-badge" [ngClass]="row.onTimePct >= 90 ? 'report-badge-green' : 'report-badge-amber'">{{ row.onTimePct }}%</span>
-                </td>
-              </tr>
-              <tr *ngIf="pagedVehicleRows.length === 0"><td colspan="6" class="report-empty">No vehicle activity found for these filters</td></tr>
             </tbody>
           </table>
         </div>

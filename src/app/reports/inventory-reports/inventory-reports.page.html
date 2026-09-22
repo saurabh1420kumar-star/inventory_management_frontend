@@ -44,6 +44,8 @@
         <button [class.active]="activeType === 'summary'" (click)="switchType('summary')">Stock Summary</button>
         <button [class.active]="activeType === 'category'" (click)="switchType('category')">Category Wise Valuation</button>
         <button [class.active]="activeType === 'reorder'" (click)="switchType('reorder')">Low Stock / Reorder</button>
+        <a routerLink="/reports/inventory-issues" routerLinkActive="active">Inventory Issues</a>
+        <a routerLink="/reports/scrap-management" routerLinkActive="active">Scrap Management</a>
       </aside>
 
       <section class="report-panel">

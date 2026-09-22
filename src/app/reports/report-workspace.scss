@@ -140,7 +140,8 @@
     padding: 12px 14px 8px;
   }
 
-  button {
+  button,
+  a {
     display: block;
     width: 100%;
     text-align: left;
@@ -151,6 +152,8 @@
     font-size: 13px;
     color: var(--ion-text-color, #111827);
     cursor: pointer;
+    text-decoration: none;
+    box-sizing: border-box;
     transition: background-color 0.15s ease, border-color 0.15s ease, color 0.15s ease;
 
     &:hover {
@@ -279,7 +282,8 @@ table.report-table {
 
     .report-type-rail-title { display: none; }
 
-    button {
+    button,
+    a {
       flex: 0 0 auto;
       border-left: none;
       border-bottom: 3px solid transparent;
