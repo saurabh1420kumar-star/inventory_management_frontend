@@ -89,14 +89,12 @@
       <aside class="report-type-rail">
         <p class="report-type-rail-title">Report Type</p>
         <button [class.active]="activeType === 'outstanding'" (click)="switchType('outstanding')">Outstanding Summary</button>
-        <button [class.active]="activeType === 'ageing'" (click)="switchType('ageing')">Ageing Analysis</button>
         <button [class.active]="activeType === 'collections'" (click)="switchType('collections')">Collections</button>
       </aside>
 
       <section class="report-panel">
         <div class="report-panel-header">
           <h2 *ngIf="activeType === 'outstanding'">Outstanding Summary</h2>
-          <h2 *ngIf="activeType === 'ageing'">Ageing Analysis</h2>
           <h2 *ngIf="activeType === 'collections'">Collections</h2>
           <div class="report-filter-actions">
             <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
@@ -125,24 +123,6 @@
                   <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
                 </tr>
                 <tr *ngIf="pagedAgeingRows.length === 0"><td colspan="6" class="report-empty">No outstanding balances match these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <!-- AGEING ANALYSIS -->
-          <div *ngIf="activeType === 'ageing'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Customer</th><th>0-30 Days</th><th>31-60 Days</th><th>61-90 Days</th><th>90+ Days</th><th>Total Outstanding</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedAgeingRows">
-                  <td>{{ row.customer }}</td>
-                  <td>{{ formatCurrencyFull(row.b0_30) }}</td>
-                  <td>{{ formatCurrencyFull(row.b31_60) }}</td>
-                  <td>{{ formatCurrencyFull(row.b61_90) }}</td>
-                  <td>{{ formatCurrencyFull(row.b90plus) }}</td>
-                  <td>{{ formatCurrencyFull(row.outstanding) }}</td>
-                </tr>
-                <tr *ngIf="pagedAgeingRows.length === 0"><td colspan="6" class="report-empty">No ageing data matches these filters</td></tr>
               </tbody>
             </table>
           </div>

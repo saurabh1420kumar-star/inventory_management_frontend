@@ -19,16 +19,6 @@
         <input id="srTo" type="date" [(ngModel)]="filters.dateTo" />
       </div>
       <div class="report-filter-field">
-        <label for="srGroupBy">Group By</label>
-        <select id="srGroupBy" [(ngModel)]="filters.groupBy">
-          <option value="none">Period</option>
-          <option value="product">Product</option>
-          <option value="dealer">Dealer</option>
-          <option value="distributor">Distributor</option>
-          <option value="salesman">Salesman</option>
-        </select>
-      </div>
-      <div class="report-filter-field">
         <label for="srDealer">Dealer</label>
         <select id="srDealer" [(ngModel)]="filters.dealer">
           <option value="all">All Dealers</option>
@@ -104,7 +94,7 @@
       <section class="report-panel">
         <div class="report-panel-header">
           <h2 *ngIf="activeType === 'register'">Sales Register</h2>
-          <h2 *ngIf="activeType === 'summary'">Sales Summary — by {{ summaryLabel }}</h2>
+          <h2 *ngIf="activeType === 'summary'">Sales Summary — by Period</h2>
           <h2 *ngIf="activeType === 'product'">Product Wise Sales</h2>
           <h2 *ngIf="activeType === 'distributor'">Distributor Wise Sales</h2>
           <h2 *ngIf="activeType === 'dealer'">Dealer Wise Sales</h2>
@@ -142,7 +132,7 @@
           <!-- SALES SUMMARY -->
           <div *ngIf="activeType === 'summary'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>{{ summaryLabel }}</th><th>Total Sales</th><th>Total Invoices</th><th>Total Qty</th><th>Avg Invoice Value</th></tr></thead>
+              <thead><tr><th>Period</th><th>Total Sales</th><th>Total Invoices</th><th>Total Qty</th><th>Avg Invoice Value</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedSummaryRows">
                   <td>{{ row.label }}</td>
@@ -210,15 +200,16 @@
           <!-- SALESMAN PERFORMANCE -->
           <div *ngIf="activeType === 'salesman'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Salesman</th><th>Orders</th><th>Qty</th><th>Revenue</th></tr></thead>
+              <thead><tr><th>Salesperson Name</th><th>Order Count</th><th>Total Qty (Kg)</th><th>Total Qty (Tons)</th><th>Total Value</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedSalesmanRows">
-                  <td>{{ row.name }}</td>
-                  <td>{{ row.orders }}</td>
-                  <td>{{ row.qty.toLocaleString('en-IN') }}</td>
-                  <td>{{ formatCurrencyFull(row.revenue) }}</td>
+                  <td>{{ row.salespersonName }}</td>
+                  <td>{{ row.orderCount }}</td>
+                  <td>{{ row.totalQuantityKg.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.totalQuantityTons.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatCurrencyFull(row.totalValue) }}</td>
                 </tr>
-                <tr *ngIf="pagedSalesmanRows.length === 0"><td colspan="4" class="report-empty">No salesman data found for these filters</td></tr>
+                <tr *ngIf="pagedSalesmanRows.length === 0"><td colspan="5" class="report-empty">No salesman data found for these filters</td></tr>
               </tbody>
             </table>
           </div>

@@ -71,16 +71,27 @@
         <!-- DISPATCH REGISTER -->
         <div *ngIf="activeType === 'register'" class="report-table-scroll">
           <table class="report-table">
-            <thead><tr><th>Challan No</th><th>Dispatch Date</th><th>Vehicle No</th><th>Customer</th><th>Status</th></tr></thead>
+            <thead>
+              <tr>
+                <th>GDN No</th><th>GDN Date</th><th>Customer</th><th>Vehicle No</th><th>Driver</th>
+                <th>Transport</th><th>Items</th><th>Packages</th><th>Weight (Kg)</th><th>Shipping Address</th><th>Status</th>
+              </tr>
+            </thead>
             <tbody>
               <tr *ngFor="let row of pagedDispatchRows">
-                <td>{{ row.challanNo }}</td>
-                <td>{{ formatDisplayDate(row.dispatchDate) }}</td>
+                <td>{{ row.gdnNumber }}</td>
+                <td>{{ formatDisplayDate(row.gdnDate) }}</td>
+                <td>{{ row.customerName }}</td>
                 <td>{{ row.vehicleNo }}</td>
-                <td>{{ row.customer }}</td>
+                <td>{{ row.driverName }}<span *ngIf="row.driverMobile"> · {{ row.driverMobile }}</span></td>
+                <td>{{ row.transportName }}</td>
+                <td>{{ row.itemCount }}</td>
+                <td>{{ row.totalPackages }}</td>
+                <td>{{ row.totalWeight.toLocaleString('en-IN') }}</td>
+                <td class="report-address-cell" [title]="row.shippingAddress">{{ row.shippingAddress }}</td>
                 <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
               </tr>
-              <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="5" class="report-empty">No dispatches found for these filters</td></tr>
+              <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="11" class="report-empty">No dispatches found for these filters</td></tr>
             </tbody>
           </table>
         </div>
@@ -88,18 +99,19 @@
         <!-- PENDING DISPATCH -->
         <div *ngIf="activeType === 'pending'" class="report-table-scroll">
           <table class="report-table">
-            <thead><tr><th>Challan No</th><th>Customer</th><th>Items</th><th>Amount</th><th>Ready Since</th></tr></thead>
+            <thead><tr><th>Challan No</th><th>Customer</th><th>Items</th><th>Amount</th><th>GDN Date</th><th>Ready Since</th></tr></thead>
             <tbody>
               <tr *ngFor="let row of pagedPendingRows">
                 <td>{{ row.challanNo }}</td>
                 <td>{{ row.customer }}</td>
                 <td>{{ row.items }}</td>
                 <td>{{ formatCurrencyFull(row.amount) }}</td>
+                <td>{{ formatDisplayDate(row.gdnDate) }}</td>
                 <td>
-                  <span class="report-badge" [ngClass]="daysReady(row.dispatchDate) > 2 ? 'report-badge-red' : 'report-badge-amber'">{{ daysReady(row.dispatchDate) }} days</span>
+                  <span class="report-badge" [ngClass]="row.readySinceDays > 2 ? 'report-badge-red' : 'report-badge-amber'">{{ row.readySinceDays }} days</span>
                 </td>
               </tr>
-              <tr *ngIf="pagedPendingRows.length === 0"><td colspan="5" class="report-empty">Nothing pending dispatch</td></tr>
+              <tr *ngIf="pagedPendingRows.length === 0"><td colspan="6" class="report-empty">Nothing pending dispatch</td></tr>
             </tbody>
           </table>
         </div>
@@ -112,10 +124,10 @@
               <tr *ngFor="let row of pagedDeliveredRows">
                 <td>{{ row.challanNo }}</td>
                 <td>{{ row.customer }}</td>
-                <td>{{ formatDisplayDate(row.deliveredDate!) }}</td>
-                <td>{{ row.receivedBy }}</td>
+                <td>{{ formatDisplayDate(row.deliveredDate) }}</td>
+                <td>{{ row.receivedBy || '—' }}</td>
                 <td>
-                  <span class="report-badge" [ngClass]="row.podConfirmed ? 'report-badge-green' : 'report-badge-amber'">{{ row.podConfirmed ? 'Confirmed' : 'Pending' }}</span>
+                  <span class="report-badge" [ngClass]="row.podStatus === 'Confirmed' ? 'report-badge-green' : 'report-badge-amber'">{{ row.podStatus }}</span>
                 </td>
               </tr>
               <tr *ngIf="pagedDeliveredRows.length === 0"><td colspan="5" class="report-empty">No confirmed deliveries in this range</td></tr>

@@ -14,7 +14,7 @@ import {
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
 
-type ReportType = 'outstanding' | 'ageing' | 'collections';
+type ReportType = 'outstanding' | 'collections';
 type AgeingFilter = 'all' | '0-30' | '31-60' | '61-90' | '90+';
 type StatusFilter = 'all' | 'Healthy' | 'Watch' | 'Overdue';
 type Status = 'Healthy' | 'Watch' | 'Overdue';
@@ -114,8 +114,8 @@ export class ReceivablesCollectionsPage implements OnInit {
     this.isLoading = true;
 
     // Outstanding Receivable (Excel #24) returns empty from the backend today — REPORTS_README.md
-    // Category 2 lists it as missing daysOverdue/status/region/invoiceCount. Both the "outstanding"
-    // and "ageing" tabs (which share this data) stay on mock data until that's fixed.
+    // Category 2 lists it as missing daysOverdue/status/region/invoiceCount. The "outstanding" tab
+    // stays on mock data until that's fixed.
     this.buildAgeingRows();
 
     this.reportsService.getCollectionHistory({
@@ -213,12 +213,6 @@ export class ReceivablesCollectionsPage implements OnInit {
       const rows = this.ageingRows.map(r => [r.customer, r.region, r.invoices, formatCurrencyFull(r.outstanding), r.daysOverdue, r.status]);
       const jsonRows = this.ageingRows.map(r => ({ Customer: r.customer, Region: r.region, Invoices: r.invoices, Outstanding: r.outstanding, 'Days Overdue': r.daysOverdue, Status: r.status }));
       return { headers, rows, jsonRows, title: 'Outstanding Summary' };
-    }
-    if (this.activeType === 'ageing') {
-      const headers = ['Customer', '0-30 Days', '31-60 Days', '61-90 Days', '90+ Days', 'Total Outstanding'];
-      const rows = this.ageingRows.map(r => [r.customer, formatCurrencyFull(r.b0_30), formatCurrencyFull(r.b31_60), formatCurrencyFull(r.b61_90), formatCurrencyFull(r.b90plus), formatCurrencyFull(r.outstanding)]);
-      const jsonRows = this.ageingRows.map(r => ({ Customer: r.customer, '0-30 Days': r.b0_30, '31-60 Days': r.b31_60, '61-90 Days': r.b61_90, '90+ Days': r.b90plus, 'Total Outstanding': r.outstanding }));
-      return { headers, rows, jsonRows, title: 'Ageing Analysis' };
     }
     const headers = ['Date', 'Customer', 'Invoice No', 'Amount Collected', 'Mode', 'Reference No'];
     const rows = this.collectionRows.map(r => [formatDisplayDate(r.date), r.customer, r.invoiceNo, formatCurrencyFull(r.amountCollected), r.mode, r.referenceNo]);

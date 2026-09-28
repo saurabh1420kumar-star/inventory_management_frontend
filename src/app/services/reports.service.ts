@@ -119,6 +119,24 @@ export class ReportsService {
     return this.getList('/sales-orders/salesman-performance', params);
   }
 
+  // ── Dispatch (Register / Pending Dispatch / Delivery Confirmation tabs) ─
+  getDispatchRegister(params: { dateFrom?: string; dateTo?: string; page?: number; size?: number } = {}): Observable<any[]> {
+    return this.getList('/dispatch/register', { page: 0, size: 200, ...params });
+  }
+
+  getDispatchPending(params: { dateFrom?: string; dateTo?: string; page?: number; size?: number } = {}): Observable<any[]> {
+    return this.getList('/dispatch/pending', { page: 0, size: 200, ...params });
+  }
+
+  getDeliveryConfirmation(params: { dateFrom?: string; dateTo?: string; page?: number; size?: number } = {}): Observable<any[]> {
+    return this.getList('/dispatch/delivery-confirmation', { page: 0, size: 200, ...params });
+  }
+
+  // ── MIS Dashboard ────────────────────────────────────────────────────────
+  getMisDashboard(params: { dateFrom?: string; dateTo?: string } = {}): Observable<any> {
+    return this.getObject('/mis/dashboard', params, {});
+  }
+
   // ── Receivables & Collections (Excel #25) ────────────────────────────────
   getCollectionHistory(params: { dateFrom?: string; dateTo?: string; distributorId?: string } = {}): Observable<any[]> {
     return this.getList('/receivables/collection-history', params);

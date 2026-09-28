@@ -19,7 +19,6 @@ import {
 } from '../report-shared';
 
 type ReportType = 'register' | 'summary' | 'product' | 'distributor' | 'dealer' | 'salesman';
-type GroupBy = 'none' | 'product' | 'dealer' | 'distributor' | 'salesman';
 
 interface DropdownOption {
   id: string;
@@ -29,7 +28,6 @@ interface DropdownOption {
 interface Filters {
   dateFrom: string;
   dateTo: string;
-  groupBy: GroupBy;
   dealer: string;
   distributor: string;
   salesperson: string;
@@ -74,8 +72,13 @@ interface PartyRow {
   revenue: number;
 }
 
-interface SalesmanRow extends PartyRow {
-  achievementPct: number;
+// Mirrors the raw /sales-orders/salesman-performance response fields (minus salespersonId).
+interface SalesmanRow {
+  salespersonName: string;
+  totalValue: number;
+  orderCount: number;
+  totalQuantityKg: number;
+  totalQuantityTons: number;
 }
 
 // GET /api/reports/sales/invoice-grid — Excel #19 Sales Register
@@ -95,6 +98,20 @@ function mapInvoiceRow(raw: any): InvoiceRow {
     dealer: raw.dealer ?? raw.dealerName ?? '—',
     distributor: raw.distributor ?? raw.distributorName ?? raw.customer ?? raw.customerName ?? '—',
     salesman: raw.salesman ?? raw.salesmanName ?? raw.salespersonName ?? '—',
+  };
+}
+
+const MONTH_NAMES = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+
+// GET /api/reports/sales/monthly-trend — Excel #20 Sales Summary (Period grouping)
+function mapMonthlyTrendRow(raw: any): SummaryRow {
+  const month = Number(raw.month ?? 0);
+  return {
+    label: `${MONTH_NAMES[month - 1] ?? month} ${raw.year ?? ''}`,
+    totalSales: Number(raw.totalValue ?? 0),
+    totalInvoices: Number(raw.invoiceCount ?? 0),
+    totalQty: Number(raw.totalQty ?? 0),
+    avgInvoiceValue: Number(raw.avgInvoiceValue ?? 0),
   };
 }
 
@@ -130,10 +147,14 @@ function mapPartyRow(raw: any): PartyRow {
 }
 
 // GET /api/reports/sales-orders/salesman-performance — Excel #28
+// Response keys are mapped 1:1 to columns (salespersonId is dropped — it's an id, not a display value).
 function mapSalesmanRow(raw: any): SalesmanRow {
   return {
-    ...mapPartyRow(raw),
-    achievementPct: Number(raw.achievementPct ?? raw.achievementPercent ?? raw.targetAchievementPct ?? 0),
+    salespersonName: raw.salespersonName ?? '—',
+    totalValue: Number(raw.totalValue ?? 0),
+    orderCount: Number(raw.orderCount ?? 0),
+    totalQuantityKg: Number(raw.totalQuantityKg ?? 0),
+    totalQuantityTons: Number(raw.totalQuantityTons ?? 0),
   };
 }
 
@@ -184,7 +205,7 @@ export class SalesReportsPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
-    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), groupBy: 'none', dealer: 'all', distributor: 'all', salesperson: 'all' };
+    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), dealer: 'all', distributor: 'all', salesperson: 'all' };
   }
 
   // Distributor & Salesperson dropdowns are populated from real master data (GET /distributors,
@@ -223,16 +244,17 @@ export class SalesReportsPage implements OnInit {
 
     forkJoin({
       invoices: this.reportsService.getInvoiceGrid({ ...dateParams, dealer: this.filters.dealer, distributor: this.filters.distributor, salesman: this.filters.salesperson }),
+      monthlyTrend: this.reportsService.getMonthlyTrend(dateParams),
       byProduct: this.reportsService.getSalesByProduct(dateParams),
       byDistributor: this.reportsService.getSalesByDistributor({ ...dateParams, distributorId: this.filters.distributor }),
       salesmanPerf: this.reportsService.getSalesmanPerformance(dateParams),
-    }).subscribe(({ invoices, byProduct, byDistributor, salesmanPerf }) => {
+    }).subscribe(({ invoices, monthlyTrend, byProduct, byDistributor, salesmanPerf }) => {
       this.invoiceRows = invoices.map(mapInvoiceRow).sort((a, b) => b.date.localeCompare(a.date));
       this.computeStats();
-      this.buildSummaryRows();
+      this.buildSummaryRows(monthlyTrend);
       this.productRows = mapProductRows(byProduct);
       this.distributorRows = byDistributor.map(mapPartyRow).sort((a, b) => b.revenue - a.revenue);
-      this.salesmanRows = salesmanPerf.map(mapSalesmanRow).sort((a, b) => b.revenue - a.revenue);
+      this.salesmanRows = salesmanPerf.map(mapSalesmanRow).sort((a, b) => b.totalValue - a.totalValue);
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
@@ -243,21 +265,6 @@ export class SalesReportsPage implements OnInit {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  get summaryLabel(): string {
-    const map: Record<GroupBy, string> = { none: 'Period', product: 'Product', dealer: 'Dealer', distributor: 'Distributor', salesman: 'Salesman' };
-    return map[this.filters.groupBy];
-  }
-
-  private groupInvoices(rows: InvoiceRow[], keyFn: (r: InvoiceRow) => string): Map<string, InvoiceRow[]> {
-    const map = new Map<string, InvoiceRow[]>();
-    rows.forEach(r => {
-      const k = keyFn(r);
-      if (!map.has(k)) map.set(k, []);
-      map.get(k)!.push(r);
-    });
-    return map;
   }
 
   private regionFor(name: string): string {
@@ -272,27 +279,12 @@ export class SalesReportsPage implements OnInit {
     this.avgInvoiceValue = this.totalInvoices ? this.totalSales / this.totalInvoices : 0;
   }
 
-  // Sales Summary (Excel #20) is built by grouping the real invoice-grid rows on the selected
-  // dimension client-side, rather than calling /sales/monthly-trend directly — that endpoint only
-  // aggregates by month, while this tab's groupBy selector also supports product/dealer/distributor/salesman.
-  private buildSummaryRows() {
-    const keyFn: Record<GroupBy, (r: InvoiceRow) => string> = {
-      none: r => new Date(r.date).toLocaleDateString('en-US', { month: 'short', year: 'numeric' }),
-      product: r => r.product,
-      dealer: r => r.dealer,
-      distributor: r => r.distributor,
-      salesman: r => r.salesman,
-    };
-    const groups = this.groupInvoices(this.invoiceRows, keyFn[this.filters.groupBy]);
-    const rows: SummaryRow[] = Array.from(groups.entries()).map(([label, grp]) => {
-      const totalSales = grp.reduce((s, r) => s + r.amount, 0);
-      const totalInvoices = grp.length;
-      const totalQty = grp.reduce((s, r) => s + r.qty, 0);
-      return { label, totalSales, totalInvoices, totalQty, avgInvoiceValue: totalInvoices ? totalSales / totalInvoices : 0 };
-    });
-    this.summaryRows = this.filters.groupBy === 'none'
-      ? rows.sort((a, b) => new Date(a.label).getTime() - new Date(b.label).getTime())
-      : rows.sort((a, b) => b.totalSales - a.totalSales);
+  // Sales Summary (Excel #20) maps GET /sales/monthly-trend directly (1 row per month, sorted
+  // chronologically).
+  private buildSummaryRows(monthlyTrend: any[]) {
+    this.summaryRows = [...monthlyTrend]
+      .sort((a, b) => (Number(a.year) * 12 + Number(a.month)) - (Number(b.year) * 12 + Number(b.month)))
+      .map(mapMonthlyTrendRow);
   }
 
   private buildDealerRows() {
@@ -349,9 +341,9 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Sales Register' };
       }
       case 'summary': {
-        const headers = [this.summaryLabel, 'Total Sales', 'Total Invoices', 'Total Qty', 'Avg Invoice Value'];
+        const headers = ['Period', 'Total Sales', 'Total Invoices', 'Total Qty', 'Avg Invoice Value'];
         const rows = this.summaryRows.map(r => [r.label, formatCurrencyFull(r.totalSales), r.totalInvoices, r.totalQty, formatCurrencyFull(r.avgInvoiceValue)]);
-        const jsonRows = this.summaryRows.map(r => ({ [this.summaryLabel]: r.label, 'Total Sales': r.totalSales, 'Total Invoices': r.totalInvoices, 'Total Qty': r.totalQty, 'Avg Invoice Value': Math.round(r.avgInvoiceValue) }));
+        const jsonRows = this.summaryRows.map(r => ({ Period: r.label, 'Total Sales': r.totalSales, 'Total Invoices': r.totalInvoices, 'Total Qty': r.totalQty, 'Avg Invoice Value': Math.round(r.avgInvoiceValue) }));
         return { headers, rows, jsonRows, title: 'Sales Summary' };
       }
       case 'product': {
@@ -373,9 +365,15 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Dealer Wise Sales' };
       }
       default: {
-        const headers = ['Salesman', 'Orders', 'Qty', 'Revenue'];
-        const rows = this.salesmanRows.map(r => [r.name, r.orders, r.qty, formatCurrencyFull(r.revenue)]);
-        const jsonRows = this.salesmanRows.map(r => ({ Salesman: r.name, Orders: r.orders, Qty: r.qty, Revenue: r.revenue }));
+        const headers = ['Salesperson Name', 'Order Count', 'Total Qty (Kg)', 'Total Qty (Tons)', 'Total Value'];
+        const rows = this.salesmanRows.map(r => [r.salespersonName, r.orderCount, r.totalQuantityKg, r.totalQuantityTons, formatCurrencyFull(r.totalValue)]);
+        const jsonRows = this.salesmanRows.map(r => ({
+          'Salesperson Name': r.salespersonName,
+          'Order Count': r.orderCount,
+          'Total Qty (Kg)': r.totalQuantityKg,
+          'Total Qty (Tons)': r.totalQuantityTons,
+          'Total Value': r.totalValue,
+        }));
         return { headers, rows, jsonRows, title: 'Salesman Performance' };
       }
     }
