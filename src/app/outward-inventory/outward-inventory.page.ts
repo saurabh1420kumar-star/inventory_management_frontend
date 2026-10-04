@@ -163,7 +163,7 @@ export class OutwardInventoryPage implements OnInit {
   // Issued-to group detail modal (full item list for a grouped promo card)
   selectedGroup: OutwardIssuedGroup | null = null;
   isGroupDetailOpen = false;
-  /** Number of items shown inline on a grouped card before collapsing into "view all". */
+  /** Number of date rows shown inline on a grouped card before collapsing into "view all". */
   readonly groupPreviewLimit = 2;
 
   // â”€â”€â”€ forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
@@ -470,12 +470,41 @@ export class OutwardInventoryPage implements OnInit {
     this.selectedGroup = null;
   }
 
-  getGroupPreviewItems(g: OutwardIssuedGroup): OutwardRecord[] {
-    return g.items.slice(0, this.groupPreviewLimit);
+  /** Which "issuedTo|date" accordion rows are currently expanded. */
+  private expandedDateKeys = new Set<string>();
+
+  /** Items in a group, bucketed by calendar day (newest day first). */
+  getGroupDates(g: OutwardIssuedGroup): { dateKey: string; items: OutwardRecord[] }[] {
+    const byDate = new Map<string, OutwardRecord[]>();
+    for (const item of g.items) {
+      const key = (item.createdAt || '').slice(0, 10);
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(item);
+    }
+    return Array.from(byDate.entries())
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateKey, items]) => ({ dateKey, items }));
   }
 
-  getGroupRemainingCount(g: OutwardIssuedGroup): number {
-    return Math.max(0, g.items.length - this.groupPreviewLimit);
+  getGroupPreviewDates(g: OutwardIssuedGroup): { dateKey: string; items: OutwardRecord[] }[] {
+    return this.getGroupDates(g).slice(0, this.groupPreviewLimit);
+  }
+
+  getGroupRemainingDateCount(g: OutwardIssuedGroup): number {
+    return Math.max(0, this.getGroupDates(g).length - this.groupPreviewLimit);
+  }
+
+  toggleDateGroup(g: OutwardIssuedGroup, dateKey: string): void {
+    const key = `${g.issuedTo}__${dateKey}`;
+    if (this.expandedDateKeys.has(key)) {
+      this.expandedDateKeys.delete(key);
+    } else {
+      this.expandedDateKeys.add(key);
+    }
+  }
+
+  isDateGroupExpanded(g: OutwardIssuedGroup, dateKey: string): boolean {
+    return this.expandedDateKeys.has(`${g.issuedTo}__${dateKey}`);
   }
 
   setFilter(f: 'all' | ModalItemType | 'raw_material' | 'finished_product'): void {
@@ -666,7 +695,9 @@ export class OutwardInventoryPage implements OnInit {
 
   addPromoOutwardRow(): void {
     this.haptic.light();
-    this.promoOutwardRows.push(this.createEmptyPromoOutwardRow());
+    // New rows go to the front so the one you just added is visible immediately,
+    // without needing to scroll past the earlier ones.
+    this.promoOutwardRows.unshift(this.createEmptyPromoOutwardRow());
   }
 
   removePromoOutwardRow(index: number): void {
