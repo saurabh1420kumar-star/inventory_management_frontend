@@ -72,6 +72,15 @@ interface PromoOutwardRow {
   quotedSellingPrice: number | null;
 }
 
+/** Multiple promotional-item outward records issued to the same person/distributor in one card. */
+interface OutwardIssuedGroup {
+  issuedTo: string;
+  referenceNumber?: string;
+  createdAt: string;
+  comments?: string;
+  items: OutwardRecord[];
+}
+
 @Component({
   selector: 'app-outward-inventory',
   standalone: true,
@@ -150,6 +159,12 @@ export class OutwardInventoryPage implements OnInit {
   // Detail modal
   selectedRecord: any = null;
   isDetailOpen = false;
+
+  // Issued-to group detail modal (full item list for a grouped promo card)
+  selectedGroup: OutwardIssuedGroup | null = null;
+  isGroupDetailOpen = false;
+  /** Number of items shown inline on a grouped card before collapsing into "view all". */
+  readonly groupPreviewLimit = 2;
 
   // â”€â”€â”€ forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   spareOutwardForm!: FormGroup;
@@ -443,6 +458,24 @@ export class OutwardInventoryPage implements OnInit {
   closeDetail(): void {
     this.isDetailOpen = false;
     this.selectedRecord = null;
+  }
+
+  openGroupDetail(g: OutwardIssuedGroup): void {
+    this.selectedGroup = g;
+    this.isGroupDetailOpen = true;
+  }
+
+  closeGroupDetail(): void {
+    this.isGroupDetailOpen = false;
+    this.selectedGroup = null;
+  }
+
+  getGroupPreviewItems(g: OutwardIssuedGroup): OutwardRecord[] {
+    return g.items.slice(0, this.groupPreviewLimit);
+  }
+
+  getGroupRemainingCount(g: OutwardIssuedGroup): number {
+    return Math.max(0, g.items.length - this.groupPreviewLimit);
   }
 
   setFilter(f: 'all' | ModalItemType | 'raw_material' | 'finished_product'): void {
@@ -1352,6 +1385,38 @@ export class OutwardInventoryPage implements OnInit {
   }
 
   trackById(_: number, r: OutwardRecord) { return r.id; }
+
+  /** Records that render as their own card (spare parts, scrap, promo returns — anything without a shared recipient). */
+  get singleCards(): OutwardRecord[] {
+    return this.filteredRecords.filter(r => !this.isGroupableRecord(r));
+  }
+
+  /** Promotional outward-giving records issued to the same person/distributor, collapsed into one card each. */
+  get issuedToGroups(): OutwardIssuedGroup[] {
+    const groups = new Map<string, OutwardIssuedGroup>();
+    const order: string[] = [];
+
+    for (const r of this.filteredRecords) {
+      if (!this.isGroupableRecord(r)) continue;
+
+      let group = groups.get(r.issuedTo!);
+      if (!group) {
+        group = { issuedTo: r.issuedTo!, referenceNumber: r.referenceNumber, createdAt: r.createdAt, comments: r.comments, items: [] };
+        groups.set(r.issuedTo!, group);
+        order.push(r.issuedTo!);
+      }
+      group.items.push(r);
+      if (r.createdAt > group.createdAt) group.createdAt = r.createdAt;
+    }
+
+    return order.map(key => groups.get(key)!);
+  }
+
+  private isGroupableRecord(r: OutwardRecord): boolean {
+    return r.itemType === 'promotional_items' && r.section === 'outward_giving' && !!r.issuedTo;
+  }
+
+  trackByIssuedTo(_: number, g: OutwardIssuedGroup) { return g.issuedTo; }
 }
 
 

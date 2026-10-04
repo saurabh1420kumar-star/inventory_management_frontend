@@ -113,11 +113,74 @@
         </ion-button>
       </div>
 
+      <!-- ── ISSUED-TO GROUPED CARDS (promo items given to the same recipient share one card) ── -->
+      <div *ngIf="!isLoading && issuedToGroups.length > 0"
+        class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
+
+        <div *ngFor="let g of issuedToGroups; trackBy: trackByIssuedTo"
+          class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-violet-500">
+
+          <!-- Header -->
+          <div class="p-3 pb-2.5">
+            <div class="flex items-start gap-2 mb-1.5">
+              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-violet-100">
+                <ion-icon name="person-outline" class="text-sm text-violet-600"></ion-icon>
+              </div>
+              <div class="flex-1 min-w-0">
+                <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ g.issuedTo }}</p>
+                <p *ngIf="g.referenceNumber" class="text-[10px] text-slate-400 font-mono truncate">Ref # {{ g.referenceNumber }}</p>
+              </div>
+              <span class="text-[9px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">
+                {{ g.items.length }} item{{ g.items.length > 1 ? 's' : '' }}
+              </span>
+            </div>
+            <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
+              <ion-icon name="arrow-up-circle-outline" class="text-[10px]"></ion-icon>
+              Outward Giving
+            </span>
+          </div>
+
+          <div class="mx-3 border-t border-slate-100"></div>
+
+          <!-- Items list (capped preview — full list opens in a modal) -->
+          <div class="px-3 py-2 space-y-1.5">
+            <div *ngFor="let item of getGroupPreviewItems(g)" class="flex items-center justify-between gap-2 bg-slate-50 rounded-lg px-2 py-1.5">
+              <div class="min-w-0 flex-1">
+                <p class="text-[11px] font-bold text-slate-700 truncate">{{ item.matName }}</p>
+                <p class="text-[9px] text-slate-400 font-mono truncate">{{ item.matCode }}</p>
+              </div>
+              <p class="text-xs font-extrabold text-slate-800 flex-shrink-0">
+                {{ item.quantity }}<span class="text-[9px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(item.unit) }}</span>
+              </p>
+            </div>
+
+            <button *ngIf="getGroupRemainingCount(g) > 0"
+              class="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg px-2 py-1.5 border-0"
+              (click)="openGroupDetail(g)">
+              <ion-icon name="list-outline" class="text-xs"></ion-icon>
+              +{{ getGroupRemainingCount(g) }} more · View all {{ g.items.length }} items
+            </button>
+          </div>
+
+          <!-- Comments + Timestamp -->
+          <div class="px-3 pb-2.5 space-y-1.5">
+            <div *ngIf="g.comments" class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
+              <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
+              <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ g.comments }}"</p>
+            </div>
+            <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
+              <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
+              <p class="text-[9px] text-slate-300 font-medium">{{ g.createdAt | date:'dd MMM yy · h:mm a' }}</p>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- ── RECORDS GRID ─────────────────────────────────────────── -->
-      <div *ngIf="!isLoading && filteredRecords.length > 0"
+      <div *ngIf="!isLoading && singleCards.length > 0"
         class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
 
-        <div *ngFor="let r of filteredRecords; trackBy: trackById"
+        <div *ngFor="let r of singleCards; trackBy: trackById"
           class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
           (click)="openDetail(r)">
 
@@ -763,6 +826,104 @@
 
       </ng-container>
 
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════════════════════════════
+     ISSUED-TO GROUP DETAIL MODAL (full item list for a grouped card)
+═══════════════════════════════════════════════════════════════ -->
+<div *ngIf="isGroupDetailOpen && selectedGroup"
+     class="fixed inset-0 z-50 flex items-end sm:items-center justify-center"
+     (click)="closeGroupDetail()">
+  <!-- Backdrop -->
+  <div class="absolute inset-0" style="background: rgba(0,0,0,0.6); backdrop-filter: blur(6px);"></div>
+
+  <!-- Sheet -->
+  <div class="relative w-full sm:max-w-lg bg-white sm:rounded-3xl rounded-t-3xl shadow-2xl flex flex-col overflow-hidden"
+       style="max-height: 93vh;"
+       (click)="$event.stopPropagation()">
+
+    <!-- Drag pill -->
+    <div class="sm:hidden flex justify-center pt-2.5 absolute top-0 left-0 right-0 z-10">
+      <div class="w-10 h-1 rounded-full bg-white/30"></div>
+    </div>
+
+    <!-- Header gradient -->
+    <div class="relative overflow-hidden px-5 pt-8 pb-5"
+         style="background: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);">
+      <div class="absolute -top-6 -right-6 w-32 h-32 rounded-full opacity-20" style="background: rgba(255,255,255,0.3);"></div>
+      <div class="absolute -bottom-8 -left-4 w-24 h-24 rounded-full opacity-15" style="background: rgba(255,255,255,0.3);"></div>
+
+      <div class="relative flex items-center justify-between">
+        <div class="flex items-center gap-3.5 min-w-0">
+          <div class="w-14 h-14 rounded-2xl flex items-center justify-center shadow-lg flex-shrink-0"
+               style="background: rgba(255,255,255,0.2); border: 1.5px solid rgba(255,255,255,0.3);">
+            <ion-icon name="person-outline" class="text-3xl text-white"></ion-icon>
+          </div>
+          <div class="min-w-0">
+            <p class="text-white/60 text-[10px] font-bold uppercase tracking-widest mb-0.5">Issued To</p>
+            <h2 class="text-white font-extrabold text-lg leading-tight truncate">{{ selectedGroup.issuedTo }}</h2>
+            <p *ngIf="selectedGroup.referenceNumber" class="text-white/65 text-xs font-mono mt-0.5">Ref # {{ selectedGroup.referenceNumber }}</p>
+          </div>
+        </div>
+        <button (click)="closeGroupDetail()"
+                class="w-9 h-9 rounded-xl flex items-center justify-center border-0 outline-none flex-shrink-0"
+                style="background: rgba(255,255,255,0.2); border: 1px solid rgba(255,255,255,0.3);">
+          <ion-icon name="close-outline" class="text-xl text-white"></ion-icon>
+        </button>
+      </div>
+
+      <div class="relative mt-4 flex items-center gap-2 flex-wrap">
+        <span class="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl text-xs font-bold"
+              style="background: rgba(255,255,255,0.2); color: #fff; border: 1px solid rgba(255,255,255,0.3);">
+          <ion-icon name="arrow-up-circle-outline" class="text-sm"></ion-icon>
+          Outward Giving
+        </span>
+        <span class="inline-flex items-center px-3 py-1.5 rounded-xl text-xs font-bold"
+              style="background: rgba(0,0,0,0.2); color: rgba(255,255,255,0.9);">
+          {{ selectedGroup.items.length }} item{{ selectedGroup.items.length > 1 ? 's' : '' }}
+        </span>
+      </div>
+    </div>
+
+    <!-- Body: full item list -->
+    <div class="flex-1 overflow-y-auto p-5 space-y-2">
+      <div *ngFor="let item of selectedGroup.items"
+           class="flex items-center justify-between gap-2 bg-slate-50 border border-slate-100 rounded-xl px-3 py-2.5">
+        <div class="min-w-0 flex-1">
+          <p class="text-sm font-bold text-slate-700 truncate">{{ item.matName }}</p>
+          <p class="text-[10px] text-slate-400 font-mono truncate">{{ item.matCode }}</p>
+          <p class="text-[9px] text-slate-400 mt-0.5 flex items-center gap-1">
+            <ion-icon name="time-outline" class="text-[10px]"></ion-icon>
+            {{ item.createdAt | date:'dd MMM yy · h:mm a' }}
+          </p>
+        </div>
+        <p class="text-sm font-extrabold text-slate-800 flex-shrink-0">
+          {{ item.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(item.unit) }}</span>
+        </p>
+      </div>
+
+      <!-- Comments -->
+      <div *ngIf="selectedGroup.comments"
+           class="rounded-2xl p-3.5 mt-3"
+           style="background: linear-gradient(135deg, #fffbeb, #fef3c7); border: 1px solid #fde68a;">
+        <div class="flex items-start gap-3">
+          <div class="w-10 h-10 rounded-xl bg-amber-400 flex items-center justify-center flex-shrink-0 shadow-sm">
+            <ion-icon name="chatbubble-ellipses-outline" class="text-base text-white"></ion-icon>
+          </div>
+          <div class="flex-1 min-w-0">
+            <p class="text-[9px] text-amber-600 font-bold uppercase tracking-widest">Comments</p>
+            <p class="text-sm text-amber-900 mt-1 leading-relaxed italic">"{{ selectedGroup.comments }}"</p>
+          </div>
+        </div>
+      </div>
+
+      <!-- Timestamp -->
+      <div class="flex items-center justify-center gap-2 py-2 mt-3 rounded-xl" style="background: rgba(0,0,0,0.03);">
+        <ion-icon name="time-outline" class="text-slate-400 text-sm"></ion-icon>
+        <p class="text-xs text-slate-400 font-medium">Recorded on {{ selectedGroup.createdAt | date:'dd MMM yyyy · h:mm a' }}</p>
+      </div>
     </div>
   </div>
 </div>
