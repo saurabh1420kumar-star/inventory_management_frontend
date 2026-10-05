@@ -1026,6 +1026,49 @@ $radius-lg: 24px;
 }
 
 // ============================================================
+// Pagination
+// ============================================================
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  background: #0a1628;
+  border-radius: $radius;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 20px;
+  box-shadow: $shadow-sm;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: $white;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.page-indicator {
+  font-size: 13px;
+  font-weight: 700;
+  color: $slate-400;
+  min-width: 60px;
+  text-align: center;
+}
+
+// ============================================================
 // Responsive Breakpoints
 // ============================================================
 
@@ -1231,5 +1274,17 @@ ion-header ion-toolbar ion-button {
   .empty-state {
     background: #f8fafc;
     border-color: #e2e8f0;
+  }
+
+  .pagination {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .page-btn {
+    color: $slate-600;
+    background: $slate-100;
+
+    &:hover:not(:disabled) { background: #e2e8f0; color: $slate-800; }
   }
 }
