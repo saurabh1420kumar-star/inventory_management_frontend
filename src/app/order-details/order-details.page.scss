@@ -378,8 +378,6 @@ $radius-lg: 24px;
   white-space: nowrap;
   flex-shrink: 0;
 
-  &[data-status="Completed"] { background: rgba($emerald, 0.15); color: #6ee7b7; }
-  &[data-status="Cancelled"] { background: rgba($red, 0.15); color: #fca5a5; }
   &:not([data-status="Completed"]):not([data-status="Cancelled"]) {
     background: rgba($amber, 0.15); color: #fcd34d;
   }
@@ -506,26 +504,19 @@ $radius-lg: 24px;
 
   ion-icon { font-size: 20px; }
 
-  &[data-status="completed"] {
-    background: rgba($emerald, 0.15);
-    ion-icon { color: $emerald; }
-    box-shadow: 0 2px 8px rgba($emerald, 0.3);
-  }
-  &[data-status="cancelled"] {
-    background: rgba($red, 0.15);
-    ion-icon { color: $red; }
-    box-shadow: 0 2px 8px rgba($red, 0.3);
-  }
-  &[data-status="in-progress"] {
-    background: rgba($blue, 0.15);
-    ion-icon { color: $blue; }
-    animation: pulse-glow 2s infinite;
-  }
-  &[data-status="pending"] {
-    background: rgba(#cbd5e1, 0.1);
-    ion-icon { color: #cbd5e1; }
-  }
+  &[data-status="completed"] { background: rgba($emerald, 0.15); box-shadow: 0 2px 8px rgba($emerald, 0.3); }
+  &[data-status="cancelled"] { background: rgba($red, 0.15); box-shadow: 0 2px 8px rgba($red, 0.3); }
+  &[data-status="in-progress"] { background: rgba($blue, 0.15); animation: pulse-glow 2s infinite; }
+  &[data-status="pending"] { background: rgba(#cbd5e1, 0.1); ion-icon { color: #cbd5e1; } }
 }
+
+// Shared with .step-label-icon — same per-status icon color.
+.step-dot[data-status="completed"] ion-icon,
+.step-label-icon[data-status="completed"] { color: $emerald; }
+.step-dot[data-status="cancelled"] ion-icon,
+.step-label-icon[data-status="cancelled"] { color: $red; }
+.step-dot[data-status="in-progress"] ion-icon,
+.step-label-icon[data-status="in-progress"] { color: $blue; }
 
 .step-connector {
   width: 3px;
@@ -570,10 +561,6 @@ $radius-lg: 24px;
   font-size: 16px;
   flex-shrink: 0;
   color: #94a3b8;
-
-  &[data-status="completed"] { color: $emerald; }
-  &[data-status="in-progress"] { color: $blue; }
-  &[data-status="cancelled"] { color: $red; }
 }
 
 .step-label {
@@ -724,16 +711,15 @@ $radius-lg: 24px;
     border-color: rgba($emerald, 0.15);
     .driver-info-hdr-icon { color: $emerald; }
     .driver-info-hdr-label { color: #64748b; }
-    .driver-info-row-label { color: #1e293b; }
-    .driver-info-row-sep { color: #1e293b; }
-    .driver-info-row-value { color: #1e293b; }
   }
   &[data-status="in-progress"] {
     background: rgba($blue, 0.04);
     border-color: rgba($blue, 0.15);
     .driver-info-hdr-icon { color: $blue; }
-    .driver-info-row-label { color: #1e293b; }
-    .driver-info-row-sep { color: #1e293b; }
+  }
+  &[data-status="completed"], &[data-status="in-progress"] {
+    .driver-info-row-label,
+    .driver-info-row-sep,
     .driver-info-row-value { color: #1e293b; }
   }
 }
@@ -741,7 +727,7 @@ $radius-lg: 24px;
 :host-context(.dark) .driver-info-card {
   &[data-status="completed"],
   &[data-status="in-progress"] {
-    .driver-info-row-label { color: #e2e8f0; }
+    .driver-info-row-label,
     .driver-info-row-sep { color: #e2e8f0; }
     .driver-info-row-value { color: #f1f5f9; }
   }
@@ -918,19 +904,6 @@ $radius-lg: 24px;
   border: 1.5px solid rgba($emerald, 0.25);
 }
 
-.action-label {
-  display: block;
-  font-size: 0.76rem;
-  font-weight: 600;
-  color: #cbd5e1;
-  margin-bottom: 8px;
-}
-
-.action-btn-group {
-  display: flex;
-  gap: 10px;
-}
-
 .action-btn {
   display: inline-flex;
   align-items: center;
@@ -957,18 +930,6 @@ $radius-lg: 24px;
     }
   }
 
-  &.action-no {
-    background: $red;
-    color: $white;
-    box-shadow: 0 3px 10px rgba($red, 0.3);
-
-    &:hover {
-      background: #dc2626;
-      transform: translateY(-1px);
-      box-shadow: 0 5px 15px rgba($red, 0.35);
-    }
-  }
-
   &:active {
     transform: scale(0.96);
   }
@@ -983,11 +944,16 @@ $radius-lg: 24px;
   font-size: 0.68rem;
   font-weight: 600;
 
-  &[data-status="completed"] { background: rgba($emerald, 0.15); color: #6ee7b7; }
-  &[data-status="cancelled"] { background: rgba($red, 0.15); color: #fca5a5; }
   &[data-status="in-progress"] { background: rgba($blue, 0.15); color: #93c5fd; }
   &[data-status="pending"] { background: rgba(#cbd5e1, 0.1); color: #cbd5e1; }
 }
+
+// Shared with .status-badge — both chips use identical completed/cancelled colors.
+.status-badge[data-status="Completed"],
+.step-status-tag[data-status="completed"] { background: rgba($emerald, 0.15); color: #6ee7b7; }
+
+.status-badge[data-status="Cancelled"],
+.step-status-tag[data-status="cancelled"] { background: rgba($red, 0.15); color: #fca5a5; }
 
 .tag-icon { font-size: 12px; }
 
@@ -1023,6 +989,49 @@ $radius-lg: 24px;
   justify-content: center;
   margin: 0 auto 16px;
   ion-icon { font-size: 32px; color: $slate-400; }
+}
+
+// ============================================================
+// Pagination
+// ============================================================
+.pagination {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 16px;
+  margin-top: 16px;
+  background: #0a1628;
+  border-radius: $radius;
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  padding: 12px 20px;
+  box-shadow: $shadow-sm;
+}
+
+.page-btn {
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  height: 36px;
+  padding: 0 14px;
+  border: none;
+  border-radius: 10px;
+  font-size: 13px;
+  font-weight: 700;
+  color: $white;
+  background: rgba(255, 255, 255, 0.08);
+  cursor: pointer;
+  transition: all 0.15s;
+
+  &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.14); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+}
+
+.page-indicator {
+  font-size: 13px;
+  font-weight: 700;
+  color: $slate-400;
+  min-width: 60px;
+  text-align: center;
 }
 
 // ============================================================
@@ -1068,8 +1077,6 @@ $radius-lg: 24px;
   .person-contact-row { gap: 3px; }
   .step-download-btn { font-size: 0.7rem; padding: 5px 11px; border-radius: 8px; }
   .step-action-buttons { padding: 9px; border-radius: 10px; }
-  .action-label { font-size: 0.71rem; margin-bottom: 6px; }
-  .action-btn-group { flex-direction: column; gap: 6px; }
   .action-btn { justify-content: center; width: 100%; padding: 8px 14px; font-size: 0.75rem; }
   .step-status-tag { font-size: 0.61rem; padding: 2px 7px; }
   .step-content { padding-bottom: 15px; }
@@ -1176,12 +1183,8 @@ ion-header ion-toolbar ion-button {
     border-bottom-color: rgba(0, 0, 0, 0.06);
   }
 
-  .status-badge {
-    &[data-status="Completed"] { background: rgba(16, 185, 129, 0.12); color: #059669; }
-    &[data-status="Cancelled"] { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
-    &:not([data-status="Completed"]):not([data-status="Cancelled"]) {
-      background: rgba(245, 158, 11, 0.12); color: #d97706;
-    }
+  .status-badge:not([data-status="Completed"]):not([data-status="Cancelled"]) {
+    background: rgba(245, 158, 11, 0.12); color: #d97706;
   }
 
   .order-info-bar {
@@ -1195,7 +1198,7 @@ ion-header ion-toolbar ion-button {
   .search-icon, .expand-icon, .info-item, .person-label,
   .person-contact, .person-email, .step-date, .order-distributor { color: #64748b; }
   .stat-value, .order-number, .step-label, .person-name, .amount { color: #1e293b; }
-  .step-remarks, .person-role, .action-label { color: #475569; }
+  .step-remarks, .person-role { color: #475569; }
 
   .step-person-info {
     background: #f1f5f9;
@@ -1216,11 +1219,16 @@ ion-header ion-toolbar ion-button {
   }
 
   .step-status-tag {
-    &[data-status="completed"] { background: rgba(16, 185, 129, 0.12); color: #059669; }
-    &[data-status="cancelled"] { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
     &[data-status="in-progress"] { background: rgba(59, 130, 246, 0.12); color: #2563eb; }
     &[data-status="pending"] { background: rgba(100, 116, 139, 0.1); color: #64748b; }
   }
+
+  // Shared with .status-badge — identical completed/cancelled colors in light mode too.
+  .status-badge[data-status="Completed"],
+  .step-status-tag[data-status="completed"] { background: rgba(16, 185, 129, 0.12); color: #059669; }
+
+  .status-badge[data-status="Cancelled"],
+  .step-status-tag[data-status="cancelled"] { background: rgba(239, 68, 68, 0.12); color: #dc2626; }
 
   .step-download-btn {
     color: #2563eb;
@@ -1231,5 +1239,17 @@ ion-header ion-toolbar ion-button {
   .empty-state {
     background: #f8fafc;
     border-color: #e2e8f0;
+  }
+
+  .pagination {
+    background: #ffffff;
+    border-color: rgba(0, 0, 0, 0.08);
+  }
+
+  .page-btn {
+    color: $slate-600;
+    background: $slate-100;
+
+    &:hover:not(:disabled) { background: #e2e8f0; color: $slate-800; }
   }
 }

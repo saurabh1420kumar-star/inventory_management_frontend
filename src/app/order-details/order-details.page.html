@@ -354,6 +354,19 @@
       </ng-container>
     </div>
 
+    <!-- ========== PAGINATION ========== -->
+    <div *ngIf="!isLoading && !loadError && orders.length > 0" class="pagination">
+      <button class="page-btn" [disabled]="isFirstPage" (click)="previousPage()">
+        <ion-icon name="chevron-back-outline"></ion-icon>
+        <span>Previous</span>
+      </button>
+      <span class="page-indicator">Page {{ currentPage }}</span>
+      <button class="page-btn" [disabled]="isLastPage" (click)="nextPage()">
+        <span>Next</span>
+        <ion-icon name="chevron-forward-outline"></ion-icon>
+      </button>
+    </div>
+
   </div>
 </ion-content>
 

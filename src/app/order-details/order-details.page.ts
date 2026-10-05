@@ -111,6 +111,12 @@ export class OrderDetailsPage implements OnInit {
   downloadingInvoiceOrderId: string | null = null;
   downloadingProformaInvoiceOrderId: string | null = null;
 
+  // Pagination — GET /api/order/tracking?status=all&page=0&size=20
+  currentPage: number = 1;
+  pageSize: number = 20;
+  isFirstPage: boolean = true;
+  isLastPage: boolean = false;
+
   // Confirm Order Received Modal
   showConfirmModal: boolean = false;
   confirmingOrder: Order | null = null;
@@ -182,7 +188,8 @@ export class OrderDetailsPage implements OnInit {
     const distributorId = role === 'DISTRIBUTOR' ? (this.auth.getUserId() ?? undefined) : undefined;
     const isSalesRole = role ? (role.includes('SALES') || ['NSM', 'SSM', 'ZSM', 'RSM', 'ASM', 'TSM', 'SE', 'SALESPERSON'].includes(role)) : false;
     const salespersonId = isSalesRole ? (this.auth.getUserId() ?? undefined) : undefined;
-    this.salesService.getOrderTracking('all', 0, 50, distributorId, salespersonId).subscribe({
+    const pageIndex = this.currentPage - 1;
+    this.salesService.getOrderTracking('all', pageIndex, this.pageSize, distributorId, salespersonId).subscribe({
       next: (response) => {
         this.orders = (response.orders || []).map((item: OrderTrackingItem) =>
           this.mapApiOrderToOrder(item)
@@ -196,8 +203,13 @@ export class OrderDetailsPage implements OnInit {
         const firstPending = this.orders.find(o => this.isOrderPending(o));
         this.orders.forEach(o => o.expanded = o === firstPending);
 
-        this.filteredOrders = [...this.orders];
+        this.applyFilters();
         this.updateStats();
+
+        // Backend may not send Page metadata yet — fall back to a short-page heuristic.
+        this.isFirstPage = response.first ?? (this.currentPage === 1);
+        this.isLastPage = response.last ?? (this.orders.length < this.pageSize);
+
         this.isLoading = false;
       },
       error: (err) => {
@@ -206,6 +218,18 @@ export class OrderDetailsPage implements OnInit {
         this.isLoading = false;
       }
     });
+  }
+
+  nextPage() {
+    if (this.isLastPage) return;
+    this.currentPage++;
+    this.loadOrders();
+  }
+
+  previousPage() {
+    if (this.currentPage <= 1) return;
+    this.currentPage--;
+    this.loadOrders();
   }
 
   /**
@@ -260,21 +284,23 @@ export class OrderDetailsPage implements OnInit {
   }
 
   /**
-   * Matches the "In Progress" filter chip definition: order has a step that's
-   * pending or in-progress. Used to pick which order (if any) auto-expands on load.
+   * Matches the "In Progress" filter chip definition: order isn't cancelled and has
+   * a step that's pending or in-progress. Used for the filter, the stat count, and
+   * to pick which order (if any) auto-expands on load. A cancelled order can still have
+   * never-reached steps sitting at 'pending', so cancelled orders must be excluded here —
+   * otherwise they leak into "In Progress".
    */
   private isOrderPending(order: Order): boolean {
-    return order.steps.some(s => s.status === 'pending' || s.status === 'in-progress');
+    return !order.steps.some(s => s.status === 'cancelled')
+      && order.steps.some(s => s.status === 'pending' || s.status === 'in-progress');
   }
 
   updateStats() {
     this.totalOrders = this.orders.length;
-    this.completedOrders = this.orders.filter(o => 
+    this.completedOrders = this.orders.filter(o =>
       o.steps.every(s => s.status === 'completed')
     ).length;
-    this.pendingOrders = this.orders.filter(o => 
-      o.steps.some(s => s.status === 'pending' || s.status === 'in-progress')
-    ).length;
+    this.pendingOrders = this.orders.filter(o => this.isOrderPending(o)).length;
   }
 
   onSearchChange(event: any) {
@@ -301,7 +327,7 @@ export class OrderDetailsPage implements OnInit {
       filtered = filtered.filter(o => {
         if (this.filterStatus === 'completed') return o.steps.every(s => s.status === 'completed');
         if (this.filterStatus === 'cancelled') return o.steps.some(s => s.status === 'cancelled');
-        if (this.filterStatus === 'pending') return o.steps.some(s => s.status === 'pending' || s.status === 'in-progress');
+        if (this.filterStatus === 'pending') return this.isOrderPending(o);
         return true;
       });
     }

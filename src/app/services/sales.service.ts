@@ -190,4 +190,11 @@ export interface OrderTrackingItem {
 
 export interface OrderTrackingResponse {
   orders: OrderTrackingItem[];
+  /** Standard Spring Page metadata — present when the backend includes it, used to drive pagination. */
+  first?: boolean;
+  last?: boolean;
+  totalPages?: number;
+  totalElements?: number;
+  number?: number;
+  size?: number;
 }
