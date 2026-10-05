@@ -104,7 +104,7 @@ export class OrderDetailsPage implements OnInit {
   orders: Order[] = [];
   filteredOrders: Order[] = [];
   searchQuery: string = '';
-  filterStatus: string = 'all';
+  filterStatus: string = 'pending';
   isLoading: boolean = false;
   loadError: string = '';
   downloadingGdnOrderId: string | null = null;
@@ -184,13 +184,18 @@ export class OrderDetailsPage implements OnInit {
     const salespersonId = isSalesRole ? (this.auth.getUserId() ?? undefined) : undefined;
     this.salesService.getOrderTracking('all', 0, 50, distributorId, salespersonId).subscribe({
       next: (response) => {
-        this.orders = (response.orders || []).map((item: OrderTrackingItem, index: number) =>
-          this.mapApiOrderToOrder(item, index === 0)
+        this.orders = (response.orders || []).map((item: OrderTrackingItem) =>
+          this.mapApiOrderToOrder(item)
         );
-        
+
         // Sort by cartId descending so newest order always appears first
         this.orders.sort((a, b) => b.cartId - a.cartId);
-        
+
+        // Auto-expand only the newest order that's still in progress.
+        // Completed/cancelled orders never auto-expand.
+        const firstPending = this.orders.find(o => this.isOrderPending(o));
+        this.orders.forEach(o => o.expanded = o === firstPending);
+
         this.filteredOrders = [...this.orders];
         this.updateStats();
         this.isLoading = false;
@@ -216,7 +221,7 @@ export class OrderDetailsPage implements OnInit {
    *   AssignedPerson.contact – API does not return the person's phone number
    *   AssignedPerson.email   – API does not return the person's email address
    */
-  private mapApiOrderToOrder(item: OrderTrackingItem, expandFirst: boolean = false): Order {
+  private mapApiOrderToOrder(item: OrderTrackingItem): Order {
     const mappedSteps = (item.steps || [])
       .slice()
       .sort((a, b) => a.stepSequence - b.stepSequence)
@@ -249,9 +254,17 @@ export class OrderDetailsPage implements OnInit {
       orderDate: item.orderDate,
       totalAmount: item.totalAmount,
       deliveryBy: orderPlacedStep?.deliveryBy || item.deliveryBy || undefined,
-      expanded: expandFirst,
+      expanded: false,
       steps: mappedSteps,
     };
+  }
+
+  /**
+   * Matches the "In Progress" filter chip definition: order has a step that's
+   * pending or in-progress. Used to pick which order (if any) auto-expands on load.
+   */
+  private isOrderPending(order: Order): boolean {
+    return order.steps.some(s => s.status === 'pending' || s.status === 'in-progress');
   }
 
   updateStats() {
@@ -300,6 +313,7 @@ export class OrderDetailsPage implements OnInit {
   }
 
   toggleOrder(order: Order) {
+    if (this.isOrderComplete(order)) return;
     order.expanded = !order.expanded;
   }
 

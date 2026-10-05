@@ -72,6 +72,15 @@ interface PromoOutwardRow {
   quotedSellingPrice: number | null;
 }
 
+/** Multiple promotional-item outward records issued to the same person/distributor in one card. */
+interface OutwardIssuedGroup {
+  issuedTo: string;
+  referenceNumber?: string;
+  createdAt: string;
+  comments?: string;
+  items: OutwardRecord[];
+}
+
 @Component({
   selector: 'app-outward-inventory',
   standalone: true,
@@ -150,6 +159,12 @@ export class OutwardInventoryPage implements OnInit {
   // Detail modal
   selectedRecord: any = null;
   isDetailOpen = false;
+
+  // Issued-to group detail modal (full item list for a grouped promo card)
+  selectedGroup: OutwardIssuedGroup | null = null;
+  isGroupDetailOpen = false;
+  /** Number of date rows shown inline on a grouped card before collapsing into "view all". */
+  readonly groupPreviewLimit = 2;
 
   // â”€â”€â”€ forms â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€â”€
   spareOutwardForm!: FormGroup;
@@ -445,6 +460,53 @@ export class OutwardInventoryPage implements OnInit {
     this.selectedRecord = null;
   }
 
+  openGroupDetail(g: OutwardIssuedGroup): void {
+    this.selectedGroup = g;
+    this.isGroupDetailOpen = true;
+  }
+
+  closeGroupDetail(): void {
+    this.isGroupDetailOpen = false;
+    this.selectedGroup = null;
+  }
+
+  /** Which "issuedTo|date" accordion rows are currently expanded. */
+  private expandedDateKeys = new Set<string>();
+
+  /** Items in a group, bucketed by calendar day (newest day first). */
+  getGroupDates(g: OutwardIssuedGroup): { dateKey: string; items: OutwardRecord[] }[] {
+    const byDate = new Map<string, OutwardRecord[]>();
+    for (const item of g.items) {
+      const key = (item.createdAt || '').slice(0, 10);
+      if (!byDate.has(key)) byDate.set(key, []);
+      byDate.get(key)!.push(item);
+    }
+    return Array.from(byDate.entries())
+      .sort(([a], [b]) => b.localeCompare(a))
+      .map(([dateKey, items]) => ({ dateKey, items }));
+  }
+
+  getGroupPreviewDates(g: OutwardIssuedGroup): { dateKey: string; items: OutwardRecord[] }[] {
+    return this.getGroupDates(g).slice(0, this.groupPreviewLimit);
+  }
+
+  getGroupRemainingDateCount(g: OutwardIssuedGroup): number {
+    return Math.max(0, this.getGroupDates(g).length - this.groupPreviewLimit);
+  }
+
+  toggleDateGroup(g: OutwardIssuedGroup, dateKey: string): void {
+    const key = `${g.issuedTo}__${dateKey}`;
+    if (this.expandedDateKeys.has(key)) {
+      this.expandedDateKeys.delete(key);
+    } else {
+      this.expandedDateKeys.add(key);
+    }
+  }
+
+  isDateGroupExpanded(g: OutwardIssuedGroup, dateKey: string): boolean {
+    return this.expandedDateKeys.has(`${g.issuedTo}__${dateKey}`);
+  }
+
   setFilter(f: 'all' | ModalItemType | 'raw_material' | 'finished_product'): void {
     this.activeFilter = f;
     this.applyFilter();
@@ -633,7 +695,9 @@ export class OutwardInventoryPage implements OnInit {
 
   addPromoOutwardRow(): void {
     this.haptic.light();
-    this.promoOutwardRows.push(this.createEmptyPromoOutwardRow());
+    // New rows go to the front so the one you just added is visible immediately,
+    // without needing to scroll past the earlier ones.
+    this.promoOutwardRows.unshift(this.createEmptyPromoOutwardRow());
   }
 
   removePromoOutwardRow(index: number): void {
@@ -1352,6 +1416,38 @@ export class OutwardInventoryPage implements OnInit {
   }
 
   trackById(_: number, r: OutwardRecord) { return r.id; }
+
+  /** Records that render as their own card (spare parts, scrap, promo returns — anything without a shared recipient). */
+  get singleCards(): OutwardRecord[] {
+    return this.filteredRecords.filter(r => !this.isGroupableRecord(r));
+  }
+
+  /** Promotional outward-giving records issued to the same person/distributor, collapsed into one card each. */
+  get issuedToGroups(): OutwardIssuedGroup[] {
+    const groups = new Map<string, OutwardIssuedGroup>();
+    const order: string[] = [];
+
+    for (const r of this.filteredRecords) {
+      if (!this.isGroupableRecord(r)) continue;
+
+      let group = groups.get(r.issuedTo!);
+      if (!group) {
+        group = { issuedTo: r.issuedTo!, referenceNumber: r.referenceNumber, createdAt: r.createdAt, comments: r.comments, items: [] };
+        groups.set(r.issuedTo!, group);
+        order.push(r.issuedTo!);
+      }
+      group.items.push(r);
+      if (r.createdAt > group.createdAt) group.createdAt = r.createdAt;
+    }
+
+    return order.map(key => groups.get(key)!);
+  }
+
+  private isGroupableRecord(r: OutwardRecord): boolean {
+    return r.itemType === 'promotional_items' && r.section === 'outward_giving' && !!r.issuedTo;
+  }
+
+  trackByIssuedTo(_: number, g: OutwardIssuedGroup) { return g.issuedTo; }
 }
 
 

@@ -27,10 +27,10 @@ export class ComplaintsManagementPage implements OnInit {
   isLastPage = false;
   isFirstPage = true;
   searchTerm = '';
-  filterStatus = '';
+  filterStatus = 'OPEN';
   filterCategory = '';
 
-  statusOptions = ['OPEN', 'IN_PROGRESS', 'RESOLVED', 'CLOSED'];
+  statusOptions = ['OPEN', 'IN_PROGRESS', 'CLOSED'];
   categoryOptions = ['PAYMENT', 'ACCOUNT', 'TECHNICAL', 'DELIVERY', 'OTHER'];
 
   selectedComplaint: Complaint | null = null;
@@ -107,7 +107,6 @@ export class ComplaintsManagementPage implements OnInit {
     return {
       open:       this.complaints.filter(c => c.status === 'OPEN').length,
       inProgress: this.complaints.filter(c => c.status === 'IN_PROGRESS').length,
-      resolved:   this.complaints.filter(c => c.status === 'RESOLVED').length,
       closed:     this.complaints.filter(c => c.status === 'CLOSED').length,
       total:      this.complaints.length,
     };

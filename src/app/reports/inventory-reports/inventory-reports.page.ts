@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
@@ -86,7 +87,7 @@ function mapReorderRow(raw: any): ReorderRow {
   templateUrl: './inventory-reports.page.html',
   styleUrls: ['./inventory-reports.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent],
 })
 export class InventoryReportsPage implements OnInit {
 

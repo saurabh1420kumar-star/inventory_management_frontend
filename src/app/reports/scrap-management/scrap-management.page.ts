@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
@@ -98,7 +99,7 @@ function mapSaleRow(raw: any): SaleRow {
   templateUrl: './scrap-management.page.html',
   styleUrls: ['./scrap-management.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent],
 })
 export class ScrapManagementReportPage implements OnInit {
 

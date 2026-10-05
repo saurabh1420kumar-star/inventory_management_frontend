@@ -54,15 +54,6 @@
             <span class="stat-label">In Progress</span>
           </div>
         </div>
-        <div class="stat-card stat-resolved" [class.stat-active]="filterStatus === 'RESOLVED'" (click)="filterStatus = filterStatus === 'RESOLVED' ? '' : 'RESOLVED'">
-          <div class="stat-icon-wrap stat-icon-green">
-            <ion-icon name="checkmark-circle-outline"></ion-icon>
-          </div>
-          <div class="stat-content">
-            <span class="stat-number">{{ stats.resolved }}</span>
-            <span class="stat-label">Resolved</span>
-          </div>
-        </div>
         <div class="stat-card stat-closed" [class.stat-active]="filterStatus === 'CLOSED'" (click)="filterStatus = filterStatus === 'CLOSED' ? '' : 'CLOSED'">
           <div class="stat-icon-wrap stat-icon-indigo">
             <ion-icon name="lock-closed-outline"></ion-icon>
@@ -173,7 +164,7 @@
             </div>
 
             <!-- META ROW -->
-            <div class="meta-row">
+            <div class="meta-row" *ngIf="complaint.status !== 'CLOSED'">
               <span class="meta-item">
                 <ion-icon name="folder-outline"></ion-icon>
                 {{ complaint.category }}
@@ -186,7 +177,7 @@
             </div>
 
             <!-- DESCRIPTION -->
-            <p class="card-description">{{ complaint.description }}</p>
+            <p class="card-description" *ngIf="complaint.status !== 'CLOSED'">{{ complaint.description }}</p>
 
             <!-- ACTIONS -->
             <div class="card-actions">
@@ -194,11 +185,13 @@
                 <ion-icon name="eye-outline"></ion-icon>
                 View Details
               </button>
-              <button *appAcl="{ feature: FEATURE, action: 'update' }" class="btn-status" (click)="openStatusModal(complaint)"
-                [style.backgroundColor]="getStatusConfig(complaint.status).color">
-                <ion-icon name="create-outline"></ion-icon>
-                Update Status
-              </button>
+              <ng-container *ngIf="complaint.status !== 'CLOSED'">
+                <button *appAcl="{ feature: FEATURE, action: 'update' }" class="btn-status" (click)="openStatusModal(complaint)"
+                  [style.backgroundColor]="getStatusConfig(complaint.status).color">
+                  <ion-icon name="create-outline"></ion-icon>
+                  Update Status
+                </button>
+              </ng-container>
             </div>
           </div>
         </div>

@@ -1,6 +1,7 @@
 import { Component, OnInit, inject } from '@angular/core';
 import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
+import { RouterModule } from '@angular/router';
 import { IonicModule } from '@ionic/angular';
 import { forkJoin } from 'rxjs';
 import { DownloadService } from '../../services/download.service';
@@ -14,7 +15,7 @@ import {
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
 
-type ReportType = 'promotional' | 'spareParts' | 'history';
+type ReportType = 'promotional' | 'spareParts';
 type IssueCategory = 'Promotional' | 'Spare Parts';
 type IssueTypeFilter = 'all' | IssueCategory;
 type IssuedToType = 'Employee' | 'Dealer' | 'Distributor';
@@ -65,7 +66,7 @@ function mapIssueRow(raw: any, category: IssueCategory): IssueRow {
   templateUrl: './inventory-issues.page.html',
   styleUrls: ['./inventory-issues.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent],
 })
 export class InventoryIssuesReportPage implements OnInit {
 
@@ -137,9 +138,7 @@ export class InventoryIssuesReportPage implements OnInit {
   get sparePartsRows(): IssueRow[] { return this.issueRows.filter(r => r.category === 'Spare Parts'); }
 
   get activeRows(): IssueRow[] {
-    if (this.activeType === 'promotional') return this.promotionalRows;
-    if (this.activeType === 'spareParts') return this.sparePartsRows;
-    return this.issueRows;
+    return this.activeType === 'promotional' ? this.promotionalRows : this.sparePartsRows;
   }
 
   get pagedRows(): IssueRow[] { return paginate(this.activeRows, this.pager); }
@@ -162,7 +161,7 @@ export class InventoryIssuesReportPage implements OnInit {
     const headers = ['Issue No', 'Issue Date', 'Category', 'Issued To', 'Item', 'Qty', 'UOM'];
     const rows = this.activeRows.map(r => [r.issueNo, formatDisplayDate(r.issueDate), r.category, `${r.issuedToType} - ${r.issuedToName}`, r.item, r.qty, r.uom]);
     const jsonRows = this.activeRows.map(r => ({ 'Issue No': r.issueNo, 'Issue Date': r.issueDate, Category: r.category, 'Issued To': `${r.issuedToType} - ${r.issuedToName}`, Item: r.item, Qty: r.qty, UOM: r.uom }));
-    const title = this.activeType === 'promotional' ? 'Promotional Issue' : this.activeType === 'spareParts' ? 'Spare Parts Issue' : 'Issue History';
+    const title = this.activeType === 'promotional' ? 'Promotional Issue' : 'Spare Parts Issue';
     return { headers, rows, jsonRows, title };
   }
 
