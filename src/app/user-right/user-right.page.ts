@@ -222,6 +222,14 @@ export class UserRightPage implements OnInit {
         ]
       },
       {
+        name: 'Content',
+        icon: 'megaphone-outline',
+        color: 'pink',
+        modules: [
+          { featureKey: 'NOTIFICATIONS_AND_OFFERS', displayName: 'Notifications & Offers', icon: 'megaphone-outline', category: 'Content', access: 'NONE' },
+        ]
+      },
+      {
         name: 'Administration',
         icon: 'settings-outline',
         color: 'slate',

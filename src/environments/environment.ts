@@ -12,6 +12,7 @@ export const environment = {
   // ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
   // dealersUrl: 'https://api.imsnectarorigin.com/api/dealers',
   // dealerLedgerUrl: 'https://api.imsnectarorigin.com/api/dealer-ledger',
+  // contentUrl: 'https://api.imsnectarorigin.com/api/content'
 
   // Staging URLs (for testing)
   apiUrl: 'https://inventorymanagement-backend-staging.onrender.com/api',
@@ -22,6 +23,7 @@ export const environment = {
   ledgerUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/ledger',
   dealersUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/dealers',
   dealerLedgerUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/dealer-ledger',
+  contentUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/content',
   // Localhost URLs
   // apiUrl: 'http://localhost:8080/api',
   // permissionsUrl: 'http://localhost:8080/api/permissions',
@@ -31,6 +33,7 @@ export const environment = {
   // ledgerUrl: 'http://localhost:8080/api/ledger',
   // dealersUrl: 'http://localhost:8080/api/dealers',
   // dealerLedgerUrl: 'http://localhost:8080/api/dealer-ledger',
+  // contentUrl: 'http://localhost:8080/api/content',
 };
 
 

@@ -225,6 +225,17 @@ const routes: Routes = [
     canActivate: [AuthGuard]
   },
   {
+    path: 'notifications-offers',
+    loadComponent: () => import('./content-management/notifications-offers/notifications-offers.page').then(m => m.NotificationsOffersPage),
+    canActivate: [AclGuard],
+    data: { feature: 'NOTIFICATIONS_AND_OFFERS' }
+  },
+  {
+    path: 'offers-news',
+    loadComponent: () => import('./offers-news/offers-news.page').then(m => m.OffersNewsPage),
+    canActivate: [AuthGuard]
+  },
+  {
     path: '**',
     loadChildren: () => import('./not-found/not-found.module').then(m => m.NotFoundPageModule)
   }

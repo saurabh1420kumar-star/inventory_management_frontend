@@ -41,25 +41,33 @@ interface CustomerAgeing {
 }
 
 interface CollectionRow {
+  id: number;
+  referenceNo: string;
   date: string;
   customer: string;
-  invoiceNo: string;
   amountCollected: number;
-  mode: string;
-  referenceNo: string;
+  description: string;
 }
 
-const COLLECTION_MODES = ['Bank Transfer', 'Cheque', 'UPI', 'Cash'];
+// The backend concatenates "firstName lastName" server-side without checking for a
+// null lastName, so distributorName frequently arrives as e.g. "Ram ji fertilizer  null".
+// Stripped here rather than fixed upstream since this is a display-layer workaround.
+function cleanName(name: string): string {
+  const cleaned = name.replace(/\s+(null|undefined)\s*$/i, '').replace(/\s{2,}/g, ' ').trim();
+  return cleaned || '—';
+}
 
 // GET /api/reports/receivables/collection-history — Excel #25 Collection Report
+// Real response shape: { id, distributorId, distributorName, amount, description, approvedAt }
+// — no invoiceNo/mode/referenceNo field exists on this endpoint.
 function mapCollectionRow(raw: any): CollectionRow {
   return {
-    date: raw.date ?? raw.paymentDate ?? raw.collectionDate ?? '',
-    customer: raw.customer ?? raw.customerName ?? raw.distributorName ?? '—',
-    invoiceNo: raw.invoiceNo ?? raw.invoiceNumber ?? '—',
-    amountCollected: Number(raw.amountCollected ?? raw.amount ?? raw.paidAmount ?? 0),
-    mode: raw.mode ?? raw.paymentMode ?? raw.paymentMethod ?? '—',
-    referenceNo: raw.referenceNo ?? raw.referenceNumber ?? raw.transactionRef ?? '—',
+    id: raw.id,
+    referenceNo: raw.referenceNo ?? raw.referenceNumber ?? (raw.id != null ? String(raw.id) : '—'),
+    date: raw.approvedAt ?? raw.date ?? raw.paymentDate ?? raw.collectionDate ?? '',
+    customer: cleanName(raw.distributorName ?? raw.customer ?? raw.customerName ?? '—'),
+    amountCollected: Number(raw.amount ?? raw.amountCollected ?? raw.paidAmount ?? 0),
+    description: raw.description ?? '',
   };
 }
 
@@ -214,9 +222,9 @@ export class ReceivablesCollectionsPage implements OnInit {
       const jsonRows = this.ageingRows.map(r => ({ Customer: r.customer, Region: r.region, Invoices: r.invoices, Outstanding: r.outstanding, 'Days Overdue': r.daysOverdue, Status: r.status }));
       return { headers, rows, jsonRows, title: 'Outstanding Summary' };
     }
-    const headers = ['Date', 'Customer', 'Invoice No', 'Amount Collected', 'Mode', 'Reference No'];
-    const rows = this.collectionRows.map(r => [formatDisplayDate(r.date), r.customer, r.invoiceNo, formatCurrencyFull(r.amountCollected), r.mode, r.referenceNo]);
-    const jsonRows = this.collectionRows.map(r => ({ Date: r.date, Customer: r.customer, 'Invoice No': r.invoiceNo, 'Amount Collected': r.amountCollected, Mode: r.mode, 'Reference No': r.referenceNo }));
+    const headers = ['Date', 'Customer', 'Amount Collected', 'Reference No', 'Description'];
+    const rows = this.collectionRows.map(r => [formatDisplayDate(r.date), r.customer, formatCurrencyFull(r.amountCollected), r.referenceNo, r.description]);
+    const jsonRows = this.collectionRows.map(r => ({ Date: r.date, Customer: r.customer, 'Amount Collected': r.amountCollected, 'Reference No': r.referenceNo, Description: r.description }));
     return { headers, rows, jsonRows, title: 'Collections' };
   }
 

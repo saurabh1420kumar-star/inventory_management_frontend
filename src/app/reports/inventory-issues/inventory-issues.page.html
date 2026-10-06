@@ -20,12 +20,7 @@
       </div>
       <div class="report-filter-field">
         <label for="iiIssuedTo">Issued To</label>
-        <select id="iiIssuedTo" [(ngModel)]="filters.issuedToType">
-          <option value="all">Employee / Dealer / Distributor</option>
-          <option value="Employee">Employee</option>
-          <option value="Dealer">Dealer</option>
-          <option value="Distributor">Distributor</option>
-        </select>
+        <input id="iiIssuedTo" type="text" placeholder="Search recipient name" [(ngModel)]="filters.issuedTo" />
       </div>
       <div class="report-filter-field">
         <label for="iiFrom">From Date</label>
@@ -79,18 +74,33 @@
         <ng-container *ngIf="!isLoading">
           <div class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Issue No</th><th>Issue Date</th><th>Category</th><th>Issued To</th><th>Item</th><th>Qty</th><th>UOM</th></tr></thead>
+              <thead>
+                <tr>
+                  <th>Reference No</th>
+                  <th>Date</th>
+                  <th>Category</th>
+                  <th>Material</th>
+                  <th>Issued To</th>
+                  <th>Qty</th>
+                  <th>Price</th>
+                  <th>Comments</th>
+                </tr>
+              </thead>
               <tbody>
                 <tr *ngFor="let row of pagedRows">
-                  <td>{{ row.issueNo }}</td>
+                  <td class="cell-mono">{{ row.referenceNo }}</td>
                   <td>{{ formatDisplayDate(row.issueDate) }}</td>
                   <td><span class="report-badge" [ngClass]="categoryBadgeClass(row.category)">{{ row.category }}</span></td>
-                  <td>{{ row.issuedToType }} - {{ row.issuedToName }}</td>
-                  <td>{{ row.item }}</td>
-                  <td>{{ row.qty }}</td>
-                  <td>{{ row.uom }}</td>
+                  <td>
+                    <div class="cell-title">{{ row.materialName }}</div>
+                    <div class="cell-sub">{{ row.materialCode }}</div>
+                  </td>
+                  <td>{{ row.issuedTo }}</td>
+                  <td class="cell-nowrap">{{ row.qty }} {{ row.uom }}</td>
+                  <td [class.cell-free]="row.unitPrice === 0">{{ formatPrice(row.unitPrice) }}</td>
+                  <td><div class="cell-comments" [title]="row.comments">{{ row.comments || '—' }}</div></td>
                 </tr>
-                <tr *ngIf="pagedRows.length === 0"><td colspan="7" class="report-empty">No issues found for these filters</td></tr>
+                <tr *ngIf="pagedRows.length === 0"><td colspan="8" class="report-empty">No issues found for these filters</td></tr>
               </tbody>
             </table>
           </div>

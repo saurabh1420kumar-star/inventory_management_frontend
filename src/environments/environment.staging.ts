@@ -8,4 +8,5 @@ export const environment = {
   ledgerUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/ledger',
   dealersUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/dealers',
   dealerLedgerUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/dealer-ledger',
+  contentUrl: 'https://inventorymanagement-backend-staging.onrender.com/api/content',
 };

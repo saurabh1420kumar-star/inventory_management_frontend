@@ -8,4 +8,5 @@ export const environment = {
   ledgerUrl: 'https://api.imsnectarorigin.com/api/ledger',
   dealersUrl: 'https://api.imsnectarorigin.com/api/dealers',
   dealerLedgerUrl: 'https://api.imsnectarorigin.com/api/dealer-ledger',
+  contentUrl: 'https://api.imsnectarorigin.com/api/content',
 };

@@ -1,0 +1,482 @@
+<ion-header class="ion-no-border">
+  <ion-toolbar style="--background: #000000;">
+    <ion-buttons slot="start">
+      <ion-menu-button style="color: #ffffff;"></ion-menu-button>
+    </ion-buttons>
+    <ion-title class="text-white font-bold tracking-wide">
+      <span class="text-emerald-400">Notifications</span> &amp; Offers
+    </ion-title>
+  </ion-toolbar>
+</ion-header>
+
+<ion-content style="--background: #f1f5f9; --padding-start: 0px; --padding-end: 0px; --padding-top: 0px; --padding-bottom: 32px;">
+
+  <div class="max-w-6xl mx-auto px-3 sm:px-6 pt-3 sm:pt-5 pb-10 sm:pb-14">
+
+    <!-- ══════════════════════════════════════════════
+         HERO BANNER
+    ══════════════════════════════════════════════ -->
+    <div class="relative overflow-hidden bg-gradient-to-r from-emerald-400 via-teal-400 to-blue-500 rounded-2xl sm:rounded-3xl shadow-xl px-5 sm:px-8 pt-5 sm:pt-7 pb-12 sm:pb-14 hero-fade">
+      <div class="absolute -top-14 -right-10 w-44 h-44 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+      <div class="absolute -bottom-16 left-1/3 w-52 h-52 bg-blue-400/20 rounded-full blur-3xl pointer-events-none"></div>
+
+      <h1 class="relative text-lg sm:text-2xl font-bold mb-2 sm:mb-3">
+        <span class="text-emerald-800">Notifications</span>
+        <span class="text-white"> &amp; Offers</span>
+      </h1>
+      <div class="relative inline-flex items-center gap-1.5 sm:gap-2 px-3 sm:px-4 py-1.5 sm:py-2 bg-white/20 backdrop-blur-sm rounded-full border border-white/30">
+        <ion-icon class="text-white text-xs sm:text-sm" name="megaphone-outline"></ion-icon>
+        <span class="text-white text-xs sm:text-sm font-medium">Publish offers &amp; news to the distributor app</span>
+      </div>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         FLOATING TAB SWITCHER (overlaps hero)
+    ══════════════════════════════════════════════ -->
+    <div class="relative z-10 -mt-7 mx-2 sm:mx-8 flex gap-1 bg-white p-1.5 rounded-2xl shadow-lg shadow-slate-200/80 border border-slate-100">
+      <button type="button" (click)="switchTab('offers')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'offers'
+          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="pricetags-outline" class="text-base shrink-0"></ion-icon>
+        <span>Offers</span>
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [ngClass]="activeTab === 'offers' ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'">{{ offers.length }}</span>
+      </button>
+      <button type="button" (click)="switchTab('notifications')"
+        class="flex-1 py-2.5 px-2 sm:px-4 rounded-xl text-xs sm:text-sm font-bold transition-all duration-200 flex items-center justify-center gap-1.5 sm:gap-2 active:scale-[0.97]"
+        [ngClass]="activeTab === 'notifications'
+          ? 'bg-emerald-500 text-white shadow-md shadow-emerald-200'
+          : 'bg-white text-slate-500 hover:bg-slate-100 hover:text-slate-800'">
+        <ion-icon name="notifications-outline" class="text-base shrink-0"></ion-icon>
+        <span>Notifications</span>
+        <span class="text-[10px] font-bold px-1.5 py-0.5 rounded-full"
+          [ngClass]="activeTab === 'notifications' ? 'bg-white/25 text-white' : 'bg-slate-100 text-slate-500'">{{ notifications.length }}</span>
+      </button>
+    </div>
+
+    <!-- ══════════════════════════════════════════════
+         ACTION BAR
+    ══════════════════════════════════════════════ -->
+    <div class="flex items-center justify-between mt-6 mb-4 px-1">
+      <div>
+        <h2 class="text-base sm:text-lg font-bold text-slate-800">
+          {{ activeTab === 'offers' ? 'All Offers' : 'All Notifications' }}
+        </h2>
+        <p class="text-xs text-slate-400">
+          {{ activeTab === 'offers' ? 'Promotional banners shown to distributors' : 'Announcements &amp; alerts for distributors' }}
+        </p>
+      </div>
+
+      <div class="flex items-center gap-2">
+        <button type="button" (click)="loadAll()"
+          class="w-9 h-9 rounded-xl bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:bg-slate-50 hover:text-slate-700 transition-colors active:scale-95">
+          <ion-icon name="refresh-outline" class="text-base"></ion-icon>
+        </button>
+
+        <ng-container *appAcl="{ feature: 'NOTIFICATIONS_AND_OFFERS', action: 'create' }">
+          <button type="button" (click)="activeTab === 'offers' ? openCreateOffer() : openCreateNotif()"
+            class="inline-flex items-center gap-1.5 px-4 py-2.5 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white text-xs sm:text-sm font-bold shadow-md shadow-emerald-200 hover:shadow-lg hover:shadow-emerald-300 transition-all active:scale-[0.97]">
+            <ion-icon name="add-outline" class="text-base"></ion-icon>
+            <span>{{ activeTab === 'offers' ? 'Add Offer' : 'Add Notification' }}</span>
+          </button>
+        </ng-container>
+      </div>
+    </div>
+
+    <!-- Loading -->
+    <div *ngIf="isLoading" class="flex flex-col items-center justify-center py-20">
+      <ion-spinner name="crescent" style="--color: #10b981; width: 36px; height: 36px;"></ion-spinner>
+      <span class="mt-3 text-sm text-slate-400 font-medium">Loading content...</span>
+    </div>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--              OFFERS TAB                -->
+    <!-- ═══════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'offers'">
+
+      <!-- Empty state -->
+      <div *ngIf="offers.length === 0"
+        class="bg-white rounded-2xl border border-slate-100 shadow-sm py-16 px-6 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="pricetags-outline" class="text-3xl text-emerald-500"></ion-icon>
+        </div>
+        <h3 class="text-base font-bold text-slate-700 mb-1">No offers yet</h3>
+        <p class="text-xs text-slate-400">Create your first offer to show it in the distributor app.</p>
+      </div>
+
+      <!-- Offer banners -->
+      <div *ngIf="offers.length > 0" class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <div *ngFor="let offer of offers"
+          class="ad-banner content-card group relative rounded-2xl overflow-hidden shadow-lg shadow-slate-200/70 hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-300"
+          [class.ad-banner--muted]="!offer.isActive">
+
+          <!-- ───── Creative ───── -->
+          <div class="relative w-full aspect-[16/9] bg-slate-900 overflow-hidden">
+            <img *ngIf="offer.imageUrl" [src]="offer.imageUrl" [alt]="offer.title"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]">
+
+            <!-- fallback canvas when no creative uploaded -->
+            <div *ngIf="!offer.imageUrl"
+              class="absolute inset-0 bg-gradient-to-br from-emerald-500 via-teal-500 to-blue-600 flex items-center justify-center">
+              <div class="absolute -top-10 -right-6 w-40 h-40 bg-white/15 rounded-full blur-2xl"></div>
+              <ion-icon name="pricetags-outline" class="text-6xl text-white/40"></ion-icon>
+            </div>
+
+            <!-- cinematic scrim for overlaid copy -->
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/25 to-black/10 pointer-events-none"></div>
+
+            <!-- top row: slot + status -->
+            <div class="absolute top-3 inset-x-3 flex items-start justify-between gap-2 pointer-events-none">
+              <span class="inline-flex items-center gap-1 text-[10px] font-extrabold tracking-wide px-2.5 py-1 rounded-lg bg-black/45 text-white backdrop-blur-md border border-white/20">
+                <ion-icon name="albums-outline" class="text-xs"></ion-icon>
+                SLOT {{ offer.displayOrder }}
+              </span>
+
+              <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-wide px-2.5 py-1 rounded-full backdrop-blur-md border"
+                [ngClass]="offer.isActive
+                  ? 'bg-emerald-500/90 text-white border-emerald-200/50'
+                  : 'bg-slate-900/70 text-slate-300 border-white/20'">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="offer.isActive ? 'bg-white animate-pulse' : 'bg-slate-400'"></span>
+                {{ offer.isActive ? 'LIVE' : 'PAUSED' }}
+              </span>
+            </div>
+
+            <!-- overlaid ad copy -->
+            <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+              <h4 class="text-white font-extrabold text-lg sm:text-xl leading-snug drop-shadow-lg line-clamp-2">
+                {{ offer.title }}
+              </h4>
+              <p *ngIf="offer.description" class="text-white/85 text-xs sm:text-sm mt-1 line-clamp-2 drop-shadow">
+                {{ offer.description }}
+              </p>
+
+              <div class="flex items-center gap-1.5 mt-2.5 text-[11px] font-semibold text-white/75">
+                <ion-icon name="calendar-outline" class="text-sm text-emerald-300"></ion-icon>
+                <span>{{ formatDate(offer.validFrom) }} – {{ formatDate(offer.validTo) }}</span>
+              </div>
+            </div>
+
+            <!-- hover action dock -->
+            <div class="ad-banner__dock absolute top-3 right-3 flex items-center gap-1.5">
+              <button type="button" *appAcl="{ feature: 'NOTIFICATIONS_AND_OFFERS', action: 'update' }" (click)="openEditOffer(offer)"
+                class="w-9 h-9 rounded-xl bg-white/95 text-slate-700 flex items-center justify-center shadow-lg backdrop-blur-md hover:bg-white hover:text-emerald-600 transition-colors active:scale-90"
+                title="Edit offer">
+                <ion-icon name="create-outline" class="text-base"></ion-icon>
+              </button>
+              <button type="button" *appAcl="{ feature: 'NOTIFICATIONS_AND_OFFERS', action: 'delete' }" (click)="deleteOffer(offer)"
+                class="w-9 h-9 rounded-xl bg-white/95 text-slate-700 flex items-center justify-center shadow-lg backdrop-blur-md hover:bg-rose-500 hover:text-white transition-colors active:scale-90"
+                title="Delete offer">
+                <ion-icon name="trash-outline" class="text-base"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+    <!-- ═══════════════════════════════════════ -->
+    <!--          NOTIFICATIONS TAB             -->
+    <!-- ═══════════════════════════════════════ -->
+    <ng-container *ngIf="!isLoading && activeTab === 'notifications'">
+
+      <!-- Empty state -->
+      <div *ngIf="notifications.length === 0"
+        class="bg-white rounded-2xl border border-slate-100 shadow-sm py-16 px-6 text-center">
+        <div class="w-16 h-16 rounded-2xl bg-emerald-50 border border-emerald-100 flex items-center justify-center mx-auto mb-4">
+          <ion-icon name="notifications-outline" class="text-3xl text-emerald-500"></ion-icon>
+        </div>
+        <h3 class="text-base font-bold text-slate-700 mb-1">No notifications yet</h3>
+        <p class="text-xs text-slate-400">Publish an announcement to reach all distributors.</p>
+      </div>
+
+      <!-- Notification broadcasts -->
+      <div *ngIf="notifications.length > 0" class="grid grid-cols-1 xl:grid-cols-2 gap-5">
+        <div *ngFor="let n of notifications"
+          class="ad-banner content-card group relative rounded-2xl overflow-hidden bg-white border shadow-lg shadow-slate-200/70 hover:shadow-2xl hover:shadow-slate-300/60 transition-all duration-300"
+          [class.ad-banner--muted]="!n.isActive"
+          [style.borderColor]="getTypeColor(n.type) + '2e'">
+
+          <!-- ───── Creative (when an image is attached) ───── -->
+          <div *ngIf="n.imageUrl" class="relative w-full aspect-[16/9] bg-slate-900 overflow-hidden">
+            <img [src]="n.imageUrl" [alt]="n.title"
+              class="absolute inset-0 w-full h-full object-cover transition-transform duration-500 group-hover:scale-[1.04]">
+            <div class="absolute inset-0 bg-gradient-to-t from-black/85 via-black/20 to-black/5 pointer-events-none"></div>
+
+            <!-- type ribbon -->
+            <span class="absolute top-3 left-3 inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-wide px-2.5 py-1 rounded-full text-white backdrop-blur-md border border-white/25"
+              [style.background]="getTypeColor(n.type) + 'e6'">
+              <ion-icon [name]="getTypeIcon(n.type)" class="text-xs"></ion-icon>
+              {{ n.type }}
+            </span>
+
+            <!-- overlaid headline -->
+            <div class="absolute inset-x-0 bottom-0 p-4 sm:p-5">
+              <h4 class="text-white font-extrabold text-lg leading-snug drop-shadow-lg line-clamp-2">{{ n.title }}</h4>
+              <p *ngIf="n.message" class="text-white/85 text-xs sm:text-sm mt-1 line-clamp-2 drop-shadow">{{ n.message }}</p>
+            </div>
+          </div>
+
+          <!-- ───── Text-only broadcast ───── -->
+          <div *ngIf="!n.imageUrl" class="relative p-5 pb-4 overflow-hidden"
+            [style.background]="'linear-gradient(135deg, ' + getTypeColor(n.type) + '14 0%, transparent 70%)'">
+            <div class="absolute -top-8 -right-6 w-28 h-28 rounded-full blur-2xl pointer-events-none"
+              [style.background]="getTypeColor(n.type) + '1f'"></div>
+
+            <div class="relative flex items-start gap-3">
+              <div class="flex-shrink-0 w-11 h-11 rounded-xl flex items-center justify-center border"
+                [style.background]="getTypeColor(n.type) + '1a'"
+                [style.borderColor]="getTypeColor(n.type) + '38'">
+                <ion-icon [name]="getTypeIcon(n.type)" class="text-xl" [style.color]="getTypeColor(n.type)"></ion-icon>
+              </div>
+
+              <div class="flex-1 min-w-0">
+                <span class="inline-block text-[10px] font-extrabold tracking-wide px-2 py-0.5 rounded-full mb-1.5"
+                  [style.background]="getTypeColor(n.type) + '1a'"
+                  [style.color]="getTypeColor(n.type)">
+                  {{ n.type }}
+                </span>
+                <h4 class="font-extrabold text-base text-slate-800 leading-snug line-clamp-2">{{ n.title }}</h4>
+                <p *ngIf="n.message" class="text-xs text-slate-500 mt-1 line-clamp-3 leading-relaxed">{{ n.message }}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- ───── Footer meta ───── -->
+          <div class="flex items-center justify-between gap-2 px-4 py-2.5 border-t border-slate-100 bg-slate-50/60">
+            <div class="flex items-center gap-3 min-w-0">
+              <span class="inline-flex items-center gap-1.5 text-[10px] font-extrabold tracking-wide px-2 py-0.5 rounded-full"
+                [ngClass]="n.isActive ? 'bg-emerald-50 text-emerald-600' : 'bg-slate-200 text-slate-500'">
+                <span class="w-1.5 h-1.5 rounded-full" [ngClass]="n.isActive ? 'bg-emerald-500 animate-pulse' : 'bg-slate-400'"></span>
+                {{ n.isActive ? 'LIVE' : 'PAUSED' }}
+              </span>
+
+              <span class="inline-flex items-center gap-1 text-[11px] font-semibold text-slate-400 truncate">
+                <ion-icon name="time-outline" class="text-sm text-emerald-500 shrink-0"></ion-icon>
+                Expires {{ formatDate(n.expiresAt) }}
+              </span>
+            </div>
+
+            <div class="flex items-center gap-1.5 flex-shrink-0">
+              <button type="button" *appAcl="{ feature: 'NOTIFICATIONS_AND_OFFERS', action: 'update' }" (click)="openEditNotif(n)"
+                class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:text-emerald-600 hover:border-emerald-300 transition-colors active:scale-90"
+                title="Edit notification">
+                <ion-icon name="create-outline" class="text-sm"></ion-icon>
+              </button>
+              <button type="button" *appAcl="{ feature: 'NOTIFICATIONS_AND_OFFERS', action: 'delete' }" (click)="deleteNotif(n)"
+                class="w-8 h-8 rounded-lg bg-white border border-slate-200 text-slate-500 flex items-center justify-center hover:text-rose-500 hover:border-rose-300 transition-colors active:scale-90"
+                title="Delete notification">
+                <ion-icon name="trash-outline" class="text-sm"></ion-icon>
+              </button>
+            </div>
+          </div>
+        </div>
+      </div>
+    </ng-container>
+
+  </div>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!--          OFFER MODAL                   -->
+  <!-- ═══════════════════════════════════════ -->
+  <ion-modal [isOpen]="showOfferModal" (didDismiss)="closeOfferModal()" [backdropDismiss]="false" class="content-modal">
+    <ng-template>
+      <ion-content style="--background: #f8fafc;">
+
+        <!-- Modal hero header -->
+        <div class="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 px-5 pt-5 pb-6">
+          <div class="absolute -top-10 -right-8 w-36 h-36 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="relative flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                <ion-icon name="pricetags-outline" class="text-xl text-white"></ion-icon>
+              </div>
+              <div>
+                <h2 class="text-base font-bold text-white">{{ isEditingOffer ? 'Edit Offer' : 'Create Offer' }}</h2>
+                <p class="text-[11px] text-white/80">Visible to all distributors in the app</p>
+              </div>
+            </div>
+
+            <button type="button" (click)="closeOfferModal()"
+              class="w-8 h-8 rounded-full bg-black/20 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/30 transition-colors active:scale-95">
+              <ion-icon name="close-outline" class="text-lg"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-4 sm:px-6 py-5 max-w-2xl mx-auto space-y-4">
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Title <span class="text-rose-500">*</span></label>
+            <input [(ngModel)]="offerForm.title" type="text" placeholder="e.g. Diwali Special — 20% off"
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Description</label>
+            <textarea [(ngModel)]="offerForm.description" rows="3" placeholder="Describe the offer details..."
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all resize-none"></textarea>
+          </div>
+
+          <div class="grid grid-cols-1 sm:grid-cols-2 gap-3">
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5">Valid From</label>
+              <input [(ngModel)]="offerForm.validFrom" type="datetime-local"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+            </div>
+            <div>
+              <label class="block text-xs font-bold text-slate-600 mb-1.5">Valid To</label>
+              <input [(ngModel)]="offerForm.validTo" type="datetime-local"
+                class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Display Order</label>
+            <input [(ngModel)]="offerForm.displayOrder" type="number" min="0"
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+          </div>
+
+          <!-- Image upload -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Offer Image</label>
+
+            <div *ngIf="offerPreview" class="relative mb-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+              <img [src]="offerPreview" alt="Preview" class="w-full h-48 object-cover">
+              <button type="button" (click)="removeOfferImage()"
+                class="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-600 transition-colors active:scale-95">
+                <ion-icon name="close-outline" class="text-base"></ion-icon>
+              </button>
+            </div>
+
+            <label
+              class="flex flex-col items-center justify-center gap-1.5 w-full py-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-white hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <ion-icon name="cloud-upload-outline" class="text-xl text-emerald-500"></ion-icon>
+              </div>
+              <span class="text-xs font-bold text-slate-600">{{ offerPreview ? 'Change image' : 'Upload image' }}</span>
+              <span class="text-[10px] text-slate-400">PNG or JPG, landscape works best</span>
+              <input type="file" accept="image/*" (change)="onOfferImageSelected($event)" class="hidden">
+            </label>
+          </div>
+
+          <div class="flex gap-2 pt-1 pb-4">
+            <button type="button" (click)="closeOfferModal()"
+              class="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors active:scale-[0.98]">
+              Cancel
+            </button>
+            <button type="button" (click)="submitOffer()" [disabled]="isSaving"
+              class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-60">
+              {{ isSaving ? 'Saving...' : (isEditingOffer ? 'Update Offer' : 'Create Offer') }}
+            </button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+  <!-- ═══════════════════════════════════════ -->
+  <!--       NOTIFICATION MODAL               -->
+  <!-- ═══════════════════════════════════════ -->
+  <ion-modal [isOpen]="showNotifModal" (didDismiss)="closeNotifModal()" [backdropDismiss]="false" class="content-modal">
+    <ng-template>
+      <ion-content style="--background: #f8fafc;">
+
+        <!-- Modal hero header -->
+        <div class="relative overflow-hidden bg-gradient-to-r from-emerald-500 via-teal-500 to-blue-500 px-5 pt-5 pb-6">
+          <div class="absolute -top-10 -right-8 w-36 h-36 bg-white/15 rounded-full blur-2xl pointer-events-none"></div>
+
+          <div class="relative flex items-start justify-between">
+            <div class="flex items-center gap-3">
+              <div class="w-10 h-10 rounded-xl bg-white/20 backdrop-blur-sm border border-white/30 flex items-center justify-center">
+                <ion-icon name="megaphone-outline" class="text-xl text-white"></ion-icon>
+              </div>
+              <div>
+                <h2 class="text-base font-bold text-white">{{ isEditingNotif ? 'Edit Notification' : 'Create Notification' }}</h2>
+                <p class="text-[11px] text-white/80">Pushed to the distributor News feed</p>
+              </div>
+            </div>
+
+            <button type="button" (click)="closeNotifModal()"
+              class="w-8 h-8 rounded-full bg-black/20 text-white flex items-center justify-center backdrop-blur-sm hover:bg-black/30 transition-colors active:scale-95">
+              <ion-icon name="close-outline" class="text-lg"></ion-icon>
+            </button>
+          </div>
+        </div>
+
+        <div class="px-4 sm:px-6 py-5 max-w-2xl mx-auto space-y-4">
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Title <span class="text-rose-500">*</span></label>
+            <input [(ngModel)]="notifForm.title" type="text" placeholder="e.g. New product launch"
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Message</label>
+            <textarea [(ngModel)]="notifForm.message" rows="4" placeholder="Write the announcement..."
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 placeholder:text-slate-400 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all resize-none"></textarea>
+          </div>
+
+          <!-- Type selector -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Type</label>
+            <div class="grid grid-cols-4 gap-2">
+              <button *ngFor="let t of notificationTypes" type="button" (click)="notifForm.type = t"
+                class="flex flex-col items-center gap-1 py-2.5 rounded-xl border text-[10px] font-bold transition-all active:scale-95"
+                [style.background]="notifForm.type === t ? getTypeColor(t) + '14' : '#ffffff'"
+                [style.borderColor]="notifForm.type === t ? getTypeColor(t) + '55' : '#e2e8f0'"
+                [style.color]="notifForm.type === t ? getTypeColor(t) : '#94a3b8'">
+                <ion-icon [name]="getTypeIcon(t)" class="text-base"></ion-icon>
+                {{ t }}
+              </button>
+            </div>
+          </div>
+
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Expires At</label>
+            <input [(ngModel)]="notifForm.expiresAt" type="datetime-local"
+              class="w-full rounded-xl border border-slate-200 bg-white px-3.5 py-2.5 text-sm text-slate-800 focus:ring-2 focus:ring-emerald-500/30 focus:border-emerald-500 outline-none transition-all">
+          </div>
+
+          <!-- Image upload -->
+          <div>
+            <label class="block text-xs font-bold text-slate-600 mb-1.5">Image <span class="text-slate-400 font-medium">(optional)</span></label>
+
+            <div *ngIf="notifPreview" class="relative mb-2 rounded-xl overflow-hidden border border-slate-200 shadow-sm">
+              <img [src]="notifPreview" alt="Preview" class="w-full h-48 object-cover">
+              <button type="button" (click)="removeNotifImage()"
+                class="absolute top-2 right-2 w-8 h-8 bg-rose-500 text-white rounded-full flex items-center justify-center shadow-lg hover:bg-rose-600 transition-colors active:scale-95">
+                <ion-icon name="close-outline" class="text-base"></ion-icon>
+              </button>
+            </div>
+
+            <label
+              class="flex flex-col items-center justify-center gap-1.5 w-full py-6 border-2 border-dashed border-slate-200 rounded-xl cursor-pointer bg-white hover:border-emerald-400 hover:bg-emerald-50/50 transition-all">
+              <div class="w-10 h-10 rounded-xl bg-emerald-50 flex items-center justify-center">
+                <ion-icon name="cloud-upload-outline" class="text-xl text-emerald-500"></ion-icon>
+              </div>
+              <span class="text-xs font-bold text-slate-600">{{ notifPreview ? 'Change image' : 'Upload image' }}</span>
+              <span class="text-[10px] text-slate-400">PNG or JPG</span>
+              <input type="file" accept="image/*" (change)="onNotifImageSelected($event)" class="hidden">
+            </label>
+          </div>
+
+          <div class="flex gap-2 pt-1 pb-4">
+            <button type="button" (click)="closeNotifModal()"
+              class="flex-1 py-3 rounded-xl bg-white border border-slate-200 text-slate-600 font-bold text-sm hover:bg-slate-50 transition-colors active:scale-[0.98]">
+              Cancel
+            </button>
+            <button type="button" (click)="submitNotif()" [disabled]="isSaving"
+              class="flex-1 py-3 rounded-xl bg-gradient-to-r from-emerald-500 to-teal-500 text-white font-bold text-sm shadow-md shadow-emerald-200 hover:shadow-lg transition-all active:scale-[0.98] disabled:opacity-60">
+              {{ isSaving ? 'Saving...' : (isEditingNotif ? 'Update Notification' : 'Create Notification') }}
+            </button>
+          </div>
+        </div>
+      </ion-content>
+    </ng-template>
+  </ion-modal>
+
+</ion-content>

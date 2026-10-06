@@ -3,27 +3,13 @@
   toolbarTitle="Reports"
   eyebrow="Manufacturing"
   heroTitle="Production Reports"
-  subtitle="Output, BOM, material consumption and costing by plant"
+  subtitle="Output, BOM, material consumption and costing"
   icon="cog-outline"
   [lastUpdated]="lastUpdated"
   [isBusy]="isLoading"
   (refresh)="viewReport()">
 
     <div class="report-filters">
-      <div class="report-filter-field">
-        <label for="prPlant">Plant</label>
-        <select id="prPlant" [(ngModel)]="filters.plant">
-          <option value="all">All Plants</option>
-          <option *ngFor="let p of plants" [value]="p">{{ p }}</option>
-        </select>
-      </div>
-      <div class="report-filter-field">
-        <label for="prProduct">Product</label>
-        <select id="prProduct" [(ngModel)]="filters.product">
-          <option value="all">All Products</option>
-          <option *ngFor="let p of products" [value]="p">{{ p }}</option>
-        </select>
-      </div>
       <div class="report-filter-field">
         <label for="prFrom">From Date</label>
         <input id="prFrom" type="date" [(ngModel)]="filters.dateFrom" />
@@ -49,6 +35,8 @@
         <button [class.active]="activeType === 'bom'" (click)="switchType('bom')">BOM Report</button>
         <button [class.active]="activeType === 'consumption'" (click)="switchType('consumption')">Material Consumption</button>
         <button [class.active]="activeType === 'cost'" (click)="switchType('cost')">Production Cost Report</button>
+        <button [class.active]="activeType === 'summary'" (click)="switchType('summary')">Production Summary</button>
+        <button [class.active]="activeType === 'daily'" (click)="switchType('daily')">Daily Summary</button>
       </aside>
 
       <section class="report-panel">
@@ -57,6 +45,8 @@
           <h2 *ngIf="activeType === 'bom'">Bill of Materials</h2>
           <h2 *ngIf="activeType === 'consumption'">Material Consumption</h2>
           <h2 *ngIf="activeType === 'cost'">Production Cost Report</h2>
+          <h2 *ngIf="activeType === 'summary'">Production Summary (By Product)</h2>
+          <h2 *ngIf="activeType === 'daily'">Daily Summary (By Date)</h2>
           <div class="report-filter-actions">
             <button class="report-btn report-btn-outline report-btn-excel" (click)="exportExcel()">
               <ion-icon name="grid-outline"></ion-icon> Export Excel
@@ -93,17 +83,21 @@
           <div *ngIf="activeType === 'bom'" class="report-table-scroll">
             <table class="report-table">
               <thead>
-                <tr><th>Product</th><th>Component</th><th>Qty Required / Unit</th><th>UOM</th><th>Batch No</th></tr>
+                <tr><th>Product</th><th>BOM Name</th><th>Component</th><th>Qty / Unit</th><th>UOM</th><th>Rate</th><th>Amount</th><th>Contribution %</th><th>Effective Cost / Unit</th></tr>
               </thead>
               <tbody>
                 <tr *ngFor="let row of pagedBomRows">
                   <td>{{ row.product }}</td>
+                  <td>{{ row.bomName }}</td>
                   <td>{{ row.component }}</td>
-                  <td>{{ row.qtyPerUnit }}</td>
+                  <td>{{ row.qty }}</td>
                   <td>{{ row.uom }}</td>
-                  <td>{{ row.batchNo }}</td>
+                  <td>{{ formatCurrencyFull(row.rate) }}</td>
+                  <td>{{ formatCurrencyFull(row.amount) }}</td>
+                  <td>{{ row.contributionPercent.toFixed(2) }}%</td>
+                  <td>{{ formatCurrencyFull(row.effectiveCostPerUnit) }}</td>
                 </tr>
-                <tr *ngIf="pagedBomRows.length === 0"><td colspan="5" class="report-empty">No BOM entries found for these filters</td></tr>
+                <tr *ngIf="pagedBomRows.length === 0"><td colspan="9" class="report-empty">No BOM entries found for these filters</td></tr>
               </tbody>
             </table>
           </div>
@@ -112,16 +106,16 @@
           <div *ngIf="activeType === 'consumption'" class="report-table-scroll">
             <table class="report-table">
               <thead>
-                <tr><th>Date</th><th>Raw Material</th><th>Batch Consumed</th><th>Qty Consumed</th><th>UOM</th><th>Product</th></tr>
+                <tr><th>Production No</th><th>Product</th><th>Raw Material</th><th>Qty Planned</th><th>Qty Actual</th><th>Variance</th></tr>
               </thead>
               <tbody>
                 <tr *ngFor="let row of pagedConsumptionRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.rawMaterial }}</td>
-                  <td>{{ row.batchConsumed }}</td>
-                  <td>{{ row.qtyConsumed.toLocaleString('en-IN') }}</td>
-                  <td>{{ row.uom }}</td>
+                  <td>{{ row.productionNumber }}</td>
                   <td>{{ row.product }}</td>
+                  <td>{{ row.rawMaterial }}</td>
+                  <td>{{ row.qtyPlanned.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.qtyActual.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.variance }}</td>
                 </tr>
                 <tr *ngIf="pagedConsumptionRows.length === 0"><td colspan="6" class="report-empty">No material consumption found for these filters</td></tr>
               </tbody>
@@ -132,7 +126,7 @@
           <div *ngIf="activeType === 'cost'" class="report-table-scroll">
             <table class="report-table">
               <thead>
-                <tr><th>Date</th><th>Product</th><th>Batch No</th><th>Material Cost</th><th>Labor Cost</th><th>Overhead</th><th>Total Cost</th><th>Cost / Unit</th></tr>
+                <tr><th>Date</th><th>Product</th><th>Batch No</th><th>Raw Material Cost</th><th>Additional Cost</th><th>Total Cost</th><th>Cost / Unit</th></tr>
               </thead>
               <tbody>
                 <tr *ngFor="let row of pagedCostRows">
@@ -140,12 +134,47 @@
                   <td>{{ row.product }}</td>
                   <td>{{ row.batchNo }}</td>
                   <td>{{ formatCurrencyFull(row.materialCost) }}</td>
-                  <td>{{ formatCurrencyFull(row.laborCost) }}</td>
-                  <td>{{ formatCurrencyFull(row.overhead) }}</td>
+                  <td>{{ formatCurrencyFull(row.additionalCost) }}</td>
                   <td>{{ formatCurrencyFull(row.totalCost) }}</td>
                   <td>{{ formatCurrencyFull(row.costPerUnit) }}</td>
                 </tr>
-                <tr *ngIf="pagedCostRows.length === 0"><td colspan="8" class="report-empty">No cost data found for these filters</td></tr>
+                <tr *ngIf="pagedCostRows.length === 0"><td colspan="7" class="report-empty">No cost data found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- PRODUCTION SUMMARY (BY PRODUCT) -->
+          <div *ngIf="activeType === 'summary'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Product</th><th>Total Quantity</th><th>Run Count</th><th>Total Cost</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedSummaryRows">
+                  <td>{{ row.product }}</td>
+                  <td>{{ row.totalQuantity.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.runCount }}</td>
+                  <td>{{ formatCurrencyFull(row.totalCost) }}</td>
+                </tr>
+                <tr *ngIf="pagedSummaryRows.length === 0"><td colspan="4" class="report-empty">No production summary found for these filters</td></tr>
+              </tbody>
+            </table>
+          </div>
+
+          <!-- DAILY SUMMARY (BY DATE) -->
+          <div *ngIf="activeType === 'daily'" class="report-table-scroll">
+            <table class="report-table">
+              <thead>
+                <tr><th>Date</th><th>Total Quantity Produced</th><th>Total Production Cost</th><th>Total Runs</th></tr>
+              </thead>
+              <tbody>
+                <tr *ngFor="let row of pagedDailySummaryRows">
+                  <td>{{ formatDisplayDate(row.date) }}</td>
+                  <td>{{ row.totalQty.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatCurrencyFull(row.totalCost) }}</td>
+                  <td>{{ row.totalRuns }}</td>
+                </tr>
+                <tr *ngIf="pagedDailySummaryRows.length === 0"><td colspan="4" class="report-empty">No daily summary found for these filters</td></tr>
               </tbody>
             </table>
           </div>

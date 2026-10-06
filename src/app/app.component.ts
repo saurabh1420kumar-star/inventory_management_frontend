@@ -4,6 +4,7 @@ import { filter } from 'rxjs';
 import { Auth } from './services/auth';
 import { MenuController, Platform } from '@ionic/angular';
 import { DistributorProfileService } from './services/distributor-profile.service';
+import { ContentService } from './services/content.service';
 import { Capacitor } from '@capacitor/core';
 import { StatusBar, Style } from '@capacitor/status-bar';
 import { App } from '@capacitor/app';
@@ -78,7 +79,8 @@ export class AppComponent {
     private auth: Auth,
     private menuController: MenuController,
     private platform: Platform,
-    private distributorProfileService: DistributorProfileService
+    private distributorProfileService: DistributorProfileService,
+    private contentService: ContentService
   ) {
 
     // 📱 Native-only setup (status bar base config + hardware back button)
@@ -97,6 +99,8 @@ export class AppComponent {
           this.applyTheme(this.userRole);
           if (this.userRole === 'DISTRIBUTOR') {
             this.distributorProfileService.loadProfile();
+            this.contentService.loadActiveOffers();
+            this.contentService.loadActiveNotifications();
           }
         } else {
           this.userRole = null;
