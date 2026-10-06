@@ -80,13 +80,33 @@ export class ReportsService {
     return this.getList('/inventory/low-stock', params);
   }
 
-  // ── Production (Excel #13, #15) ───────────────────────────────────────
+  // ── Production (Excel #13, #15, #17) ──────────────────────────────────
   getProductionLog(params: { plant?: string; product?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
     return this.getList('/production/log', params);
   }
 
   getBomConsumption(params: { plant?: string; product?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
     return this.getList('/production/bom-consumption', params);
+  }
+
+  // Per-product lifetime totals (qty / run count / cost) — no tab consumed this before.
+  getProductionSummary(params: { plant?: string; product?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/production/summary', params);
+  }
+
+  // Per-date totals (qty / cost / run count).
+  getProductionDailySummary(params: { plant?: string; product?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/production/daily-summary', params);
+  }
+
+  // Per-run cost breakdown (raw material cost + additional/manufacturing cost) — backs Production Cost Report tab.
+  getProductionCost(params: { plant?: string; product?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/production/cost', params);
+  }
+
+  // One entry per finished product's active BOM, each carrying a nested `components[]` array — backs BOM Report tab.
+  getBomReport(params: { plant?: string; product?: string } = {}): Observable<any[]> {
+    return this.getList('/production/bom-report', params);
   }
 
   // ── Sales (Excel #19, #20, #21, #22, #27) ───────────────────────────────
@@ -145,6 +165,21 @@ export class ReportsService {
   // ── Inventory Issues (Excel #34, #35) ───────────────────────────────────
   getInventoryIssuesByType(itemType: 'PROMOTIONAL_ITEMS' | 'SPARE_PARTS', params: { dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
     return this.getList('/inventory-issues/by-type', { ...params, itemType });
+  }
+
+  // ── Stock Movement (Excel #1, #2, #4) ───────────────────────────────────
+  // Filter param names (item/warehouse/dateFrom/dateTo) are unconfirmed against the backend —
+  // sent defensively the same way other report filters are; harmless if the backend ignores them.
+  getStockLedger(params: { item?: string; warehouse?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/stock-movement/ledger', params);
+  }
+
+  getSupplierWiseInward(params: { item?: string; warehouse?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/stock-movement/supplier-wise', params);
+  }
+
+  getMaterialInward(params: { item?: string; warehouse?: string; dateFrom?: string; dateTo?: string } = {}): Observable<any[]> {
+    return this.getList('/stock-movement/material-inward', params);
   }
 
   // ── Scrap (Excel #36, #37, #38) ─────────────────────────────────────────

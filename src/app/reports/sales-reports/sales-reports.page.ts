@@ -10,9 +10,10 @@ import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { DistributorService, DistributorDto, ApiResponse } from '../../services/distributor.service';
 import { SalesHierarchyService } from '../../services/sales-hierarchy.service';
+import { DealerService } from '../../services/dealer.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  DEALERS, REGIONS,
+  REGIONS,
   seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
@@ -173,8 +174,9 @@ export class SalesReportsPage implements OnInit {
   private reportsService = inject(ReportsService);
   private distributorService = inject(DistributorService);
   private salesHierarchyService = inject(SalesHierarchyService);
+  private dealerService = inject(DealerService);
 
-  dealers = DEALERS;
+  dealers: string[] = [];
   distributors: DropdownOption[] = [];
   salespersons: DropdownOption[] = [];
 
@@ -208,10 +210,9 @@ export class SalesReportsPage implements OnInit {
     return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), dealer: 'all', distributor: 'all', salesperson: 'all' };
   }
 
-  // Distributor & Salesperson dropdowns are populated from real master data (GET /distributors,
-  // GET /sales-hierarchy/list). Dealers have no global "all dealers" endpoint in this backend yet
-  // (dealers are only fetchable scoped to a distributor via GET /dealers/distributor/{id}), so that
-  // dropdown stays on the deterministic mock list for now.
+  // Distributor, Salesperson & Dealer dropdowns are all populated from real master data
+  // (GET /distributors, GET /sales-hierarchy/list, GET /dealers — the last one is the global,
+  // unscoped dealer directory, distinct from the distributor-scoped /dealers/distributor/{id}).
   private loadFilterOptions() {
     this.distributorService.getAllDistributors().pipe(
       catchError(() => of({ success: false, message: '', data: [] } as ApiResponse<DistributorDto[]>))
@@ -225,6 +226,13 @@ export class SalesReportsPage implements OnInit {
     ).subscribe(list => {
       this.salespersons = list.map(p => ({ id: String(p.id), name: p.name }));
     });
+
+    this.dealerService.getAllDealers().subscribe(list => {
+      this.dealers = list.map(d => d.fullName);
+      // Dealer Wise Sales (Excel #23) builds its rows by iterating `this.dealers` — re-run it now
+      // that the real dealer list has arrived, since applyFilters() ran before this resolved.
+      this.buildDealerRows();
+    });
   }
 
   resetFilters() {
@@ -236,8 +244,9 @@ export class SalesReportsPage implements OnInit {
     this.haptic.selectionChanged();
     this.isLoading = true;
 
-    // Dealer Wise Sales (Excel #23) has no backend endpoint yet (REPORTS_README.md Category 3) —
-    // that tab stays on deterministic mock data until a dealer-grouped query exists.
+    // Dealer Wise Sales (Excel #23): the dealer *directory* is now real (GET /dealers), but there's
+    // still no dealer-grouped sales aggregate endpoint, so orders/qty/revenue per dealer stay
+    // deterministic mock figures layered on top of the real dealer names.
     this.buildDealerRows();
 
     const dateParams = { dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };

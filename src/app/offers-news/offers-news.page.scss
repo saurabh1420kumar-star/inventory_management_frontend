@@ -1,0 +1,439 @@
+/* ═══════════════════════════════════════════════════════════
+   Offers & News — matches the Distributor Dashboard dark theme
+   ═══════════════════════════════════════════════════════════ */
+
+:host {
+  --on-bg: #0a1628;
+  --on-surface: #0f1d32;
+  --on-border: rgba(255, 255, 255, 0.06);
+  --on-text: #ffffff;
+  --on-text-secondary: #94a3b8;
+  --on-emerald: #10b981;
+  --on-teal: #2dd4bf;
+  --ion-background-color: #0a1628;
+  --ion-text-color: #e2e8f0;
+}
+
+ion-content {
+  --background: var(--on-bg);
+  --color: var(--on-text);
+}
+
+ion-refresher-content {
+  --color: var(--on-emerald);
+  color: var(--on-emerald);
+}
+
+// Tailwind preflight is disabled, so reset the UA button appearance only.
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  background: transparent;
+  border: none;
+  cursor: pointer;
+  font-family: inherit;
+}
+
+.on-shell {
+  display: flex;
+  flex-direction: column;
+  min-height: 100%;
+  background: var(--on-bg);
+}
+
+/* ─── Header ─── */
+
+.on-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 16px 10px;
+  background: linear-gradient(180deg, #0b3326 0%, #092a1e 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.12);
+}
+
+.on-header__left,
+.on-header__right {
+  flex-shrink: 0;
+  width: 40px;
+  display: flex;
+}
+
+.on-header__right {
+  justify-content: flex-end;
+}
+
+.on-header__center {
+  flex: 1;
+  text-align: center;
+}
+
+.on-header__title {
+  font-size: 20px;
+  font-weight: 800;
+  color: #ffffff;
+  letter-spacing: 0.02em;
+  line-height: 1.2;
+  margin: 0;
+}
+
+.on-header__accent {
+  color: var(--on-emerald);
+}
+
+.on-header__subtitle {
+  font-size: 12px;
+  font-weight: 500;
+  color: rgba(255, 255, 255, 0.65);
+  margin: 0;
+}
+
+.on-back,
+.on-refresh {
+  width: 36px;
+  height: 36px;
+  border-radius: 12px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: rgba(255, 255, 255, 0.06);
+  border: 1px solid rgba(255, 255, 255, 0.08);
+  color: #e2e8f0;
+  transition: background 0.2s ease, transform 0.15s ease;
+
+  ion-icon {
+    font-size: 20px;
+  }
+
+  &:active {
+    transform: scale(0.92);
+    background: rgba(255, 255, 255, 0.12);
+  }
+}
+
+/* ─── Tab Bar (mirrors .dd-tabs) ─── */
+
+.on-tabs {
+  display: flex;
+  background: rgba(255, 255, 255, 0.04);
+  border-bottom: 1px solid var(--on-border);
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(12px);
+}
+
+.on-tabs__btn {
+  flex: 1;
+  padding: 14px 0;
+  font-size: 15px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.45);
+  text-align: center;
+  position: relative;
+  transition: color 0.25s ease;
+  letter-spacing: 0.01em;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 7px;
+
+  &--active {
+    color: #ffffff;
+    font-weight: 700;
+
+    &::after {
+      content: '';
+      position: absolute;
+      bottom: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: linear-gradient(90deg, var(--on-emerald), var(--on-teal));
+      border-radius: 3px 3px 0 0;
+    }
+
+    .on-tabs__count {
+      background: rgba(16, 185, 129, 0.2);
+      color: var(--on-emerald);
+    }
+  }
+}
+
+.on-tabs__count {
+  font-size: 11px;
+  font-weight: 700;
+  padding: 1px 7px;
+  border-radius: 999px;
+  background: rgba(255, 255, 255, 0.08);
+  color: rgba(255, 255, 255, 0.5);
+  transition: background 0.25s ease, color 0.25s ease;
+}
+
+/* ─── Body ─── */
+
+.on-body {
+  flex: 1;
+  padding: 16px 14px 32px;
+}
+
+.on-list {
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+}
+
+/* ─── Advertisement banner ─── */
+
+.on-ad {
+  position: relative;
+  border-radius: 18px;
+  border: 1.5px solid rgba(16, 185, 129, 0.18);
+  background: rgba(255, 255, 255, 0.03);
+  overflow: hidden;
+  animation: onCardIn 0.35s ease-out both;
+  transition: transform 0.2s ease, box-shadow 0.2s ease, border-color 0.2s ease;
+  box-shadow: 0 8px 24px rgba(0, 0, 0, 0.28);
+
+  &:active {
+    transform: scale(0.985);
+  }
+
+  &--news {
+    border-color: rgba(56, 189, 248, 0.18);
+  }
+}
+
+@keyframes onCardIn {
+  from {
+    opacity: 0;
+    transform: translateY(12px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+/* The creative is the content — a 16:9 billboard with the copy laid over it. */
+.on-ad__creative {
+  position: relative;
+  width: 100%;
+  aspect-ratio: 16 / 9;
+  overflow: hidden;
+  background: #060f1d;
+
+  img {
+    position: absolute;
+    inset: 0;
+    width: 100%;
+    height: 100%;
+    object-fit: cover;
+    display: block;
+  }
+}
+
+.on-ad__fallback {
+  position: absolute;
+  inset: 0;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background: linear-gradient(135deg, #10b981 0%, #2dd4bf 50%, #3b82f6 100%);
+
+  ion-icon {
+    font-size: 54px;
+    color: rgba(255, 255, 255, 0.4);
+  }
+}
+
+.on-ad__scrim {
+  position: absolute;
+  inset: 0;
+  background: linear-gradient(to top, rgba(4, 12, 24, 0.92) 0%, rgba(4, 12, 24, 0.35) 45%, rgba(4, 12, 24, 0.08) 100%);
+  pointer-events: none;
+}
+
+.on-ad__ribbon {
+  position: absolute;
+  top: 12px;
+  left: 12px;
+  display: inline-flex;
+  align-items: center;
+  gap: 5px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  text-transform: uppercase;
+  padding: 5px 10px;
+  border-radius: 999px;
+  color: #ffffff;
+  background: rgba(16, 185, 129, 0.9);
+  border: 1px solid rgba(255, 255, 255, 0.25);
+  backdrop-filter: blur(8px);
+
+  ion-icon {
+    font-size: 12px;
+  }
+}
+
+.on-ad__copy {
+  position: absolute;
+  inset-inline: 0;
+  bottom: 0;
+  padding: 16px;
+}
+
+.on-ad__title {
+  font-size: 17px;
+  font-weight: 800;
+  color: #ffffff;
+  margin: 0;
+  line-height: 1.3;
+  text-shadow: 0 2px 10px rgba(0, 0, 0, 0.5);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+
+  &--dark {
+    color: var(--on-text);
+    text-shadow: none;
+    font-size: 15.5px;
+    margin-top: 2px;
+  }
+}
+
+.on-ad__text {
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: rgba(255, 255, 255, 0.85);
+  margin: 4px 0 0;
+  text-shadow: 0 1px 6px rgba(0, 0, 0, 0.4);
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.on-ad__meta {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin-top: 9px;
+  font-size: 11px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.75);
+
+  ion-icon {
+    font-size: 14px;
+    color: #6ee7b7;
+  }
+
+  &--dark {
+    color: #64748b;
+
+    ion-icon {
+      color: var(--on-emerald);
+    }
+  }
+}
+
+/* ─── Text-only broadcast ─── */
+
+.on-note {
+  position: relative;
+  display: flex;
+  gap: 12px;
+  padding: 16px;
+}
+
+.on-note__icon {
+  flex-shrink: 0;
+  width: 44px;
+  height: 44px;
+  border-radius: 13px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: 1px solid;
+
+  ion-icon {
+    font-size: 21px;
+  }
+}
+
+.on-note__content {
+  flex: 1;
+  min-width: 0;
+}
+
+.on-note__badge {
+  display: inline-block;
+  font-size: 9.5px;
+  font-weight: 800;
+  letter-spacing: 0.05em;
+  padding: 2px 8px;
+  border-radius: 999px;
+  white-space: nowrap;
+}
+
+.on-note__text {
+  font-size: 12.5px;
+  line-height: 1.55;
+  color: var(--on-text-secondary);
+  margin: 5px 0 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Empty state ─── */
+
+.on-empty {
+  text-align: center;
+  padding: 56px 24px;
+}
+
+.on-empty__icon {
+  width: 64px;
+  height: 64px;
+  border-radius: 18px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 16px;
+  border: 1px solid;
+
+  ion-icon {
+    font-size: 30px;
+  }
+
+  &--emerald {
+    background: rgba(16, 185, 129, 0.1);
+    border-color: rgba(16, 185, 129, 0.2);
+    ion-icon { color: var(--on-emerald); }
+  }
+
+  &--sky {
+    background: rgba(56, 189, 248, 0.1);
+    border-color: rgba(56, 189, 248, 0.2);
+    ion-icon { color: #38bdf8; }
+  }
+}
+
+.on-empty__title {
+  font-size: 16px;
+  font-weight: 700;
+  color: var(--on-text);
+  margin: 0 0 6px;
+}
+
+.on-empty__text {
+  font-size: 12.5px;
+  color: #64748b;
+  margin: 0;
+  line-height: 1.5;
+}

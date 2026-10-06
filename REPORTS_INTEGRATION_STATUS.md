@@ -22,31 +22,36 @@ A new `src/app/services/reports.service.ts` was added — no reports service exi
 | | | Category Wise Valuation | *(derived client-side from Stock Summary)* | Wired (not a separate API) |
 | | | Low Stock Reorder | `GET /inventory/low-stock` | Wired |
 | Production Reports | `/reports/production-reports` | Daily Production | `GET /production/log` | Wired |
-| | | Material Consumption | `GET /production/bom-consumption` | Wired |
-| | | BOM Report | *(no backend endpoint)* | **Still mock** |
-| | | Production Cost | *(no backend endpoint)* | **Still mock** |
+| | | Material Consumption | `GET /production/bom-consumption` | Wired (2026-10-07: fixed field mapping — was reading the wrong qty field) |
+| | | BOM Report | `GET /production/bom-report` | Wired 2026-10-07 — flattened nested `components[]` to one row per component |
+| | | Production Cost | `GET /production/cost` | Wired 2026-10-07 — columns changed to Raw Material Cost / Additional Cost (no labor/overhead split in the API) |
+| | | Production Summary *(new tab)* | `GET /production/summary` | Wired 2026-10-07 |
+| | | Daily Summary *(new tab)* | `GET /production/daily-summary` | Wired 2026-10-07 |
+| | | *(Plant and Product filters removed from this page 2026-10-07 — Plant was mock-only, Product filtering was unconfirmed; only the date range filter remains)* | | |
 | Sales Reports | `/reports/sales-reports` | Sales Register | `GET /sales/invoice-grid` | Wired |
 | | | Sales Summary | *(derived client-side from Sales Register)* | Wired (not a separate API call) |
 | | | Product Wise | `GET /sales/by-product` | Wired |
 | | | Distributor Wise | `GET /sales/by-distributor` | Wired |
 | | | Top Selling Products | `GET /sales/top-products` | Wired |
 | | | Salesman Performance | `GET /sales-orders/salesman-performance` | Wired |
-| | | Dealer Wise | *(no backend endpoint — Excel #23, Category 3)* | **Still mock** |
-| Receivables & Collections | `/reports/receivables-collections` | Collections | `GET /receivables/collection-history` | Wired |
+| | | Dealer Wise | `GET /dealers` (directory only) | Dealer names wired 2026-10-07 via new `DealerService`; orders/qty/revenue **still mock** — no dealer-wise sales aggregate endpoint exists |
+| Receivables & Collections | `/reports/receivables-collections` | Collections | `GET /receivables/collection-history` | Wired 2026-10-07 — fixed field mapping (real shape is `{ id, distributorId, distributorName, amount, description, approvedAt }`, not `invoiceNo`/`mode`/`referenceNo`/`date`); columns changed to Date / Customer / Amount Collected / Reference No (falls back to `id`) / Description. Also strips a backend string-concat bug that appends a literal `" null"` to `distributorName` when the distributor has no last name. |
 | | | Outstanding Summary | *(backend returns empty — Excel #24, Category 2)* | **Still mock** |
 | | | Ageing Analysis | *(same data source as Outstanding)* | **Still mock** |
 | Sales Orders | `/reports/sales-orders` | All Orders / Pending / Dispatch Queue | `GET /sales-orders/grid` | Wired (one call, filtered client-side into the 3 views) |
-| Inventory Issues | `/reports/inventory-issues` | Promotional / Spare Parts / History | `GET /inventory-issues/by-type` (called twice, once per itemType) | Wired |
+| Inventory Issues | `/reports/inventory-issues` | Promotional / Spare Parts | `GET /inventory-issues/by-type` (called twice, once per itemType) | Wired 2026-10-07 — fixed field mapping (real shape is `{ id, itemType, transactionType, materialCode, materialName, quantity, unit, issuedTo, referenceNumber, comments, quotedSellingPrice, createdAt }`, not `issueDate`/`item`/`issuedToType`); the Employee/Dealer/Distributor filter was fabricated (no such field exists) and was replaced with a free-text search on `issuedTo`. Columns changed to Reference No / Date / Category / Material (name + code) / Issued To / Qty / Price / Comments. |
 | Scrap Management | `/reports/scrap-management` | Scrap Generation | `GET /scrap/lifecycle` | Wired |
 | | | Scrap Disposal | `GET /scrap/disposal-status` | Wired |
 | | | Scrap Sale | `GET /scrap/revenue` | Wired |
+| Stock Movement | `/reports/stock-movement` | Stock Ledger | `GET /stock-movement/ledger` | Wired 2026-10-07 — material name bug on backend is fixed, added a Material column to the table |
+| | | Supplier Wise Inward | `GET /stock-movement/supplier-wise` | Wired 2026-10-07 |
+| | | Material Inward | `GET /stock-movement/material-inward` | Wired 2026-10-07 |
 
 ### ⛔ Not touched — still 100% mock data
 
 | Page | Route | Why it was skipped |
 |---|---|---|
 | Batch Management | `/reports/batch-management` | Backend API exists but is missing fields (`mfgDate`, opening/inward/outward/closing qty) — Category 2 in README. |
-| Stock Movement | `/reports/stock-movement` | Supplier/Material Inward endpoints work, but material name comes back as `"Raw Material ID: 47"` (README "Fix 1", not yet applied on backend). Wiring now would ship a page with a broken-looking material column. |
 | Dispatch & Delivery | `/reports/dispatch-delivery` | Dispatch Register / Delivery Status / Pending Dispatch all need `customerName` added to the backend DTO first (README "Fix 2"). |
 | MIS Dashboard | `/reports/mis-dashboard` | Backend `mis/kpi-summary` is missing production and purchase/inward totals — Category 2. |
 

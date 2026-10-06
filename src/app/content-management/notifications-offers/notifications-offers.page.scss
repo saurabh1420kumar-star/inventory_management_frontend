@@ -1,0 +1,135 @@
+:host {
+  display: block;
+}
+
+// Tailwind preflight is disabled, so native <button> shows a UA "ButtonFace"
+// background. Reset ONLY `appearance` — setting background/border/color here
+// would out-specify the Tailwind utility classes on the buttons.
+button {
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+}
+
+// Keep native form controls light regardless of the html-level dark
+// color-scheme applied for sales/distributor roles.
+input,
+select,
+textarea {
+  color-scheme: light;
+  font-family: inherit;
+}
+
+// The native datetime indicator renders white-on-white under a dark
+// color-scheme, so draw our own icon and overlay the real (invisible) one.
+input[type='datetime-local'] {
+  position: relative;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' fill='none' viewBox='0 0 24 24' stroke='%2364748b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Crect x='3' y='4.5' width='18' height='16' rx='2.5'/%3E%3Cpath d='M3 9.5h18M8 2.5v4M16 2.5v4'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 12px center;
+  background-size: 18px;
+  padding-right: 42px !important;
+}
+
+input[type='datetime-local']::-webkit-calendar-picker-indicator {
+  position: absolute;
+  top: 0;
+  right: 0;
+  width: 2.6rem;
+  height: 100%;
+  margin: 0;
+  opacity: 0;
+  cursor: pointer;
+}
+
+input[type='number']::-webkit-outer-spin-button,
+input[type='number']::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+.hero-fade {
+  animation: heroFade 0.45s ease-out both;
+}
+
+@keyframes heroFade {
+  from {
+    opacity: 0;
+    transform: translateY(-8px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.content-card {
+  animation: cardIn 0.35s ease-out both;
+}
+
+@keyframes cardIn {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+.line-clamp-2 {
+  display: -webkit-box;
+  -webkit-line-clamp: 2;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.line-clamp-3 {
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+/* ─── Advertisement banner ─── */
+
+.ad-banner {
+  // Paused creatives read as drafts, not live placements.
+  &--muted {
+    img {
+      filter: saturate(0.45) brightness(0.8);
+    }
+  }
+}
+
+// The action dock stays out of the creative until the admin reaches for it,
+// so the card reads as an ad preview rather than a CRUD row. Always visible
+// on touch devices, which have no hover state.
+.ad-banner__dock {
+  opacity: 0;
+  transform: translateY(-4px);
+  transition: opacity 0.2s ease, transform 0.2s ease;
+}
+
+.ad-banner:hover .ad-banner__dock,
+.ad-banner:focus-within .ad-banner__dock {
+  opacity: 1;
+  transform: translateY(0);
+}
+
+@media (hover: none) {
+  .ad-banner__dock {
+    opacity: 1;
+    transform: none;
+  }
+}
+
+.content-modal {
+  --width: 100%;
+  --max-width: 640px;
+  --height: 100%;
+  --max-height: 92vh;
+  --border-radius: 20px;
+  --box-shadow: 0 24px 60px rgba(15, 23, 42, 0.25);
+}

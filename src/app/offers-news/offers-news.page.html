@@ -1,0 +1,152 @@
+<ion-content>
+  <div class="on-shell">
+
+    <!-- ═══════════════ HEADER ═══════════════ -->
+    <div class="on-header">
+      <div class="on-header__left">
+        <button type="button" class="on-back" (click)="goBack()">
+          <ion-icon name="chevron-back-outline"></ion-icon>
+        </button>
+      </div>
+      <div class="on-header__center">
+        <h1 class="on-header__title">
+          <span class="on-header__accent">Offers</span> &amp; News
+        </h1>
+        <p class="on-header__subtitle">Latest updates for you</p>
+      </div>
+      <div class="on-header__right">
+        <button type="button" class="on-refresh" (click)="reload()">
+          <ion-icon name="refresh-outline"></ion-icon>
+        </button>
+      </div>
+    </div>
+
+    <!-- ═══════════════ TABS ═══════════════ -->
+    <div class="on-tabs">
+      <button type="button" class="on-tabs__btn" [class.on-tabs__btn--active]="activeTab === 'offers'"
+        (click)="switchTab('offers')">
+        Offers
+        <span class="on-tabs__count" *ngIf="offers.length">{{ offers.length }}</span>
+      </button>
+      <button type="button" class="on-tabs__btn" [class.on-tabs__btn--active]="activeTab === 'news'"
+        (click)="switchTab('news')">
+        Notifications
+        <span class="on-tabs__count" *ngIf="notifications.length">{{ notifications.length }}</span>
+      </button>
+    </div>
+
+    <!-- ═══════════════ BODY ═══════════════ -->
+    <div class="on-body">
+      <ion-refresher slot="fixed" (ionRefresh)="handleRefresh($event)">
+        <ion-refresher-content pullingIcon="chevron-down-circle-outline" refreshingSpinner="crescent">
+        </ion-refresher-content>
+      </ion-refresher>
+
+      <!-- ─────────── OFFERS TAB ─────────── -->
+      <ng-container *ngIf="activeTab === 'offers'">
+
+        <div *ngIf="offers.length === 0" class="on-empty">
+          <div class="on-empty__icon on-empty__icon--emerald">
+            <ion-icon name="pricetags-outline"></ion-icon>
+          </div>
+          <h3 class="on-empty__title">No offers right now</h3>
+          <p class="on-empty__text">New promotions will appear here as soon as they go live.</p>
+        </div>
+
+        <div class="on-list">
+          <div *ngFor="let offer of offers" class="on-ad">
+
+            <!-- Creative -->
+            <div class="on-ad__creative">
+              <img *ngIf="offer.imageUrl" [src]="offer.imageUrl" [alt]="offer.title">
+
+              <div *ngIf="!offer.imageUrl" class="on-ad__fallback">
+                <ion-icon name="pricetags-outline"></ion-icon>
+              </div>
+
+              <div class="on-ad__scrim"></div>
+
+              <span class="on-ad__ribbon">
+                <ion-icon name="pricetag-outline"></ion-icon>
+                Offer
+              </span>
+
+              <!-- Overlaid copy -->
+              <div class="on-ad__copy">
+                <h4 class="on-ad__title">{{ offer.title }}</h4>
+                <p class="on-ad__text" *ngIf="offer.description">{{ offer.description }}</p>
+                <div class="on-ad__meta">
+                  <ion-icon name="calendar-outline"></ion-icon>
+                  <span>Valid till {{ formatDate(offer.validTo) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+      <!-- ─────────── NEWS TAB ─────────── -->
+      <ng-container *ngIf="activeTab === 'news'">
+
+        <div *ngIf="notifications.length === 0" class="on-empty">
+          <div class="on-empty__icon on-empty__icon--sky">
+            <ion-icon name="megaphone-outline"></ion-icon>
+          </div>
+          <h3 class="on-empty__title">No notifications</h3>
+          <p class="on-empty__text">Announcements and alerts will show up here.</p>
+        </div>
+
+        <div class="on-list">
+          <div *ngFor="let n of notifications" class="on-ad on-ad--news"
+            [style.borderColor]="getTypeColor(n.type) + '2e'">
+
+            <!-- Image-led broadcast -->
+            <div class="on-ad__creative" *ngIf="n.imageUrl">
+              <img [src]="n.imageUrl" [alt]="n.title">
+              <div class="on-ad__scrim"></div>
+
+              <span class="on-ad__ribbon" [style.background]="getTypeColor(n.type) + 'e6'">
+                <ion-icon [name]="getTypeIcon(n.type)"></ion-icon>
+                {{ n.type }}
+              </span>
+
+              <div class="on-ad__copy">
+                <h4 class="on-ad__title">{{ n.title }}</h4>
+                <p class="on-ad__text" *ngIf="n.message">{{ n.message }}</p>
+                <div class="on-ad__meta">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span>{{ formatDate(n.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+
+            <!-- Text-only broadcast -->
+            <div class="on-note" *ngIf="!n.imageUrl"
+              [style.background]="'linear-gradient(135deg, ' + getTypeColor(n.type) + '1a 0%, transparent 70%)'">
+              <div class="on-note__icon"
+                [style.background]="getTypeColor(n.type) + '1f'"
+                [style.borderColor]="getTypeColor(n.type) + '40'">
+                <ion-icon [name]="getTypeIcon(n.type)" [style.color]="getTypeColor(n.type)"></ion-icon>
+              </div>
+
+              <div class="on-note__content">
+                <span class="on-note__badge"
+                  [style.background]="getTypeColor(n.type) + '1f'"
+                  [style.color]="getTypeColor(n.type)">
+                  {{ n.type }}
+                </span>
+                <h4 class="on-ad__title on-ad__title--dark">{{ n.title }}</h4>
+                <p class="on-note__text" *ngIf="n.message">{{ n.message }}</p>
+                <div class="on-ad__meta on-ad__meta--dark">
+                  <ion-icon name="time-outline"></ion-icon>
+                  <span>{{ formatDate(n.createdAt) }}</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </ng-container>
+
+    </div>
+  </div>
+</ion-content>

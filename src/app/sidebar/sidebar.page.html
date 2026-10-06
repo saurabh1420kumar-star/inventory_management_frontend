@@ -189,11 +189,27 @@
           <ion-label>Dispatch & GDN</ion-label>
         </ion-item>
 
+        <!-- ===== NOTIFICATIONS & OFFERS (Desktop only, or for all screens if admin) ===== -->
+        <ng-container *ngIf="isDesktop || isAdmin">
+          <ion-item *appAcl="'NOTIFICATIONS_AND_OFFERS'" routerLink="/notifications-offers" routerLinkActive="active" (click)="onMenuItemClick()">
+            <ion-icon name="megaphone-outline" slot="start"></ion-icon>
+            <ion-label>Notifications & Offers</ion-label>
+          </ion-item>
+        </ng-container>
+
         <!-- ===== LOGISTICS (hidden) ===== -->
         <!-- <ion-item *appAcl="{ features: ['ORDER_DETAILS'] }" routerLink="/logistics" routerLinkActive="active" (click)="onMenuItemClick()">
           <ion-icon name="navigate-outline" slot="start"></ion-icon>
           <ion-label>Logistics</ion-label>
         </ion-item> -->
+
+        <!-- ===== OFFERS & NEWS (Distributor / Sales mobile view) ===== -->
+        <ng-container *ngIf="isSalesRole || userRole === 'DISTRIBUTOR'">
+          <ion-item routerLink="/offers-news" routerLinkActive="active" (click)="onMenuItemClick()">
+            <ion-icon name="megaphone-outline" slot="start"></ion-icon>
+            <ion-label>Offers & News</ion-label>
+          </ion-item>
+        </ng-container>
 
         <!-- ===== COMPLAINTS & FEEDBACK ===== -->
         <!-- For Sales / Distributor: custom dark accordion (ion-accordion shadow DOM blocks theme CSS) -->

@@ -74,6 +74,7 @@ export class Acl {
       ['INVENTORY_OUTWARD', '/outward-inventory'],
       ['ORDER_DETAILS', '/order-details'],
       ['DISPATCH', '/dispatch'],
+      ['NOTIFICATIONS_AND_OFFERS', '/notifications-offers'],
       ['COMPLAINT', '/complaints'],
       ['REPORTS', '/reports/mis-dashboard'],
       ['USER_RIGHTS', '/user-right'],

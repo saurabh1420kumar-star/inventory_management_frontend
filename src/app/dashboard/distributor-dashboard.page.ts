@@ -538,6 +538,11 @@ export class DistributorDashboardPage implements OnInit {
     this.router.navigate(['/order-details']);
   }
 
+  goToOffersNews() {
+    this.haptic.medium();
+    this.router.navigate(['/offers-news']);
+  }
+
   toggleMenu(menu: string) {
     this.haptic.light();
     this.expandedMenu = this.expandedMenu === menu ? null : menu;

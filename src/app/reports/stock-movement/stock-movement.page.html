@@ -76,6 +76,7 @@
                   <th>Date</th>
                   <th>Voucher No</th>
                   <th>Type</th>
+                  <th>Material</th>
                   <th>Party / Ref No</th>
                   <th>Inward Qty</th>
                   <th>Outward Qty</th>
@@ -87,12 +88,13 @@
                   <td>{{ formatDisplayDate(row.date) }}</td>
                   <td>{{ row.voucherNo }}</td>
                   <td><span class="report-badge" [ngClass]="typeBadgeClass(row.type)">{{ row.type }}</span></td>
+                  <td>{{ row.material }}</td>
                   <td>{{ row.party }}</td>
                   <td>{{ row.inwardQty || '—' }}</td>
                   <td>{{ row.outwardQty || '—' }}</td>
                   <td>{{ row.balanceQty }}</td>
                 </tr>
-                <tr *ngIf="pagedLedgerRows.length === 0"><td colspan="7" class="report-empty">No stock movement in this range</td></tr>
+                <tr *ngIf="pagedLedgerRows.length === 0"><td colspan="8" class="report-empty">No stock movement in this range</td></tr>
               </tbody>
             </table>
           </div>

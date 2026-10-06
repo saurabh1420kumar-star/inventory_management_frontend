@@ -10,7 +10,7 @@ import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  toDateInputValue, formatDisplayDate,
+  toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
@@ -18,46 +18,46 @@ import {
 type ReportType = 'promotional' | 'spareParts';
 type IssueCategory = 'Promotional' | 'Spare Parts';
 type IssueTypeFilter = 'all' | IssueCategory;
-type IssuedToType = 'Employee' | 'Dealer' | 'Distributor';
-type IssuedToFilter = 'all' | IssuedToType;
-
-const KNOWN_RECIPIENT_TYPES: IssuedToType[] = ['Employee', 'Dealer', 'Distributor'];
 
 interface Filters {
   issueType: IssueTypeFilter;
-  issuedToType: IssuedToFilter;
+  issuedTo: string;
   dateFrom: string;
   dateTo: string;
 }
 
+// Matches GET /api/reports/inventory-issues/by-type?itemType=PROMOTIONAL_ITEMS|SPARE_PARTS
+// Each row: { id, itemType, transactionType, materialCode, materialName, quantity, unit,
+//             issuedTo, referenceNumber, comments, quotedSellingPrice, createdAt }
 interface IssueRow {
-  issueNo: string;
+  id: number;
+  referenceNo: string;
   issueDate: string;
   category: IssueCategory;
-  issuedToType: IssuedToType;
-  issuedToName: string;
-  item: string;
+  materialCode: string;
+  materialName: string;
+  issuedTo: string;
+  transactionType: string;
   qty: number;
   uom: string;
+  unitPrice: number;
+  comments: string;
 }
 
-function normalizeRecipientType(raw: unknown): IssuedToType {
-  const text = String(raw ?? 'Employee').trim();
-  const titleCase = (text.charAt(0).toUpperCase() + text.slice(1).toLowerCase()) as IssuedToType;
-  return KNOWN_RECIPIENT_TYPES.includes(titleCase) ? titleCase : 'Employee';
-}
-
-// GET /api/reports/inventory-issues/by-type?itemType=PROMOTIONAL_ITEMS|SPARE_PARTS — Excel #34 / #35
 function mapIssueRow(raw: any, category: IssueCategory): IssueRow {
   return {
-    issueNo: raw.issueNo ?? raw.issueNumber ?? '—',
-    issueDate: raw.issueDate ?? raw.date ?? raw.issuedDate ?? '',
+    id: raw.id,
+    referenceNo: raw.referenceNumber ?? (raw.id != null ? String(raw.id) : '—'),
+    issueDate: raw.createdAt ?? raw.issueDate ?? raw.date ?? '',
     category,
-    issuedToType: normalizeRecipientType(raw.issuedToType ?? raw.recipientType),
-    issuedToName: raw.issuedToName ?? raw.recipientName ?? raw.issuedTo ?? '—',
-    item: raw.item ?? raw.itemName ?? '—',
-    qty: Number(raw.qty ?? raw.quantity ?? 0),
-    uom: raw.uom ?? raw.unit ?? 'PCS',
+    materialCode: raw.materialCode ?? '—',
+    materialName: raw.materialName ?? raw.item ?? raw.itemName ?? '—',
+    issuedTo: raw.issuedTo ?? raw.issuedToName ?? raw.recipientName ?? '—',
+    transactionType: raw.transactionType ?? '—',
+    qty: Number(raw.quantity ?? raw.qty ?? 0),
+    uom: raw.unit ?? raw.uom ?? 'PCS',
+    unitPrice: Number(raw.quotedSellingPrice ?? 0),
+    comments: raw.comments ?? '',
   };
 }
 
@@ -91,7 +91,7 @@ export class InventoryIssuesReportPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
-    return { issueType: 'all', issuedToType: 'all', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
+    return { issueType: 'all', issuedTo: '', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
   }
 
   resetFilters() {
@@ -117,8 +117,9 @@ export class InventoryIssuesReportPage implements OnInit {
       if (this.filters.issueType !== 'all') {
         rows = rows.filter(r => r.category === this.filters.issueType);
       }
-      if (this.filters.issuedToType !== 'all') {
-        rows = rows.filter(r => r.issuedToType === this.filters.issuedToType);
+      const search = this.filters.issuedTo.trim().toLowerCase();
+      if (search) {
+        rows = rows.filter(r => r.issuedTo.toLowerCase().includes(search));
       }
 
       this.issueRows = rows.sort((a, b) => b.issueDate.localeCompare(a.issueDate));
@@ -157,10 +158,31 @@ export class InventoryIssuesReportPage implements OnInit {
 
   formatDisplayDate = formatDisplayDate;
 
+  formatTransactionType(type: string): string {
+    if (!type || type === '—') return '—';
+    return type
+      .toLowerCase()
+      .split('_')
+      .map(w => w.charAt(0).toUpperCase() + w.slice(1))
+      .join(' ');
+  }
+
+  formatPrice(value: number): string {
+    return value > 0 ? formatCurrencyFull(value) : 'Free';
+  }
+
   private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
-    const headers = ['Issue No', 'Issue Date', 'Category', 'Issued To', 'Item', 'Qty', 'UOM'];
-    const rows = this.activeRows.map(r => [r.issueNo, formatDisplayDate(r.issueDate), r.category, `${r.issuedToType} - ${r.issuedToName}`, r.item, r.qty, r.uom]);
-    const jsonRows = this.activeRows.map(r => ({ 'Issue No': r.issueNo, 'Issue Date': r.issueDate, Category: r.category, 'Issued To': `${r.issuedToType} - ${r.issuedToName}`, Item: r.item, Qty: r.qty, UOM: r.uom }));
+    const headers = ['Reference No', 'Date', 'Category', 'Material', 'Material Code', 'Issued To', 'Transaction Type', 'Qty', 'UOM', 'Price', 'Comments'];
+    const rows = this.activeRows.map(r => [
+      r.referenceNo, formatDisplayDate(r.issueDate), r.category, r.materialName, r.materialCode,
+      r.issuedTo, this.formatTransactionType(r.transactionType), r.qty, r.uom, this.formatPrice(r.unitPrice), r.comments,
+    ]);
+    const jsonRows = this.activeRows.map(r => ({
+      'Reference No': r.referenceNo, Date: formatDisplayDate(r.issueDate), Category: r.category,
+      Material: r.materialName, 'Material Code': r.materialCode, 'Issued To': r.issuedTo,
+      'Transaction Type': this.formatTransactionType(r.transactionType), Qty: r.qty, UOM: r.uom,
+      Price: this.formatPrice(r.unitPrice), Comments: r.comments,
+    }));
     const title = this.activeType === 'promotional' ? 'Promotional Issue' : 'Spare Parts Issue';
     return { headers, rows, jsonRows, title };
   }

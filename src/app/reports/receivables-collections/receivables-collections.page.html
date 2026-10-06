@@ -130,17 +130,16 @@
           <!-- COLLECTIONS -->
           <div *ngIf="activeType === 'collections'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Date</th><th>Customer</th><th>Invoice No</th><th>Amount Collected</th><th>Mode</th><th>Reference No</th></tr></thead>
+              <thead><tr><th>Date</th><th>Customer</th><th>Amount Collected</th><th>Reference No</th><th>Description</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedCollectionRows">
                   <td>{{ formatDisplayDate(row.date) }}</td>
                   <td>{{ row.customer }}</td>
-                  <td>{{ row.invoiceNo }}</td>
-                  <td>{{ formatCurrencyFull(row.amountCollected) }}</td>
-                  <td>{{ row.mode }}</td>
-                  <td>{{ row.referenceNo }}</td>
+                  <td class="cell-amount">{{ formatCurrencyFull(row.amountCollected) }}</td>
+                  <td class="cell-mono">{{ row.referenceNo }}</td>
+                  <td><div class="cell-comments" [title]="row.description">{{ row.description || '—' }}</div></td>
                 </tr>
-                <tr *ngIf="pagedCollectionRows.length === 0"><td colspan="6" class="report-empty">No collections recorded in this range</td></tr>
+                <tr *ngIf="pagedCollectionRows.length === 0"><td colspan="5" class="report-empty">No collections recorded in this range</td></tr>
               </tbody>
             </table>
           </div>

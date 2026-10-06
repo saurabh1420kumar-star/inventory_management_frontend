@@ -1,1 +1,36 @@
 @import '../report-workspace.scss';
+
+.cell-mono {
+  font-family: 'SFMono-Regular', Consolas, monospace;
+  font-size: 12px;
+  color: #4b5563;
+}
+
+.cell-title {
+  font-weight: 600;
+}
+
+.cell-sub {
+  font-size: 11px;
+  color: #9ca3af;
+  margin-top: 1px;
+}
+
+.cell-nowrap {
+  white-space: nowrap;
+}
+
+.cell-free {
+  color: #059669;
+  font-weight: 600;
+}
+
+.cell-comments {
+  display: block;
+  max-width: 220px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  color: #6b7280;
+  font-size: 12.5px;
+}
