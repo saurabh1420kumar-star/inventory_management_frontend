@@ -11,7 +11,7 @@ import {
   DEALERS,
   seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'outstanding' | 'collections';
@@ -131,7 +131,10 @@ export class ReceivablesCollectionsPage implements OnInit {
       dateTo: this.filters.dateTo,
       distributorId: this.filters.customer,
     }).subscribe(rows => {
-      this.collectionRows = rows.map(mapCollectionRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.collectionRows = filterByField(
+        filterByDateRange(rows.map(mapCollectionRow), this.filters.dateFrom, this.filters.dateTo, r => r.date),
+        this.filters.customer, r => r.customer
+      ).sort((a, b) => b.date.localeCompare(a.date));
       this.computeStats();
       this.pager.page = 1;
       this.isLoading = false;
@@ -148,7 +151,10 @@ export class ReceivablesCollectionsPage implements OnInit {
   private buildAgeingRows() {
     const customerPool = this.filters.customer === 'all' ? this.customers : [this.filters.customer];
     let rows: CustomerAgeing[] = customerPool.map(customer => {
-      const rng = seededRandom('ageing|' + customer);
+      // Seed includes the date range (not just the customer) so this still-mocked tab (no backend
+      // endpoint yet — see REPORTS_BACKEND_GAPS.md #2) at least reacts to the date filter like every
+      // other mock-data report tab in this codebase, instead of looking frozen when dates change.
+      const rng = seededRandom('ageing|' + customer + '|' + this.filters.dateFrom + '|' + this.filters.dateTo);
       const b0_30 = Math.round(rng() * 90000);
       const b31_60 = Math.round(rng() * 60000);
       const b61_90 = rng() > 0.55 ? Math.round(rng() * 45000) : 0;

@@ -72,6 +72,45 @@ export function daysBetween(a: Date, b: Date): number {
   return Math.round((b.getTime() - a.getTime()) / (1000 * 60 * 60 * 24));
 }
 
+// Client-side safety net for the date-range filters on report pages: several backend report
+// endpoints accept dateFrom/dateTo query params but haven't confirmed honoring them server-side
+// (see REPORTS_BACKEND_GAPS.md), so without this the filter UI can silently do nothing even though
+// the request is sent correctly. ISO date-ish strings ("2026-10-01" or "2026-10-01T10:23:45Z") sort
+// lexically in chronological order, so comparing the first 10 chars avoids any Date/timezone parsing.
+// A row with a missing/unparseable date is kept rather than hidden, matching this codebase's
+// tolerant-of-missing-fields convention elsewhere.
+export function withinDateRange(dateStr: string | null | undefined, dateFrom: string, dateTo: string): boolean {
+  if (!dateStr) return true;
+  const day = dateStr.slice(0, 10);
+  if (dateFrom && day < dateFrom) return false;
+  if (dateTo && day > dateTo) return false;
+  return true;
+}
+
+export function filterByDateRange<T>(rows: T[], dateFrom: string, dateTo: string, getDate: (row: T) => string | null | undefined): T[] {
+  if (!dateFrom && !dateTo) return rows;
+  return rows.filter(r => withinDateRange(getDate(r), dateFrom, dateTo));
+}
+
+// Same client-side safety-net idea as filterByDateRange, for the non-date dropdown filters
+// (category, warehouse, status, scrap type, etc.). Per REPORTS_INTEGRATION_STATUS.md, the real
+// backend field names/casing were never verified against a live response (e.g. a category might
+// come back as "RAW_MATERIAL" while the dropdown option is "Raw Material") — an exact-string filter
+// would then silently match nothing even though both sides mean the same value. Normalizing away
+// case/spacing/underscores before comparing makes the filter work for either casing convention.
+function normalizeForMatch(s: string): string {
+  return s.toLowerCase().replace(/[^a-z0-9]/g, '');
+}
+
+export function looseEquals(a: string | null | undefined, b: string | null | undefined): boolean {
+  return normalizeForMatch(String(a ?? '')) === normalizeForMatch(String(b ?? ''));
+}
+
+export function filterByField<T>(rows: T[], filterValue: string | null | undefined, getField: (row: T) => string | null | undefined): T[] {
+  if (!filterValue || filterValue === 'all') return rows;
+  return rows.filter(r => looseEquals(getField(r), filterValue));
+}
+
 function getStamp(): string {
   return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 }

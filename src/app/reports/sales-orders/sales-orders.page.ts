@@ -11,7 +11,7 @@ import {
   DEALERS,
   toDateInputValue, formatDisplayDate, formatCurrencyFull, daysBetween,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'all' | 'pending' | 'dispatch';
@@ -110,7 +110,10 @@ export class SalesOrdersReportPage implements OnInit {
       dateFrom: this.filters.dateFrom,
       dateTo: this.filters.dateTo,
     }).subscribe(rows => {
-      this.orderRows = rows.map(mapOrderRow).sort((a, b) => b.date.localeCompare(a.date));
+      let orderRows = filterByDateRange(rows.map(mapOrderRow), this.filters.dateFrom, this.filters.dateTo, r => r.date);
+      orderRows = filterByField(orderRows, this.filters.status, r => r.status);
+      orderRows = filterByField(orderRows, this.filters.customer, r => r.customer);
+      this.orderRows = orderRows.sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

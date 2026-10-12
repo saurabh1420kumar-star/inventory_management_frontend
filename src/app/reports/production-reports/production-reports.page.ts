@@ -11,7 +11,7 @@ import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange,
 } from '../report-shared';
 
 type ReportType = 'production' | 'bom' | 'consumption' | 'cost' | 'summary' | 'daily';
@@ -211,12 +211,16 @@ export class ProductionReportsPage implements OnInit {
       summary: this.reportsService.getProductionSummary(commonParams),
       daily: this.reportsService.getProductionDailySummary(commonParams),
     }).subscribe(({ production, consumption, cost, bom, summary, daily }) => {
-      this.productionRows = production.map(mapProductionRow).sort((a, b) => b.date.localeCompare(a.date));
+      const { dateFrom, dateTo } = this.filters;
+      this.productionRows = filterByDateRange(production.map(mapProductionRow), dateFrom, dateTo, r => r.date)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.consumptionRows = consumption.map(mapConsumptionRow);
-      this.costRows = cost.map(mapCostRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.costRows = filterByDateRange(cost.map(mapCostRow), dateFrom, dateTo, r => r.date)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.bomRows = flattenBomReport(bom);
       this.summaryRows = summary.map(mapSummaryRow).sort((a, b) => b.totalCost - a.totalCost);
-      this.dailySummaryRows = daily.map(mapDailySummaryRow).sort((a, b) => b.date.localeCompare(a.date));
+      this.dailySummaryRows = filterByDateRange(daily.map(mapDailySummaryRow), dateFrom, dateTo, r => r.date)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

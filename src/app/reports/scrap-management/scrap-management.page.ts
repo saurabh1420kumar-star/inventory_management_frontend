@@ -12,7 +12,7 @@ import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'generation' | 'disposal' | 'sale';
@@ -147,9 +147,13 @@ export class ScrapManagementReportPage implements OnInit {
       disposal: this.reportsService.getScrapDisposalStatus(params),
       sale: this.reportsService.getScrapRevenue(params),
     }).subscribe(({ generation, disposal, sale }) => {
-      this.generationRows = generation.map(mapGenerationRow).sort((a, b) => b.date.localeCompare(a.date));
-      this.disposalRows = disposal.map(mapDisposalRow).sort((a, b) => b.date.localeCompare(a.date));
-      this.saleRows = sale.map(mapSaleRow).sort((a, b) => b.date.localeCompare(a.date));
+      const { dateFrom, dateTo, scrapType } = this.filters;
+      this.generationRows = filterByField(filterByDateRange(generation.map(mapGenerationRow), dateFrom, dateTo, r => r.date), scrapType, r => r.scrapType)
+        .sort((a, b) => b.date.localeCompare(a.date));
+      this.disposalRows = filterByField(filterByDateRange(disposal.map(mapDisposalRow), dateFrom, dateTo, r => r.date), scrapType, r => r.scrapType)
+        .sort((a, b) => b.date.localeCompare(a.date));
+      this.saleRows = filterByField(filterByDateRange(sale.map(mapSaleRow), dateFrom, dateTo, r => r.date), scrapType, r => r.scrapType)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

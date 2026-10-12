@@ -16,7 +16,7 @@ import {
   REGIONS,
   seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'register' | 'summary' | 'product' | 'distributor' | 'dealer' | 'salesman';
@@ -258,12 +258,24 @@ export class SalesReportsPage implements OnInit {
       byDistributor: this.reportsService.getSalesByDistributor({ ...dateParams, distributorId: this.filters.distributor }),
       salesmanPerf: this.reportsService.getSalesmanPerformance(dateParams),
     }).subscribe(({ invoices, monthlyTrend, byProduct, byDistributor, salesmanPerf }) => {
-      this.invoiceRows = invoices.map(mapInvoiceRow).sort((a, b) => b.date.localeCompare(a.date));
+      const distributorName = this.distributors.find(d => d.id === this.filters.distributor)?.name ?? this.filters.distributor;
+      const salespersonName = this.salespersons.find(s => s.id === this.filters.salesperson)?.name ?? this.filters.salesperson;
+
+      let invoiceRows = filterByDateRange(invoices.map(mapInvoiceRow), this.filters.dateFrom, this.filters.dateTo, r => r.date);
+      invoiceRows = filterByField(invoiceRows, this.filters.dealer, r => r.dealer);
+      invoiceRows = filterByField(invoiceRows, distributorName, r => r.distributor);
+      invoiceRows = filterByField(invoiceRows, salespersonName, r => r.salesman);
+      this.invoiceRows = invoiceRows.sort((a, b) => b.date.localeCompare(a.date));
+
       this.computeStats();
       this.buildSummaryRows(monthlyTrend);
       this.productRows = mapProductRows(byProduct);
-      this.distributorRows = byDistributor.map(mapPartyRow).sort((a, b) => b.revenue - a.revenue);
-      this.salesmanRows = salesmanPerf.map(mapSalesmanRow).sort((a, b) => b.totalValue - a.totalValue);
+      this.distributorRows = filterByField(byDistributor.map(mapPartyRow), distributorName, r => r.name)
+        .sort((a, b) => b.revenue - a.revenue);
+      // getSalesmanPerformance has no salesperson param server-side — the Salesperson filter above
+      // can only narrow this tab client-side, keyed by name since salespersonId isn't in the response.
+      this.salesmanRows = filterByField(salesmanPerf.map(mapSalesmanRow), salespersonName, r => r.salespersonName)
+        .sort((a, b) => b.totalValue - a.totalValue);
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

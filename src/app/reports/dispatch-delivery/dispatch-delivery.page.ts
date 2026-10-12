@@ -12,7 +12,7 @@ import {
   ROUTES,
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'register' | 'pending' | 'confirmation';
@@ -160,9 +160,13 @@ export class DispatchDeliveryReportPage implements OnInit {
       pending: this.reportsService.getDispatchPending(dateParams),
       confirmation: this.reportsService.getDeliveryConfirmation(dateParams),
     }).subscribe(({ register, pending, confirmation }) => {
-      this.dispatchRegisterRows = register.map(mapDispatchRegisterRow).sort((a, b) => b.gdnDate.localeCompare(a.gdnDate));
-      this.pendingDispatchRows = pending.map(mapPendingDispatchRow);
-      this.deliveryConfirmationRows = confirmation.map(mapDeliveryConfirmationRow);
+      const { dateFrom, dateTo, status } = this.filters;
+      // No region/route field exists on any of these 3 DTOs (see REPORTS_BACKEND_GAPS.md #5), so the
+      // "Region" filter can't be applied client-side either — it needs that field added server-side.
+      this.dispatchRegisterRows = filterByField(filterByDateRange(register.map(mapDispatchRegisterRow), dateFrom, dateTo, r => r.gdnDate), status, r => r.status)
+        .sort((a, b) => b.gdnDate.localeCompare(a.gdnDate));
+      this.pendingDispatchRows = filterByDateRange(pending.map(mapPendingDispatchRow), dateFrom, dateTo, r => r.gdnDate);
+      this.deliveryConfirmationRows = filterByDateRange(confirmation.map(mapDeliveryConfirmationRow), dateFrom, dateTo, r => r.deliveredDate);
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

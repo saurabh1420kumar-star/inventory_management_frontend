@@ -12,7 +12,7 @@ import {
   RAW_MATERIALS, FINISHED_PRODUCTS, WAREHOUSES,
   toDateInputValue, formatDisplayDate,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'ledger' | 'supplier' | 'material';
@@ -147,9 +147,14 @@ export class StockMovementPage implements OnInit {
       supplier: this.reportsService.getSupplierWiseInward(params),
       material: this.reportsService.getMaterialInward(params),
     }).subscribe(({ ledger, supplier, material }) => {
-      this.ledgerRows = ledger.map(mapLedgerRow).sort((a, b) => b.date.localeCompare(a.date));
+      const { dateFrom, dateTo, item, warehouse } = this.filters;
+      this.ledgerRows = filterByField(filterByDateRange(ledger.map(mapLedgerRow), dateFrom, dateTo, r => r.date), item, r => r.material)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.supplierRows = supplier.map(mapSupplierRow).sort((a, b) => b.totalQty - a.totalQty);
-      this.materialRows = material.map(mapMaterialInwardRow).sort((a, b) => b.date.localeCompare(a.date));
+      let materialRows = filterByDateRange(material.map(mapMaterialInwardRow), dateFrom, dateTo, r => r.date);
+      materialRows = filterByField(materialRows, item, r => r.item);
+      materialRows = filterByField(materialRows, warehouse, r => r.warehouse);
+      this.materialRows = materialRows.sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

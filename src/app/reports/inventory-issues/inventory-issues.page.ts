@@ -12,7 +12,7 @@ import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange,
 } from '../report-shared';
 
 type ReportType = 'promotional' | 'spareParts';
@@ -113,6 +113,8 @@ export class InventoryIssuesReportPage implements OnInit {
         ...promotional.map(r => mapIssueRow(r, 'Promotional')),
         ...spareParts.map(r => mapIssueRow(r, 'Spare Parts')),
       ];
+
+      rows = filterByDateRange(rows, this.filters.dateFrom, this.filters.dateTo, r => r.issueDate);
 
       if (this.filters.issueType !== 'all') {
         rows = rows.filter(r => r.category === this.filters.issueType);
