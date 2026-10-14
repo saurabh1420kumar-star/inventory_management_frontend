@@ -1,0 +1,413 @@
+@import '../report-workspace.scss';
+
+// ── Per-group summary table ──────────────────────────────────────────────
+table.report-table.dg-summary {
+  min-width: 520px;
+}
+
+tr.dg-row {
+  cursor: pointer;
+}
+
+th.dg-action,
+td.dg-action {
+  width: 1%;
+  text-align: right;
+}
+
+.dg-date-link {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 0;
+  border: none;
+  background: none;
+  font: inherit;
+  font-weight: 700;
+  color: var(--ion-text-color, #111827);
+  cursor: pointer;
+  transition: color 0.15s ease;
+
+  ion-icon {
+    font-size: 16px;
+    color: #059669;
+  }
+
+  &:focus-visible {
+    outline: 2px solid #10b981;
+    outline-offset: 3px;
+    border-radius: 4px;
+  }
+}
+
+tr.dg-row:hover .dg-date-link {
+  color: #059669;
+}
+
+.dg-view {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  font-size: 12px;
+  font-weight: 600;
+  color: #059669;
+
+  ion-icon {
+    font-size: 14px;
+    transition: transform 0.15s ease;
+  }
+}
+
+tr.dg-row:hover .dg-view ion-icon {
+  transform: translateX(2px);
+}
+
+// ── Detail modal ─────────────────────────────────────────────────────────
+// ion-modal moves itself out of this component's DOM while open, so its sizing hooks are global
+// (same approach as the other modals in this app); the inner elements keep their scoped attributes.
+::ng-deep ion-modal.dg-modal {
+  --width: min(1120px, 96vw);
+  --height: auto;
+  --max-height: 90vh;
+  --border-radius: 20px;
+  --backdrop-opacity: 0.45;
+  --box-shadow: 0 24px 64px rgba(15, 23, 42, 0.35);
+
+  // Ionic lays the modal's page out absolutely, which gives an auto-height modal nothing to size from.
+  .ion-page {
+    position: relative;
+    display: flex;
+    flex-direction: column;
+    max-height: 90vh;
+    contain: content;
+  }
+}
+
+.dg-modal-shell {
+  display: flex;
+  flex-direction: column;
+  flex: 1 1 auto;
+  min-height: 0;
+  background: var(--ion-background-color, #f8fafc);
+}
+
+// Header — same gradient and glow as the page hero, so the modal reads as part of the report.
+.dg-modal-header {
+  position: relative;
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 20px 24px;
+  overflow: hidden;
+  color: #fff;
+  background: linear-gradient(120deg, #10b981 0%, #14b8a6 45%, #2563eb 100%);
+
+  &::before {
+    content: '';
+    position: absolute;
+    inset: 0;
+    opacity: 0.22;
+    pointer-events: none;
+    background-image:
+      radial-gradient(circle at 88% 10%, #ffffff 0%, transparent 42%),
+      radial-gradient(circle at 4% 100%, #a7f3d0 0%, transparent 38%);
+  }
+
+  > * { position: relative; }
+}
+
+.dg-modal-icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  width: 52px;
+  height: 52px;
+  border-radius: 14px;
+  background: rgba(255, 255, 255, 0.18);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.3), 0 6px 16px rgba(0, 0, 0, 0.12);
+
+  ion-icon {
+    font-size: 26px;
+    color: #fff;
+  }
+}
+
+.dg-modal-heading {
+  min-width: 0;
+  flex: 1 1 auto;
+}
+
+.dg-modal-eyebrow {
+  margin: 0 0 3px;
+  font-size: 11px;
+  font-weight: 700;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+  color: #d1fae5;
+}
+
+.dg-modal-title {
+  margin: 0;
+  font-size: 24px;
+  font-weight: 800;
+  line-height: 1.15;
+  letter-spacing: -0.01em;
+  color: #fff;
+  overflow-wrap: anywhere;
+  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.12);
+}
+
+.dg-modal-meta {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px;
+  margin: 8px 0 0;
+  font-size: 12px;
+  font-weight: 600;
+  color: rgba(255, 255, 255, 0.88);
+}
+
+.dg-modal-kind {
+  padding: 2px 10px;
+  border-radius: 999px;
+  font-size: 10px;
+  font-weight: 800;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  background: rgba(255, 255, 255, 0.2);
+  border: 1px solid rgba(255, 255, 255, 0.35);
+}
+
+.dg-modal-controls {
+  display: flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: 8px;
+}
+
+.dg-icon-btn {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  width: 38px;
+  height: 38px;
+  border-radius: 12px;
+  border: 1px solid rgba(255, 255, 255, 0.35);
+  background: rgba(255, 255, 255, 0.16);
+  color: #fff;
+  cursor: pointer;
+  transition: background-color 0.15s ease, transform 0.1s ease, opacity 0.15s ease;
+
+  ion-icon { font-size: 20px; }
+
+  &:hover:not(:disabled) { background: rgba(255, 255, 255, 0.3); }
+  &:active:not(:disabled) { transform: scale(0.94); }
+  &:disabled { opacity: 0.4; cursor: not-allowed; }
+  &:focus-visible { outline: 2px solid #fff; outline-offset: 2px; }
+}
+
+.dg-icon-btn-close {
+  margin-left: 6px;
+  background: rgba(255, 255, 255, 0.26);
+}
+
+// Summary tiles — one per summary column, each with its own accent colour.
+.dg-stats {
+  flex: 0 0 auto;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: 12px;
+  padding: 16px 24px 4px;
+}
+
+.dg-stat {
+  --accent: #10b981;
+  padding: 12px 14px 12px 16px;
+  border-radius: 14px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  border-left: 4px solid var(--accent);
+  background: var(--ion-card-background, #fff);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+
+  &:nth-child(4n + 2) { --accent: #3b82f6; }
+  &:nth-child(4n + 3) { --accent: #f59e0b; }
+  &:nth-child(4n + 4) { --accent: #8b5cf6; }
+}
+
+.dg-stat-label {
+  margin: 0 0 4px;
+  font-size: 10.5px;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--ion-color-medium, #6b7280);
+}
+
+.dg-stat-value {
+  margin: 0;
+  font-size: 17px;
+  font-weight: 800;
+  line-height: 1.25;
+  color: var(--ion-text-color, #111827);
+  overflow-wrap: anywhere;
+}
+
+// Toolbar — search on the left, exports on the right.
+.dg-modal-toolbar {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: 12px;
+  padding: 14px 24px 12px;
+}
+
+.dg-search {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex: 1 1 240px;
+  max-width: 380px;
+  height: 38px;
+  padding: 0 10px 0 12px;
+  border-radius: 10px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--ion-card-background, #fff);
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus-within {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  }
+
+  > ion-icon {
+    flex-shrink: 0;
+    font-size: 16px;
+    color: var(--ion-color-medium, #6b7280);
+  }
+
+  input {
+    flex: 1;
+    min-width: 0;
+    border: none;
+    outline: none;
+    background: transparent;
+    font-size: 13px;
+    color: var(--ion-text-color, #111827);
+  }
+}
+
+.dg-search-clear {
+  display: flex;
+  align-items: center;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--ion-color-medium, #9ca3af);
+  cursor: pointer;
+
+  ion-icon { font-size: 17px; }
+  &:hover { color: #6b7280; }
+}
+
+// The body is the scroll container, so the detail table's sticky header pins to it.
+.dg-modal-body {
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow: auto;
+  padding: 0 24px 16px;
+}
+
+// `clip` (not `hidden`) rounds the corners without becoming a scroll container, which would break sticky.
+.dg-table-card {
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--ion-card-background, #fff);
+  box-shadow: 0 2px 10px rgba(0, 0, 0, 0.04);
+  overflow: clip;
+}
+
+.dg-no-match {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 8px;
+  padding: 40px 20px;
+  border-radius: 12px;
+  border: 1px dashed rgba(0, 0, 0, 0.14);
+  background: var(--ion-card-background, #fff);
+  color: var(--ion-color-medium, #6b7280);
+  font-size: 13px;
+
+  ion-icon { font-size: 26px; opacity: 0.6; }
+  p { margin: 0; }
+}
+
+.dg-modal-footer {
+  flex: 0 0 auto;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  padding: 10px 24px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--ion-card-background, #fff);
+  font-size: 12px;
+  color: var(--ion-color-medium, #6b7280);
+}
+
+.dg-modal-hint {
+  font-size: 11px;
+  opacity: 0.8;
+}
+
+@media (max-width: 640px) {
+  .dg-modal-header {
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 16px;
+  }
+
+  .dg-modal-icon {
+    width: 44px;
+    height: 44px;
+  }
+
+  .dg-modal-title {
+    font-size: 20px;
+  }
+
+  .dg-modal-controls {
+    margin-left: auto;
+  }
+
+  .dg-stats {
+    grid-template-columns: repeat(2, 1fr);
+    padding: 14px 16px 4px;
+  }
+
+  .dg-modal-toolbar {
+    padding: 12px 16px 10px;
+  }
+
+  .dg-search {
+    max-width: none;
+  }
+
+  .dg-modal-body {
+    padding: 0 16px 14px;
+  }
+
+  .dg-modal-footer {
+    padding: 10px 16px;
+  }
+
+  .dg-modal-hint {
+    display: none;
+  }
+}

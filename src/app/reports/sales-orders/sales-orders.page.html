@@ -73,75 +73,86 @@
 
         <ng-container *ngIf="!isLoading">
           <!-- ALL ORDERS -->
-          <div *ngIf="activeType === 'all'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Status</th><th>Amount</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedOrderRows">
-                  <td>{{ row.orderNo }}</td>
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.customer }}</td>
-                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
-                  <td>{{ formatCurrencyFull(row.amount) }}</td>
-                </tr>
-                <tr *ngIf="pagedOrderRows.length === 0"><td colspan="5" class="report-empty">No orders found for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'all'"
+            heading="All Orders"
+            [rows]="orderRows"
+            dateField="date"
+            countLabel="Orders"
+            emptyText="No orders found for these filters"
+            [summaryColumns]="orderSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Status</th><th>Amount</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ row.orderNo }}</td>
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.customer }}</td>
+                    <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
+                    <td>{{ formatCurrencyFull(row.amount) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- PENDING APPROVAL -->
-          <div *ngIf="activeType === 'pending'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Amount</th><th>Requested By</th><th>Days Pending</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedPendingRows">
-                  <td>{{ row.orderNo }}</td>
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.customer }}</td>
-                  <td>{{ formatCurrencyFull(row.amount) }}</td>
-                  <td>{{ row.requestedBy }}</td>
-                  <td>
-                    <span class="report-badge" [ngClass]="daysPending(row.date) > 5 ? 'report-badge-red' : 'report-badge-amber'">{{ daysPending(row.date) }} days</span>
-                  </td>
-                </tr>
-                <tr *ngIf="pagedPendingRows.length === 0"><td colspan="6" class="report-empty">No orders pending approval</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'pending'"
+            heading="Pending Approval"
+            [rows]="pendingRows"
+            dateField="date"
+            countLabel="Orders"
+            emptyText="No orders pending approval"
+            [summaryColumns]="orderSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Amount</th><th>Requested By</th><th>Days Pending</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ row.orderNo }}</td>
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.customer }}</td>
+                    <td>{{ formatCurrencyFull(row.amount) }}</td>
+                    <td>{{ row.requestedBy }}</td>
+                    <td>
+                      <span class="report-badge" [ngClass]="daysPending(row.date) > 5 ? 'report-badge-red' : 'report-badge-amber'">{{ daysPending(row.date) }} days</span>
+                    </td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- DISPATCH QUEUE -->
-          <div *ngIf="activeType === 'dispatch'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Items</th><th>Amount</th><th>Dispatch Status</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedDispatchRows">
-                  <td>{{ row.orderNo }}</td>
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.customer }}</td>
-                  <td>{{ row.items }}</td>
-                  <td>{{ formatCurrencyFull(row.amount) }}</td>
-                  <td><span class="report-badge report-badge-blue">{{ dispatchStatusLabel(row.status) }}</span></td>
-                </tr>
-                <tr *ngIf="pagedDispatchRows.length === 0"><td colspan="6" class="report-empty">Dispatch queue is empty</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-table-footer">
-            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
-            <div class="report-pagination">
-              <button (click)="prevPage()" [disabled]="pager.page === 1">
-                <ion-icon name="chevron-back-outline"></ion-icon>
-              </button>
-              <ng-container *ngFor="let p of pageNumbers">
-                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
-                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
-              </ng-container>
-              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
-                <ion-icon name="chevron-forward-outline"></ion-icon>
-              </button>
-            </div>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'dispatch'"
+            heading="Dispatch Queue"
+            [rows]="dispatchRows"
+            dateField="date"
+            countLabel="Orders"
+            emptyText="Dispatch queue is empty"
+            [summaryColumns]="dispatchSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Order No</th><th>Date</th><th>Customer</th><th>Items</th><th>Amount</th><th>Dispatch Status</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ row.orderNo }}</td>
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.customer }}</td>
+                    <td>{{ row.items }}</td>
+                    <td>{{ formatCurrencyFull(row.amount) }}</td>
+                    <td><span class="report-badge report-badge-blue">{{ dispatchStatusLabel(row.status) }}</span></td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
         </ng-container>
       </section>
     </div>

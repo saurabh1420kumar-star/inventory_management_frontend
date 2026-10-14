@@ -9,9 +9,10 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
-  Pager, paginate, totalPages, pageWindow, pageRange,
+  DateGroup, listDistinct, sumBy, sumByUnit,
   exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
@@ -99,7 +100,7 @@ function mapSaleRow(raw: any): SaleRow {
   templateUrl: './scrap-management.page.html',
   styleUrls: ['./scrap-management.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class ScrapManagementReportPage implements OnInit {
 
@@ -114,11 +115,27 @@ export class ScrapManagementReportPage implements OnInit {
   isLoading = false;
   lastUpdated: Date | null = null;
   activeType: ReportType = 'generation';
-  pager: Pager = { page: 1, pageSize: 5 };
 
   generationRows: GenerationRow[] = [];
   disposalRows: DisposalRow[] = [];
   saleRows: SaleRow[] = [];
+
+  readonly generationSummaryColumns: DateSummaryColumn<GenerationRow>[] = [
+    { header: 'Scrap Types', value: rows => listDistinct(rows, r => r.scrapType) },
+    { header: 'Total Qty', value: rows => sumByUnit(rows, r => r.quantity, r => r.uom) },
+    { header: 'Total Value', value: rows => formatCurrencyFull(sumBy(rows, r => r.value)) },
+  ];
+
+  readonly disposalSummaryColumns: DateSummaryColumn<DisposalRow>[] = [
+    { header: 'Scrap Types', value: rows => listDistinct(rows, r => r.scrapType) },
+    { header: 'Total Qty', value: rows => sumByUnit(rows, r => r.quantity, r => r.uom) },
+  ];
+
+  readonly saleSummaryColumns: DateSummaryColumn<SaleRow>[] = [
+    { header: 'Buyers', value: rows => listDistinct(rows, r => r.buyer) },
+    { header: 'Total Qty', value: rows => sumByUnit(rows, r => r.quantity, r => r.uom) },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.amount)) },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -154,7 +171,6 @@ export class ScrapManagementReportPage implements OnInit {
         .sort((a, b) => b.date.localeCompare(a.date));
       this.saleRows = filterByField(filterByDateRange(sale.map(mapSaleRow), dateFrom, dateTo, r => r.date), scrapType, r => r.scrapType)
         .sort((a, b) => b.date.localeCompare(a.date));
-      this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
     });
@@ -162,47 +178,32 @@ export class ScrapManagementReportPage implements OnInit {
 
   switchType(type: ReportType) {
     this.activeType = type;
-    this.pager.page = 1;
     this.haptic.selectionChanged();
   }
-
-  get activeRowCount(): number {
-    if (this.activeType === 'disposal') return this.disposalRows.length;
-    if (this.activeType === 'sale') return this.saleRows.length;
-    return this.generationRows.length;
-  }
-
-  get pagedGenerationRows(): GenerationRow[] { return paginate(this.generationRows, this.pager); }
-  get pagedDisposalRows(): DisposalRow[] { return paginate(this.disposalRows, this.pager); }
-  get pagedSaleRows(): SaleRow[] { return paginate(this.saleRows, this.pager); }
-
-  get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
-  get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
-  get pageNumbers(): (number | '...')[] { return pageWindow(this.pager.page, this.totalPageCount); }
-
-  goToPage(p: number | '...') { if (p !== '...') this.pager.page = p; }
-  prevPage() { if (this.pager.page > 1) this.pager.page--; }
-  nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
 
   formatDisplayDate = formatDisplayDate;
   formatCurrencyFull = formatCurrencyFull;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the export to one date's rows (the date modal); omitted, it exports the whole active tab.
+  private getExportData(source?: any[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'disposal') {
+      const data: DisposalRow[] = source ?? this.disposalRows;
       const headers = ['Date', 'Scrap Type', 'Quantity', 'UOM', 'Disposal Method', 'Disposed By'];
-      const rows = this.disposalRows.map(r => [formatDisplayDate(r.date), r.scrapType, r.quantity, r.uom, r.method, r.disposedBy]);
-      const jsonRows = this.disposalRows.map(r => ({ Date: r.date, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, 'Disposal Method': r.method, 'Disposed By': r.disposedBy }));
+      const rows = data.map(r => [formatDisplayDate(r.date), r.scrapType, r.quantity, r.uom, r.method, r.disposedBy]);
+      const jsonRows = data.map(r => ({ Date: r.date, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, 'Disposal Method': r.method, 'Disposed By': r.disposedBy }));
       return { headers, rows, jsonRows, title: 'Scrap Disposal' };
     }
     if (this.activeType === 'sale') {
+      const data: SaleRow[] = source ?? this.saleRows;
       const headers = ['Date', 'Scrap Type', 'Quantity', 'UOM', 'Buyer', 'Rate', 'Amount', 'Invoice No'];
-      const rows = this.saleRows.map(r => [formatDisplayDate(r.date), r.scrapType, r.quantity, r.uom, r.buyer, formatCurrencyFull(r.rate), formatCurrencyFull(r.amount), r.invoiceNo]);
-      const jsonRows = this.saleRows.map(r => ({ Date: r.date, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, Buyer: r.buyer, Rate: r.rate, Amount: r.amount, 'Invoice No': r.invoiceNo }));
+      const rows = data.map(r => [formatDisplayDate(r.date), r.scrapType, r.quantity, r.uom, r.buyer, formatCurrencyFull(r.rate), formatCurrencyFull(r.amount), r.invoiceNo]);
+      const jsonRows = data.map(r => ({ Date: r.date, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, Buyer: r.buyer, Rate: r.rate, Amount: r.amount, 'Invoice No': r.invoiceNo }));
       return { headers, rows, jsonRows, title: 'Scrap Sale' };
     }
+    const data: GenerationRow[] = source ?? this.generationRows;
     const headers = ['Date', 'Source', 'Scrap Type', 'Quantity', 'UOM', 'Value'];
-    const rows = this.generationRows.map(r => [formatDisplayDate(r.date), r.source, r.scrapType, r.quantity, r.uom, formatCurrencyFull(r.value)]);
-    const jsonRows = this.generationRows.map(r => ({ Date: r.date, Source: r.source, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, Value: r.value }));
+    const rows = data.map(r => [formatDisplayDate(r.date), r.source, r.scrapType, r.quantity, r.uom, formatCurrencyFull(r.value)]);
+    const jsonRows = data.map(r => ({ Date: r.date, Source: r.source, 'Scrap Type': r.scrapType, Quantity: r.quantity, UOM: r.uom, Value: r.value }));
     return { headers, rows, jsonRows, title: 'Scrap Generation' };
   }
 
@@ -214,5 +215,15 @@ export class ScrapManagementReportPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<unknown>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<unknown>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

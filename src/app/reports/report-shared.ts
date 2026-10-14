@@ -111,6 +111,83 @@ export function filterByField<T>(rows: T[], filterValue: string | null | undefin
   return rows.filter(r => looseEquals(getField(r), filterValue));
 }
 
+// ── Date clustering ──────────────────────────────────────────────────────
+
+// A cluster of rows. Built by groupByDate (the usual case) or groupByValue (e.g. BOM rows by product).
+export interface DateGroup<T> {
+  // groupByDate: local calendar date as YYYY-MM-DD, or '' when the row has no usable date.
+  // groupByValue: the trimmed text value the rows share.
+  key: string;
+  // groupByDate: same display format as formatDisplayDate(), e.g. "04 Oct 2026". groupByValue: the value itself.
+  label: string;
+  rows: T[];
+}
+
+// Keyed on the *local* calendar date because that is what formatDisplayDate() shows in the table —
+// a row created at 2026-10-04T20:00Z must cluster under the day the user actually sees (05 Oct in IST).
+export function dateGroupKey(dateStr: string | null | undefined): string {
+  if (!dateStr) return '';
+  const d = new Date(dateStr);
+  if (isNaN(d.getTime())) return '';
+  const pad = (n: number) => String(n).padStart(2, '0');
+  return `${d.getFullYear()}-${pad(d.getMonth() + 1)}-${pad(d.getDate())}`;
+}
+
+export function formatGroupLabel(key: string): string {
+  if (!key) return 'No date';
+  const [y, m, d] = key.split('-').map(Number);
+  return new Date(y, m - 1, d).toLocaleDateString('en-GB', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// Newest date first, undated rows last. Rows keep their incoming order inside each group.
+export function groupByDate<T>(rows: T[], getDate: (row: T) => string | null | undefined): DateGroup<T>[] {
+  const byKey = new Map<string, T[]>();
+  for (const row of rows) {
+    const key = dateGroupKey(getDate(row));
+    const bucket = byKey.get(key);
+    if (bucket) bucket.push(row); else byKey.set(key, [row]);
+  }
+  return Array.from(byKey.entries())
+    .sort(([a], [b]) => (a === '' ? 1 : b === '' ? -1 : b.localeCompare(a)))
+    .map(([key, groupRows]) => ({ key, label: formatGroupLabel(key), rows: groupRows }));
+}
+
+// Clusters by a text value instead of a date. Groups keep the order in which each value first appears,
+// so whatever sort the rows arrived in carries through.
+export function groupByValue<T>(rows: T[], getValue: (row: T) => string | null | undefined): DateGroup<T>[] {
+  const byKey = new Map<string, T[]>();
+  for (const row of rows) {
+    const key = (getValue(row) ?? '').trim() || '—';
+    const bucket = byKey.get(key);
+    if (bucket) bucket.push(row); else byKey.set(key, [row]);
+  }
+  return Array.from(byKey.entries()).map(([key, groupRows]) => ({ key, label: key, rows: groupRows }));
+}
+
+export function sumBy<T>(rows: T[], get: (row: T) => number): number {
+  return rows.reduce((total, row) => total + (Number(get(row)) || 0), 0);
+}
+
+// "5 PCS · 2 DOZENS" — quantities in different units can't be added, so total each unit separately.
+export function sumByUnit<T>(rows: T[], getQty: (row: T) => number, getUnit: (row: T) => string): string {
+  const totals = new Map<string, number>();
+  for (const row of rows) {
+    const unit = getUnit(row) || '';
+    totals.set(unit, (totals.get(unit) ?? 0) + (Number(getQty(row)) || 0));
+  }
+  return Array.from(totals.entries())
+    .map(([unit, qty]) => `${(Math.round(qty * 100) / 100).toLocaleString('en-IN')} ${unit}`.trim())
+    .join(' · ') || '—';
+}
+
+// "Aadhya Enterprises, Ayush Kumar +2" — distinct non-empty values, capped so the summary row stays one line.
+export function listDistinct<T>(rows: T[], get: (row: T) => string | null | undefined, max = 2): string {
+  const values = Array.from(new Set(rows.map(get).filter((v): v is string => !!v && v !== '—')));
+  if (values.length === 0) return '—';
+  const shown = values.slice(0, max).join(', ');
+  return values.length > max ? `${shown} +${values.length - max}` : shown;
+}
+
 function getStamp(): string {
   return new Date().toISOString().slice(0, 19).replace(/[:T]/g, '-');
 }
@@ -158,18 +235,21 @@ export function pageWindow(current: number, total: number, span = 1): (number | 
 
 // ── Excel / PDF export ───────────────────────────────────────────────────
 
+// `subtitle` (e.g. the date a modal is scoped to) goes into the file name and the PDF heading;
+// the Excel sheet name stays the plain title since sheet names are capped at 31 characters.
 export async function exportRowsToExcel(
   jsonRows: Record<string, unknown>[],
   title: string,
   downloadService: DownloadService,
-  toast: Toast
+  toast: Toast,
+  subtitle?: string
 ): Promise<void> {
   const worksheet = XLSX.utils.json_to_sheet(jsonRows);
   const workbook = XLSX.utils.book_new();
   XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
   const buffer = XLSX.write(workbook, { bookType: 'xlsx', type: 'array' });
   const blob = new Blob([buffer], { type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet' });
-  await downloadService.downloadBlob(blob, `${slugify(title)}-${getStamp()}.xlsx`);
+  await downloadService.downloadBlob(blob, `${slugify(subtitle ? `${title} ${subtitle}` : title)}-${getStamp()}.xlsx`);
   toast.present('Excel exported successfully', 'success');
 }
 
@@ -178,15 +258,21 @@ export async function exportRowsToPdf(
   rows: (string | number)[][],
   title: string,
   downloadService: DownloadService,
-  toast: Toast
+  toast: Toast,
+  subtitle?: string
 ): Promise<void> {
   const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
   doc.setFontSize(16);
   doc.setTextColor(5, 150, 105);
   doc.text(title, 14, 16);
+  if (subtitle) {
+    doc.setFontSize(10);
+    doc.setTextColor(107, 114, 128);
+    doc.text(subtitle, 14, 22);
+  }
 
   autoTable(doc, {
-    startY: 24,
+    startY: subtitle ? 28 : 24,
     head: [headers],
     body: rows,
     theme: 'grid',
@@ -197,6 +283,6 @@ export async function exportRowsToPdf(
   });
 
   const blob = doc.output('blob');
-  await downloadService.downloadBlob(blob, `${slugify(title)}-${getStamp()}.pdf`);
+  await downloadService.downloadBlob(blob, `${slugify(subtitle ? `${title} ${subtitle}` : title)}-${getStamp()}.pdf`);
   toast.present('PDF exported successfully', 'success');
 }

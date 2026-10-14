@@ -238,6 +238,20 @@ table.report-table {
   }
 }
 
+// Detail tables shown inside a scrolling date modal: keep the header row pinned. The tint is layered
+// over an opaque base so rows scrolling underneath don't show through the translucent header.
+table.report-table.report-table-sticky thead th {
+  position: sticky;
+  top: 0;
+  z-index: 1;
+  background-color: var(--ion-card-background, #fff);
+  background-image: linear-gradient(rgba(16, 185, 129, 0.08), rgba(16, 185, 129, 0.08));
+}
+
+table.report-table.report-table-sticky tbody tr:nth-child(even):not(:hover) {
+  background: rgba(16, 185, 129, 0.03);
+}
+
 .report-badge {
   display: inline-flex;
   align-items: center;

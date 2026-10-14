@@ -7,22 +7,19 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
-  DEALERS,
-  seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  DateGroup, listDistinct, sumBy,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'outstanding' | 'collections';
-type AgeingFilter = 'all' | '0-30' | '31-60' | '61-90' | '90+';
-type StatusFilter = 'all' | 'Healthy' | 'Watch' | 'Overdue';
 type Status = 'Healthy' | 'Watch' | 'Overdue';
 
 interface Filters {
   customer: string;
-  ageing: AgeingFilter;
-  status: StatusFilter;
   dateFrom: string;
   dateTo: string;
 }
@@ -76,7 +73,7 @@ function mapCollectionRow(raw: any): CollectionRow {
   templateUrl: './receivables-collections.page.html',
   styleUrls: ['./receivables-collections.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class ReceivablesCollectionsPage implements OnInit {
 
@@ -85,7 +82,7 @@ export class ReceivablesCollectionsPage implements OnInit {
   private haptic = inject(HapticService);
   private reportsService = inject(ReportsService);
 
-  customers = DEALERS;
+  customers: string[] = [];
 
   filters: Filters = this.buildDefaultFilters();
   isLoading = false;
@@ -95,6 +92,11 @@ export class ReceivablesCollectionsPage implements OnInit {
 
   ageingRows: CustomerAgeing[] = [];
   collectionRows: CollectionRow[] = [];
+
+  readonly collectionSummaryColumns: DateSummaryColumn<CollectionRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'Total Collected', value: rows => formatCurrencyFull(sumBy(rows, r => r.amountCollected)) },
+  ];
 
   totalOutstanding = 0;
   overdueAmount = 0;
@@ -109,7 +111,7 @@ export class ReceivablesCollectionsPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
-    return { customer: 'all', ageing: 'all', status: 'all', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
+    return { customer: 'all', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
   }
 
   resetFilters() {
@@ -121,20 +123,21 @@ export class ReceivablesCollectionsPage implements OnInit {
     this.haptic.selectionChanged();
     this.isLoading = true;
 
-    // Outstanding Receivable (Excel #24) returns empty from the backend today — REPORTS_README.md
-    // Category 2 lists it as missing daysOverdue/status/region/invoiceCount. The "outstanding" tab
-    // stays on mock data until that's fixed.
-    this.buildAgeingRows();
+    // Outstanding Receivable (Excel #24) has no backend endpoint — see REPORTS_BACKEND_GAPS.md #2.
+    // The "Outstanding Summary" tab has no real data source, so it stays empty rather than
+    // showing fabricated numbers; wire this up once a real endpoint exists.
+    this.ageingRows = [];
 
     this.reportsService.getCollectionHistory({
       dateFrom: this.filters.dateFrom,
       dateTo: this.filters.dateTo,
-      distributorId: this.filters.customer,
     }).subscribe(rows => {
-      this.collectionRows = filterByField(
-        filterByDateRange(rows.map(mapCollectionRow), this.filters.dateFrom, this.filters.dateTo, r => r.date),
-        this.filters.customer, r => r.customer
-      ).sort((a, b) => b.date.localeCompare(a.date));
+      const dateFiltered = filterByDateRange(rows.map(mapCollectionRow), this.filters.dateFrom, this.filters.dateTo, r => r.date);
+
+      this.customers = Array.from(new Set(dateFiltered.map(r => r.customer).filter(name => name !== '—'))).sort((a, b) => a.localeCompare(b));
+
+      this.collectionRows = filterByField(dateFiltered, this.filters.customer, r => r.customer)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.computeStats();
       this.pager.page = 1;
       this.isLoading = false;
@@ -146,47 +149,6 @@ export class ReceivablesCollectionsPage implements OnInit {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private buildAgeingRows() {
-    const customerPool = this.filters.customer === 'all' ? this.customers : [this.filters.customer];
-    let rows: CustomerAgeing[] = customerPool.map(customer => {
-      // Seed includes the date range (not just the customer) so this still-mocked tab (no backend
-      // endpoint yet — see REPORTS_BACKEND_GAPS.md #2) at least reacts to the date filter like every
-      // other mock-data report tab in this codebase, instead of looking frozen when dates change.
-      const rng = seededRandom('ageing|' + customer + '|' + this.filters.dateFrom + '|' + this.filters.dateTo);
-      const b0_30 = Math.round(rng() * 90000);
-      const b31_60 = Math.round(rng() * 60000);
-      const b61_90 = rng() > 0.55 ? Math.round(rng() * 45000) : 0;
-      const b90plus = rng() > 0.75 ? Math.round(rng() * 60000) : 0;
-      const outstanding = b0_30 + b31_60 + b61_90 + b90plus;
-      const weighted = b0_30 * 15 + b31_60 * 45 + b61_90 * 75 + b90plus * 105;
-      const daysOverdue = outstanding ? Math.round(weighted / outstanding) : 0;
-      const rowBase = { b0_30, b31_60, b61_90, b90plus, outstanding };
-      const status: Status = b90plus > 0 || b61_90 > outstanding * 0.3 ? 'Overdue' : (b31_60 > 0 || b61_90 > 0) ? 'Watch' : 'Healthy';
-      return {
-        customer,
-        region: pick(rng, ['North', 'South', 'East', 'West', 'Central']),
-        invoices: 2 + Math.floor(rng() * 14),
-        ...rowBase,
-        daysOverdue,
-        status,
-      };
-    });
-
-    if (this.filters.ageing !== 'all') {
-      rows = rows.filter(r => {
-        if (this.filters.ageing === '0-30') return r.b0_30 > 0;
-        if (this.filters.ageing === '31-60') return r.b31_60 > 0;
-        if (this.filters.ageing === '61-90') return r.b61_90 > 0;
-        return r.b90plus > 0;
-      });
-    }
-    if (this.filters.status !== 'all') {
-      rows = rows.filter(r => r.status === this.filters.status);
-    }
-
-    this.ageingRows = rows.sort((a, b) => b.outstanding - a.outstanding);
   }
 
   private computeStats() {
@@ -202,7 +164,6 @@ export class ReceivablesCollectionsPage implements OnInit {
   }
 
   get pagedAgeingRows(): CustomerAgeing[] { return paginate(this.ageingRows, this.pager); }
-  get pagedCollectionRows(): CollectionRow[] { return paginate(this.collectionRows, this.pager); }
 
   get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
   get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
@@ -221,16 +182,18 @@ export class ReceivablesCollectionsPage implements OnInit {
   formatDisplayDate = formatDisplayDate;
   formatCurrencyFull = formatCurrencyFull;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the Collections export to one date's rows (the date modal); omitted, it exports every row.
+  private getExportData(source?: CollectionRow[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'outstanding') {
       const headers = ['Customer', 'Region', 'Invoices', 'Outstanding', 'Days Overdue', 'Status'];
       const rows = this.ageingRows.map(r => [r.customer, r.region, r.invoices, formatCurrencyFull(r.outstanding), r.daysOverdue, r.status]);
       const jsonRows = this.ageingRows.map(r => ({ Customer: r.customer, Region: r.region, Invoices: r.invoices, Outstanding: r.outstanding, 'Days Overdue': r.daysOverdue, Status: r.status }));
       return { headers, rows, jsonRows, title: 'Outstanding Summary' };
     }
+    const data = source ?? this.collectionRows;
     const headers = ['Date', 'Customer', 'Amount Collected', 'Reference No', 'Description'];
-    const rows = this.collectionRows.map(r => [formatDisplayDate(r.date), r.customer, formatCurrencyFull(r.amountCollected), r.referenceNo, r.description]);
-    const jsonRows = this.collectionRows.map(r => ({ Date: r.date, Customer: r.customer, 'Amount Collected': r.amountCollected, 'Reference No': r.referenceNo, Description: r.description }));
+    const rows = data.map(r => [formatDisplayDate(r.date), r.customer, formatCurrencyFull(r.amountCollected), r.referenceNo, r.description]);
+    const jsonRows = data.map(r => ({ Date: r.date, Customer: r.customer, 'Amount Collected': r.amountCollected, 'Reference No': r.referenceNo, Description: r.description }));
     return { headers, rows, jsonRows, title: 'Collections' };
   }
 
@@ -242,5 +205,15 @@ export class ReceivablesCollectionsPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<CollectionRow>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<CollectionRow>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

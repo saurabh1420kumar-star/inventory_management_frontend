@@ -8,8 +8,10 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  DateGroup, listDistinct, sumBy, sumByUnit,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf, filterByDateRange,
 } from '../report-shared';
@@ -159,7 +161,7 @@ function flattenBomReport(list: any[]): BomRow[] {
   templateUrl: './production-reports.page.html',
   styleUrls: ['./production-reports.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class ProductionReportsPage implements OnInit {
 
@@ -180,6 +182,23 @@ export class ProductionReportsPage implements OnInit {
   costRows: CostRow[] = [];
   summaryRows: SummaryRow[] = [];
   dailySummaryRows: DailySummaryRow[] = [];
+
+  readonly productionSummaryColumns: DateSummaryColumn<ProductionRow>[] = [
+    { header: 'Products', value: rows => listDistinct(rows, r => r.product) },
+    { header: 'Total Qty Produced', value: rows => sumByUnit(rows, r => r.qtyProduced, r => r.uom) },
+  ];
+
+  // One BOM per finished product, so every row in a product's group shares the same effective cost.
+  readonly bomSummaryColumns: DateSummaryColumn<BomRow>[] = [
+    { header: 'BOM', value: rows => listDistinct(rows, r => r.bomName) },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.amount)) },
+    { header: 'Effective Cost / Unit', value: rows => formatCurrencyFull(rows[0].effectiveCostPerUnit) },
+  ];
+
+  readonly costSummaryColumns: DateSummaryColumn<CostRow>[] = [
+    { header: 'Products', value: rows => listDistinct(rows, r => r.product) },
+    { header: 'Total Cost', value: rows => formatCurrencyFull(sumBy(rows, r => r.totalCost)) },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -242,10 +261,7 @@ export class ProductionReportsPage implements OnInit {
     return this.dailySummaryRows.length;
   }
 
-  get pagedProductionRows(): ProductionRow[] { return paginate(this.productionRows, this.pager); }
-  get pagedBomRows(): BomRow[] { return paginate(this.bomRows, this.pager); }
   get pagedConsumptionRows(): ConsumptionRow[] { return paginate(this.consumptionRows, this.pager); }
-  get pagedCostRows(): CostRow[] { return paginate(this.costRows, this.pager); }
   get pagedSummaryRows(): SummaryRow[] { return paginate(this.summaryRows, this.pager); }
   get pagedDailySummaryRows(): DailySummaryRow[] { return paginate(this.dailySummaryRows, this.pager); }
 
@@ -260,17 +276,21 @@ export class ProductionReportsPage implements OnInit {
   formatDisplayDate = formatDisplayDate;
   formatCurrencyFull = formatCurrencyFull;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the Production Report / Cost Report / BOM export to one group's rows (a date's runs,
+  // or one product's components) from the group modal; omitted, it exports the whole active tab.
+  private getExportData(source?: any[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'production') {
+      const data: ProductionRow[] = source ?? this.productionRows;
       const headers = ['Date', 'Product', 'Batch No', 'Quantity Produced', 'UOM'];
-      const rows = this.productionRows.map(r => [formatDisplayDate(r.date), r.product, r.batchNo, r.qtyProduced, r.uom]);
-      const jsonRows = this.productionRows.map(r => ({ Date: r.date, Product: r.product, 'Batch No': r.batchNo, 'Quantity Produced': r.qtyProduced, UOM: r.uom }));
+      const rows = data.map(r => [formatDisplayDate(r.date), r.product, r.batchNo, r.qtyProduced, r.uom]);
+      const jsonRows = data.map(r => ({ Date: r.date, Product: r.product, 'Batch No': r.batchNo, 'Quantity Produced': r.qtyProduced, UOM: r.uom }));
       return { headers, rows, jsonRows, title: 'Daily Production Summary' };
     }
     if (this.activeType === 'bom') {
       const headers = ['Product', 'BOM Name', 'Component', 'Qty / Unit', 'UOM', 'Rate', 'Amount', 'Contribution %', 'Effective Cost / Unit'];
-      const rows = this.bomRows.map(r => [r.product, r.bomName, r.component, r.qty, r.uom, formatCurrencyFull(r.rate), formatCurrencyFull(r.amount), r.contributionPercent.toFixed(2) + '%', formatCurrencyFull(r.effectiveCostPerUnit)]);
-      const jsonRows = this.bomRows.map(r => ({ Product: r.product, 'BOM Name': r.bomName, Component: r.component, 'Qty / Unit': r.qty, UOM: r.uom, Rate: r.rate, Amount: r.amount, 'Contribution %': r.contributionPercent, 'Effective Cost / Unit': r.effectiveCostPerUnit }));
+      const data: BomRow[] = source ?? this.bomRows;
+      const rows = data.map(r => [r.product, r.bomName, r.component, r.qty, r.uom, formatCurrencyFull(r.rate), formatCurrencyFull(r.amount), r.contributionPercent.toFixed(2) + '%', formatCurrencyFull(r.effectiveCostPerUnit)]);
+      const jsonRows = data.map(r => ({ Product: r.product, 'BOM Name': r.bomName, Component: r.component, 'Qty / Unit': r.qty, UOM: r.uom, Rate: r.rate, Amount: r.amount, 'Contribution %': r.contributionPercent, 'Effective Cost / Unit': r.effectiveCostPerUnit }));
       return { headers, rows, jsonRows, title: 'BOM Report' };
     }
     if (this.activeType === 'consumption') {
@@ -280,9 +300,10 @@ export class ProductionReportsPage implements OnInit {
       return { headers, rows, jsonRows, title: 'Material Consumption' };
     }
     if (this.activeType === 'cost') {
+      const data: CostRow[] = source ?? this.costRows;
       const headers = ['Date', 'Product', 'Batch No', 'Raw Material Cost', 'Additional Cost', 'Total Cost', 'Cost / Unit'];
-      const rows = this.costRows.map(r => [formatDisplayDate(r.date), r.product, r.batchNo, formatCurrencyFull(r.materialCost), formatCurrencyFull(r.additionalCost), formatCurrencyFull(r.totalCost), formatCurrencyFull(r.costPerUnit)]);
-      const jsonRows = this.costRows.map(r => ({ Date: r.date, Product: r.product, 'Batch No': r.batchNo, 'Raw Material Cost': r.materialCost, 'Additional Cost': r.additionalCost, 'Total Cost': r.totalCost, 'Cost / Unit': r.costPerUnit }));
+      const rows = data.map(r => [formatDisplayDate(r.date), r.product, r.batchNo, formatCurrencyFull(r.materialCost), formatCurrencyFull(r.additionalCost), formatCurrencyFull(r.totalCost), formatCurrencyFull(r.costPerUnit)]);
+      const jsonRows = data.map(r => ({ Date: r.date, Product: r.product, 'Batch No': r.batchNo, 'Raw Material Cost': r.materialCost, 'Additional Cost': r.additionalCost, 'Total Cost': r.totalCost, 'Cost / Unit': r.costPerUnit }));
       return { headers, rows, jsonRows, title: 'Production Cost Report' };
     }
     if (this.activeType === 'summary') {
@@ -305,5 +326,15 @@ export class ProductionReportsPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<unknown>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<unknown>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

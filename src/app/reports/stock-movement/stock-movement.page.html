@@ -69,35 +69,44 @@
 
         <ng-container *ngIf="!isLoading">
           <!-- STOCK LEDGER -->
-          <div *ngIf="activeType === 'ledger'" class="report-table-scroll">
-            <table class="report-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Voucher No</th>
-                  <th>Type</th>
-                  <th>Material</th>
-                  <th>Party / Ref No</th>
-                  <th>Inward Qty</th>
-                  <th>Outward Qty</th>
-                  <th>Balance Qty</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of pagedLedgerRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.voucherNo }}</td>
-                  <td><span class="report-badge" [ngClass]="typeBadgeClass(row.type)">{{ row.type }}</span></td>
-                  <td>{{ row.material }}</td>
-                  <td>{{ row.party }}</td>
-                  <td>{{ row.inwardQty || '—' }}</td>
-                  <td>{{ row.outwardQty || '—' }}</td>
-                  <td>{{ row.balanceQty }}</td>
-                </tr>
-                <tr *ngIf="pagedLedgerRows.length === 0"><td colspan="8" class="report-empty">No stock movement in this range</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'ledger'"
+            heading="Stock Ledger"
+            [rows]="ledgerRows"
+            dateField="date"
+            countLabel="Entries"
+            emptyText="No stock movement in this range"
+            [summaryColumns]="ledgerSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Voucher No</th>
+                    <th>Type</th>
+                    <th>Material</th>
+                    <th>Party / Ref No</th>
+                    <th>Inward Qty</th>
+                    <th>Outward Qty</th>
+                    <th>Balance Qty</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.voucherNo }}</td>
+                    <td><span class="report-badge" [ngClass]="typeBadgeClass(row.type)">{{ row.type }}</span></td>
+                    <td>{{ row.material }}</td>
+                    <td>{{ row.party }}</td>
+                    <td>{{ row.inwardQty || '—' }}</td>
+                    <td>{{ row.outwardQty || '—' }}</td>
+                    <td>{{ row.balanceQty }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- SUPPLIER WISE INWARD -->
           <div *ngIf="activeType === 'supplier'" class="report-table-scroll">
@@ -125,35 +134,45 @@
           </div>
 
           <!-- MATERIAL INWARD -->
-          <div *ngIf="activeType === 'material'" class="report-table-scroll">
-            <table class="report-table">
-              <thead>
-                <tr>
-                  <th>Date</th>
-                  <th>Item</th>
-                  <th>Batch No</th>
-                  <th>Supplier</th>
-                  <th>Qty Received</th>
-                  <th>Voucher No</th>
-                  <th>Warehouse</th>
-                </tr>
-              </thead>
-              <tbody>
-                <tr *ngFor="let row of pagedMaterialRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.item }}</td>
-                  <td>{{ row.batchNo }}</td>
-                  <td>{{ row.supplier }}</td>
-                  <td>{{ row.qty.toLocaleString('en-IN') }}</td>
-                  <td>{{ row.voucherNo }}</td>
-                  <td>{{ row.warehouse }}</td>
-                </tr>
-                <tr *ngIf="pagedMaterialRows.length === 0"><td colspan="7" class="report-empty">No material inward in this range</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'material'"
+            heading="Material Inward"
+            [rows]="materialRows"
+            dateField="date"
+            countLabel="Receipts"
+            emptyText="No material inward in this range"
+            [summaryColumns]="materialSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead>
+                  <tr>
+                    <th>Date</th>
+                    <th>Item</th>
+                    <th>Batch No</th>
+                    <th>Supplier</th>
+                    <th>Qty Received</th>
+                    <th>Voucher No</th>
+                    <th>Warehouse</th>
+                  </tr>
+                </thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.item }}</td>
+                    <td>{{ row.batchNo }}</td>
+                    <td>{{ row.supplier }}</td>
+                    <td>{{ row.qty.toLocaleString('en-IN') }}</td>
+                    <td>{{ row.voucherNo }}</td>
+                    <td>{{ row.warehouse }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
-          <div class="report-table-footer">
+          <!-- The date-grouped tabs above carry their own pager; this one serves the supplier tab only. -->
+          <div *ngIf="activeType === 'supplier'" class="report-table-footer">
             <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
             <div class="report-pagination">
               <button (click)="prevPage()" [disabled]="pager.page === 1">
