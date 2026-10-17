@@ -10,26 +10,24 @@ import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import {
-  WAREHOUSES,
   toDateInputValue, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf, filterByField,
 } from '../report-shared';
 
 type ReportType = 'summary' | 'category' | 'reorder';
-type Category = 'Raw Material' | 'Finished Goods' | 'Machine Parts' | 'Promotional Items' | 'Scrap';
+// Backend category code, e.g. RAW / FINISHED / SCRAP
+type Category = string;
 type Status = 'OK' | 'Low' | 'Critical';
 
 interface Filters {
-  category: 'all' | Category;
-  warehouse: string;
+  category: string;
   asOfDate: string;
 }
 
 interface StockRow {
   item: string;
   category: Category;
-  warehouse: string;
   qtyOnHand: number;
   unitValue: number;
   totalValue: number;
@@ -52,14 +50,13 @@ interface ReorderRow {
   status: Status;
 }
 
-// GET /api/reports/inventory/snapshot — Excel #3 Current Stock Report (⚠️ warehouse field may be missing per REPORTS_README.md)
+// GET /api/reports/inventory/snapshot — Excel #3 Current Stock Report
 function mapStockRow(raw: any): StockRow {
   const qtyOnHand = Number(raw.qtyOnHand ?? raw.quantity ?? raw.qty ?? raw.stockQty ?? 0);
   const unitValue = Number(raw.unitValue ?? raw.unitPrice ?? raw.rate ?? raw.costPrice ?? 0);
   return {
     item: raw.item ?? raw.itemName ?? raw.materialName ?? raw.productName ?? raw.name ?? '—',
     category: (raw.category ?? raw.itemCategory ?? 'Raw Material') as Category,
-    warehouse: raw.warehouse ?? raw.warehouseName ?? raw.warehouseId ?? '—',
     qtyOnHand,
     unitValue,
     totalValue: Number(raw.totalValue ?? qtyOnHand * unitValue),
@@ -96,8 +93,14 @@ export class InventoryReportsPage implements OnInit {
   private haptic = inject(HapticService);
   private reportsService = inject(ReportsService);
 
-  categories: Category[] = ['Raw Material', 'Finished Goods', 'Machine Parts', 'Promotional Items', 'Scrap'];
-  warehouses = WAREHOUSES;
+  // `value` is the code the reports API stores and filters on; the snapshot currently returns RAW / FINISHED / SCRAP only
+  categories: { value: Category; label: string }[] = [
+    { value: 'RAW', label: 'Raw Material' },
+    { value: 'FINISHED', label: 'Finished Goods' },
+    { value: 'MACHINE_PARTS', label: 'Machine Parts' },
+    { value: 'PROMOTIONAL_ITEMS', label: 'Promotional Items' },
+    { value: 'SCRAP', label: 'Scrap' },
+  ];
 
   filters: Filters = this.buildDefaultFilters();
   isLoading = false;
@@ -114,7 +117,7 @@ export class InventoryReportsPage implements OnInit {
   }
 
   private buildDefaultFilters(): Filters {
-    return { category: 'all', warehouse: 'all', asOfDate: toDateInputValue(new Date()) };
+    return { category: 'all', asOfDate: toDateInputValue(new Date()) };
   }
 
   resetFilters() {
@@ -126,8 +129,8 @@ export class InventoryReportsPage implements OnInit {
     this.haptic.selectionChanged();
     this.isLoading = true;
 
-    const snapshotParams = { category: this.filters.category, warehouse: this.filters.warehouse, asOfDate: this.filters.asOfDate };
-    const lowStockParams = { category: this.filters.category, warehouse: this.filters.warehouse };
+    const snapshotParams = { category: this.filters.category, asOfDate: this.filters.asOfDate };
+    const lowStockParams = { category: this.filters.category };
 
     forkJoin({
       snapshot: this.reportsService.getInventorySnapshot(snapshotParams),
@@ -135,7 +138,6 @@ export class InventoryReportsPage implements OnInit {
     }).subscribe(({ snapshot, lowStock }) => {
       let stockRows = snapshot.map(mapStockRow);
       stockRows = filterByField(stockRows, this.filters.category, r => r.category);
-      stockRows = filterByField(stockRows, this.filters.warehouse, r => r.warehouse);
       this.stockRows = stockRows.sort((a, b) => b.totalValue - a.totalValue);
 
       this.reorderRows = filterByField(lowStock.map(mapReorderRow), this.filters.category, r => r.category)
@@ -208,9 +210,9 @@ export class InventoryReportsPage implements OnInit {
       const jsonRows = this.reorderRows.map(r => ({ Item: r.item, Category: r.category, 'Current Qty': r.currentQty, 'Reorder Level': r.reorderLevel, Shortfall: r.shortfall, Status: r.status }));
       return { headers, rows, jsonRows, title: 'Low Stock Reorder Report' };
     }
-    const headers = ['Item', 'Category', 'Warehouse', 'Qty on Hand', 'Unit Value', 'Total Value'];
-    const rows = this.stockRows.map(r => [r.item, r.category, r.warehouse, r.qtyOnHand, formatCurrencyFull(r.unitValue), formatCurrencyFull(r.totalValue)]);
-    const jsonRows = this.stockRows.map(r => ({ Item: r.item, Category: r.category, Warehouse: r.warehouse, 'Qty on Hand': r.qtyOnHand, 'Unit Value': r.unitValue, 'Total Value': r.totalValue }));
+    const headers = ['Item', 'Category', 'Qty on Hand', 'Unit Value', 'Total Value'];
+    const rows = this.stockRows.map(r => [r.item, r.category, r.qtyOnHand, formatCurrencyFull(r.unitValue), formatCurrencyFull(r.totalValue)]);
+    const jsonRows = this.stockRows.map(r => ({ Item: r.item, Category: r.category, 'Qty on Hand': r.qtyOnHand, 'Unit Value': r.unitValue, 'Total Value': r.totalValue }));
     return { headers, rows, jsonRows, title: 'Stock Summary' };
   }
 

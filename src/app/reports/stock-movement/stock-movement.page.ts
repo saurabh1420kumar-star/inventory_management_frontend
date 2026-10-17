@@ -10,7 +10,6 @@ import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
-  RAW_MATERIALS, FINISHED_PRODUCTS, WAREHOUSES,
   toDateInputValue, formatDisplayDate,
   DateGroup, listDistinct, sumBy,
   Pager, paginate, totalPages, pageWindow, pageRange,
@@ -20,8 +19,7 @@ import {
 type ReportType = 'ledger' | 'supplier' | 'material';
 
 interface Filters {
-  item: string;
-  warehouse: string;
+  material: string;
   dateFrom: string;
   dateTo: string;
 }
@@ -109,8 +107,8 @@ export class StockMovementPage implements OnInit {
   private haptic = inject(HapticService);
   private reportsService = inject(ReportsService);
 
-  items = [...RAW_MATERIALS, ...FINISHED_PRODUCTS];
-  warehouses = WAREHOUSES;
+  // Material dropdown options — distinct names found in the report responses
+  materials: string[] = [];
 
   filters: Filters = this.buildDefaultFilters();
   isLoading = false;
@@ -140,7 +138,7 @@ export class StockMovementPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 30);
-    return { item: 'all', warehouse: 'all', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
+    return { material: 'all', dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now) };
   }
 
   resetFilters() {
@@ -152,21 +150,30 @@ export class StockMovementPage implements OnInit {
     this.haptic.selectionChanged();
     this.isLoading = true;
 
-    const params = { item: this.filters.item, warehouse: this.filters.warehouse, dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
+    // The material filter is applied client-side (the API ignores it), so the responses stay unfiltered
+    // and the dropdown always lists every material.
+    const params = { dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
 
     forkJoin({
       ledger: this.reportsService.getStockLedger(params),
       supplier: this.reportsService.getSupplierWiseInward(params),
       material: this.reportsService.getMaterialInward(params),
     }).subscribe(({ ledger, supplier, material }) => {
-      const { dateFrom, dateTo, item, warehouse } = this.filters;
-      this.ledgerRows = filterByField(filterByDateRange(ledger.map(mapLedgerRow), dateFrom, dateTo, r => r.date), item, r => r.material)
+      const { dateFrom, dateTo, material: selectedMaterial } = this.filters;
+      const allLedger = ledger.map(mapLedgerRow);
+      const allMaterialInward = material.map(mapMaterialInwardRow);
+
+      this.materials = Array.from(new Set(
+        [...allLedger.map(r => r.material), ...allMaterialInward.map(r => r.item)]
+          .map(name => name.trim())
+          .filter(name => name && name !== '—')
+      )).sort((a, b) => a.localeCompare(b));
+
+      this.ledgerRows = filterByField(filterByDateRange(allLedger, dateFrom, dateTo, r => r.date), selectedMaterial, r => r.material)
         .sort((a, b) => b.date.localeCompare(a.date));
       this.supplierRows = supplier.map(mapSupplierRow).sort((a, b) => b.totalQty - a.totalQty);
-      let materialRows = filterByDateRange(material.map(mapMaterialInwardRow), dateFrom, dateTo, r => r.date);
-      materialRows = filterByField(materialRows, item, r => r.item);
-      materialRows = filterByField(materialRows, warehouse, r => r.warehouse);
-      this.materialRows = materialRows.sort((a, b) => b.date.localeCompare(a.date));
+      this.materialRows = filterByField(filterByDateRange(allMaterialInward, dateFrom, dateTo, r => r.date), selectedMaterial, r => r.item)
+        .sort((a, b) => b.date.localeCompare(a.date));
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();

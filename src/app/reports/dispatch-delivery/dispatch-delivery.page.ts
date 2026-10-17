@@ -10,7 +10,6 @@ import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
-  ROUTES,
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
   DateGroup, listDistinct, sumBy,
   exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
@@ -23,7 +22,6 @@ type StatusFilter = 'all' | DispatchStatus;
 interface Filters {
   dateFrom: string;
   dateTo: string;
-  route: string;
   status: StatusFilter;
 }
 
@@ -123,8 +121,6 @@ export class DispatchDeliveryReportPage implements OnInit {
   private haptic = inject(HapticService);
   private reportsService = inject(ReportsService);
 
-  routes = ROUTES;
-
   filters: Filters = this.buildDefaultFilters();
   isLoading = false;
   lastUpdated: Date | null = null;
@@ -159,7 +155,7 @@ export class DispatchDeliveryReportPage implements OnInit {
     const now = new Date();
     const from = new Date(now);
     from.setDate(from.getDate() - 14);
-    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), route: 'all', status: 'all' };
+    return { dateFrom: toDateInputValue(from), dateTo: toDateInputValue(now), status: 'all' };
   }
 
   resetFilters() {
@@ -178,8 +174,6 @@ export class DispatchDeliveryReportPage implements OnInit {
       confirmation: this.reportsService.getDeliveryConfirmation(dateParams),
     }).subscribe(({ register, pending, confirmation }) => {
       const { dateFrom, dateTo, status } = this.filters;
-      // No region/route field exists on any of these 3 DTOs (see REPORTS_BACKEND_GAPS.md #5), so the
-      // "Region" filter can't be applied client-side either — it needs that field added server-side.
       this.dispatchRegisterRows = filterByField(filterByDateRange(register.map(mapDispatchRegisterRow), dateFrom, dateTo, r => r.gdnDate), status, r => r.status)
         .sort((a, b) => b.gdnDate.localeCompare(a.gdnDate));
       this.pendingDispatchRows = filterByDateRange(pending.map(mapPendingDispatchRow), dateFrom, dateTo, r => r.gdnDate);

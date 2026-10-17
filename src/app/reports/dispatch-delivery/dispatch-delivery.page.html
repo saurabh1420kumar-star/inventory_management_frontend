@@ -19,13 +19,6 @@
         <input id="ddTo" type="date" [(ngModel)]="filters.dateTo" />
       </div>
       <div class="report-filter-field">
-        <label for="ddRoute">Region</label>
-        <select id="ddRoute" [(ngModel)]="filters.route">
-          <option value="all">All Regions</option>
-          <option *ngFor="let r of routes" [value]="r">{{ r }}</option>
-        </select>
-      </div>
-      <div class="report-filter-field">
         <label for="ddStatus">Status</label>
         <select id="ddStatus" [(ngModel)]="filters.status">
           <option value="all">All Statuses</option>

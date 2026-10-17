@@ -388,9 +388,9 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Distributor Wise Sales' };
       }
       case 'dealer': {
-        const headers = ['Dealer', 'Region', 'Orders', 'Qty', 'Revenue'];
-        const rows = this.dealerRows.map(r => [r.name, r.region, r.orders, r.qty, formatCurrencyFull(r.revenue)]);
-        const jsonRows = this.dealerRows.map(r => ({ Dealer: r.name, Region: r.region, Orders: r.orders, Qty: r.qty, Revenue: r.revenue }));
+        const headers = ['Dealer', 'Orders', 'Qty', 'Revenue'];
+        const rows = this.dealerRows.map(r => [r.name, r.orders, r.qty, formatCurrencyFull(r.revenue)]);
+        const jsonRows = this.dealerRows.map(r => ({ Dealer: r.name, Orders: r.orders, Qty: r.qty, Revenue: r.revenue }));
         return { headers, rows, jsonRows, title: 'Dealer Wise Sales' };
       }
       default: {
