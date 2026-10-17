@@ -7,11 +7,12 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   DEALERS,
   toDateInputValue, formatDisplayDate, formatCurrencyFull, daysBetween,
-  Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  DateGroup, listDistinct, sumBy,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'all' | 'pending' | 'dispatch';
@@ -65,7 +66,7 @@ function mapOrderRow(raw: any): OrderRow {
   templateUrl: './sales-orders.page.html',
   styleUrls: ['./sales-orders.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class SalesOrdersReportPage implements OnInit {
 
@@ -80,9 +81,21 @@ export class SalesOrdersReportPage implements OnInit {
   isLoading = false;
   lastUpdated: Date | null = null;
   activeType: ReportType = 'all';
-  pager: Pager = { page: 1, pageSize: 6 };
 
   orderRows: OrderRow[] = [];
+  pendingRows: OrderRow[] = [];
+  dispatchRows: OrderRow[] = [];
+
+  readonly orderSummaryColumns: DateSummaryColumn<OrderRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.amount)) },
+  ];
+
+  readonly dispatchSummaryColumns: DateSummaryColumn<OrderRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'Total Items', value: rows => sumBy(rows, r => r.items).toLocaleString('en-IN') },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.amount)) },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -110,8 +123,13 @@ export class SalesOrdersReportPage implements OnInit {
       dateFrom: this.filters.dateFrom,
       dateTo: this.filters.dateTo,
     }).subscribe(rows => {
-      this.orderRows = rows.map(mapOrderRow).sort((a, b) => b.date.localeCompare(a.date));
-      this.pager.page = 1;
+      let orderRows = filterByDateRange(rows.map(mapOrderRow), this.filters.dateFrom, this.filters.dateTo, r => r.date);
+      orderRows = filterByField(orderRows, this.filters.status, r => r.status);
+      orderRows = filterByField(orderRows, this.filters.customer, r => r.customer);
+      this.orderRows = orderRows.sort((a, b) => b.date.localeCompare(a.date));
+      // Stable arrays (not filtering getters): they're bound to the date-grouped table's [rows] input.
+      this.pendingRows = this.orderRows.filter(r => r.status === 'Pending');
+      this.dispatchRows = this.orderRows.filter(r => r.status === 'Approved' || r.status === 'Dispatched');
       this.isLoading = false;
       this.lastUpdated = new Date();
     });
@@ -119,16 +137,7 @@ export class SalesOrdersReportPage implements OnInit {
 
   switchType(type: ReportType) {
     this.activeType = type;
-    this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  get pendingRows(): OrderRow[] {
-    return this.orderRows.filter(r => r.status === 'Pending');
-  }
-
-  get dispatchRows(): OrderRow[] {
-    return this.orderRows.filter(r => r.status === 'Approved' || r.status === 'Dispatched');
   }
 
   dispatchStatusLabel(status: OrderStatus): string {
@@ -138,24 +147,6 @@ export class SalesOrdersReportPage implements OnInit {
   daysPending(dateStr: string): number {
     return daysBetween(new Date(dateStr), new Date());
   }
-
-  get activeRowCount(): number {
-    if (this.activeType === 'pending') return this.pendingRows.length;
-    if (this.activeType === 'dispatch') return this.dispatchRows.length;
-    return this.orderRows.length;
-  }
-
-  get pagedOrderRows(): OrderRow[] { return paginate(this.orderRows, this.pager); }
-  get pagedPendingRows(): OrderRow[] { return paginate(this.pendingRows, this.pager); }
-  get pagedDispatchRows(): OrderRow[] { return paginate(this.dispatchRows, this.pager); }
-
-  get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
-  get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
-  get pageNumbers(): (number | '...')[] { return pageWindow(this.pager.page, this.totalPageCount); }
-
-  goToPage(p: number | '...') { if (p !== '...') this.pager.page = p; }
-  prevPage() { if (this.pager.page > 1) this.pager.page--; }
-  nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
 
   statusBadgeClass(status: OrderStatus): string {
     if (status === 'Delivered') return 'report-badge-green';
@@ -169,22 +160,26 @@ export class SalesOrdersReportPage implements OnInit {
   formatDisplayDate = formatDisplayDate;
   formatCurrencyFull = formatCurrencyFull;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the export to one date's rows (the date modal); omitted, it exports the whole active tab.
+  private getExportData(source?: OrderRow[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'pending') {
+      const data = source ?? this.pendingRows;
       const headers = ['Order No', 'Date', 'Customer', 'Amount', 'Requested By', 'Days Pending'];
-      const rows = this.pendingRows.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, formatCurrencyFull(r.amount), r.requestedBy, this.daysPending(r.date)]);
-      const jsonRows = this.pendingRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Amount: r.amount, 'Requested By': r.requestedBy, 'Days Pending': this.daysPending(r.date) }));
+      const rows = data.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, formatCurrencyFull(r.amount), r.requestedBy, this.daysPending(r.date)]);
+      const jsonRows = data.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Amount: r.amount, 'Requested By': r.requestedBy, 'Days Pending': this.daysPending(r.date) }));
       return { headers, rows, jsonRows, title: 'Pending Approval' };
     }
     if (this.activeType === 'dispatch') {
+      const data = source ?? this.dispatchRows;
       const headers = ['Order No', 'Date', 'Customer', 'Items', 'Amount', 'Dispatch Status'];
-      const rows = this.dispatchRows.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.items, formatCurrencyFull(r.amount), this.dispatchStatusLabel(r.status)]);
-      const jsonRows = this.dispatchRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Items: r.items, Amount: r.amount, 'Dispatch Status': this.dispatchStatusLabel(r.status) }));
+      const rows = data.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.items, formatCurrencyFull(r.amount), this.dispatchStatusLabel(r.status)]);
+      const jsonRows = data.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Items: r.items, Amount: r.amount, 'Dispatch Status': this.dispatchStatusLabel(r.status) }));
       return { headers, rows, jsonRows, title: 'Dispatch Queue' };
     }
+    const data = source ?? this.orderRows;
     const headers = ['Order No', 'Date', 'Customer', 'Status', 'Amount'];
-    const rows = this.orderRows.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.status, formatCurrencyFull(r.amount)]);
-    const jsonRows = this.orderRows.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Status: r.status, Amount: r.amount }));
+    const rows = data.map(r => [r.orderNo, formatDisplayDate(r.date), r.customer, r.status, formatCurrencyFull(r.amount)]);
+    const jsonRows = data.map(r => ({ 'Order No': r.orderNo, Date: r.date, Customer: r.customer, Status: r.status, Amount: r.amount }));
     return { headers, rows, jsonRows, title: 'Sales Orders' };
   }
 
@@ -196,5 +191,15 @@ export class SalesOrdersReportPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<OrderRow>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<OrderRow>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

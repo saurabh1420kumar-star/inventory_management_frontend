@@ -3,9 +3,6 @@ import { CommonModule } from '@angular/common';
 import { FormsModule } from '@angular/forms';
 import { IonicModule } from '@ionic/angular';
 import { NgApexchartsModule } from 'ng-apexcharts';
-import * as XLSX from 'xlsx';
-import jsPDF from 'jspdf';
-import autoTable from 'jspdf-autotable';
 import {
   ApexAxisChartSeries,
   ApexChart,
@@ -491,6 +488,7 @@ export class MisDashboardPage implements OnInit {
 
   async exportExcel() {
     const { jsonRows, title } = this.getExportData();
+    const XLSX = await import('xlsx');
     const worksheet = XLSX.utils.json_to_sheet(jsonRows);
     const workbook = XLSX.utils.book_new();
     XLSX.utils.book_append_sheet(workbook, worksheet, title.slice(0, 31));
@@ -502,6 +500,10 @@ export class MisDashboardPage implements OnInit {
 
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
+    const [{ default: jsPDF }, { default: autoTable }] = await Promise.all([
+      import('jspdf'),
+      import('jspdf-autotable'),
+    ]);
     const doc = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
     doc.setFontSize(16);
     doc.setTextColor(5, 150, 105);

@@ -70,76 +70,87 @@
 
         <ng-container *ngIf="!isLoading">
           <!-- SCRAP GENERATION -->
-          <div *ngIf="activeType === 'generation'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Date</th><th>Source</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Value</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedGenerationRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.source }}</td>
-                  <td>{{ row.scrapType }}</td>
-                  <td>{{ row.quantity }}</td>
-                  <td>{{ row.uom }}</td>
-                  <td>{{ formatCurrencyFull(row.value) }}</td>
-                </tr>
-                <tr *ngIf="pagedGenerationRows.length === 0"><td colspan="6" class="report-empty">No scrap generated for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'generation'"
+            heading="Scrap Generation"
+            [rows]="generationRows"
+            dateField="date"
+            countLabel="Entries"
+            emptyText="No scrap generated for these filters"
+            [summaryColumns]="generationSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Date</th><th>Source</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Value</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.source }}</td>
+                    <td>{{ row.scrapType }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>{{ row.uom }}</td>
+                    <td>{{ formatCurrencyFull(row.value) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- SCRAP DISPOSAL -->
-          <div *ngIf="activeType === 'disposal'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Disposal Method</th><th>Disposed By</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedDisposalRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.scrapType }}</td>
-                  <td>{{ row.quantity }}</td>
-                  <td>{{ row.uom }}</td>
-                  <td><span class="report-badge report-badge-blue">{{ row.method }}</span></td>
-                  <td>{{ row.disposedBy }}</td>
-                </tr>
-                <tr *ngIf="pagedDisposalRows.length === 0"><td colspan="6" class="report-empty">No disposal records for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'disposal'"
+            heading="Scrap Disposal"
+            [rows]="disposalRows"
+            dateField="date"
+            countLabel="Entries"
+            emptyText="No disposal records for these filters"
+            [summaryColumns]="disposalSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Disposal Method</th><th>Disposed By</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.scrapType }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>{{ row.uom }}</td>
+                    <td><span class="report-badge report-badge-blue">{{ row.method }}</span></td>
+                    <td>{{ row.disposedBy }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- SCRAP SALE -->
-          <div *ngIf="activeType === 'sale'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Buyer</th><th>Rate</th><th>Amount</th><th>Invoice No</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedSaleRows">
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.scrapType }}</td>
-                  <td>{{ row.quantity }}</td>
-                  <td>{{ row.uom }}</td>
-                  <td>{{ row.buyer }}</td>
-                  <td>{{ formatCurrencyFull(row.rate) }}</td>
-                  <td>{{ formatCurrencyFull(row.amount) }}</td>
-                  <td>{{ row.invoiceNo }}</td>
-                </tr>
-                <tr *ngIf="pagedSaleRows.length === 0"><td colspan="8" class="report-empty">No scrap sales for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
-
-          <div class="report-table-footer">
-            <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount }} items</span>
-            <div class="report-pagination">
-              <button (click)="prevPage()" [disabled]="pager.page === 1">
-                <ion-icon name="chevron-back-outline"></ion-icon>
-              </button>
-              <ng-container *ngFor="let p of pageNumbers">
-                <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
-                <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
-              </ng-container>
-              <button (click)="nextPage()" [disabled]="pager.page === totalPageCount">
-                <ion-icon name="chevron-forward-outline"></ion-icon>
-              </button>
-            </div>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'sale'"
+            heading="Scrap Sale"
+            [rows]="saleRows"
+            dateField="date"
+            countLabel="Sales"
+            emptyText="No scrap sales for these filters"
+            [summaryColumns]="saleSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Date</th><th>Scrap Type</th><th>Quantity</th><th>UOM</th><th>Buyer</th><th>Rate</th><th>Amount</th><th>Invoice No</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.scrapType }}</td>
+                    <td>{{ row.quantity }}</td>
+                    <td>{{ row.uom }}</td>
+                    <td>{{ row.buyer }}</td>
+                    <td>{{ formatCurrencyFull(row.rate) }}</td>
+                    <td>{{ formatCurrencyFull(row.amount) }}</td>
+                    <td>{{ row.invoiceNo }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
         </ng-container>
       </section>
     </div>

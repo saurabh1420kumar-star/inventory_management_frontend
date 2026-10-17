@@ -12,11 +12,13 @@ import { DistributorService, DistributorDto, ApiResponse } from '../../services/
 import { SalesHierarchyService } from '../../services/sales-hierarchy.service';
 import { DealerService } from '../../services/dealer.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   REGIONS,
   seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  DateGroup, listDistinct, sumBy,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'register' | 'summary' | 'product' | 'distributor' | 'dealer' | 'salesman';
@@ -164,7 +166,7 @@ function mapSalesmanRow(raw: any): SalesmanRow {
   templateUrl: './sales-reports.page.html',
   styleUrls: ['./sales-reports.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class SalesReportsPage implements OnInit {
 
@@ -192,6 +194,11 @@ export class SalesReportsPage implements OnInit {
   distributorRows: PartyRow[] = [];
   dealerRows: PartyRow[] = [];
   salesmanRows: SalesmanRow[] = [];
+
+  readonly invoiceSummaryColumns: DateSummaryColumn<InvoiceRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.grandTotal)) },
+  ];
 
   totalSales = 0;
   totalInvoices = 0;
@@ -258,12 +265,24 @@ export class SalesReportsPage implements OnInit {
       byDistributor: this.reportsService.getSalesByDistributor({ ...dateParams, distributorId: this.filters.distributor }),
       salesmanPerf: this.reportsService.getSalesmanPerformance(dateParams),
     }).subscribe(({ invoices, monthlyTrend, byProduct, byDistributor, salesmanPerf }) => {
-      this.invoiceRows = invoices.map(mapInvoiceRow).sort((a, b) => b.date.localeCompare(a.date));
+      const distributorName = this.distributors.find(d => d.id === this.filters.distributor)?.name ?? this.filters.distributor;
+      const salespersonName = this.salespersons.find(s => s.id === this.filters.salesperson)?.name ?? this.filters.salesperson;
+
+      let invoiceRows = filterByDateRange(invoices.map(mapInvoiceRow), this.filters.dateFrom, this.filters.dateTo, r => r.date);
+      invoiceRows = filterByField(invoiceRows, this.filters.dealer, r => r.dealer);
+      invoiceRows = filterByField(invoiceRows, distributorName, r => r.distributor);
+      invoiceRows = filterByField(invoiceRows, salespersonName, r => r.salesman);
+      this.invoiceRows = invoiceRows.sort((a, b) => b.date.localeCompare(a.date));
+
       this.computeStats();
       this.buildSummaryRows(monthlyTrend);
       this.productRows = mapProductRows(byProduct);
-      this.distributorRows = byDistributor.map(mapPartyRow).sort((a, b) => b.revenue - a.revenue);
-      this.salesmanRows = salesmanPerf.map(mapSalesmanRow).sort((a, b) => b.totalValue - a.totalValue);
+      this.distributorRows = filterByField(byDistributor.map(mapPartyRow), distributorName, r => r.name)
+        .sort((a, b) => b.revenue - a.revenue);
+      // getSalesmanPerformance has no salesperson param server-side — the Salesperson filter above
+      // can only narrow this tab client-side, keyed by name since salespersonId isn't in the response.
+      this.salesmanRows = filterByField(salesmanPerf.map(mapSalesmanRow), salespersonName, r => r.salespersonName)
+        .sort((a, b) => b.totalValue - a.totalValue);
       this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
@@ -315,7 +334,6 @@ export class SalesReportsPage implements OnInit {
     return this.salesmanRows.length;
   }
 
-  get pagedInvoiceRows(): InvoiceRow[] { return paginate(this.invoiceRows, this.pager); }
   get pagedSummaryRows(): SummaryRow[] { return paginate(this.summaryRows, this.pager); }
   get pagedProductRows(): ProductRow[] { return paginate(this.productRows, this.pager); }
   get pagedDistributorRows(): PartyRow[] { return paginate(this.distributorRows, this.pager); }
@@ -341,12 +359,14 @@ export class SalesReportsPage implements OnInit {
     return 'report-badge-blue';
   }
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the Sales Register export to one date's invoices (the date modal); omitted, it exports every row.
+  private getExportData(source?: InvoiceRow[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     switch (this.activeType) {
       case 'register': {
+        const data = source ?? this.invoiceRows;
         const headers = ['Invoice No', 'Date', 'Customer', 'Invoice Status', 'Amount'];
-        const rows = this.invoiceRows.map(r => [r.invoiceNo, formatDisplayDate(r.date), r.customer, r.invoiceStatus, formatCurrencyFull(r.grandTotal)]);
-        const jsonRows = this.invoiceRows.map(r => ({ 'Invoice No': r.invoiceNo, Date: r.date, Customer: r.customer, 'Invoice Status': r.invoiceStatus, Amount: r.grandTotal }));
+        const rows = data.map(r => [r.invoiceNo, formatDisplayDate(r.date), r.customer, r.invoiceStatus, formatCurrencyFull(r.grandTotal)]);
+        const jsonRows = data.map(r => ({ 'Invoice No': r.invoiceNo, Date: r.date, Customer: r.customer, 'Invoice Status': r.invoiceStatus, Amount: r.grandTotal }));
         return { headers, rows, jsonRows, title: 'Sales Register' };
       }
       case 'summary': {
@@ -396,5 +416,15 @@ export class SalesReportsPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<InvoiceRow>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<InvoiceRow>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

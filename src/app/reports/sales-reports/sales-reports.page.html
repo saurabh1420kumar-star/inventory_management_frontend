@@ -113,21 +113,30 @@
 
         <ng-container *ngIf="!isLoading">
           <!-- SALES REGISTER -->
-          <div *ngIf="activeType === 'register'" class="report-table-scroll">
-            <table class="report-table">
-              <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Invoice Status</th><th>Amount</th></tr></thead>
-              <tbody>
-                <tr *ngFor="let row of pagedInvoiceRows">
-                  <td>{{ row.invoiceNo }}</td>
-                  <td>{{ formatDisplayDate(row.date) }}</td>
-                  <td>{{ row.customer }}</td>
-                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.invoiceStatus)">{{ row.invoiceStatus }}</span></td>
-                  <td>{{ formatCurrencyFull(row.grandTotal) }}</td>
-                </tr>
-                <tr *ngIf="pagedInvoiceRows.length === 0"><td colspan="5" class="report-empty">No invoices found for these filters</td></tr>
-              </tbody>
-            </table>
-          </div>
+          <app-date-grouped-table *ngIf="activeType === 'register'"
+            heading="Sales Register"
+            [rows]="invoiceRows"
+            dateField="date"
+            countLabel="Invoices"
+            emptyText="No invoices found for these filters"
+            [summaryColumns]="invoiceSummaryColumns"
+            (exportExcel)="exportGroupExcel($event)"
+            (exportPdf)="exportGroupPdf($event)">
+            <ng-template #detail let-rows>
+              <table class="report-table report-table-sticky">
+                <thead><tr><th>Invoice No</th><th>Date</th><th>Customer</th><th>Invoice Status</th><th>Amount</th></tr></thead>
+                <tbody>
+                  <tr *ngFor="let row of rows">
+                    <td>{{ row.invoiceNo }}</td>
+                    <td>{{ formatDisplayDate(row.date) }}</td>
+                    <td>{{ row.customer }}</td>
+                    <td><span class="report-badge" [ngClass]="statusBadgeClass(row.invoiceStatus)">{{ row.invoiceStatus }}</span></td>
+                    <td>{{ formatCurrencyFull(row.grandTotal) }}</td>
+                  </tr>
+                </tbody>
+              </table>
+            </ng-template>
+          </app-date-grouped-table>
 
           <!-- SALES SUMMARY -->
           <div *ngIf="activeType === 'summary'" class="report-table-scroll">
@@ -214,7 +223,8 @@
             </table>
           </div>
 
-          <div class="report-table-footer">
+          <!-- The Sales Register carries its own pager (it's grouped by date); this one serves the other tabs. -->
+          <div *ngIf="activeType !== 'register'" class="report-table-footer">
             <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ activeRowCount.toLocaleString('en-IN') }} items</span>
             <div class="report-pagination">
               <button (click)="prevPage()" [disabled]="pager.page === 1">

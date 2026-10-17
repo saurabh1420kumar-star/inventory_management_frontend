@@ -9,10 +9,11 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
-  Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  DateGroup, listDistinct, sumByUnit,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange,
 } from '../report-shared';
 
 type ReportType = 'promotional' | 'spareParts';
@@ -66,7 +67,7 @@ function mapIssueRow(raw: any, category: IssueCategory): IssueRow {
   templateUrl: './inventory-issues.page.html',
   styleUrls: ['./inventory-issues.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, RouterModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class InventoryIssuesReportPage implements OnInit {
 
@@ -79,9 +80,16 @@ export class InventoryIssuesReportPage implements OnInit {
   isLoading = false;
   lastUpdated: Date | null = null;
   activeType: ReportType = 'promotional';
-  pager: Pager = { page: 1, pageSize: 5 };
 
   issueRows: IssueRow[] = [];
+  promotionalRows: IssueRow[] = [];
+  sparePartsRows: IssueRow[] = [];
+  issuedToOptions: string[] = [];
+
+  readonly summaryColumns: DateSummaryColumn<IssueRow>[] = [
+    { header: 'Issued To', value: rows => listDistinct(rows, r => r.issuedTo) },
+    { header: 'Total Qty', value: rows => sumByUnit(rows, r => r.qty, r => r.uom) },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -114,16 +122,25 @@ export class InventoryIssuesReportPage implements OnInit {
         ...spareParts.map(r => mapIssueRow(r, 'Spare Parts')),
       ];
 
+      rows = filterByDateRange(rows, this.filters.dateFrom, this.filters.dateTo, r => r.issueDate);
+
       if (this.filters.issueType !== 'all') {
         rows = rows.filter(r => r.category === this.filters.issueType);
       }
-      const search = this.filters.issuedTo.trim().toLowerCase();
-      if (search) {
-        rows = rows.filter(r => r.issuedTo.toLowerCase().includes(search));
+
+      this.issuedToOptions = Array.from(
+        new Set(rows.map(r => r.issuedTo).filter(name => !!name && name !== '—'))
+      ).sort((a, b) => a.localeCompare(b));
+
+      if (this.filters.issuedTo) {
+        rows = rows.filter(r => r.issuedTo === this.filters.issuedTo);
       }
 
       this.issueRows = rows.sort((a, b) => b.issueDate.localeCompare(a.issueDate));
-      this.pager.page = 1;
+      // Kept as stable arrays, not filtering getters: a getter returns a new array on every read, which would
+      // re-cluster the date-grouped table and reset its pager on each change-detection pass.
+      this.promotionalRows = this.issueRows.filter(r => r.category === 'Promotional');
+      this.sparePartsRows = this.issueRows.filter(r => r.category === 'Spare Parts');
       this.isLoading = false;
       this.lastUpdated = new Date();
     });
@@ -131,26 +148,16 @@ export class InventoryIssuesReportPage implements OnInit {
 
   switchType(type: ReportType) {
     this.activeType = type;
-    this.pager.page = 1;
     this.haptic.selectionChanged();
   }
-
-  get promotionalRows(): IssueRow[] { return this.issueRows.filter(r => r.category === 'Promotional'); }
-  get sparePartsRows(): IssueRow[] { return this.issueRows.filter(r => r.category === 'Spare Parts'); }
 
   get activeRows(): IssueRow[] {
     return this.activeType === 'promotional' ? this.promotionalRows : this.sparePartsRows;
   }
 
-  get pagedRows(): IssueRow[] { return paginate(this.activeRows, this.pager); }
-
-  get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRows.length); }
-  get totalPageCount(): number { return totalPages(this.activeRows.length, this.pager.pageSize); }
-  get pageNumbers(): (number | '...')[] { return pageWindow(this.pager.page, this.totalPageCount); }
-
-  goToPage(p: number | '...') { if (p !== '...') this.pager.page = p; }
-  prevPage() { if (this.pager.page > 1) this.pager.page--; }
-  nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
+  get activeTitle(): string {
+    return this.activeType === 'promotional' ? 'Promotional Issue' : 'Spare Parts Issue';
+  }
 
   categoryBadgeClass(category: IssueCategory): string {
     return category === 'Promotional' ? 'report-badge-blue' : 'report-badge-amber';
@@ -171,20 +178,20 @@ export class InventoryIssuesReportPage implements OnInit {
     return value > 0 ? formatCurrencyFull(value) : 'Free';
   }
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the export to one date's rows (the date modal); omitted, it exports the whole active tab.
+  private getExportData(source: IssueRow[] = this.activeRows): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     const headers = ['Reference No', 'Date', 'Category', 'Material', 'Material Code', 'Issued To', 'Transaction Type', 'Qty', 'UOM', 'Price', 'Comments'];
-    const rows = this.activeRows.map(r => [
+    const rows = source.map(r => [
       r.referenceNo, formatDisplayDate(r.issueDate), r.category, r.materialName, r.materialCode,
       r.issuedTo, this.formatTransactionType(r.transactionType), r.qty, r.uom, this.formatPrice(r.unitPrice), r.comments,
     ]);
-    const jsonRows = this.activeRows.map(r => ({
+    const jsonRows = source.map(r => ({
       'Reference No': r.referenceNo, Date: formatDisplayDate(r.issueDate), Category: r.category,
       Material: r.materialName, 'Material Code': r.materialCode, 'Issued To': r.issuedTo,
       'Transaction Type': this.formatTransactionType(r.transactionType), Qty: r.qty, UOM: r.uom,
       Price: this.formatPrice(r.unitPrice), Comments: r.comments,
     }));
-    const title = this.activeType === 'promotional' ? 'Promotional Issue' : 'Spare Parts Issue';
-    return { headers, rows, jsonRows, title };
+    return { headers, rows, jsonRows, title: this.activeTitle };
   }
 
   async exportExcel() {
@@ -195,5 +202,15 @@ export class InventoryIssuesReportPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<IssueRow>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<IssueRow>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

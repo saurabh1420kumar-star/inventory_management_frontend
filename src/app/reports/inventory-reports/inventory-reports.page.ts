@@ -13,7 +13,7 @@ import {
   WAREHOUSES,
   toDateInputValue, formatCurrencyFull,
   Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  exportRowsToExcel, exportRowsToPdf, filterByField,
 } from '../report-shared';
 
 type ReportType = 'summary' | 'category' | 'reorder';
@@ -133,8 +133,13 @@ export class InventoryReportsPage implements OnInit {
       snapshot: this.reportsService.getInventorySnapshot(snapshotParams),
       lowStock: this.reportsService.getLowStock(lowStockParams),
     }).subscribe(({ snapshot, lowStock }) => {
-      this.stockRows = snapshot.map(mapStockRow).sort((a, b) => b.totalValue - a.totalValue);
-      this.reorderRows = lowStock.map(mapReorderRow).sort((a, b) => b.shortfall - a.shortfall);
+      let stockRows = snapshot.map(mapStockRow);
+      stockRows = filterByField(stockRows, this.filters.category, r => r.category);
+      stockRows = filterByField(stockRows, this.filters.warehouse, r => r.warehouse);
+      this.stockRows = stockRows.sort((a, b) => b.totalValue - a.totalValue);
+
+      this.reorderRows = filterByField(lowStock.map(mapReorderRow), this.filters.category, r => r.category)
+        .sort((a, b) => b.shortfall - a.shortfall);
       this.buildCategoryRows();
       this.pager.page = 1;
       this.isLoading = false;

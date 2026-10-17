@@ -1,0 +1,118 @@
+<div class="report-table-scroll">
+  <table class="report-table dg-summary">
+    <thead>
+      <tr>
+        <th>{{ columnHeader }}</th>
+        <th>{{ countLabel }}</th>
+        <th *ngFor="let col of summaryColumns">{{ col.header }}</th>
+        <th class="dg-action"></th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr *ngFor="let group of pagedGroups; trackBy: trackByKey" class="dg-row" (click)="open(group)">
+        <td>
+          <button type="button" class="dg-date-link" [attr.aria-label]="'View all ' + countLabel.toLowerCase() + ' for ' + group.label">
+            <ion-icon [name]="icon"></ion-icon>{{ group.label }}
+          </button>
+        </td>
+        <td><span class="report-badge report-badge-green">{{ group.rows.length }}</span></td>
+        <td *ngFor="let value of group.summary">{{ value }}</td>
+        <td class="dg-action"><span class="dg-view">View <ion-icon name="chevron-forward-outline"></ion-icon></span></td>
+      </tr>
+      <tr *ngIf="groups.length === 0"><td [attr.colspan]="summaryColumns.length + 3" class="report-empty">{{ emptyText }}</td></tr>
+    </tbody>
+  </table>
+</div>
+
+<div class="report-table-footer">
+  <span>Showing {{ rowRange.start }}–{{ rowRange.end }} of {{ groups.length }} {{ groups.length === 1 ? columnHeader.toLowerCase() : columnHeader.toLowerCase() + 's' }} · {{ itemCount }} {{ countLabel.toLowerCase() }}</span>
+  <div class="report-pagination">
+    <button (click)="prevPage()" [disabled]="pager.page === 1" aria-label="Previous page">
+      <ion-icon name="chevron-back-outline"></ion-icon>
+    </button>
+    <ng-container *ngFor="let p of pageNumbers">
+      <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+      <button *ngIf="p !== '...'" [class.active]="p === pager.page" (click)="goToPage(p)">{{ p }}</button>
+    </ng-container>
+    <button (click)="nextPage()" [disabled]="pager.page === totalPageCount" aria-label="Next page">
+      <ion-icon name="chevron-forward-outline"></ion-icon>
+    </button>
+  </div>
+</div>
+
+<ion-modal class="dg-modal" [isOpen]="isModalOpen" (didDismiss)="onDismissed()">
+  <ng-template>
+    <div class="dg-modal-shell" *ngIf="selected as group">
+
+      <header class="dg-modal-header">
+        <div class="dg-modal-icon"><ion-icon [name]="icon"></ion-icon></div>
+        <div class="dg-modal-heading">
+          <p class="dg-modal-eyebrow">{{ heading }}</p>
+          <h2 class="dg-modal-title">{{ group.label }}</h2>
+          <p class="dg-modal-meta">
+            <span class="dg-modal-kind">{{ columnHeader }}</span>
+            <span>{{ selectedIndex + 1 }} of {{ groups.length }}</span>
+          </p>
+        </div>
+        <div class="dg-modal-controls">
+          <button type="button" class="dg-icon-btn" (click)="step(-1)" [disabled]="selectedIndex <= 0" aria-label="Previous in list">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+          </button>
+          <button type="button" class="dg-icon-btn" (click)="step(1)" [disabled]="selectedIndex >= groups.length - 1" aria-label="Next in list">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </button>
+          <button type="button" class="dg-icon-btn dg-icon-btn-close" (click)="close()" aria-label="Close">
+            <ion-icon name="close-outline"></ion-icon>
+          </button>
+        </div>
+      </header>
+
+      <section class="dg-stats" aria-label="Summary">
+        <div class="dg-stat">
+          <p class="dg-stat-label">{{ countLabel }}</p>
+          <p class="dg-stat-value">{{ group.rows.length }}</p>
+        </div>
+        <div class="dg-stat" *ngFor="let col of summaryColumns; let i = index">
+          <p class="dg-stat-label">{{ col.header }}</p>
+          <p class="dg-stat-value">{{ group.summary[i] }}</p>
+        </div>
+      </section>
+
+      <div class="dg-modal-toolbar">
+        <label class="dg-search">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text" [value]="search" (input)="onSearch($any($event.target).value)"
+                 [placeholder]="'Search ' + countLabel.toLowerCase() + '…'" aria-label="Search rows" />
+          <button *ngIf="search" type="button" class="dg-search-clear" (click)="clearSearch()" aria-label="Clear search">
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </label>
+        <div class="report-filter-actions">
+          <button type="button" class="report-btn report-btn-outline report-btn-excel" (click)="exportSelectedExcel()">
+            <ion-icon name="grid-outline"></ion-icon> Export Excel
+          </button>
+          <button type="button" class="report-btn report-btn-outline report-btn-pdf" (click)="exportSelectedPdf()">
+            <ion-icon name="document-text-outline"></ion-icon> Export PDF
+          </button>
+        </div>
+      </div>
+
+      <div class="dg-modal-body">
+        <div class="dg-table-card" *ngIf="visibleRows.length > 0; else noMatches">
+          <ng-container *ngTemplateOutlet="detailTemplate ?? null; context: { $implicit: visibleRows, group: group }"></ng-container>
+        </div>
+        <ng-template #noMatches>
+          <div class="dg-no-match">
+            <ion-icon name="search-outline"></ion-icon>
+            <p>No {{ countLabel.toLowerCase() }} match “{{ search }}”</p>
+          </div>
+        </ng-template>
+      </div>
+
+      <footer class="dg-modal-footer">
+        <span>Showing {{ visibleRows.length }} of {{ group.rows.length }} {{ countLabel.toLowerCase() }}</span>
+        <span class="dg-modal-hint">← → browse · Esc close</span>
+      </footer>
+    </div>
+  </ng-template>
+</ion-modal>

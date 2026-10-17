@@ -6,10 +6,11 @@ import { DownloadService } from '../../services/download.service';
 import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   RAW_MATERIALS, FINISHED_PRODUCTS, WAREHOUSES,
   seededRandom, toDateInputValue, formatDisplayDate, daysBetween,
-  Pager, paginate, totalPages, pageWindow, pageRange,
+  DateGroup, listDistinct, sumBy,
   exportRowsToExcel, exportRowsToPdf,
 } from '../report-shared';
 
@@ -76,7 +77,7 @@ const BATCH_POOL: BatchPoolEntry[] = [
   templateUrl: './batch-management.page.html',
   styleUrls: ['./batch-management.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class BatchManagementPage implements OnInit {
 
@@ -91,11 +92,25 @@ export class BatchManagementPage implements OnInit {
   isLoading = false;
   lastUpdated: Date | null = null;
   activeType: ReportType = 'lot';
-  pager: Pager = { page: 1, pageSize: 6 };
 
   lotRows: LotRow[] = [];
   productionRows: ProductionRow[] = [];
   fgRows: FgBatchRow[] = [];
+
+  readonly lotSummaryColumns: DateSummaryColumn<LotRow>[] = [
+    { header: 'Items', value: rows => listDistinct(rows, r => r.itemName) },
+    { header: 'Closing Qty', value: rows => sumBy(rows, r => r.closingQty).toLocaleString('en-IN') },
+  ];
+
+  readonly productionSummaryColumns: DateSummaryColumn<ProductionRow>[] = [
+    { header: 'Products', value: rows => listDistinct(rows, r => r.product) },
+    { header: 'Qty Produced', value: rows => sumBy(rows, r => r.qtyProduced).toLocaleString('en-IN') },
+  ];
+
+  readonly fgSummaryColumns: DateSummaryColumn<FgBatchRow>[] = [
+    { header: 'Finished Goods', value: rows => listDistinct(rows, r => r.finishedGood) },
+    { header: 'Qty Available', value: rows => sumBy(rows, r => r.qtyAvailable).toLocaleString('en-IN') },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -120,7 +135,6 @@ export class BatchManagementPage implements OnInit {
       this.buildLotRows();
       this.buildProductionRows();
       this.buildFgRows();
-      this.pager.page = 1;
       this.isLoading = false;
       this.lastUpdated = new Date();
     }, 300);
@@ -128,7 +142,6 @@ export class BatchManagementPage implements OnInit {
 
   switchType(type: ReportType) {
     this.activeType = type;
-    this.pager.page = 1;
     this.haptic.selectionChanged();
   }
 
@@ -229,24 +242,6 @@ export class BatchManagementPage implements OnInit {
     }).sort((a, b) => b.mfgDate.localeCompare(a.mfgDate));
   }
 
-  get activeRowCount(): number {
-    if (this.activeType === 'lot') return this.lotRows.length;
-    if (this.activeType === 'production') return this.productionRows.length;
-    return this.fgRows.length;
-  }
-
-  get pagedLotRows(): LotRow[] { return paginate(this.lotRows, this.pager); }
-  get pagedProductionRows(): ProductionRow[] { return paginate(this.productionRows, this.pager); }
-  get pagedFgRows(): FgBatchRow[] { return paginate(this.fgRows, this.pager); }
-
-  get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
-  get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
-  get pageNumbers(): (number | '...')[] { return pageWindow(this.pager.page, this.totalPageCount); }
-
-  goToPage(p: number | '...') { if (p !== '...') this.pager.page = p; }
-  prevPage() { if (this.pager.page > 1) this.pager.page--; }
-  nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
-
   productionStatusBadgeClass(status: ProductionRow['status']): string {
     if (status === 'Completed') return 'report-badge-green';
     if (status === 'In Progress') return 'report-badge-blue';
@@ -255,22 +250,26 @@ export class BatchManagementPage implements OnInit {
 
   formatDisplayDate = formatDisplayDate;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the export to one date's rows (the date modal); omitted, it exports the whole active tab.
+  private getExportData(source?: any[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'lot') {
+      const data: LotRow[] = source ?? this.lotRows;
       const headers = ['Batch No', 'Item Name', 'Mfg Date', 'Expiry Date', 'Opening Qty', 'Inward', 'Outward', 'Closing Qty'];
-      const rows = this.lotRows.map(r => [r.batchNo, r.itemName, formatDisplayDate(r.mfgDate), formatDisplayDate(r.expiryDate), r.openingQty, r.inward, r.outward, r.closingQty]);
-      const jsonRows = this.lotRows.map(r => ({ 'Batch No': r.batchNo, 'Item Name': r.itemName, 'Mfg Date': r.mfgDate, 'Expiry Date': r.expiryDate, 'Opening Qty': r.openingQty, Inward: r.inward, Outward: r.outward, 'Closing Qty': r.closingQty }));
+      const rows = data.map(r => [r.batchNo, r.itemName, formatDisplayDate(r.mfgDate), formatDisplayDate(r.expiryDate), r.openingQty, r.inward, r.outward, r.closingQty]);
+      const jsonRows = data.map(r => ({ 'Batch No': r.batchNo, 'Item Name': r.itemName, 'Mfg Date': r.mfgDate, 'Expiry Date': r.expiryDate, 'Opening Qty': r.openingQty, Inward: r.inward, Outward: r.outward, 'Closing Qty': r.closingQty }));
       return { headers, rows, jsonRows, title: 'Batch Lot Tracking' };
     }
     if (this.activeType === 'production') {
+      const data: ProductionRow[] = source ?? this.productionRows;
       const headers = ['Batch No', 'Product', 'Production Date', 'Qty Produced', 'Yield %', 'Status'];
-      const rows = this.productionRows.map(r => [r.batchNo, r.product, formatDisplayDate(r.productionDate), r.qtyProduced, r.yieldPct + '%', r.status]);
-      const jsonRows = this.productionRows.map(r => ({ 'Batch No': r.batchNo, Product: r.product, 'Production Date': r.productionDate, 'Qty Produced': r.qtyProduced, 'Yield %': r.yieldPct, Status: r.status }));
+      const rows = data.map(r => [r.batchNo, r.product, formatDisplayDate(r.productionDate), r.qtyProduced, r.yieldPct + '%', r.status]);
+      const jsonRows = data.map(r => ({ 'Batch No': r.batchNo, Product: r.product, 'Production Date': r.productionDate, 'Qty Produced': r.qtyProduced, 'Yield %': r.yieldPct, Status: r.status }));
       return { headers, rows, jsonRows, title: 'Batch Production' };
     }
+    const data: FgBatchRow[] = source ?? this.fgRows;
     const headers = ['Batch No', 'Finished Good', 'Mfg Date', 'Expiry Date', 'Qty Available', 'Warehouse'];
-    const rows = this.fgRows.map(r => [r.batchNo, r.finishedGood, formatDisplayDate(r.mfgDate), formatDisplayDate(r.expiryDate), r.qtyAvailable, r.warehouse]);
-    const jsonRows = this.fgRows.map(r => ({ 'Batch No': r.batchNo, 'Finished Good': r.finishedGood, 'Mfg Date': r.mfgDate, 'Expiry Date': r.expiryDate, 'Qty Available': r.qtyAvailable, Warehouse: r.warehouse }));
+    const rows = data.map(r => [r.batchNo, r.finishedGood, formatDisplayDate(r.mfgDate), formatDisplayDate(r.expiryDate), r.qtyAvailable, r.warehouse]);
+    const jsonRows = data.map(r => ({ 'Batch No': r.batchNo, 'Finished Good': r.finishedGood, 'Mfg Date': r.mfgDate, 'Expiry Date': r.expiryDate, 'Qty Available': r.qtyAvailable, Warehouse: r.warehouse }));
     return { headers, rows, jsonRows, title: 'FG Batch Report' };
   }
 
@@ -282,5 +281,15 @@ export class BatchManagementPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<unknown>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<unknown>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }

@@ -8,11 +8,12 @@ import { Toast } from '../../services/toast';
 import { HapticService } from '../../services/haptic.service';
 import { ReportsService } from '../../services/reports.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
+import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
   ROUTES,
   toDateInputValue, formatDisplayDate, formatCurrencyFull,
-  Pager, paginate, totalPages, pageWindow, pageRange,
-  exportRowsToExcel, exportRowsToPdf,
+  DateGroup, listDistinct, sumBy,
+  exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
 } from '../report-shared';
 
 type ReportType = 'register' | 'pending' | 'confirmation';
@@ -113,7 +114,7 @@ function mapDeliveryConfirmationRow(raw: any): DeliveryConfirmationRow {
   templateUrl: './dispatch-delivery.page.html',
   styleUrls: ['./dispatch-delivery.page.scss'],
   standalone: true,
-  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent],
+  imports: [CommonModule, FormsModule, IonicModule, ReportHeroComponent, DateGroupedTableComponent],
 })
 export class DispatchDeliveryReportPage implements OnInit {
 
@@ -128,11 +129,27 @@ export class DispatchDeliveryReportPage implements OnInit {
   isLoading = false;
   lastUpdated: Date | null = null;
   activeType: ReportType = 'register';
-  pager: Pager = { page: 1, pageSize: 5 };
 
   dispatchRegisterRows: DispatchRegisterRow[] = [];
   pendingDispatchRows: PendingDispatchRow[] = [];
   deliveryConfirmationRows: DeliveryConfirmationRow[] = [];
+
+  readonly registerSummaryColumns: DateSummaryColumn<DispatchRegisterRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customerName) },
+    { header: 'Packages', value: rows => sumBy(rows, r => r.totalPackages).toLocaleString('en-IN') },
+    { header: 'Weight (Kg)', value: rows => sumBy(rows, r => r.totalWeight).toLocaleString('en-IN') },
+  ];
+
+  readonly pendingSummaryColumns: DateSummaryColumn<PendingDispatchRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'Total Items', value: rows => sumBy(rows, r => r.items).toLocaleString('en-IN') },
+    { header: 'Total Amount', value: rows => formatCurrencyFull(sumBy(rows, r => r.amount)) },
+  ];
+
+  readonly confirmationSummaryColumns: DateSummaryColumn<DeliveryConfirmationRow>[] = [
+    { header: 'Customers', value: rows => listDistinct(rows, r => r.customer) },
+    { header: 'POD Confirmed', value: rows => rows.filter(r => r.podStatus === 'Confirmed').length },
+  ];
 
   ngOnInit() {
     this.viewReport();
@@ -160,10 +177,13 @@ export class DispatchDeliveryReportPage implements OnInit {
       pending: this.reportsService.getDispatchPending(dateParams),
       confirmation: this.reportsService.getDeliveryConfirmation(dateParams),
     }).subscribe(({ register, pending, confirmation }) => {
-      this.dispatchRegisterRows = register.map(mapDispatchRegisterRow).sort((a, b) => b.gdnDate.localeCompare(a.gdnDate));
-      this.pendingDispatchRows = pending.map(mapPendingDispatchRow);
-      this.deliveryConfirmationRows = confirmation.map(mapDeliveryConfirmationRow);
-      this.pager.page = 1;
+      const { dateFrom, dateTo, status } = this.filters;
+      // No region/route field exists on any of these 3 DTOs (see REPORTS_BACKEND_GAPS.md #5), so the
+      // "Region" filter can't be applied client-side either — it needs that field added server-side.
+      this.dispatchRegisterRows = filterByField(filterByDateRange(register.map(mapDispatchRegisterRow), dateFrom, dateTo, r => r.gdnDate), status, r => r.status)
+        .sort((a, b) => b.gdnDate.localeCompare(a.gdnDate));
+      this.pendingDispatchRows = filterByDateRange(pending.map(mapPendingDispatchRow), dateFrom, dateTo, r => r.gdnDate);
+      this.deliveryConfirmationRows = filterByDateRange(confirmation.map(mapDeliveryConfirmationRow), dateFrom, dateTo, r => r.deliveredDate);
       this.isLoading = false;
       this.lastUpdated = new Date();
     });
@@ -171,7 +191,6 @@ export class DispatchDeliveryReportPage implements OnInit {
 
   switchType(type: ReportType) {
     this.activeType = type;
-    this.pager.page = 1;
     this.haptic.selectionChanged();
   }
 
@@ -181,46 +200,32 @@ export class DispatchDeliveryReportPage implements OnInit {
     return 'report-badge-amber';
   }
 
-  get activeRowCount(): number {
-    if (this.activeType === 'pending') return this.pendingDispatchRows.length;
-    if (this.activeType === 'confirmation') return this.deliveryConfirmationRows.length;
-    return this.dispatchRegisterRows.length;
-  }
-
-  get pagedDispatchRows(): DispatchRegisterRow[] { return paginate(this.dispatchRegisterRows, this.pager); }
-  get pagedPendingRows(): PendingDispatchRow[] { return paginate(this.pendingDispatchRows, this.pager); }
-  get pagedDeliveredRows(): DeliveryConfirmationRow[] { return paginate(this.deliveryConfirmationRows, this.pager); }
-
-  get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
-  get totalPageCount(): number { return totalPages(this.activeRowCount, this.pager.pageSize); }
-  get pageNumbers(): (number | '...')[] { return pageWindow(this.pager.page, this.totalPageCount); }
-
-  goToPage(p: number | '...') { if (p !== '...') this.pager.page = p; }
-  prevPage() { if (this.pager.page > 1) this.pager.page--; }
-  nextPage() { if (this.pager.page < this.totalPageCount) this.pager.page++; }
-
   formatDisplayDate = formatDisplayDate;
   formatCurrencyFull = formatCurrencyFull;
 
-  private getExportData(): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
+  // `source` narrows the export to one date's rows (the date modal); omitted, it exports the whole active tab.
+  private getExportData(source?: any[]): { headers: string[]; rows: (string | number)[][]; jsonRows: Record<string, unknown>[]; title: string } {
     if (this.activeType === 'pending') {
+      const data: PendingDispatchRow[] = source ?? this.pendingDispatchRows;
       const headers = ['Challan No', 'Customer', 'Items', 'Amount', 'GDN Date', 'Ready Since (days)'];
-      const rows = this.pendingDispatchRows.map(r => [r.challanNo, r.customer, r.items, formatCurrencyFull(r.amount), formatDisplayDate(r.gdnDate), r.readySinceDays]);
-      const jsonRows = this.pendingDispatchRows.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, Items: r.items, Amount: r.amount, 'GDN Date': r.gdnDate, 'Ready Since (days)': r.readySinceDays }));
+      const rows = data.map(r => [r.challanNo, r.customer, r.items, formatCurrencyFull(r.amount), formatDisplayDate(r.gdnDate), r.readySinceDays]);
+      const jsonRows = data.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, Items: r.items, Amount: r.amount, 'GDN Date': r.gdnDate, 'Ready Since (days)': r.readySinceDays }));
       return { headers, rows, jsonRows, title: 'Pending Dispatch' };
     }
     if (this.activeType === 'confirmation') {
+      const data: DeliveryConfirmationRow[] = source ?? this.deliveryConfirmationRows;
       const headers = ['Challan No', 'Customer', 'Delivered Date', 'Received By', 'POD Status'];
-      const rows = this.deliveryConfirmationRows.map(r => [r.challanNo, r.customer, formatDisplayDate(r.deliveredDate), r.receivedBy ?? '—', r.podStatus]);
-      const jsonRows = this.deliveryConfirmationRows.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, 'Delivered Date': r.deliveredDate, 'Received By': r.receivedBy, 'POD Status': r.podStatus }));
+      const rows = data.map(r => [r.challanNo, r.customer, formatDisplayDate(r.deliveredDate), r.receivedBy ?? '—', r.podStatus]);
+      const jsonRows = data.map(r => ({ 'Challan No': r.challanNo, Customer: r.customer, 'Delivered Date': r.deliveredDate, 'Received By': r.receivedBy, 'POD Status': r.podStatus }));
       return { headers, rows, jsonRows, title: 'Delivery Confirmation' };
     }
+    const data: DispatchRegisterRow[] = source ?? this.dispatchRegisterRows;
     const headers = ['GDN No', 'GDN Date', 'Customer', 'Vehicle No', 'Driver', 'Driver Mobile', 'Transport', 'Items', 'Packages', 'Weight (Kg)', 'Shipping Address', 'Status'];
-    const rows = this.dispatchRegisterRows.map(r => [
+    const rows = data.map(r => [
       r.gdnNumber, formatDisplayDate(r.gdnDate), r.customerName, r.vehicleNo, r.driverName, r.driverMobile,
       r.transportName, r.itemCount, r.totalPackages, r.totalWeight, r.shippingAddress, r.status,
     ]);
-    const jsonRows = this.dispatchRegisterRows.map(r => ({
+    const jsonRows = data.map(r => ({
       'GDN No': r.gdnNumber, 'GDN Date': r.gdnDate, Customer: r.customerName, 'Vehicle No': r.vehicleNo,
       Driver: r.driverName, 'Driver Mobile': r.driverMobile, Transport: r.transportName, Items: r.itemCount,
       Packages: r.totalPackages, 'Weight (Kg)': r.totalWeight, 'Shipping Address': r.shippingAddress, Status: r.status,
@@ -236,5 +241,15 @@ export class DispatchDeliveryReportPage implements OnInit {
   async exportPdf() {
     const { headers, rows, title } = this.getExportData();
     await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast);
+  }
+
+  async exportGroupExcel(group: DateGroup<unknown>) {
+    const { jsonRows, title } = this.getExportData(group.rows);
+    await exportRowsToExcel(jsonRows, title, this.downloadService, this.toast, group.label);
+  }
+
+  async exportGroupPdf(group: DateGroup<unknown>) {
+    const { headers, rows, title } = this.getExportData(group.rows);
+    await exportRowsToPdf(headers, rows, title, this.downloadService, this.toast, group.label);
   }
 }
