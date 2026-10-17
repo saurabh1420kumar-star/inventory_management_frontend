@@ -11,17 +11,10 @@
 
     <div class="report-filters">
       <div class="report-filter-field">
-        <label for="smItem">Item</label>
-        <select id="smItem" [(ngModel)]="filters.item">
-          <option value="all">All Items</option>
-          <option *ngFor="let i of items" [value]="i">{{ i }}</option>
-        </select>
-      </div>
-      <div class="report-filter-field">
-        <label for="smWarehouse">Warehouse</label>
-        <select id="smWarehouse" [(ngModel)]="filters.warehouse">
-          <option value="all">All Warehouses</option>
-          <option *ngFor="let w of warehouses" [value]="w">{{ w }}</option>
+        <label for="smMaterial">Material</label>
+        <select id="smMaterial" [(ngModel)]="filters.material">
+          <option value="all">All Materials</option>
+          <option *ngFor="let m of materials" [value]="m">{{ m }}</option>
         </select>
       </div>
       <div class="report-filter-field">

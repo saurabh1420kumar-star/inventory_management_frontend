@@ -460,7 +460,7 @@ export class AccountsMasterPage implements OnInit {
       fromParty: {
         id: 'nectar-origin',
         name: 'NECTAR ORIGIN PRIVATE LIMITED',
-        address: 'Kahalzaon, Bhagalpur',
+        address: 'Kahalgaon, Bhagalpur',
         city: 'Bhagalpur',
         state: 'Bihar',
         pincode: '813203',
@@ -741,7 +741,7 @@ export class AccountsMasterPage implements OnInit {
           : `1-Apr-${yy(fyStart)} to 31-Mar-${yy(fyStart + 1)}`;
         const companyData = [
           ['', 'NECTAR ORIGIN PRIVATE LIMITED'],
-          ['', '360 K, Shiv Parwati Nagar, Block Road No -2, Ward No 16, Kahalzaon, Bhagalpur, Bihar - 813203'],
+          ['', '360 K, Shiv Parwati Nagar, Block Road No -2, Ward No 16, Kahalgaon, Bhagalpur, Bihar - 813203'],
           ['', 'CIN: U74999BR2016PTC032690'],
           ['', 'Contact: 06429-450126, +91-9797979522'],
           ['', 'Email: info@nectarorigin.com'],
