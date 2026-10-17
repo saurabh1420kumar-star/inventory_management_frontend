@@ -192,6 +192,9 @@ export class AccountsMasterPage implements OnInit {
   // API-provided closing balance
   apiClosingBalance: number | null = null;
 
+  // API-provided KPI totals (payment-history response); any key the API omits falls back to computed values
+  apiTotals: Partial<Pick<LedgerSummary, 'totalDebits' | 'totalCredits' | 'netBalance'>> | null = null;
+
   // Pending payments
   pendingPayments: any[] = [];
   isLoadingPayments: boolean = false;
@@ -370,7 +373,7 @@ export class AccountsMasterPage implements OnInit {
       next: (response: ApiResponse<any>) => {
         if (this.selectedAccount) {
           const responseData = response?.data || {};
-          // New response shape: { closingBalance, distributorId, paymentHistory[] }
+          // Response shape: { closingBalance, totalCredits, totalDebits, netBalance, distributorId, paymentHistory[] }
           const payments = Array.isArray(responseData.paymentHistory)
             ? responseData.paymentHistory
             : (Array.isArray(responseData) ? responseData : []);
@@ -379,6 +382,14 @@ export class AccountsMasterPage implements OnInit {
           this.apiClosingBalance = responseData.closingBalance != null
             ? Number(responseData.closingBalance)
             : null;
+
+          // Store the API-provided KPI totals
+          const num = (v: any) => (v != null && v !== '' && !isNaN(Number(v)) ? Number(v) : undefined);
+          this.apiTotals = {
+            totalDebits: num(responseData.totalDebits),
+            totalCredits: num(responseData.totalCredits),
+            netBalance: num(responseData.netBalance),
+          };
 
           if (payments.length > 0) {
             this.selectedAccount.transactions = this.mapPaymentHistoryToTransactions(payments);
@@ -544,8 +555,13 @@ export class AccountsMasterPage implements OnInit {
 
   get summary(): LedgerSummary {
     const filtered = this.filteredTransactions;
-    const totalDebits = filtered.reduce((sum, t) => sum + t.debit, 0);
-    const totalCredits = filtered.reduce((sum, t) => sum + t.credit, 0);
+    // API totals cover the whole account, so use them only when no filter is narrowing the list
+    const api = this.activeFiltersCount === 0 ? this.apiTotals : null;
+    const computedDebits = filtered.reduce((sum, t) => sum + t.debit, 0);
+    const computedCredits = filtered.reduce((sum, t) => sum + t.credit, 0);
+    const totalDebits = api?.totalDebits ?? computedDebits;
+    const totalCredits = api?.totalCredits ?? computedCredits;
+    const netBalance = api?.netBalance ?? (computedCredits - computedDebits);
     const openingBalance = this.selectedAccount?.openingBalance || 0;
     // Use API-provided closing balance when available; fall back to computed value
     const closingBalance = this.apiClosingBalance != null
@@ -555,7 +571,7 @@ export class AccountsMasterPage implements OnInit {
     return {
       totalDebits,
       totalCredits,
-      netBalance: totalCredits - totalDebits,
+      netBalance,
       transactionCount: filtered.length,
       openingBalance,
       closingBalance,
@@ -637,6 +653,7 @@ export class AccountsMasterPage implements OnInit {
     // Reset filters and cached API values on new account selection
     this.resetFilters();
     this.apiClosingBalance = null;
+    this.apiTotals = null;
 
     // Load payment history from API if distributor ID exists
     if (account.distributorId) {
