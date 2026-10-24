@@ -159,14 +159,14 @@
           <!-- PRODUCT WISE SALES -->
           <div *ngIf="activeType === 'product'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Rank</th><th>Product</th><th>Qty Sold</th><th>Revenue</th><th>Share</th></tr></thead>
+              <thead><tr><th>Rank</th><th>Product</th><th>Qty Sold</th><th>Invoices</th><th>Revenue</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedProductRows">
                   <td>{{ row.rank }}</td>
                   <td>{{ row.product }}</td>
                   <td>{{ row.qtySold.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.invoiceCount.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.revenue) }}</td>
-                  <td><span class="report-badge report-badge-green">{{ row.sharePct.toFixed(1) }}%</span></td>
                 </tr>
                 <tr *ngIf="pagedProductRows.length === 0"><td colspan="5" class="report-empty">No product sales found for these filters</td></tr>
               </tbody>

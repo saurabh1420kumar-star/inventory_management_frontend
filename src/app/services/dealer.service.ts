@@ -50,4 +50,23 @@ export class DealerService {
       })
     );
   }
+
+  // Same GET /api/dealers, but a failure reaches the caller instead of becoming an empty list,
+  // so the Dealers page can show a retry state rather than passing a failed load off as "no dealers".
+  getDealerDirectory(): Observable<DealerDto[]> {
+    return this.http.get<unknown>(this.baseUrl, { headers: this.getAuthHeaders() }).pipe(
+      map((res) => {
+        const list: any[] = Array.isArray(res) ? res : ((res as any)?.data ?? (res as any)?.dealers ?? []);
+        return list.map((d: any) => ({
+          id: d.id,
+          fullName: d.fullName ?? d.full_name ?? d.name ?? '',
+          phone: d.phone ?? '',
+          address: d.address ?? '',
+          isActive: d.isActive ?? d.active ?? true,
+          distributorId: d.distributorId ?? d.distributor?.id,
+          distributorName: d.distributorName ?? d.distributor?.firmName ?? d.distributor?.name,
+        }));
+      })
+    );
+  }
 }
