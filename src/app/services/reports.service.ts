@@ -109,7 +109,7 @@ export class ReportsService {
     return this.getList('/production/bom-report', params);
   }
 
-  // ── Sales (Excel #19, #20, #21, #22, #27) ───────────────────────────────
+  // ── Sales (Excel #19, #20, #21, #22, #23, #27) ───────────────────────────────
   getInvoiceGrid(params: { dateFrom?: string; dateTo?: string; dealer?: string; distributor?: string; salesman?: string } = {}): Observable<any[]> {
     return this.getList('/sales/invoice-grid', params);
   }
@@ -124,6 +124,10 @@ export class ReportsService {
 
   getSalesByDistributor(params: { dateFrom?: string; dateTo?: string; distributorId?: string } = {}): Observable<any[]> {
     return this.getList('/sales/by-distributor', params);
+  }
+
+  getSalesByDealer(params: { dateFrom?: string; dateTo?: string; distributorId?: string } = {}): Observable<any[]> {
+    return this.getList('/sales/by-dealer', params);
   }
 
   getTopProducts(params: { dateFrom?: string; dateTo?: string; limit?: number } = {}): Observable<any[]> {

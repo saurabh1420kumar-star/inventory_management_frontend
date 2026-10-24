@@ -59,6 +59,15 @@ import { HapticService } from '../services/haptic.service';
 import { Toast } from '../services/toast';
 import { Auth } from '../services/auth';
 import { AclDirective } from '../acl/acl.directive';
+import { of } from 'rxjs';
+import { catchError } from 'rxjs/operators';
+import type { AbstractControl, ValidationErrors } from '@angular/forms';
+import {
+  RawMaterialDamageService,
+  RawMaterialDamage,
+  RawMaterialDamagePayload,
+  DamageReason
+} from '../services/raw-material-damage.service';
 
 /* ---------- TYPES ---------- */
 type ItemStatus = 'in_stock' | 'low_stock' | 'out_of_stock';
@@ -117,7 +126,7 @@ export class MasterInventoryPage implements OnInit {
   readonly FEATURE = 'INVENTORY_MASTERS';
 
   /* ---------- UI STATE ---------- */
-  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals' = 'all';
+  activeTab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals' | 'damaged' = 'all';
   filterDropdownOpen = false;
   filterOptions = [
     { value: 'all',               label: 'All Categories',    dot: 'bg-emerald-400' },
@@ -126,6 +135,7 @@ export class MasterInventoryPage implements OnInit {
     { value: 'spare_parts',       label: 'Spare Parts',       dot: 'bg-orange-400' },
     { value: 'promotional_items', label: 'Promotional Items', dot: 'bg-pink-400' },
     { value: 'scrap_material',    label: 'Scrap Material',    dot: 'bg-slate-400' },
+    { value: 'damaged',           label: 'Damaged Products',  dot: 'bg-rose-400' },
     { value: 'bom',               label: 'Bill of Material',  dot: 'bg-teal-400' },
     { value: 'inward_approvals',  label: 'Inward Approvals',  dot: 'bg-amber-400' }
   ];
@@ -198,6 +208,34 @@ export class MasterInventoryPage implements OnInit {
 
   private haptic = inject(HapticService);
   private toast = inject(Toast);
+  private damageService = inject(RawMaterialDamageService);
+
+  /* ---------- DAMAGED PRODUCTS STATE ---------- */
+  readonly damageReasons: { value: DamageReason; icon: string }[] = [
+    { value: 'Expired',         icon: 'hourglass-outline' },
+    { value: 'Physical damage', icon: 'hammer-outline' },
+    { value: 'Quality issue',   icon: 'flask-outline' },
+    { value: 'Other',           icon: 'ellipsis-horizontal-circle-outline' }
+  ];
+  damagedRecords: RawMaterialDamage[] = [];
+  isLoadingDamaged = false;
+  damagedReasonFilter = 'all';
+  damagedVisibleCount = 9;
+  isDamageModalOpen = false;
+  isSavingDamage = false;
+  damageTarget: DisplayInventoryItem | null = null;
+  damageForm: FormGroup = inject(FormBuilder).group({
+    quantity: [null as number | null, [
+      Validators.required,
+      Validators.min(0.01),
+      // Can't write off more than what's currently in stock.
+      (c: AbstractControl): ValidationErrors | null =>
+        this.damageTarget && Number(c.value) > this.damageTarget.quantity ? { exceedsStock: true } : null
+    ]],
+    reason: ['Physical damage', Validators.required],
+    notes: [''],
+    damagedBy: ['']
+  });
 
   constructor(
     private fb: FormBuilder,
@@ -281,6 +319,7 @@ export class MasterInventoryPage implements OnInit {
       next: (data) => {
         this.inventory = data.map(item => this.mapToDisplayItem(item));
         this.isLoading = false;
+        if (this.activeTab === 'damaged') this.loadAllDamaged();
       },
       error: (error) => {
         console.error('Error loading inventory:', error);
@@ -1053,7 +1092,7 @@ export class MasterInventoryPage implements OnInit {
     this.confirmCallback = null;
   }
 
-  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals') {
+  onActiveTabChange(tab: 'all' | 'raw_material' | 'finished_product' | 'bom' | 'spare_parts' | 'promotional_items' | 'scrap_material' | 'inward_approvals' | 'damaged') {
     this.haptic.selectionChanged();
     this.activeTab = tab;
     this.resetPagination();
@@ -1063,6 +1102,11 @@ export class MasterInventoryPage implements OnInit {
     }
     if (tab === 'inward_approvals') {
       this.loadPendingApprovals();
+    }
+    if (tab === 'damaged') {
+      this.damagedVisibleCount = 9;
+      this.damagedReasonFilter = 'all';
+      this.loadAllDamaged();
     }
   }
 
@@ -1146,6 +1190,203 @@ export class MasterInventoryPage implements OnInit {
       error: () => {
         this.processingApprovalId = null;
         this.toast.present('Failed to process approval', 'danger');
+      }
+    });
+  }
+
+  /* ============================================ */
+  /*        DAMAGED PRODUCTS (RAW MATERIALS)      */
+  /* ============================================ */
+
+  /** The API only has a per-item damage log, so the combined view fans out one GET per raw material. */
+  loadAllDamaged() {
+    const ids = this.inventory.filter(i => i.category === 'raw_material').map(i => i.id);
+    if (ids.length === 0) {
+      this.damagedRecords = [];
+      return;
+    }
+
+    this.isLoadingDamaged = true;
+    let failed = 0;
+    forkJoin(
+      ids.map(id =>
+        this.damageService.getDamageHistory(id).pipe(
+          catchError(err => {
+            console.error('Failed to load damage history for raw material', id, err);
+            failed++;
+            return of([] as RawMaterialDamage[]);
+          })
+        )
+      )
+    ).subscribe(lists => {
+      this.damagedRecords = ([] as RawMaterialDamage[])
+        .concat(...lists)
+        .sort((a, b) => new Date(b.damagedAt).getTime() - new Date(a.damagedAt).getTime());
+      this.isLoadingDamaged = false;
+      if (failed > 0) {
+        this.toast.present(`Could not load damage history for ${failed} item(s)`, 'warning');
+      }
+    });
+  }
+
+  /** Reasons outside the preset list are grouped under "Other". */
+  private reasonKey(reason: string | null | undefined): string {
+    return this.damageReasons.some(r => r.value === reason) ? (reason as string) : 'Other';
+  }
+
+  get damagedReasonFilters(): { value: string; label: string }[] {
+    return [{ value: 'all', label: 'All' }, ...this.damageReasons.map(r => ({ value: r.value as string, label: r.value as string }))];
+  }
+
+  damagedReasonCount(filter: string): number {
+    if (filter === 'all') return this.damagedRecords.length;
+    return this.damagedRecords.filter(r => this.reasonKey(r.reason) === filter).length;
+  }
+
+  setDamagedReasonFilter(filter: string) {
+    this.haptic.selectionChanged();
+    this.damagedReasonFilter = filter;
+    this.damagedVisibleCount = 9;
+  }
+
+  loadMoreDamaged() {
+    this.haptic.light();
+    this.damagedVisibleCount += 9;
+  }
+
+  get filteredDamagedRecords(): RawMaterialDamage[] {
+    const q = this.searchTerm?.trim().toLowerCase();
+    return this.damagedRecords.filter(r => {
+      if (this.damagedReasonFilter !== 'all' && this.reasonKey(r.reason) !== this.damagedReasonFilter) return false;
+      if (!q) return true;
+      return [r.rawMaterialName, r.materialCode, r.reason, r.notes, r.damagedBy]
+        .some(v => (v ?? '').toLowerCase().includes(q));
+    });
+  }
+
+  get visibleDamagedRecords(): RawMaterialDamage[] {
+    return this.filteredDamagedRecords.slice(0, this.damagedVisibleCount);
+  }
+
+  get damagedStats() {
+    const recs = this.damagedRecords;
+    return {
+      records: recs.length,
+      materials: new Set(recs.map(r => r.rawMaterialId)).size,
+      last: recs[0]?.damagedAt ?? null
+    };
+  }
+
+  trackByDamageId(_: number, rec: RawMaterialDamage): number {
+    return rec.id;
+  }
+
+  private findRawMaterial(id: number): DisplayInventoryItem | undefined {
+    return this.inventory.find(i => i.id === id && i.category === 'raw_material');
+  }
+
+  damagedImage(rec: RawMaterialDamage): string {
+    return this.findRawMaterial(rec.rawMaterialId)?.imageUrl
+      || this.getImageUrlForItem(rec.rawMaterialName, 'raw_material');
+  }
+
+  damagedUnit(rec: RawMaterialDamage): string {
+    return this.findRawMaterial(rec.rawMaterialId)?.unit || 'KG';
+  }
+
+  damagedRemainingPct(rec: RawMaterialDamage): number {
+    if (!rec.quantityBefore || rec.quantityBefore <= 0) return 0;
+    return Math.max(0, Math.min(100, (rec.quantityAfter / rec.quantityBefore) * 100));
+  }
+
+  damageReasonChipClass(reason: string): string {
+    switch (this.reasonKey(reason)) {
+      case 'Expired':         return 'bg-amber-500/90';
+      case 'Physical damage': return 'bg-orange-600/90';
+      case 'Quality issue':   return 'bg-purple-600/90';
+      default:                return 'bg-slate-600/90';
+    }
+  }
+
+  /* ---------- MARK AS DAMAGED MODAL ---------- */
+  openDamageModal(item: DisplayInventoryItem) {
+    this.haptic.medium();
+    this.damageTarget = item;
+    this.damageForm.reset({
+      quantity: null,
+      reason: 'Physical damage',
+      notes: '',
+      damagedBy: this.auth.getUsername() ?? ''
+    });
+    this.isDamageModalOpen = true;
+  }
+
+  closeDamageModal() {
+    this.haptic.light();
+    this.isDamageModalOpen = false;
+    this.isSavingDamage = false;
+    this.damageTarget = null;
+  }
+
+  selectDamageReason(reason: DamageReason) {
+    this.haptic.selectionChanged();
+    this.damageForm.patchValue({ reason });
+  }
+
+  get damageQtyValue(): number {
+    return Number(this.damageForm.value.quantity) || 0;
+  }
+
+  get damageQtyExceeds(): boolean {
+    return !!this.damageTarget && this.damageQtyValue > this.damageTarget.quantity;
+  }
+
+  get damageAfterQty(): number {
+    return Math.round(((this.damageTarget?.quantity ?? 0) - this.damageQtyValue) * 100) / 100;
+  }
+
+  private statusAfterWriteOff(quantity: number, minimumThreshold: number): ItemStatus {
+    if (quantity === 0) return 'out_of_stock';
+    return quantity <= minimumThreshold ? 'low_stock' : 'in_stock';
+  }
+
+  submitDamage() {
+    if (!this.damageTarget || this.isSavingDamage) return;
+    if (this.damageForm.invalid) {
+      this.damageForm.markAllAsTouched();
+      return;
+    }
+
+    this.haptic.medium();
+    const v = this.damageForm.value;
+    const target = this.damageTarget;
+    const payload: RawMaterialDamagePayload = {
+      quantity: Number(v.quantity),
+      reason: v.reason,
+      notes: (v.notes ?? '').trim() || undefined,
+      damagedBy: (v.damagedBy ?? '').trim() || undefined
+    };
+
+    this.isSavingDamage = true;
+    this.damageService.recordDamage(target.id, payload).subscribe({
+      next: (record) => {
+        // Reflect the new stock on the card straight away (no full reload / spinner).
+        this.inventory = this.inventory.map(i => {
+          if (i.id !== target.id || i.category !== 'raw_material') return i;
+          const min = i.minimumThreshold ?? 0;
+          const status = this.statusAfterWriteOff(record.quantityAfter, min);
+          return { ...i, quantity: record.quantityAfter, status, lowStock: status === 'low_stock' };
+        });
+        this.closeDamageModal();
+        this.haptic.success();
+        const unit = target.unit ? ` ${target.unit}` : '';
+        this.toast.present(`${record.quantityDamaged}${unit} of ${record.rawMaterialName} marked as damaged`, 'success');
+      },
+      error: (err) => {
+        this.isSavingDamage = false;
+        const msg = this.extractErrorMessage(err);
+        console.error('Failed to record damage:', err);
+        this.toast.present(msg, 'danger');
       }
     });
   }

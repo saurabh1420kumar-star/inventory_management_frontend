@@ -14,8 +14,7 @@ import { DealerService } from '../../services/dealer.service';
 import { ReportHeroComponent } from '../report-hero/report-hero.component';
 import { DateGroupedTableComponent, DateSummaryColumn } from '../date-grouped-table/date-grouped-table.component';
 import {
-  REGIONS,
-  seededRandom, pick, toDateInputValue, formatDisplayDate, formatCurrencyFull,
+  toDateInputValue, formatDisplayDate, formatCurrencyFull,
   DateGroup, listDistinct, sumBy,
   Pager, paginate, totalPages, pageWindow, pageRange,
   exportRowsToExcel, exportRowsToPdf, filterByDateRange, filterByField,
@@ -57,6 +56,7 @@ interface SummaryRow {
   totalInvoices: number;
   totalQty: number;
   avgInvoiceValue: number;
+  totalWeight: number;
 }
 
 interface ProductRow {
@@ -67,11 +67,23 @@ interface ProductRow {
   sharePct: number;
 }
 
-interface PartyRow {
+// GET /reports/sales/by-distributor row (distributorId is dropped — it's an id, not a display value).
+interface DistributorSalesRow {
   name: string;
-  region: string;
   orders: number;
   qty: number;
+  weightKg: number;
+  revenue: number;
+}
+
+// GET /reports/sales/by-dealer row (dealerId is dropped — it's an id, not a display value).
+interface DealerSalesRow {
+  name: string;
+  distributor: string;
+  distributorId: string;
+  orders: number;
+  qty: number;
+  weightKg: number;
   revenue: number;
 }
 
@@ -115,6 +127,7 @@ function mapMonthlyTrendRow(raw: any): SummaryRow {
     totalInvoices: Number(raw.invoiceCount ?? 0),
     totalQty: Number(raw.totalQty ?? 0),
     avgInvoiceValue: Number(raw.avgInvoiceValue ?? 0),
+    totalWeight: Number(raw.totalWeight ?? 0),
   };
 }
 
@@ -139,13 +152,28 @@ function mapProductRows(rawList: any[]): ProductRow[] {
 }
 
 // GET /api/reports/sales/by-distributor — Excel #22 Distributor Wise Sales
-function mapPartyRow(raw: any): PartyRow {
+// Response: { distributorId, distributorName, invoiceCount, totalQuantity, totalValue, totalWeight (Kg) }
+function mapDistributorSalesRow(raw: any): DistributorSalesRow {
   return {
-    name: raw.name ?? raw.distributorName ?? raw.dealerName ?? '—',
-    region: raw.region ?? '—',
-    orders: Number(raw.orders ?? raw.orderCount ?? raw.invoiceCount ?? 0),
-    qty: Number(raw.qty ?? raw.totalQty ?? raw.quantity ?? 0),
-    revenue: Number(raw.revenue ?? raw.totalRevenue ?? raw.totalSales ?? raw.amount ?? 0),
+    name: raw.distributorName ?? '—',
+    orders: Number(raw.invoiceCount ?? 0),
+    qty: Number(raw.totalQuantity ?? 0),
+    weightKg: Number(raw.totalWeight ?? 0),
+    revenue: Number(raw.totalValue ?? 0),
+  };
+}
+
+// GET /api/reports/sales/by-dealer — Excel #23 Dealer Wise Sales
+// Response: { dealerId, dealerName, distributorId, distributorName, orderCount, totalQty, totalRevenue, totalWeight (Kg) }
+function mapDealerSalesRow(raw: any): DealerSalesRow {
+  return {
+    name: raw.dealerName ?? '—',
+    distributor: raw.distributorName ?? '—',
+    distributorId: String(raw.distributorId ?? ''),
+    orders: Number(raw.orderCount ?? 0),
+    qty: Number(raw.totalQty ?? 0),
+    weightKg: Number(raw.totalWeight ?? 0),
+    revenue: Number(raw.totalRevenue ?? 0),
   };
 }
 
@@ -191,8 +219,8 @@ export class SalesReportsPage implements OnInit {
   invoiceRows: InvoiceRow[] = [];
   summaryRows: SummaryRow[] = [];
   productRows: ProductRow[] = [];
-  distributorRows: PartyRow[] = [];
-  dealerRows: PartyRow[] = [];
+  distributorRows: DistributorSalesRow[] = [];
+  dealerRows: DealerSalesRow[] = [];
   salesmanRows: SalesmanRow[] = [];
 
   readonly invoiceSummaryColumns: DateSummaryColumn<InvoiceRow>[] = [
@@ -236,9 +264,6 @@ export class SalesReportsPage implements OnInit {
 
     this.dealerService.getAllDealers().subscribe(list => {
       this.dealers = list.map(d => d.fullName);
-      // Dealer Wise Sales (Excel #23) builds its rows by iterating `this.dealers` — re-run it now
-      // that the real dealer list has arrived, since applyFilters() ran before this resolved.
-      this.buildDealerRows();
     });
   }
 
@@ -251,11 +276,6 @@ export class SalesReportsPage implements OnInit {
     this.haptic.selectionChanged();
     this.isLoading = true;
 
-    // Dealer Wise Sales (Excel #23): the dealer *directory* is now real (GET /dealers), but there's
-    // still no dealer-grouped sales aggregate endpoint, so orders/qty/revenue per dealer stay
-    // deterministic mock figures layered on top of the real dealer names.
-    this.buildDealerRows();
-
     const dateParams = { dateFrom: this.filters.dateFrom, dateTo: this.filters.dateTo };
 
     forkJoin({
@@ -263,8 +283,9 @@ export class SalesReportsPage implements OnInit {
       monthlyTrend: this.reportsService.getMonthlyTrend(dateParams),
       byProduct: this.reportsService.getSalesByProduct(dateParams),
       byDistributor: this.reportsService.getSalesByDistributor({ ...dateParams, distributorId: this.filters.distributor }),
+      byDealer: this.reportsService.getSalesByDealer({ ...dateParams, distributorId: this.filters.distributor }),
       salesmanPerf: this.reportsService.getSalesmanPerformance(dateParams),
-    }).subscribe(({ invoices, monthlyTrend, byProduct, byDistributor, salesmanPerf }) => {
+    }).subscribe(({ invoices, monthlyTrend, byProduct, byDistributor, byDealer, salesmanPerf }) => {
       const distributorName = this.distributors.find(d => d.id === this.filters.distributor)?.name ?? this.filters.distributor;
       const salespersonName = this.salespersons.find(s => s.id === this.filters.salesperson)?.name ?? this.filters.salesperson;
 
@@ -277,8 +298,14 @@ export class SalesReportsPage implements OnInit {
       this.computeStats();
       this.buildSummaryRows(monthlyTrend);
       this.productRows = mapProductRows(byProduct);
-      this.distributorRows = filterByField(byDistributor.map(mapPartyRow), distributorName, r => r.name)
+      this.distributorRows = filterByField(byDistributor.map(mapDistributorSalesRow), distributorName, r => r.name)
         .sort((a, b) => b.revenue - a.revenue);
+      // by-dealer returns every dealer×distributor pair; the Distributor / Dealer filters also narrow it
+      // client-side (distributor by id, dealer by name) in case the backend ignores the query params.
+      this.dealerRows = filterByField(
+        filterByField(byDealer.map(mapDealerSalesRow), this.filters.distributor, r => r.distributorId),
+        this.filters.dealer, r => r.name,
+      ).sort((a, b) => b.revenue - a.revenue);
       // getSalesmanPerformance has no salesperson param server-side — the Salesperson filter above
       // can only narrow this tab client-side, keyed by name since salespersonId isn't in the response.
       this.salesmanRows = filterByField(salesmanPerf.map(mapSalesmanRow), salespersonName, r => r.salespersonName)
@@ -293,11 +320,6 @@ export class SalesReportsPage implements OnInit {
     this.activeType = type;
     this.pager.page = 1;
     this.haptic.selectionChanged();
-  }
-
-  private regionFor(name: string): string {
-    const rng = seededRandom('region|' + name);
-    return pick(rng, REGIONS);
   }
 
   private computeStats() {
@@ -315,16 +337,6 @@ export class SalesReportsPage implements OnInit {
       .map(mapMonthlyTrendRow);
   }
 
-  private buildDealerRows() {
-    const rng = seededRandom('dealer|' + JSON.stringify(this.filters));
-    const dealerPool = this.filters.dealer === 'all' ? this.dealers : [this.filters.dealer];
-    this.dealerRows = dealerPool.map(name => {
-      const orders = 2 + Math.floor(rng() * 20);
-      const qty = Math.round(50 + rng() * 4000);
-      return { name, region: this.regionFor(name), orders, qty, revenue: Math.round(qty * (80 + rng() * 300)) };
-    }).sort((a, b) => b.revenue - a.revenue);
-  }
-
   get activeRowCount(): number {
     if (this.activeType === 'register') return this.invoiceRows.length;
     if (this.activeType === 'summary') return this.summaryRows.length;
@@ -336,8 +348,8 @@ export class SalesReportsPage implements OnInit {
 
   get pagedSummaryRows(): SummaryRow[] { return paginate(this.summaryRows, this.pager); }
   get pagedProductRows(): ProductRow[] { return paginate(this.productRows, this.pager); }
-  get pagedDistributorRows(): PartyRow[] { return paginate(this.distributorRows, this.pager); }
-  get pagedDealerRows(): PartyRow[] { return paginate(this.dealerRows, this.pager); }
+  get pagedDistributorRows(): DistributorSalesRow[] { return paginate(this.distributorRows, this.pager); }
+  get pagedDealerRows(): DealerSalesRow[] { return paginate(this.dealerRows, this.pager); }
   get pagedSalesmanRows(): SalesmanRow[] { return paginate(this.salesmanRows, this.pager); }
 
   get rowRange(): { start: number; end: number } { return pageRange(this.pager, this.activeRowCount); }
@@ -370,9 +382,9 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Sales Register' };
       }
       case 'summary': {
-        const headers = ['Period', 'Total Sales', 'Total Invoices', 'Total Qty', 'Avg Invoice Value'];
-        const rows = this.summaryRows.map(r => [r.label, formatCurrencyFull(r.totalSales), r.totalInvoices, r.totalQty, formatCurrencyFull(r.avgInvoiceValue)]);
-        const jsonRows = this.summaryRows.map(r => ({ Period: r.label, 'Total Sales': r.totalSales, 'Total Invoices': r.totalInvoices, 'Total Qty': r.totalQty, 'Avg Invoice Value': Math.round(r.avgInvoiceValue) }));
+        const headers = ['Period', 'Total Sales', 'Total Invoices', 'Total Qty', 'Avg Invoice Value', 'Total Weight (Kg)'];
+        const rows = this.summaryRows.map(r => [r.label, formatCurrencyFull(r.totalSales), r.totalInvoices, r.totalQty, formatCurrencyFull(r.avgInvoiceValue), r.totalWeight]);
+        const jsonRows = this.summaryRows.map(r => ({ Period: r.label, 'Total Sales': r.totalSales, 'Total Invoices': r.totalInvoices, 'Total Qty': r.totalQty, 'Avg Invoice Value': Math.round(r.avgInvoiceValue), 'Total Weight (Kg)': r.totalWeight }));
         return { headers, rows, jsonRows, title: 'Sales Summary' };
       }
       case 'product': {
@@ -382,15 +394,15 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Product Wise Sales' };
       }
       case 'distributor': {
-        const headers = ['Distributor', 'Region', 'Orders', 'Qty', 'Revenue'];
-        const rows = this.distributorRows.map(r => [r.name, r.region, r.orders, r.qty, formatCurrencyFull(r.revenue)]);
-        const jsonRows = this.distributorRows.map(r => ({ Distributor: r.name, Region: r.region, Orders: r.orders, Qty: r.qty, Revenue: r.revenue }));
+        const headers = ['Distributor', 'Orders', 'Qty', 'Weight (Kg)', 'Revenue'];
+        const rows = this.distributorRows.map(r => [r.name, r.orders, r.qty, r.weightKg, formatCurrencyFull(r.revenue)]);
+        const jsonRows = this.distributorRows.map(r => ({ Distributor: r.name, Orders: r.orders, Qty: r.qty, 'Weight (Kg)': r.weightKg, Revenue: r.revenue }));
         return { headers, rows, jsonRows, title: 'Distributor Wise Sales' };
       }
       case 'dealer': {
-        const headers = ['Dealer', 'Orders', 'Qty', 'Revenue'];
-        const rows = this.dealerRows.map(r => [r.name, r.orders, r.qty, formatCurrencyFull(r.revenue)]);
-        const jsonRows = this.dealerRows.map(r => ({ Dealer: r.name, Orders: r.orders, Qty: r.qty, Revenue: r.revenue }));
+        const headers = ['Dealer', 'Distributor', 'Orders', 'Qty', 'Weight (Kg)', 'Revenue'];
+        const rows = this.dealerRows.map(r => [r.name, r.distributor, r.orders, r.qty, r.weightKg, formatCurrencyFull(r.revenue)]);
+        const jsonRows = this.dealerRows.map(r => ({ Dealer: r.name, Distributor: r.distributor, Orders: r.orders, Qty: r.qty, 'Weight (Kg)': r.weightKg, Revenue: r.revenue }));
         return { headers, rows, jsonRows, title: 'Dealer Wise Sales' };
       }
       default: {

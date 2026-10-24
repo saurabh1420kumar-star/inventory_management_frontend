@@ -141,7 +141,7 @@
           <!-- SALES SUMMARY -->
           <div *ngIf="activeType === 'summary'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Period</th><th>Total Sales</th><th>Total Invoices</th><th>Total Qty</th><th>Avg Invoice Value</th></tr></thead>
+              <thead><tr><th>Period</th><th>Total Sales</th><th>Total Invoices</th><th>Total Qty</th><th>Avg Invoice Value</th><th>Total Weight (Kg)</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedSummaryRows">
                   <td>{{ row.label }}</td>
@@ -149,8 +149,9 @@
                   <td>{{ row.totalInvoices }}</td>
                   <td>{{ row.totalQty.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.avgInvoiceValue) }}</td>
+                  <td>{{ row.totalWeight.toLocaleString('en-IN') }}</td>
                 </tr>
-                <tr *ngIf="pagedSummaryRows.length === 0"><td colspan="5" class="report-empty">No sales data found for these filters</td></tr>
+                <tr *ngIf="pagedSummaryRows.length === 0"><td colspan="6" class="report-empty">No sales data found for these filters</td></tr>
               </tbody>
             </table>
           </div>
@@ -175,13 +176,13 @@
           <!-- DISTRIBUTOR WISE SALES -->
           <div *ngIf="activeType === 'distributor'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Distributor</th><th>Region</th><th>Orders</th><th>Qty</th><th>Revenue</th></tr></thead>
+              <thead><tr><th>Distributor</th><th>Orders</th><th>Qty</th><th>Weight (Kg)</th><th>Revenue</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedDistributorRows">
                   <td>{{ row.name }}</td>
-                  <td>{{ row.region }}</td>
                   <td>{{ row.orders }}</td>
                   <td>{{ row.qty.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.weightKg.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.revenue) }}</td>
                 </tr>
                 <tr *ngIf="pagedDistributorRows.length === 0"><td colspan="5" class="report-empty">No distributor sales found for these filters</td></tr>
@@ -192,15 +193,17 @@
           <!-- DEALER WISE SALES -->
           <div *ngIf="activeType === 'dealer'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Dealer</th><th>Orders</th><th>Qty</th><th>Revenue</th></tr></thead>
+              <thead><tr><th>Dealer</th><th>Distributor</th><th>Orders</th><th>Qty</th><th>Weight (Kg)</th><th>Revenue</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedDealerRows">
                   <td>{{ row.name }}</td>
+                  <td>{{ row.distributor }}</td>
                   <td>{{ row.orders }}</td>
                   <td>{{ row.qty.toLocaleString('en-IN') }}</td>
+                  <td>{{ row.weightKg.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.revenue) }}</td>
                 </tr>
-                <tr *ngIf="pagedDealerRows.length === 0"><td colspan="4" class="report-empty">No dealer sales found for these filters</td></tr>
+                <tr *ngIf="pagedDealerRows.length === 0"><td colspan="6" class="report-empty">No dealer sales found for these filters</td></tr>
               </tbody>
             </table>
           </div>

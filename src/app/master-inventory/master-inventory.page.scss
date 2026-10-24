@@ -424,3 +424,34 @@ select.appearance-none {
     padding: 4px 8px;
   }
 }
+
+/* ---------- MARK AS DAMAGED ---------- */
+
+.damage-modal {
+  --width: min(92vw, 520px);
+  --height: auto;
+  --max-height: 92vh;
+  --border-radius: 24px;
+  --box-shadow: 0 32px 64px rgba(0, 0, 0, 0.18), 0 8px 24px rgba(0, 0, 0, 0.10);
+}
+
+/* The card action row is a size container so "Mark as Damaged" can shorten to "Damaged"
+   on narrow cards instead of squeezing View / Edit / Delete. */
+.inv-actions {
+  container-type: inline-size;
+  container-name: inv-actions;
+}
+
+.damage-label-short {
+  display: none;
+}
+
+@container inv-actions (max-width: 330px) {
+  .damage-label-full {
+    display: none;
+  }
+
+  .damage-label-short {
+    display: inline;
+  }
+}
