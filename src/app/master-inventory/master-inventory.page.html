@@ -296,7 +296,7 @@
       </div>
 
       <!-- PAGINATION -->
-      <div *ngIf="activeTab !== 'bom' && showPagination" class="flex items-center justify-between mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
+      <div *ngIf="activeTab !== 'bom' && showPagination" class="flex flex-wrap items-center justify-between gap-3 mt-8 mb-8 px-4 py-4 bg-white rounded-2xl shadow-md">
         <!-- Pagination Info -->
         <div class="text-sm text-gray-600 font-medium">
           Showing
@@ -314,19 +314,25 @@
           items
         </div>
         <!-- Pagination Controls -->
-        <div class="flex items-center gap-2">
+        <div class="flex items-center gap-1.5 flex-wrap justify-end">
           <!-- Previous Button -->
-          <button (click)="previousPage()" [disabled]="currentPage === 1" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+          <button (click)="previousPage()" [disabled]="currentPage === 1" class="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700 flex-shrink-0">
             <ion-icon name="chevron-back-outline"></ion-icon>
           </button>
-          <!-- Page Numbers -->
-          <div class="flex gap-2">
-            <button (click)="goToPage(page)" *ngFor="let page of pages" [class.bg-gradient-to-r]="currentPage === page" [class.bg-gray-100]="currentPage !== page" [class.from-emerald-400]="currentPage === page" [class.hover:bg-gray-200]="currentPage !== page" [class.shadow-md]="currentPage === page" [class.text-gray-700]="currentPage !== page" [class.text-white]="currentPage === page" [class.to-teal-500]="currentPage === page" class="min-w-[44px] px-4 py-2.5 rounded-xl transition-all font-bold text-sm">
+          <!-- Page Numbers (windowed, with "..." for skipped ranges) -->
+          <ng-container *ngFor="let page of pages">
+            <span *ngIf="page === '...'" class="w-9 text-center text-gray-400 font-bold select-none flex-shrink-0">&hellip;</span>
+            <button *ngIf="page !== '...'" (click)="goToPage(page)"
+              [class.bg-gradient-to-r]="currentPage === page" [class.bg-gray-100]="currentPage !== page"
+              [class.from-emerald-400]="currentPage === page" [class.hover:bg-gray-200]="currentPage !== page"
+              [class.shadow-md]="currentPage === page" [class.text-gray-700]="currentPage !== page"
+              [class.text-white]="currentPage === page" [class.to-teal-500]="currentPage === page"
+              class="min-w-[40px] px-3 py-2.5 rounded-xl transition-all font-bold text-sm flex-shrink-0">
               {{ page }}
             </button>
-          </div>
+          </ng-container>
           <!-- Next Button -->
-          <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-4 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700">
+          <button (click)="nextPage()" [disabled]="currentPage === totalPages" class="px-3.5 py-2.5 bg-gray-100 hover:bg-gray-200 rounded-xl transition-all disabled:opacity-40 disabled:cursor-not-allowed font-medium text-gray-700 flex-shrink-0">
             <ion-icon name="chevron-forward-outline"></ion-icon>
           </button>
         </div>
