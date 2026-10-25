@@ -2,6 +2,7 @@ import { NgModule } from '@angular/core';
 import { PreloadAllModules, RouterModule, Routes } from '@angular/router';
 import { AuthGuard } from './guards/auth.guard'; // Import the guard
 import { AclGuard } from './guards/acl.guard';
+import { AdminGuard } from './guards/admin.guard';
 import { DashboardGuard } from './guards/dashboard.guard';
 
 const routes: Routes = [
@@ -92,6 +93,11 @@ const routes: Routes = [
     path: 'distributor',
     loadChildren: () => import('./distributor/distributor.module').then( m => m.DistributorPageModule),
     canActivate: [AuthGuard]
+  },
+  {
+    path: 'dealers',
+    loadComponent: () => import('./dealers/dealers.page').then(m => m.DealersPage),
+    canActivate: [AdminGuard] // ADMIN / SUPER_ADMIN only
   },
   {
     path: 'order-details',

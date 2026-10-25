@@ -1,0 +1,340 @@
+// Reuses the shared report styles (stat cards, panel, table, badges, pagination) so Dealers matches the Reports pages.
+@import '../reports/report-workspace.scss';
+
+// NOTE: never set `display` on .dealer-table-wrap / .dealer-cards — Tailwind's `hidden md:block` / `md:hidden`
+// toggle them, and component styles (attribute-scoped) would out-rank those utilities.
+
+// ── Summary cards ────────────────────────────────────────────────────────
+.dealer-stats {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+  margin-bottom: 18px;
+
+  .report-stat-card {
+    min-width: 0;
+  }
+
+  @media (max-width: 640px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+
+    .report-stat-card:first-child {
+      grid-column: 1 / -1;
+    }
+  }
+}
+
+// ── Search + distributor filter ──────────────────────────────────────────
+.dealer-filters {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 10px;
+  flex: 1 1 auto;
+
+  @media (max-width: 640px) {
+    justify-content: stretch;
+    width: 100%;
+  }
+}
+
+.dealer-search {
+  position: relative;
+  display: flex;
+  align-items: center;
+  flex: 1 1 220px;
+  min-width: 200px;
+  max-width: 340px;
+
+  @media (max-width: 640px) {
+    max-width: none;
+  }
+
+  > ion-icon {
+    position: absolute;
+    left: 12px;
+    font-size: 16px;
+    color: var(--ion-color-medium, #6b7280);
+    pointer-events: none;
+  }
+
+  input {
+    width: 100%;
+    height: 38px;
+    padding: 0 34px 0 36px;
+    border-radius: 8px;
+    border: 1px solid rgba(0, 0, 0, 0.12);
+    background: var(--ion-background-color, #fff);
+    color: var(--ion-text-color, #111827);
+    font-size: 13px;
+    outline: none;
+    transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+    &::placeholder {
+      color: var(--ion-color-medium, #9ca3af);
+    }
+
+    &:focus {
+      border-color: #10b981;
+      box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+    }
+
+    &:disabled {
+      opacity: 0.6;
+      cursor: not-allowed;
+    }
+  }
+}
+
+.dealer-search-clear {
+  position: absolute;
+  right: 5px;
+  width: 28px;
+  height: 28px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border: none;
+  border-radius: 50%;
+  background: transparent;
+  color: var(--ion-color-medium, #9ca3af);
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+
+  ion-icon {
+    font-size: 18px;
+  }
+
+  &:hover {
+    color: #475569;
+  }
+}
+
+.dealer-select {
+  height: 38px;
+  max-width: 220px;
+  padding: 0 10px;
+  border-radius: 8px;
+  border: 1px solid rgba(0, 0, 0, 0.12);
+  background: var(--ion-background-color, #fff);
+  color: var(--ion-text-color, #111827);
+  font-size: 13px;
+  outline: none;
+  text-overflow: ellipsis;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+
+  &:focus {
+    border-color: #10b981;
+    box-shadow: 0 0 0 3px rgba(16, 185, 129, 0.15);
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+
+  @media (max-width: 640px) {
+    flex: 1 1 100%;
+    max-width: none;
+  }
+}
+
+// ── Table ────────────────────────────────────────────────────────────────
+table.report-table.dealer-table {
+  min-width: 720px;
+
+  tbody td {
+    vertical-align: middle;
+    padding-top: 12px;
+    padding-bottom: 12px;
+  }
+
+  // Addresses can be long — wrap them instead of stretching the table.
+  tbody td.dealer-address {
+    white-space: normal;
+    min-width: 220px;
+    max-width: 380px;
+    line-height: 1.45;
+    color: #475569;
+  }
+}
+
+.dealer-cell {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+
+.dealer-avatar {
+  width: 34px;
+  height: 34px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 10px;
+  background: linear-gradient(135deg, #10b981, #3b82f6);
+  box-shadow: 0 2px 6px rgba(16, 185, 129, 0.25);
+  color: #fff;
+  font-size: 12px;
+  font-weight: 700;
+  letter-spacing: 0.02em;
+}
+
+.dealer-name {
+  font-weight: 600;
+  color: var(--ion-text-color, #111827);
+  word-break: break-word;
+}
+
+.dealer-phone {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  color: #047857;
+  font-weight: 500;
+  font-variant-numeric: tabular-nums;
+  text-decoration: none;
+
+  ion-icon {
+    font-size: 14px;
+    opacity: 0.8;
+  }
+
+  &:hover {
+    text-decoration: underline;
+  }
+}
+
+.dealer-muted {
+  color: var(--ion-color-medium, #9ca3af);
+}
+
+// ── Cards (phone) ────────────────────────────────────────────────────────
+.dealer-cards {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+}
+
+.dealer-card {
+  padding: 14px;
+  border-radius: 12px;
+  border: 1px solid rgba(0, 0, 0, 0.06);
+  background: var(--ion-card-background, #fff);
+  box-shadow: 0 1px 6px rgba(0, 0, 0, 0.04);
+
+  & + & {
+    margin-top: 10px;
+  }
+}
+
+.dealer-card-row {
+  display: flex;
+  align-items: flex-start;
+  gap: 8px;
+  margin-top: 10px;
+  font-size: 13px;
+  color: #475569;
+
+  > ion-icon {
+    flex-shrink: 0;
+    margin-top: 2px;
+    font-size: 15px;
+    color: #10b981;
+  }
+
+  > span:not(.report-badge) {
+    min-width: 0;
+    word-break: break-word;
+    line-height: 1.45;
+  }
+}
+
+.dealer-footer {
+  flex-wrap: wrap;
+  gap: 8px;
+}
+
+// ── Loading skeleton ─────────────────────────────────────────────────────
+.dealer-skeleton-row {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  padding: 14px 6px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+
+  &:first-child {
+    border-top: none;
+  }
+}
+
+.dealer-skel {
+  display: block;
+  height: 12px;
+  border-radius: 6px;
+  background: rgba(100, 116, 139, 0.16);
+}
+
+.dealer-skel-avatar { width: 34px; height: 34px; border-radius: 10px; flex-shrink: 0; }
+.dealer-skel-name { width: 18%; }
+.dealer-skel-phone { width: 14%; }
+.dealer-skel-address { flex: 1; }
+.dealer-skel-dist { width: 16%; }
+
+@media (max-width: 767px) {
+  .dealer-skel-phone,
+  .dealer-skel-dist {
+    display: none;
+  }
+
+  .dealer-skel-name { width: 40%; }
+}
+
+// ── Empty / error states ─────────────────────────────────────────────────
+.dealer-state {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  gap: 6px;
+  padding: 44px 20px;
+  text-align: center;
+}
+
+.dealer-state-icon {
+  width: 56px;
+  height: 56px;
+  margin-bottom: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 16px;
+  background: rgba(16, 185, 129, 0.12);
+  color: #047857;
+
+  ion-icon {
+    font-size: 26px;
+  }
+
+  &.dealer-state-icon-error {
+    background: rgba(239, 68, 68, 0.12);
+    color: #b91c1c;
+  }
+}
+
+.dealer-state-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 700;
+  color: var(--ion-text-color, #111827);
+}
+
+.dealer-state-text {
+  margin: 0 0 10px;
+  font-size: 12px;
+  color: var(--ion-color-medium, #6b7280);
+}

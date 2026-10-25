@@ -64,7 +64,7 @@ interface ProductRow {
   product: string;
   qtySold: number;
   revenue: number;
-  sharePct: number;
+  invoiceCount: number;
 }
 
 // GET /reports/sales/by-distributor row (distributorId is dropped — it's an id, not a display value).
@@ -131,24 +131,17 @@ function mapMonthlyTrendRow(raw: any): SummaryRow {
   };
 }
 
-// Shared by Excel #21 (by-product) and #27 (top-products) — same row shape.
-function mapProductRows(rawList: any[]): ProductRow[] {
-  const base = rawList.map(raw => ({
-    product: raw.product ?? raw.productName ?? raw.itemName ?? '—',
-    qtySold: Number(raw.qtySold ?? raw.qty ?? raw.quantity ?? raw.totalQty ?? 0),
-    revenue: Number(raw.revenue ?? raw.totalRevenue ?? raw.totalSales ?? raw.amount ?? 0),
-    sharePctRaw: raw.sharePct,
-  }));
-  const total = base.reduce((s, r) => s + r.revenue, 0) || 1;
-  return base
-    .sort((a, b) => b.revenue - a.revenue)
-    .map((r, i) => ({
-      rank: i + 1,
-      product: r.product,
-      qtySold: r.qtySold,
-      revenue: r.revenue,
-      sharePct: Number(r.sharePctRaw ?? (r.revenue / total) * 100),
-    }));
+// GET /api/reports/sales/by-product — Excel #21 Product Wise Sales
+// Response: { rank, productId, productName, totalQuantity, totalAmount, invoiceCount, sharePercentage }
+// (productId and sharePercentage are not displayed.)
+function mapProductRow(raw: any): ProductRow {
+  return {
+    rank: Number(raw.rank ?? 0),
+    product: raw.productName ?? '—',
+    qtySold: Number(raw.totalQuantity ?? 0),
+    revenue: Number(raw.totalAmount ?? 0),
+    invoiceCount: Number(raw.invoiceCount ?? 0),
+  };
 }
 
 // GET /api/reports/sales/by-distributor — Excel #22 Distributor Wise Sales
@@ -297,7 +290,7 @@ export class SalesReportsPage implements OnInit {
 
       this.computeStats();
       this.buildSummaryRows(monthlyTrend);
-      this.productRows = mapProductRows(byProduct);
+      this.productRows = byProduct.map(mapProductRow).sort((a, b) => a.rank - b.rank);
       this.distributorRows = filterByField(byDistributor.map(mapDistributorSalesRow), distributorName, r => r.name)
         .sort((a, b) => b.revenue - a.revenue);
       // by-dealer returns every dealer×distributor pair; the Distributor / Dealer filters also narrow it
@@ -388,9 +381,9 @@ export class SalesReportsPage implements OnInit {
         return { headers, rows, jsonRows, title: 'Sales Summary' };
       }
       case 'product': {
-        const headers = ['Rank', 'Product', 'Qty Sold', 'Revenue', 'Share %'];
-        const rows = this.productRows.map(r => [r.rank, r.product, r.qtySold, formatCurrencyFull(r.revenue), r.sharePct.toFixed(1) + '%']);
-        const jsonRows = this.productRows.map(r => ({ Rank: r.rank, Product: r.product, 'Qty Sold': r.qtySold, Revenue: r.revenue, 'Share %': r.sharePct.toFixed(1) }));
+        const headers = ['Rank', 'Product', 'Qty Sold', 'Invoices', 'Revenue'];
+        const rows = this.productRows.map(r => [r.rank, r.product, r.qtySold, r.invoiceCount, formatCurrencyFull(r.revenue)]);
+        const jsonRows = this.productRows.map(r => ({ Rank: r.rank, Product: r.product, 'Qty Sold': r.qtySold, Invoices: r.invoiceCount, Revenue: r.revenue }));
         return { headers, rows, jsonRows, title: 'Product Wise Sales' };
       }
       case 'distributor': {

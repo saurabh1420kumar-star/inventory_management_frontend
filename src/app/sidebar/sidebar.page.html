@@ -126,6 +126,12 @@
           </ion-accordion>
         </ion-accordion-group>
 
+        <!-- ===== DEALERS (independent menu — ADMIN / SUPER_ADMIN only; global dealer directory) ===== -->
+        <ion-item *ngIf="isAdmin" routerLink="/dealers" routerLinkActive="active" (click)="onMenuItemClick()">
+          <ion-icon name="people-circle-outline" slot="start"></ion-icon>
+          <ion-label>Dealers</ion-label>
+        </ion-item>
+
         <ng-container *ngIf="!isSalesRole && userRole !== 'DISTRIBUTOR' && userRole !== 'DEALER'">
         <ion-accordion-group *appAcl="{ features: ['SALES', 'REPORTING_MANAGER'] }">
           <ion-accordion>

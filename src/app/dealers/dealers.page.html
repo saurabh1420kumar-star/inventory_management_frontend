@@ -1,0 +1,186 @@
+<app-report-hero
+  toolbarAccent="Dealer"
+  toolbarTitle="Directory"
+  eyebrow="Distribution Network"
+  heroTitle="Dealers"
+  subtitle="Every dealer and the distributor they belong to"
+  icon="people-circle-outline"
+  [lastUpdated]="lastUpdated"
+  [isBusy]="isLoading"
+  (refresh)="loadDealers()">
+
+  <!-- ── Summary ─────────────────────────────────────────────── -->
+  <div class="dealer-stats">
+    <div class="report-stat-card">
+      <div class="report-stat-icon report-stat-icon-green"><ion-icon name="people-circle-outline"></ion-icon></div>
+      <div>
+        <p class="report-stat-label">Total Dealers</p>
+        <p class="report-stat-value">{{ loadFailed || (isLoading && !dealers.length) ? '—' : dealers.length }}</p>
+      </div>
+    </div>
+    <div class="report-stat-card">
+      <div class="report-stat-icon report-stat-icon-blue"><ion-icon name="storefront-outline"></ion-icon></div>
+      <div>
+        <p class="report-stat-label">Distributors</p>
+        <p class="report-stat-value">{{ loadFailed || (isLoading && !dealers.length) ? '—' : distributors.length }}</p>
+      </div>
+    </div>
+    <div class="report-stat-card">
+      <div class="report-stat-icon report-stat-icon-violet"><ion-icon name="funnel-outline"></ion-icon></div>
+      <div>
+        <p class="report-stat-label">Showing</p>
+        <p class="report-stat-value">{{ loadFailed || (isLoading && !dealers.length) ? '—' : filtered.length }}</p>
+      </div>
+    </div>
+  </div>
+
+  <section class="report-panel">
+    <div class="report-panel-header">
+      <h2>All Dealers</h2>
+
+      <div class="dealer-filters">
+        <div class="dealer-search">
+          <ion-icon name="search-outline"></ion-icon>
+          <input type="text"
+                 placeholder="Search name, phone, address…"
+                 aria-label="Search dealers"
+                 [ngModel]="searchTerm"
+                 (ngModelChange)="onSearch($event)"
+                 [disabled]="!dealers.length" />
+          <button *ngIf="searchTerm" type="button" class="dealer-search-clear" aria-label="Clear search" (click)="clearSearch()">
+            <ion-icon name="close-circle"></ion-icon>
+          </button>
+        </div>
+
+        <select class="dealer-select"
+                aria-label="Filter by distributor"
+                [ngModel]="distributorFilter"
+                (ngModelChange)="onDistributorChange($event)"
+                [disabled]="!distributors.length">
+          <option value="all">All Distributors</option>
+          <option *ngFor="let name of distributors" [value]="name">{{ name }}</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- ── Loading ──────────────────────────────────────────── -->
+    <div *ngIf="isLoading" class="animate-pulse" aria-busy="true" aria-label="Loading dealers">
+      <div *ngFor="let i of skeletonRows" class="dealer-skeleton-row">
+        <span class="dealer-skel dealer-skel-avatar"></span>
+        <span class="dealer-skel dealer-skel-name"></span>
+        <span class="dealer-skel dealer-skel-phone"></span>
+        <span class="dealer-skel dealer-skel-address"></span>
+        <span class="dealer-skel dealer-skel-dist"></span>
+      </div>
+    </div>
+
+    <!-- ── Error ────────────────────────────────────────────── -->
+    <div *ngIf="!isLoading && loadFailed" class="dealer-state" role="alert">
+      <div class="dealer-state-icon dealer-state-icon-error"><ion-icon name="alert-circle-outline"></ion-icon></div>
+      <p class="dealer-state-title">Couldn't load dealers</p>
+      <p class="dealer-state-text">Check your connection and try again.</p>
+      <button type="button" class="report-btn report-btn-primary" (click)="loadDealers()">
+        <ion-icon name="refresh-outline"></ion-icon> Retry
+      </button>
+    </div>
+
+    <!-- ── Empty ────────────────────────────────────────────── -->
+    <div *ngIf="!isLoading && !loadFailed && filtered.length === 0" class="dealer-state">
+      <div class="dealer-state-icon"><ion-icon name="people-circle-outline"></ion-icon></div>
+      <ng-container *ngIf="dealers.length === 0; else noMatch">
+        <p class="dealer-state-title">No dealers yet</p>
+        <p class="dealer-state-text">Dealers will appear here once they are added under a distributor.</p>
+      </ng-container>
+      <ng-template #noMatch>
+        <p class="dealer-state-title">No matching dealers</p>
+        <p class="dealer-state-text">Try a different search or distributor.</p>
+        <button *ngIf="hasActiveFilters" type="button" class="report-btn report-btn-outline" (click)="resetFilters()">
+          <ion-icon name="refresh-outline"></ion-icon> Clear filters
+        </button>
+      </ng-template>
+    </div>
+
+    <ng-container *ngIf="!isLoading && !loadFailed && filtered.length > 0">
+
+      <!-- ── Table (tablet / desktop) ───────────────────────── -->
+      <div class="report-table-scroll dealer-table-wrap hidden md:block">
+        <table class="report-table dealer-table">
+          <thead>
+            <tr>
+              <th>Dealer</th>
+              <th>Phone</th>
+              <th>Address</th>
+              <th>Distributor</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr *ngFor="let d of pageRows; trackBy: trackByDealer">
+              <td>
+                <div class="dealer-cell">
+                  <span class="dealer-avatar" aria-hidden="true">{{ initials(d.fullName) }}</span>
+                  <span class="dealer-name">{{ d.fullName || '—' }}</span>
+                </div>
+              </td>
+              <td>
+                <a *ngIf="d.phone; else noPhone" class="dealer-phone" [href]="phoneHref(d.phone)">
+                  <ion-icon name="call-outline"></ion-icon>{{ d.phone }}
+                </a>
+                <ng-template #noPhone><span class="dealer-muted">—</span></ng-template>
+              </td>
+              <td class="dealer-address">
+                <span *ngIf="d.address; else noAddress">{{ d.address }}</span>
+                <ng-template #noAddress><span class="dealer-muted">—</span></ng-template>
+              </td>
+              <td>
+                <span *ngIf="d.distributorName; else noDistributor" class="report-badge report-badge-blue">{{ d.distributorName }}</span>
+                <ng-template #noDistributor><span class="dealer-muted">—</span></ng-template>
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- ── Cards (phone) ──────────────────────────────────── -->
+      <ul class="dealer-cards md:hidden">
+        <li *ngFor="let d of pageRows; trackBy: trackByDealer" class="dealer-card">
+          <div class="dealer-cell">
+            <span class="dealer-avatar" aria-hidden="true">{{ initials(d.fullName) }}</span>
+            <span class="dealer-name">{{ d.fullName || '—' }}</span>
+          </div>
+          <div class="dealer-card-row">
+            <ion-icon name="call-outline"></ion-icon>
+            <a *ngIf="d.phone; else cardNoPhone" class="dealer-phone" [href]="phoneHref(d.phone)">{{ d.phone }}</a>
+            <ng-template #cardNoPhone><span class="dealer-muted">—</span></ng-template>
+          </div>
+          <div class="dealer-card-row">
+            <ion-icon name="location-outline"></ion-icon>
+            <span>{{ d.address || '—' }}</span>
+          </div>
+          <div class="dealer-card-row">
+            <ion-icon name="business-outline"></ion-icon>
+            <span *ngIf="d.distributorName; else cardNoDistributor" class="report-badge report-badge-blue">{{ d.distributorName }}</span>
+            <ng-template #cardNoDistributor><span class="dealer-muted">—</span></ng-template>
+          </div>
+        </li>
+      </ul>
+
+      <!-- ── Footer / pagination ────────────────────────────── -->
+      <div class="report-table-footer dealer-footer">
+        <span>Showing {{ rangeStart }}–{{ rangeEnd }} of {{ filtered.length }} {{ filtered.length === 1 ? 'dealer' : 'dealers' }}</span>
+        <div class="report-pagination" *ngIf="pageCount > 1">
+          <button type="button" (click)="prevPage()" [disabled]="page === 1" aria-label="Previous page">
+            <ion-icon name="chevron-back-outline"></ion-icon>
+          </button>
+          <ng-container *ngFor="let p of pageNumbers">
+            <span *ngIf="p === '...'" class="report-pagination-ellipsis">…</span>
+            <button *ngIf="p !== '...'" type="button" [class.active]="p === page" (click)="goToPage(p)">{{ p }}</button>
+          </ng-container>
+          <button type="button" (click)="nextPage()" [disabled]="page === pageCount" aria-label="Next page">
+            <ion-icon name="chevron-forward-outline"></ion-icon>
+          </button>
+        </div>
+      </div>
+    </ng-container>
+  </section>
+
+</app-report-hero>
