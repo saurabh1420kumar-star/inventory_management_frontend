@@ -27,10 +27,13 @@ interface Filters {
 
 interface StockRow {
   item: string;
+  sku: string;
   category: Category;
   qtyOnHand: number;
   unitValue: number;
   totalValue: number;
+  minThreshold: number | null;
+  belowThreshold: boolean;
 }
 
 interface CategoryRow {
@@ -43,39 +46,47 @@ interface CategoryRow {
 
 interface ReorderRow {
   item: string;
+  sku: string;
   category: Category;
   currentQty: number;
+  price: number;
   reorderLevel: number;
-  shortfall: number;
-  status: Status;
+  belowThreshold: boolean;
 }
 
 // GET /api/reports/inventory/snapshot — Excel #3 Current Stock Report
 function mapStockRow(raw: any): StockRow {
-  const qtyOnHand = Number(raw.qtyOnHand ?? raw.quantity ?? raw.qty ?? raw.stockQty ?? 0);
-  const unitValue = Number(raw.unitValue ?? raw.unitPrice ?? raw.rate ?? raw.costPrice ?? 0);
+  const qtyOnHand = Number(raw.quantity ?? raw.qtyOnHand ?? raw.qty ?? raw.stockQty ?? 0);
+  // API sends `price` (unit price); `totalValue` can be null, so derive whichever side is missing
+  const rawUnit = raw.price ?? raw.unitValue ?? raw.unitPrice ?? raw.rate ?? raw.costPrice;
+  const rawTotal = raw.totalValue;
+  const unitValue = rawUnit != null ? Number(rawUnit) : (rawTotal != null && qtyOnHand ? Number(rawTotal) / qtyOnHand : 0);
+  const totalValue = rawTotal != null ? Number(rawTotal) : qtyOnHand * unitValue;
+  const minThreshold = raw.minimumThreshold ?? raw.minStockLevel ?? null;
   return {
-    item: raw.item ?? raw.itemName ?? raw.materialName ?? raw.productName ?? raw.name ?? '—',
-    category: (raw.category ?? raw.itemCategory ?? 'Raw Material') as Category,
+    item: raw.itemName ?? raw.item ?? raw.materialName ?? raw.productName ?? raw.name ?? raw.sku ?? '—',
+    sku: raw.sku ?? '—',
+    category: (raw.category ?? raw.itemCategory ?? 'RAW') as Category,
     qtyOnHand,
     unitValue,
-    totalValue: Number(raw.totalValue ?? qtyOnHand * unitValue),
+    totalValue,
+    minThreshold: minThreshold != null ? Number(minThreshold) : null,
+    belowThreshold: !!raw.belowThreshold,
   };
 }
 
 // GET /api/reports/inventory/low-stock — Excel #7 Minimum Stock Alert
 function mapReorderRow(raw: any): ReorderRow {
-  const currentQty = Number(raw.currentQty ?? raw.qtyOnHand ?? raw.quantity ?? 0);
-  const reorderLevel = Number(raw.reorderLevel ?? raw.minStockLevel ?? raw.minimumStock ?? 0);
-  const shortfall = Number(raw.shortfall ?? Math.max(0, reorderLevel - currentQty));
-  const status: Status = raw.status ?? (currentQty < reorderLevel * 0.5 ? 'Critical' : currentQty < reorderLevel ? 'Low' : 'OK');
+  const currentQty = Number(raw.quantity ?? raw.currentQty ?? raw.qtyOnHand ?? 0);
+  const reorderLevel = Number(raw.minimumThreshold ?? raw.reorderLevel ?? raw.minStockLevel ?? raw.minimumStock ?? 0);
   return {
-    item: raw.item ?? raw.itemName ?? raw.materialName ?? raw.name ?? '—',
-    category: (raw.category ?? raw.itemCategory ?? 'Raw Material') as Category,
+    item: raw.itemName ?? raw.item ?? raw.materialName ?? raw.name ?? raw.sku ?? '—',
+    sku: raw.sku ?? '—',
+    category: (raw.category ?? raw.itemCategory ?? 'RAW') as Category,
     currentQty,
+    price: Number(raw.price ?? raw.unitPrice ?? raw.unitValue ?? 0),
     reorderLevel,
-    shortfall,
-    status,
+    belowThreshold: raw.belowThreshold != null ? !!raw.belowThreshold : currentQty < reorderLevel,
   };
 }
 
@@ -141,7 +152,7 @@ export class InventoryReportsPage implements OnInit {
       this.stockRows = stockRows.sort((a, b) => b.totalValue - a.totalValue);
 
       this.reorderRows = filterByField(lowStock.map(mapReorderRow), this.filters.category, r => r.category)
-        .sort((a, b) => b.shortfall - a.shortfall);
+        .sort((a, b) => Number(b.belowThreshold) - Number(a.belowThreshold) || a.currentQty - b.currentQty);
       this.buildCategoryRows();
       this.pager.page = 1;
       this.isLoading = false;
@@ -205,14 +216,16 @@ export class InventoryReportsPage implements OnInit {
       return { headers, rows, jsonRows, title: 'Category Wise Valuation' };
     }
     if (this.activeType === 'reorder') {
-      const headers = ['Item', 'Category', 'Current Qty', 'Reorder Level', 'Shortfall', 'Status'];
-      const rows = this.reorderRows.map(r => [r.item, r.category, r.currentQty, r.reorderLevel, r.shortfall, r.status]);
-      const jsonRows = this.reorderRows.map(r => ({ Item: r.item, Category: r.category, 'Current Qty': r.currentQty, 'Reorder Level': r.reorderLevel, Shortfall: r.shortfall, Status: r.status }));
+      const headers = ['Item', 'SKU', 'Category', 'Current Qty', 'Price', 'Reorder Level', 'Status'];
+      const status = (r: ReorderRow) => r.belowThreshold ? 'Not OK' : 'OK';
+      const rows = this.reorderRows.map(r => [r.item, r.sku, r.category, r.currentQty, formatCurrencyFull(r.price), r.reorderLevel, status(r)]);
+      const jsonRows = this.reorderRows.map(r => ({ Item: r.item, SKU: r.sku, Category: r.category, 'Current Qty': r.currentQty, Price: r.price, 'Reorder Level': r.reorderLevel, Status: status(r) }));
       return { headers, rows, jsonRows, title: 'Low Stock Reorder Report' };
     }
-    const headers = ['Item', 'Category', 'Qty on Hand', 'Unit Value', 'Total Value'];
-    const rows = this.stockRows.map(r => [r.item, r.category, r.qtyOnHand, formatCurrencyFull(r.unitValue), formatCurrencyFull(r.totalValue)]);
-    const jsonRows = this.stockRows.map(r => ({ Item: r.item, Category: r.category, 'Qty on Hand': r.qtyOnHand, 'Unit Value': r.unitValue, 'Total Value': r.totalValue }));
+    const headers = ['Item', 'SKU', 'Category', 'Qty on Hand', 'Unit Price', 'Total Value', 'Min Threshold', 'Status'];
+    const status = (r: StockRow) => r.belowThreshold ? 'Below Threshold' : 'OK';
+    const rows = this.stockRows.map(r => [r.item, r.sku, r.category, r.qtyOnHand, formatCurrencyFull(r.unitValue), formatCurrencyFull(r.totalValue), r.minThreshold ?? '—', status(r)]);
+    const jsonRows = this.stockRows.map(r => ({ Item: r.item, SKU: r.sku, Category: r.category, 'Qty on Hand': r.qtyOnHand, 'Unit Price': r.unitValue, 'Total Value': r.totalValue, 'Min Threshold': r.minThreshold ?? '', Status: status(r) }));
     return { headers, rows, jsonRows, title: 'Stock Summary' };
   }
 

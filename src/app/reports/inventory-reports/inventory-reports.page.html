@@ -62,16 +62,19 @@
           <!-- STOCK SUMMARY -->
           <div *ngIf="activeType === 'summary'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Item</th><th>Category</th><th>Qty on Hand</th><th>Unit Value</th><th>Total Value</th></tr></thead>
+              <thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Qty on Hand</th><th>Unit Price</th><th>Total Value</th><th>Min Threshold</th><th>Status</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedStockRows">
                   <td>{{ row.item }}</td>
+                  <td>{{ row.sku }}</td>
                   <td>{{ row.category }}</td>
                   <td>{{ row.qtyOnHand.toLocaleString('en-IN') }}</td>
                   <td>{{ formatCurrencyFull(row.unitValue) }}</td>
                   <td>{{ formatCurrencyFull(row.totalValue) }}</td>
+                  <td>{{ row.minThreshold !== null ? (row.minThreshold | number) : '—' }}</td>
+                  <td><span class="report-badge" [ngClass]="row.belowThreshold ? 'report-badge-red' : 'report-badge-green'">{{ row.belowThreshold ? 'Below Threshold' : 'OK' }}</span></td>
                 </tr>
-                <tr *ngIf="pagedStockRows.length === 0"><td colspan="5" class="report-empty">No stock found for these filters</td></tr>
+                <tr *ngIf="pagedStockRows.length === 0"><td colspan="8" class="report-empty">No stock found for these filters</td></tr>
               </tbody>
             </table>
           </div>
@@ -96,17 +99,18 @@
           <!-- LOW STOCK / REORDER -->
           <div *ngIf="activeType === 'reorder'" class="report-table-scroll">
             <table class="report-table">
-              <thead><tr><th>Item</th><th>Category</th><th>Current Qty</th><th>Reorder Level</th><th>Shortfall</th><th>Status</th></tr></thead>
+              <thead><tr><th>Item</th><th>SKU</th><th>Category</th><th>Current Qty</th><th>Price</th><th>Reorder Level</th><th>Status</th></tr></thead>
               <tbody>
                 <tr *ngFor="let row of pagedReorderRows">
                   <td>{{ row.item }}</td>
+                  <td>{{ row.sku }}</td>
                   <td>{{ row.category }}</td>
                   <td>{{ row.currentQty.toLocaleString('en-IN') }}</td>
+                  <td>{{ formatCurrencyFull(row.price) }}</td>
                   <td>{{ row.reorderLevel.toLocaleString('en-IN') }}</td>
-                  <td>{{ row.shortfall.toLocaleString('en-IN') }}</td>
-                  <td><span class="report-badge" [ngClass]="statusBadgeClass(row.status)">{{ row.status }}</span></td>
+                  <td><span class="report-badge" [ngClass]="row.belowThreshold ? 'report-badge-red' : 'report-badge-green'">{{ row.belowThreshold ? 'Not OK' : 'OK' }}</span></td>
                 </tr>
-                <tr *ngIf="pagedReorderRows.length === 0"><td colspan="6" class="report-empty">All items are above their reorder level</td></tr>
+                <tr *ngIf="pagedReorderRows.length === 0"><td colspan="7" class="report-empty">All items are above their reorder level</td></tr>
               </tbody>
             </table>
           </div>
