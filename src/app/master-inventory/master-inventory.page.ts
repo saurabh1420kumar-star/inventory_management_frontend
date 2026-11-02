@@ -480,8 +480,28 @@ export class MasterInventoryPage implements OnInit {
     return Math.ceil(this.filteredInventory.length / this.itemsPerPage);
   }
 
-  get pages(): number[] {
-    return Array.from({ length: this.totalPages }, (_, i) => i + 1);
+  /**
+   * Windowed page list for the pager: first page, last page, the current page
+   * and one neighbor on each side, with '...' filling any gap. Keeps the control
+   * to a handful of buttons instead of rendering one per page (e.g. 23 pages).
+   */
+  get pages(): (number | '...')[] {
+    const total = this.totalPages;
+    const current = this.currentPage;
+    if (total <= 7) {
+      return Array.from({ length: total }, (_, i) => i + 1);
+    }
+
+    const result: (number | '...')[] = [1];
+    const start = Math.max(2, current - 1);
+    const end = Math.min(total - 1, current + 1);
+
+    if (start > 2) result.push('...');
+    for (let i = start; i <= end; i++) result.push(i);
+    if (end < total - 1) result.push('...');
+
+    result.push(total);
+    return result;
   }
 
   get showPagination(): boolean {
