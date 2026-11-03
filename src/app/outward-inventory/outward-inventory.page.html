@@ -91,6 +91,9 @@
             </button>
           </div>
         </div>
+        <div class="mt-4 border-t border-slate-100 pt-4">
+          <app-date-range-filter [value]="dateFilter" [months]="monthOptions" (valueChange)="onDateFilterChange($event)"></app-date-range-filter>
+        </div>
       </div>
 
       <!-- ── LOADER ───────────────────────────────────────────────── -->
@@ -100,7 +103,21 @@
       </div>
 
       <!-- ── EMPTY STATE ──────────────────────────────────────────── -->
-      <div *ngIf="!isLoading && filteredRecords.length === 0 && activeFilter !== 'raw_material' && activeFilter !== 'finished_product'"
+      <!-- ── Nothing in the chosen date range ── -->
+      <div *ngIf="isDateFilterActive && !isLoading && !isLoadingProducts && sections.length === 0"
+        class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+        <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+          <ion-icon name="calendar-outline" class="text-3xl text-slate-400"></ion-icon>
+        </div>
+        <h3 class="text-base font-bold text-slate-700 mb-1">No records in this date range</h3>
+        <p class="text-slate-400 text-sm mb-5">Try a wider range or clear the date filter.</p>
+        <button type="button" (click)="clearDateFilter()"
+          class="rounded-xl border-0 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+          Clear date filter
+        </button>
+      </div>
+
+      <div *ngIf="!isLoading && filteredRecords.length === 0 && activeFilter !== 'raw_material' && activeFilter !== 'finished_product' && !isDateFilterActive"
         class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
         <div class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
           <ion-icon name="swap-horizontal-outline" class="text-4xl text-emerald-400"></ion-icon>
@@ -113,217 +130,313 @@
         </ion-button>
       </div>
 
-      <!-- ── ISSUED-TO GROUPED CARDS (promo items given to the same recipient share one card) ── -->
-      <div *ngIf="!isLoading && issuedToGroups.length > 0"
-        class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3 mb-3">
+      <!-- ── CATEGORY ACCORDIONS (newest first) ─────────────────────── -->
+      <ng-container *ngIf="sections.length > 0">
 
-        <div *ngFor="let g of issuedToGroups; trackBy: trackByIssuedTo"
-          class="bg-white rounded-2xl border border-slate-200 shadow-sm overflow-hidden border-l-4 border-l-violet-500">
+        <div class="mb-3 flex items-center justify-between gap-3 px-1">
+          <p class="m-0 text-sm text-slate-500">
+            <span class="font-semibold text-slate-800">{{ sections.length }}</span>
+            categor{{ sections.length === 1 ? 'y' : 'ies' }} · newest first
+          </p>
+          <button type="button" (click)="toggleAllSections()"
+                  class="flex items-center gap-1 rounded-lg border-0 bg-transparent px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
+            <ion-icon [name]="allSectionsCollapsed ? 'chevron-expand-outline' : 'chevron-collapse-outline'" class="text-sm"></ion-icon>
+            {{ allSectionsCollapsed ? 'Expand all' : 'Collapse all' }}
+          </button>
+        </div>
 
-          <!-- Header -->
-          <div class="p-3 pb-2.5">
-            <div class="flex items-start gap-2 mb-1.5">
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5 bg-violet-100">
-                <ion-icon name="person-outline" class="text-sm text-violet-600"></ion-icon>
-              </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ g.issuedTo }}</p>
-                <p *ngIf="g.referenceNumber" class="text-[10px] text-slate-400 font-mono truncate">Ref # {{ g.referenceNumber }}</p>
-              </div>
-              <span class="text-[9px] font-semibold text-violet-600 bg-violet-50 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">
-                {{ g.items.length }} item{{ g.items.length > 1 ? 's' : '' }}
+        <ng-container *ngFor="let s of sections; trackBy: trackBySection">
+          <section *ngIf="s.source === 'records' ? !isLoading : !isLoadingProducts"
+                   class="mb-5" [ngClass]="'inv-card--' + s.key">
+
+            <!-- Accordion header -->
+            <button type="button"
+                    class="inv-section__header"
+                    [attr.aria-expanded]="!isSectionCollapsed(s.key)"
+                    (click)="toggleSection(s.key)">
+              <span class="inv-card__icon flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl">
+                <ion-icon [name]="s.icon" class="text-xl"></ion-icon>
               </span>
-            </div>
-            <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md bg-emerald-50 text-emerald-700">
-              <ion-icon name="arrow-up-circle-outline" class="text-[10px]"></ion-icon>
-              Outward Giving
-            </span>
-          </div>
-
-          <div class="mx-3 border-t border-slate-100"></div>
-
-          <!-- Dates list (accordion — tap a date to reveal its items; capped preview, full list opens in a modal) -->
-          <div class="px-3 py-2 space-y-1.5">
-            <div *ngFor="let d of getGroupPreviewDates(g)">
-              <button type="button"
-                class="w-full flex items-center justify-between gap-2 bg-slate-50 hover:bg-slate-100 rounded-lg px-2 py-1.5 border-0"
-                (click)="toggleDateGroup(g, d.dateKey)">
-                <span class="flex items-center gap-1.5 text-[11px] font-bold text-slate-700">
-                  <ion-icon name="calendar-outline" class="text-violet-500 text-xs"></ion-icon>
-                  {{ d.dateKey | date:'dd MMM yyyy' }}
-                  <span class="text-[9px] font-semibold text-slate-400">({{ d.items.length }} item{{ d.items.length > 1 ? 's' : '' }})</span>
+              <span class="min-w-0 flex-1 text-left">
+                <span class="block text-[15px] font-semibold leading-tight text-slate-900">{{ s.label }}</span>
+                <span class="block text-xs text-slate-500">
+                  {{ s.itemCount }} item{{ s.itemCount === 1 ? '' : 's' }}<ng-container *ngIf="s.latestTime"> · latest {{ s.latestTime | date:'dd MMM yyyy' }}</ng-container>
                 </span>
-                <ion-icon [name]="isDateGroupExpanded(g, d.dateKey) ? 'chevron-up-outline' : 'chevron-down-outline'" class="text-slate-400 text-xs flex-shrink-0"></ion-icon>
-              </button>
-
-              <div *ngIf="isDateGroupExpanded(g, d.dateKey)" class="mt-1 mb-1 space-y-1 pl-2">
-                <div *ngFor="let item of d.items" class="flex items-center justify-between gap-2 bg-white border border-slate-100 rounded-lg px-2 py-1.5">
-                  <div class="min-w-0 flex-1">
-                    <p class="text-[11px] font-bold text-slate-700 truncate">{{ item.matName }}</p>
-                    <p class="text-[9px] text-slate-400 font-mono truncate">{{ item.matCode }}</p>
-                  </div>
-                  <p class="text-xs font-extrabold text-slate-800 flex-shrink-0">
-                    {{ item.quantity }}<span class="text-[9px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(item.unit) }}</span>
-                  </p>
-                </div>
-              </div>
-            </div>
-
-            <button *ngIf="getGroupRemainingDateCount(g) > 0"
-              class="w-full flex items-center justify-center gap-1.5 text-[11px] font-bold text-violet-600 bg-violet-50 hover:bg-violet-100 rounded-lg px-2 py-1.5 border-0"
-              (click)="openGroupDetail(g)">
-              <ion-icon name="list-outline" class="text-xs"></ion-icon>
-              +{{ getGroupRemainingDateCount(g) }} more date{{ getGroupRemainingDateCount(g) > 1 ? 's' : '' }} · View all {{ g.items.length }} items
+              </span>
+              <span class="inv-card__more rounded-full px-2.5 py-1 text-xs font-bold">{{ s.itemCount }}</span>
+              <ion-icon [name]="isSectionCollapsed(s.key) ? 'chevron-down-outline' : 'chevron-up-outline'" class="flex-shrink-0 text-lg text-slate-400"></ion-icon>
             </button>
-          </div>
 
-          <!-- Comments + Timestamp -->
-          <div class="px-3 pb-2.5 space-y-1.5">
-            <div *ngIf="g.comments" class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
-              <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
-              <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ g.comments }}"</p>
-            </div>
-            <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
-              <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
-              <p class="text-[9px] text-slate-300 font-medium">{{ g.createdAt | date:'dd MMM yy · h:mm a' }}</p>
-            </div>
-          </div>
-        </div>
-      </div>
+            <!-- Section body -->
+            <div *ngIf="!isSectionCollapsed(s.key)" class="mt-3">
+              <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+                <ng-container *ngFor="let en of getVisibleEntries(s); trackBy: trackByEntry">
 
-      <!-- ── RECORDS GRID ─────────────────────────────────────────── -->
-      <div *ngIf="!isLoading && singleCards.length > 0"
-        class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+              <article *ngIf="en.group as g"
+                class="inv-card inv-card--static inv-card--group">
 
-        <div *ngFor="let r of singleCards; trackBy: trackById"
-          class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
-          (click)="openDetail(r)">
+                <!-- Header -->
+                <div class="flex items-start gap-3 px-4 pt-5 pb-3">
+                  <div class="inv-card__icon w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ion-icon name="person-outline" class="text-2xl"></ion-icon>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="inv-card__eyebrow m-0 flex items-center gap-1 text-[11px] font-semibold uppercase tracking-wide">
+                      <ion-icon name="arrow-up-circle-outline" class="text-sm"></ion-icon>
+                      Outward Giving
+                    </p>
+                    <p class="m-0 mt-0.5 text-[15px] font-semibold leading-snug text-slate-900 line-clamp-2" [title]="g.issuedTo">{{ g.issuedTo }}</p>
+                    <p *ngIf="g.referenceNumber" class="m-0 mt-0.5 text-xs text-slate-500 truncate">Ref # <span class="font-mono text-slate-600">{{ g.referenceNumber }}</span></p>
+                  </div>
+                  <span class="flex-shrink-0 rounded-full bg-slate-100 px-2.5 py-1 text-xs font-semibold text-slate-600">
+                    {{ g.items.length }} item{{ g.items.length > 1 ? 's' : '' }}
+                  </span>
+                </div>
 
-          <!-- -- TOP ACCENT BAR + HEADER -- -->
-          <div class="p-3 pb-2.5"
-            [ngClass]="{
-              'border-l-4 border-l-orange-400': r.itemType === 'spare_parts',
-              'border-l-4 border-l-violet-500': r.itemType === 'promotional_items',
-              'border-l-4 border-l-rose-500':   r.itemType === 'scrap_material'
-            }">
+                <!-- Dates list (accordion — tap a date to reveal its items; capped preview, full list opens in a modal) -->
+                <div class="flex-1 space-y-2 px-4 pb-4">
+                  <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Issued on</p>
 
-            <!-- Row 1: icon + name + ID -->
-            <div class="flex items-start gap-2 mb-1.5">
-              <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                [ngClass]="{
-                  'bg-orange-100': r.itemType === 'spare_parts',
-                  'bg-violet-100': r.itemType === 'promotional_items',
-                  'bg-rose-100':   r.itemType === 'scrap_material'
-                }">
-                <ion-icon
-                  [name]="r.itemType === 'spare_parts' ? 'build-outline' : r.itemType === 'promotional_items' ? 'gift-outline' : 'trash-outline'"
-                  class="text-sm"
-                  [ngClass]="{
-                    'text-orange-500': r.itemType === 'spare_parts',
-                    'text-violet-600': r.itemType === 'promotional_items',
-                    'text-rose-500':   r.itemType === 'scrap_material'
-                  }">
-                </ion-icon>
+                  <div *ngFor="let d of getGroupPreviewDates(g)">
+                    <button type="button"
+                      class="flex w-full items-center justify-between gap-2 rounded-lg border border-slate-200 bg-white px-3 py-2 text-left transition-colors hover:bg-slate-50"
+                      [attr.aria-expanded]="isDateGroupExpanded(g, d.dateKey)"
+                      (click)="toggleDateGroup(g, d.dateKey)">
+                      <span class="flex items-center gap-2 text-[13px] font-semibold text-slate-800">
+                        <ion-icon name="calendar-outline" class="inv-card__eyebrow text-base"></ion-icon>
+                        {{ d.dateKey | date:'dd MMM yyyy' }}
+                        <span class="text-xs font-medium text-slate-500">· {{ d.items.length }} item{{ d.items.length > 1 ? 's' : '' }}</span>
+                      </span>
+                      <ion-icon [name]="isDateGroupExpanded(g, d.dateKey) ? 'chevron-up-outline' : 'chevron-down-outline'" class="flex-shrink-0 text-sm text-slate-400"></ion-icon>
+                    </button>
+
+                    <div *ngIf="isDateGroupExpanded(g, d.dateKey)" class="ml-3 mt-2 mb-1 space-y-2 border-l-2 border-slate-200 pl-3">
+                      <div *ngFor="let item of d.items" class="flex items-center justify-between gap-3">
+                        <div class="min-w-0 flex-1">
+                          <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 break-words">{{ item.matName }}</p>
+                          <p class="m-0 text-[11px] font-mono text-slate-500 truncate">{{ item.matCode }}</p>
+                        </div>
+                        <p class="m-0 flex-shrink-0 text-[13px] font-bold text-slate-900 tabular-nums">
+                          {{ item.quantity }}<span class="ml-1 text-xs font-medium text-slate-500">{{ getUnitLabel(item.unit) }}</span>
+                        </p>
+                      </div>
+                    </div>
+                  </div>
+
+                  <button *ngIf="getGroupRemainingDateCount(g) > 0" type="button"
+                    class="inv-card__more flex w-full items-center justify-center gap-1.5 rounded-lg px-3 py-2 text-xs font-semibold"
+                    (click)="openGroupDetail(g)">
+                    <ion-icon name="list-outline" class="text-sm"></ion-icon>
+                    +{{ getGroupRemainingDateCount(g) }} more date{{ getGroupRemainingDateCount(g) > 1 ? 's' : '' }} · View all {{ g.items.length }} items
+                  </button>
+
+                  <!-- Comments -->
+                  <p *ngIf="g.comments" class="m-0 border-l-2 border-slate-300 pl-3 text-[13px] italic leading-relaxed text-slate-600 line-clamp-2">{{ g.comments }}</p>
+                </div>
+
+                <!-- Footer: timestamp -->
+                <div class="flex items-center border-t border-slate-100 px-4 py-2.5 text-xs">
+                  <span class="flex items-center gap-1.5 font-medium text-slate-500">
+                    <ion-icon name="time-outline" class="text-sm"></ion-icon>
+                    {{ g.createdAt | date:'dd MMM yyyy · h:mm a' }}
+                  </span>
+                </div>
+              </article>
+
+              <article *ngIf="en.record as r"
+                class="inv-card"
+                [ngClass]="'inv-card--' + r.itemType"
+                role="button"
+                tabindex="0"
+                (click)="openDetail(r)"
+                (keydown.enter)="openDetail(r)">
+
+                <!-- Header: type icon, type label, name, code, id -->
+                <div class="flex items-start gap-3 px-4 pt-5 pb-3">
+                  <div class="inv-card__icon w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ion-icon
+                      [name]="r.itemType === 'spare_parts' ? 'build-outline' : r.itemType === 'promotional_items' ? 'gift-outline' : 'trash-outline'"
+                      class="text-2xl">
+                    </ion-icon>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="inv-card__eyebrow m-0 text-[11px] font-semibold uppercase tracking-wide">{{ getTypeBadge(r.itemType).label }}</p>
+                    <p class="m-0 mt-0.5 text-[15px] font-semibold leading-snug text-slate-900 line-clamp-2" [title]="r.matName || ''">{{ r.matName || '—' }}</p>
+                    <p class="m-0 mt-0.5 text-xs font-mono text-slate-500 truncate">{{ r.matCode || '—' }}</p>
+                  </div>
+                  <span class="flex-shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{{ r.id }}</span>
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 space-y-3 px-4 pb-4">
+
+                  <!-- Transaction type -->
+                  <span class="inline-flex items-center gap-1 rounded-md border px-2 py-1 text-[11px] font-semibold"
+                    [ngClass]="getTransactionTypeLabel(r.section).cls">
+                    <ion-icon
+                      [name]="r.section === 'outward_giving' ? 'arrow-up-circle-outline' : r.section === 'returned_part' ? 'return-up-back-outline' : 'cash-outline'"
+                      class="text-sm">
+                    </ion-icon>
+                    {{ getTransactionTypeLabel(r.section).label }}
+                  </span>
+
+                  <!-- Metrics: quantity (+ price for scrap) -->
+                  <div class="grid gap-2" [ngClass]="r.itemType === 'scrap_material' ? 'grid-cols-2' : 'grid-cols-1'">
+                    <div class="rounded-xl bg-slate-50 px-3.5 py-3">
+                      <p class="m-0 mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">Quantity</p>
+                      <p class="m-0 flex items-baseline gap-1.5">
+                        <span class="text-2xl font-bold leading-none text-slate-900 tabular-nums">{{ r.quantity }}</span>
+                        <span class="text-sm font-medium text-slate-500">{{ getUnitLabel(r.unit) }}</span>
+                      </p>
+                    </div>
+                    <div *ngIf="r.itemType === 'scrap_material'" class="rounded-xl bg-slate-50 px-3.5 py-3">
+                      <p class="m-0 mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">Price</p>
+                      <p class="m-0 text-2xl font-bold leading-none tabular-nums"
+                        [ngClass]="(r.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-400'">
+                        {{ (r.desiredQuotedPrice ?? 0) > 0 ? ('₹' + r.desiredQuotedPrice) : '—' }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Issued To -->
+                  <div *ngIf="r.issuedTo" class="flex items-start gap-2.5">
+                    <ion-icon name="person-outline" class="mt-0.5 flex-shrink-0 text-base text-slate-400"></ion-icon>
+                    <div class="min-w-0">
+                      <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Issued to</p>
+                      <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 break-words">{{ r.issuedTo }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Reference Number -->
+                  <div *ngIf="r.referenceNumber" class="flex items-start gap-2.5">
+                    <ion-icon name="bookmark-outline" class="mt-0.5 flex-shrink-0 text-base text-slate-400"></ion-icon>
+                    <div class="min-w-0">
+                      <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Reference no.</p>
+                      <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 font-mono break-words">{{ r.referenceNumber }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Comments -->
+                  <p *ngIf="r.comments" class="m-0 border-l-2 border-slate-300 pl-3 text-[13px] italic leading-relaxed text-slate-600 line-clamp-2">{{ r.comments }}</p>
+                </div>
+
+                <!-- Footer: timestamp + affordance -->
+                <div class="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-xs">
+                  <span class="flex items-center gap-1.5 font-medium text-slate-500">
+                    <ion-icon name="time-outline" class="text-sm"></ion-icon>
+                    {{ r.createdAt | date:'dd MMM yyyy · h:mm a' }}
+                  </span>
+                  <span class="inv-card__cta flex items-center gap-0.5 font-semibold text-slate-400">
+                    View details
+                    <ion-icon name="chevron-forward-outline" class="text-sm"></ion-icon>
+                  </span>
+                </div>
+              </article>
+
+              <article *ngIf="en.product as p"
+                   class="inv-card"
+                   [ngClass]="'inv-card--' + p._cardType"
+                   role="button"
+                   tabindex="0"
+                   (click)="openDetail(p)"
+                   (keydown.enter)="openDetail(p)">
+
+                <!-- Header: type icon, type label, name, code, id -->
+                <div class="flex items-start gap-3 px-4 pt-5 pb-3">
+                  <div class="inv-card__icon w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                    <ion-icon [name]="p._cardType === 'raw_material' ? 'cube-outline' : 'bag-outline'" class="text-2xl"></ion-icon>
+                  </div>
+                  <div class="min-w-0 flex-1">
+                    <p class="inv-card__eyebrow m-0 text-[11px] font-semibold uppercase tracking-wide">
+                      {{ p._cardType === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
+                    </p>
+                    <p class="m-0 mt-0.5 text-[15px] font-semibold leading-snug text-slate-900 line-clamp-2" [title]="p.name || ''">{{ p.name }}</p>
+                    <p class="m-0 mt-0.5 text-xs font-mono text-slate-500 truncate">{{ p.code || '—' }}</p>
+                  </div>
+                  <span *ngIf="p.id" class="flex-shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{{ p.id }}</span>
+                </div>
+
+                <!-- Body -->
+                <div class="flex-1 space-y-3 px-4 pb-4">
+
+                  <!-- Status -->
+                  <span *ngIf="p.status"
+                        class="inline-flex items-center gap-1.5 rounded-md px-2 py-1 text-[11px] font-semibold uppercase tracking-wide"
+                        [ngClass]="{
+                          'bg-green-50 text-green-700': p.status === 'INWARD' || p.status === 'ACTIVE',
+                          'bg-red-50 text-red-700': p.status === 'OUTWARD' || p.status === 'INACTIVE',
+                          'bg-slate-100 text-slate-600': p.status !== 'INWARD' && p.status !== 'OUTWARD' && p.status !== 'ACTIVE' && p.status !== 'INACTIVE'
+                        }">
+                    <span class="h-1.5 w-1.5 rounded-full bg-current"></span>
+                    {{ p.status }}
+                  </span>
+
+                  <!-- Metrics: quantity + price / min stock -->
+                  <div class="grid grid-cols-2 gap-2">
+                    <div class="rounded-xl bg-slate-50 px-3.5 py-3">
+                      <p class="m-0 mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">Quantity</p>
+                      <p class="m-0 flex flex-wrap items-baseline gap-x-1.5">
+                        <span class="text-xl font-bold leading-none text-slate-900 tabular-nums">{{ p.quantity }}</span>
+                        <span class="text-xs font-medium text-slate-500">{{ p.unit }}</span>
+                      </p>
+                    </div>
+                    <div class="rounded-xl bg-slate-50 px-3.5 py-3">
+                      <p class="m-0 mb-1 text-[11px] font-medium uppercase tracking-wide text-slate-500">
+                        {{ p.price != null ? 'Price' : 'Min stock' }}
+                      </p>
+                      <p class="m-0 text-xl font-bold leading-none tabular-nums"
+                         [ngClass]="p.price != null ? 'text-emerald-600' : 'text-slate-700'">
+                        {{ p.price != null ? ('₹' + p.price) : (p.minimumThreshold || '—') }}
+                      </p>
+                    </div>
+                  </div>
+
+                  <!-- Vendor (raw material) -->
+                  <div *ngIf="p.vendorName" class="flex items-start gap-2.5">
+                    <ion-icon name="business-outline" class="mt-0.5 flex-shrink-0 text-base text-slate-400"></ion-icon>
+                    <div class="min-w-0">
+                      <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Vendor</p>
+                      <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 break-words">{{ p.vendorName }}</p>
+                    </div>
+                  </div>
+
+                  <!-- Description (finished product) -->
+                  <p *ngIf="p.description" class="m-0 border-l-2 border-slate-300 pl-3 text-[13px] leading-relaxed text-slate-600 line-clamp-2">{{ p.description }}</p>
+                </div>
+
+                <!-- Footer: timestamp + affordance -->
+                <div class="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-xs">
+                  <span class="flex items-center gap-1.5 font-medium text-slate-500">
+                    <ng-container *ngIf="p.createdAt">
+                      <ion-icon name="time-outline" class="text-sm"></ion-icon>
+                      {{ p.createdAt | date:'dd MMM yyyy · h:mm a' }}
+                    </ng-container>
+                  </span>
+                  <span class="inv-card__cta flex items-center gap-0.5 font-semibold text-slate-400">
+                    View details
+                    <ion-icon name="chevron-forward-outline" class="text-sm"></ion-icon>
+                  </span>
+                </div>
+              </article>
+
+                </ng-container>
               </div>
-              <div class="flex-1 min-w-0">
-                <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ r.matName || '�' }}</p>
-                <p class="text-[10px] text-slate-400 font-mono truncate">{{ r.matCode || '�' }}</p>
-              </div>
-              <span class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ r.id }}</span>
-            </div>
 
-            <!-- Row 2: type badge + transaction badge -->
-            <div class="flex flex-wrap gap-1">
-              <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                [ngClass]="{
-                  'bg-orange-50 text-orange-600': r.itemType === 'spare_parts',
-                  'bg-violet-50 text-violet-600': r.itemType === 'promotional_items',
-                  'bg-rose-50 text-rose-600':     r.itemType === 'scrap_material'
-                }">
-                {{ getTypeBadge(r.itemType).label }}
-              </span>
-              <span class="inline-flex items-center gap-0.5 text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                [ngClass]="{
-                  'bg-emerald-50 text-emerald-700': r.section === 'outward_giving',
-                  'bg-sky-50 text-sky-700':         r.section === 'returned_part',
-                  'bg-teal-50 text-teal-700':       r.section === 'selling_scrap'
-                }">
-                <ion-icon
-                  [name]="r.section === 'outward_giving' ? 'arrow-up-circle-outline' : r.section === 'returned_part' ? 'return-up-back-outline' : 'cash-outline'"
-                  class="text-[10px]">
-                </ion-icon>
-                {{ getTransactionTypeLabel(r.section).label }}
-              </span>
-            </div>
-          </div>
-
-          <!-- -- DIVIDER -- -->
-          <div class="mx-3 border-t border-slate-100"></div>
-
-          <!-- -- METRICS ROW -- -->
-          <div class="grid grid-cols-2 divide-x divide-slate-100 mx-3 my-2">
-            <div class="pr-2 py-1">
-              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
-              <p class="text-sm font-extrabold text-slate-800 leading-none">
-                {{ r.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ getUnitLabel(r.unit) }}</span>
-              </p>
-            </div>
-            <!-- Price: scrap only -->
-            <div *ngIf="r.itemType === 'scrap_material'" class="pl-2 py-1">
-              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Price</p>
-              <p class="text-sm font-extrabold leading-none"
-                [ngClass]="(r.desiredQuotedPrice ?? 0) > 0 ? 'text-emerald-600' : 'text-slate-300'">
-                {{ (r.desiredQuotedPrice ?? 0) > 0 ? ('₹' + r.desiredQuotedPrice) : '—' }}
-              </p>
-            </div>
-            <!-- Unit: spare_parts / promotional_items -->
-            <div *ngIf="r.itemType !== 'scrap_material'" class="pl-2 py-1">
-              <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Unit</p>
-              <p class="text-sm font-extrabold leading-none text-slate-700">
-                {{ getUnitLabel(r.unit) }}
-              </p>
-            </div>
-          </div>
-
-          <!-- -- OPTIONAL DETAILS -- -->
-          <div class="px-3 pb-2.5 space-y-1.5">
-
-            <!-- Issued To -->
-            <div *ngIf="r.issuedTo"
-              class="flex items-center gap-2 bg-violet-50 border border-violet-100 rounded-lg px-2 py-1.5">
-              <ion-icon name="person-outline" class="text-violet-500 text-xs flex-shrink-0"></ion-icon>
-              <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
-                <span class="text-[8px] text-violet-500 font-bold uppercase tracking-wide flex-shrink-0">Issued To</span>
-                <span class="text-[11px] font-bold text-violet-800 truncate text-right">{{ r.issuedTo }}</span>
+              <div *ngIf="getHiddenCount(s) > 0 || canShowFewer(s)" class="mt-4 flex items-center justify-center gap-2">
+                <button *ngIf="getHiddenCount(s) > 0" type="button" (click)="showMoreEntries(s)"
+                        class="inv-card__more rounded-xl px-4 py-2 text-xs font-semibold">
+                  Show {{ getHiddenCount(s) > sectionPageSize ? sectionPageSize : getHiddenCount(s) }} more
+                  <span class="font-medium opacity-80">({{ getHiddenCount(s) }} remaining)</span>
+                </button>
+                <button *ngIf="canShowFewer(s)" type="button" (click)="showFewerEntries(s)"
+                        class="rounded-xl border-0 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200">
+                  Show less
+                </button>
               </div>
             </div>
-
-            <!-- Reference Number -->
-            <div *ngIf="r.referenceNumber"
-              class="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-lg px-2 py-1.5">
-              <ion-icon name="bookmark-outline" class="text-sky-500 text-xs flex-shrink-0"></ion-icon>
-              <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
-                <span class="text-[8px] text-sky-500 font-bold uppercase tracking-wide flex-shrink-0">Ref #</span>
-                <span class="text-[11px] font-bold text-sky-800 truncate text-right">{{ r.referenceNumber }}</span>
-              </div>
-            </div>
-
-            <!-- Comments -->
-            <div *ngIf="r.comments"
-              class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
-              <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
-              <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ r.comments }}"</p>
-            </div>
-
-            <!-- Timestamp -->
-            <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
-              <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
-              <p class="text-[9px] text-slate-300 font-medium">{{ r.createdAt | date:'dd MMM yy � h:mm a' }}</p>
-            </div>
-
-          </div>
-        </div>
-      </div>
+          </section>
+        </ng-container>
+      </ng-container>
 
       <!-- -- PRODUCT CARDS LOADING SPINNER ------------------- -->
       <div *ngIf="isLoadingProducts && (activeFilter === 'all' || activeFilter === 'raw_material' || activeFilter === 'finished_product')"
@@ -331,110 +444,8 @@
         <ion-spinner name="crescent" style="color: #10b981;"></ion-spinner>
       </div>
 
-      <!-- -- PRODUCT CARDS GRID ------------------------------- -->
-      <ng-container *ngIf="!isLoadingProducts && filteredProductCards.length > 0">
-
-        <!-- Section header (only on 'all' filter to show context) -->
-        <div *ngIf="activeFilter === 'all'" class="flex items-center gap-2 mt-2 mb-1">
-          <div class="h-px flex-1 bg-slate-200"></div>
-          <span class="text-[10px] font-bold text-slate-400 uppercase tracking-widest px-2">Product Catalog</span>
-          <div class="h-px flex-1 bg-slate-200"></div>
-        </div>
-
-        <div class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
-          <div *ngFor="let p of filteredProductCards"
-               class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
-               [ngClass]="p._cardType === 'raw_material' ? 'border-l-4 border-l-emerald-500' : 'border-l-4 border-l-blue-500'"
-               (click)="openDetail(p)">
-
-            <!-- TOP: icon + name + code + id -->
-            <div class="p-3 pb-2.5">
-              <div class="flex items-start gap-2 mb-1.5">
-                <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                     [ngClass]="p._cardType === 'raw_material' ? 'bg-emerald-100' : 'bg-blue-100'">
-                  <ion-icon [name]="p._cardType === 'raw_material' ? 'cube-outline' : 'bag-outline'"
-                            class="text-sm"
-                            [ngClass]="p._cardType === 'raw_material' ? 'text-emerald-600' : 'text-blue-600'">
-                  </ion-icon>
-                </div>
-                <div class="flex-1 min-w-0">
-                  <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ p.name }}</p>
-                  <p class="text-[10px] text-slate-400 font-mono truncate">{{ p.code || '�' }}</p>
-                </div>
-                <span *ngIf="p.id" class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ p.id }}</span>
-              </div>
-
-              <!-- Type badge + Status badge -->
-              <div class="flex flex-wrap gap-1">
-                <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                      [ngClass]="p._cardType === 'raw_material' ? 'bg-emerald-50 text-emerald-700' : 'bg-blue-50 text-blue-700'">
-                  {{ p._cardType === 'raw_material' ? 'Raw Material' : 'Finished Product' }}
-                </span>
-                <span *ngIf="p.status"
-                      class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                      [ngClass]="{
-                        'bg-green-50 text-green-700': p.status === 'INWARD' || p.status === 'ACTIVE',
-                        'bg-red-50 text-red-700': p.status === 'OUTWARD' || p.status === 'INACTIVE',
-                        'bg-slate-100 text-slate-500': p.status !== 'INWARD' && p.status !== 'OUTWARD' && p.status !== 'ACTIVE' && p.status !== 'INACTIVE'
-                      }">
-                  {{ p.status }}
-                </span>
-              </div>
-            </div>
-
-            <!-- DIVIDER -->
-            <div class="mx-3 border-t border-slate-100"></div>
-
-            <!-- METRICS ROW: Qty + Price/Threshold -->
-            <div class="grid grid-cols-2 divide-x divide-slate-100 mx-3 my-2">
-              <div class="pr-2 py-1">
-                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
-                <p class="text-sm font-extrabold text-slate-800 leading-none">
-                  {{ p.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ p.unit }}</span>
-                </p>
-              </div>
-              <div class="pl-2 py-1">
-                <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">
-                  {{ p.price != null ? 'Price' : 'Min Stock' }}
-                </p>
-                <p class="text-sm font-extrabold leading-none"
-                   [ngClass]="p.price != null ? 'text-emerald-600' : 'text-slate-400'">
-                  {{ p.price != null ? ('?' + p.price) : (p.minimumThreshold || '�') }}
-                </p>
-              </div>
-            </div>
-
-            <!-- OPTIONAL DETAILS -->
-            <div class="px-3 pb-2.5 space-y-1.5">
-              <!-- Vendor (raw material) -->
-              <div *ngIf="p.vendorName"
-                   class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1.5">
-                <ion-icon name="business-outline" class="text-emerald-500 text-xs flex-shrink-0"></ion-icon>
-                <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
-                  <span class="text-[8px] text-emerald-600 font-bold uppercase tracking-wide flex-shrink-0">Vendor</span>
-                  <span class="text-[11px] font-bold text-emerald-800 truncate text-right">{{ p.vendorName }}</span>
-                </div>
-              </div>
-
-              <!-- Description (finished product) -->
-              <div *ngIf="p.description"
-                   class="flex items-start gap-1.5 bg-blue-50 border border-blue-100 rounded-lg px-2 py-1.5">
-                <ion-icon name="information-circle-outline" class="text-blue-400 text-xs flex-shrink-0 mt-px"></ion-icon>
-                <p class="text-[10px] text-slate-500 line-clamp-1 leading-relaxed">{{ p.description }}</p>
-              </div>
-
-              <!-- Timestamp -->
-              <div *ngIf="p.createdAt" class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
-                <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
-                <p class="text-[9px] text-slate-300 font-medium">{{ p.createdAt | date:'dd MMM yy � h:mm a' }}</p>
-              </div>
-            </div>
-          </div>
-        </div>
-      </ng-container>
-
       <!-- -- PRODUCT CARDS EMPTY STATE -------------------------- -->
-      <div *ngIf="!isLoadingProducts && filteredProductCards.length === 0 && (activeFilter === 'raw_material' || activeFilter === 'finished_product')"
+      <div *ngIf="!isLoadingProducts && filteredProductCards.length === 0 && !isDateFilterActive && (activeFilter === 'raw_material' || activeFilter === 'finished_product')"
            class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200 mt-2">
         <div class="w-16 h-16 rounded-2xl flex items-center justify-center mb-4"
              [ngClass]="activeFilter === 'raw_material' ? 'bg-emerald-50' : 'bg-blue-50'">
@@ -1118,31 +1129,21 @@
 
               <div class="field-group">
                 <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matName"
-                    (change)="onMatNameChange(spareOutwardForm.get('matName')?.value, spareOutwardForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched">
-                    <option value="">Select material name...</option>
-                    <option *ngFor="let item of getSparePartOptions()" [value]="item.name">{{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matName"
+                    [options]="getSparePartOptions()" valueKey="name" labelKey="name"
+                    placeholder="Select material name..." searchPlaceholder="Search by code or name..."
+                    [hasError]="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched"
+                    (selectionChange)="onMatNameChange($event, spareOutwardForm)"></app-searchable-select>
                 <p *ngIf="spareOutwardForm.get('matName')?.invalid && spareOutwardForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matCode"
-                    (change)="onMatCodeChange(spareOutwardForm.get('matCode')?.value, spareOutwardForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched">
-                    <option value="">Select material code...</option>
-                    <option *ngFor="let item of getSparePartOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matCode"
+                    [options]="getSparePartOptions()" valueKey="code" labelPrefixKey="code" labelKey="name"
+                    placeholder="Select material code..." searchPlaceholder="Search by code or name..."
+                    [hasError]="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched"
+                    (selectionChange)="onMatCodeChange($event, spareOutwardForm)"></app-searchable-select>
                 <p *ngIf="spareOutwardForm.get('matCode')?.invalid && spareOutwardForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
@@ -1188,31 +1189,21 @@
 
               <div class="field-group">
                 <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matName"
-                    (change)="onMatNameChange(spareReturnedForm.get('matName')?.value, spareReturnedForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched">
-                    <option value="">Select material name...</option>
-                    <option *ngFor="let item of getSparePartOptions()" [value]="item.name">{{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matName"
+                    [options]="getSparePartOptions()" valueKey="name" labelKey="name"
+                    placeholder="Select material name..." searchPlaceholder="Search by code or name..."
+                    [hasError]="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched"
+                    (selectionChange)="onMatNameChange($event, spareReturnedForm)"></app-searchable-select>
                 <p *ngIf="spareReturnedForm.get('matName')?.invalid && spareReturnedForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matCode"
-                    (change)="onMatCodeChange(spareReturnedForm.get('matCode')?.value, spareReturnedForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched">
-                    <option value="">Select material code...</option>
-                    <option *ngFor="let item of getSparePartOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matCode"
+                    [options]="getSparePartOptions()" valueKey="code" labelPrefixKey="code" labelKey="name"
+                    placeholder="Select material code..." searchPlaceholder="Search by code or name..."
+                    [hasError]="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched"
+                    (selectionChange)="onMatCodeChange($event, spareReturnedForm)"></app-searchable-select>
                 <p *ngIf="spareReturnedForm.get('matCode')?.invalid && spareReturnedForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
@@ -1279,47 +1270,21 @@
 
                   <div class="field-group">
                     <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                    <div class="relative">
-                      <button type="button"
-                        (click)="togglePromoRowDropdown(i, 'matCode')"
-                        (blur)="onPromoDropdownTriggerBlur()"
-                        class="field-input flex items-center justify-between gap-2 text-left"
-                        [class.field-input--error]="promoRowsSubmitAttempted && !row.matCode">
-                        <span [class.text-slate-400]="!row.matCode" class="truncate">{{ row.matCode ? (row.matCode + ' - ' + row.matName) : 'Select material code...' }}</span>
-                        <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
-                      </button>
-                      <div *ngIf="isPromoRowDropdownOpen(i, 'matCode')" class="promo-dropdown-list"
-                        (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
-                        <button *ngFor="let item of getPromotionalItemOptions()" type="button"
-                          (click)="selectPromoRowMatCode(i, item.code)" class="promo-dropdown-item">
-                          {{ item.code }} - {{ item.name }}
-                        </button>
-                        <div *ngIf="!getPromotionalItemOptions().length" class="promo-dropdown-empty">No items found.</div>
-                      </div>
-                    </div>
+                    <app-searchable-select
+                      [options]="getPromotionalItemOptions()" valueKey="code" labelPrefixKey="code" labelKey="name"
+                      [value]="row.matCode" placeholder="Select material code..." searchPlaceholder="Search by code or name..."
+                      [hasError]="promoRowsSubmitAttempted && !row.matCode"
+                      (selectionChange)="selectPromoRowMatCode(i, $event)"></app-searchable-select>
                     <p *ngIf="promoRowsSubmitAttempted && !row.matCode" class="field-error">Please select a material code</p>
                   </div>
 
                   <div class="field-group">
                     <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                    <div class="relative">
-                      <button type="button"
-                        (click)="togglePromoRowDropdown(i, 'matName')"
-                        (blur)="onPromoDropdownTriggerBlur()"
-                        class="field-input flex items-center justify-between gap-2 text-left"
-                        [class.field-input--error]="promoRowsSubmitAttempted && !row.matName">
-                        <span [class.text-slate-400]="!row.matName" class="truncate">{{ row.matName || 'Select material name...' }}</span>
-                        <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
-                      </button>
-                      <div *ngIf="isPromoRowDropdownOpen(i, 'matName')" class="promo-dropdown-list"
-                        (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
-                        <button *ngFor="let item of getPromotionalItemOptions()" type="button"
-                          (click)="selectPromoRowMatName(i, item.name)" class="promo-dropdown-item">
-                          {{ item.name }}
-                        </button>
-                        <div *ngIf="!getPromotionalItemOptions().length" class="promo-dropdown-empty">No items found.</div>
-                      </div>
-                    </div>
+                    <app-searchable-select
+                      [options]="getPromotionalItemOptions()" valueKey="name" labelKey="name"
+                      [value]="row.matName" placeholder="Select material name..." searchPlaceholder="Search by code or name..."
+                      [hasError]="promoRowsSubmitAttempted && !row.matName"
+                      (selectionChange)="selectPromoRowMatName(i, $event)"></app-searchable-select>
                     <p *ngIf="promoRowsSubmitAttempted && !row.matName" class="field-error">Please select a material name</p>
                   </div>
 
@@ -1356,68 +1321,32 @@
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'employee'">
                 <label class="field-label">Select Employee</label>
-                <div class="relative">
-                  <button type="button"
-                    (click)="togglePromoPartyDropdown('employee')"
-                    (blur)="onPromoDropdownTriggerBlur()"
-                    class="field-input flex items-center justify-between gap-2 text-left"
-                    [class.field-input--error]="promoPartySelectionError">
-                    <span [class.text-slate-400]="!promoOutwardForm.get('employeeId')?.value" class="truncate">{{ promoOutwardForm.get('employeeName')?.value || 'Select employee...' }}</span>
-                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
-                  </button>
-                  <div *ngIf="openPromoPartyDropdown === 'employee'" class="promo-dropdown-list"
-                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
-                    <button type="button" (click)="clearPromoEmployee()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select employee...</button>
-                    <button *ngFor="let employee of promotionalEmployees" type="button"
-                      (click)="selectPromoEmployee(employee)" class="promo-dropdown-item">
-                      {{ employee.name }}
-                    </button>
-                  </div>
-                </div>
+                <app-searchable-select
+                    [options]="promotionalEmployees" valueKey="id" labelKey="name"
+                    [value]="promoOutwardForm.get('employeeId')?.value" placeholder="Select employee..."
+                    searchPlaceholder="Search employee..." clearLabel="Clear selection"
+                    [hasError]="promoPartySelectionError"
+                    (selectionChange)="onEmployeeChange($event)"></app-searchable-select>
               </div>
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'distributor'">
                 <label class="field-label">Select Distributor</label>
-                <div class="relative">
-                  <button type="button"
-                    (click)="togglePromoPartyDropdown('distributor')"
-                    (blur)="onPromoDropdownTriggerBlur()"
-                    class="field-input flex items-center justify-between gap-2 text-left"
-                    [class.field-input--error]="promoPartySelectionError">
-                    <span [class.text-slate-400]="!promoOutwardForm.get('distributorId')?.value" class="truncate">{{ promoOutwardForm.get('distributorName')?.value || 'Select distributor...' }}</span>
-                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
-                  </button>
-                  <div *ngIf="openPromoPartyDropdown === 'distributor'" class="promo-dropdown-list"
-                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
-                    <button type="button" (click)="clearPromoDistributor()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select distributor...</button>
-                    <button *ngFor="let distributor of promotionalDistributors" type="button"
-                      (click)="selectPromoDistributor(distributor)" class="promo-dropdown-item">
-                      {{ distributor.label }}
-                    </button>
-                  </div>
-                </div>
+                <app-searchable-select
+                    [options]="promotionalDistributors" valueKey="id" labelKey="label"
+                    [value]="promoOutwardForm.get('distributorId')?.value" placeholder="Select distributor..."
+                    searchPlaceholder="Search distributor..." clearLabel="Clear selection"
+                    [hasError]="promoPartySelectionError"
+                    (selectionChange)="onDistributorChange($event)"></app-searchable-select>
               </div>
 
               <div class="field-group" *ngIf="!promoSelectedParty || promoSelectedParty === 'salesperson'">
                 <label class="field-label">Select Salesperson</label>
-                <div class="relative">
-                  <button type="button"
-                    (click)="togglePromoPartyDropdown('salesperson')"
-                    (blur)="onPromoDropdownTriggerBlur()"
-                    class="field-input flex items-center justify-between gap-2 text-left"
-                    [class.field-input--error]="promoPartySelectionError">
-                    <span [class.text-slate-400]="!promoOutwardForm.get('salespersonId')?.value" class="truncate">{{ promoOutwardForm.get('salespersonName')?.value || 'Select salesperson...' }}</span>
-                    <ion-icon name="chevron-down-outline" class="text-slate-400 flex-shrink-0"></ion-icon>
-                  </button>
-                  <div *ngIf="openPromoPartyDropdown === 'salesperson'" class="promo-dropdown-list"
-                    (mouseenter)="onPromoDropdownMouseEnter()" (mouseleave)="onPromoDropdownMouseLeave()">
-                    <button type="button" (click)="clearPromoSalesperson()" class="promo-dropdown-item promo-dropdown-item--placeholder">Select salesperson...</button>
-                    <button *ngFor="let salesperson of promotionalSalespersons" type="button"
-                      (click)="selectPromoSalesperson(salesperson)" class="promo-dropdown-item">
-                      {{ salesperson.name }}
-                    </button>
-                  </div>
-                </div>
+                <app-searchable-select
+                    [options]="promotionalSalespersons" valueKey="id" labelKey="name"
+                    [value]="promoOutwardForm.get('salespersonId')?.value" placeholder="Select salesperson..."
+                    searchPlaceholder="Search salesperson..." clearLabel="Clear selection"
+                    [hasError]="promoPartySelectionError"
+                    (selectionChange)="onSalespersonChange($event)"></app-searchable-select>
                 <p *ngIf="promoPartySelectionError" class="field-error">Please select any one: employee, distributor, or salesperson</p>
               </div>
 
@@ -1438,31 +1367,21 @@
 
               <div class="field-group">
                 <label class="field-label">Material Code <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matCode"
-                    (change)="onMatCodeChange(scrapReturnedForm.get('matCode')?.value, scrapReturnedForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched">
-                    <option value="">Select material code...</option>
-                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.code">{{ item.code }} - {{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matCode"
+                    [options]="getScrapItemOptions()" valueKey="code" labelPrefixKey="code" labelKey="name"
+                    placeholder="Select material code..." searchPlaceholder="Search by code or name..."
+                    [hasError]="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched"
+                    (selectionChange)="onMatCodeChange($event, scrapReturnedForm)"></app-searchable-select>
                 <p *ngIf="scrapReturnedForm.get('matCode')?.invalid && scrapReturnedForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Material Name <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matName"
-                    (change)="onMatNameChange(scrapReturnedForm.get('matName')?.value, scrapReturnedForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched">
-                    <option value="">Select material name...</option>
-                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.name">{{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matName"
+                    [options]="getScrapItemOptions()" valueKey="name" labelKey="name"
+                    placeholder="Select material name..." searchPlaceholder="Search by code or name..."
+                    [hasError]="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched"
+                    (selectionChange)="onMatNameChange($event, scrapReturnedForm)"></app-searchable-select>
                 <p *ngIf="scrapReturnedForm.get('matName')?.invalid && scrapReturnedForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 
@@ -1508,34 +1427,21 @@
 
               <div class="field-group">
                 <label class="field-label">Select Material Code <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matCode"
-                    (change)="onMatCodeChange(scrapSellingForm.get('matCode')?.value, scrapSellingForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched">
-                    <option value="">Select material code...</option>
-                    <option *ngFor="let item of getScrapItemOptions()"
-                      [value]="item.code">
-                      {{ item.code }} - {{ item.name }}
-                    </option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matCode"
+                    [options]="getScrapItemOptions()" valueKey="code" labelPrefixKey="code" labelKey="name"
+                    placeholder="Select material code..." searchPlaceholder="Search by code or name..."
+                    [hasError]="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched"
+                    (selectionChange)="onMatCodeChange($event, scrapSellingForm)"></app-searchable-select>
                 <p *ngIf="scrapSellingForm.get('matCode')?.invalid && scrapSellingForm.get('matCode')?.touched" class="field-error">Please select a material code</p>
               </div>
 
               <div class="field-group">
                 <label class="field-label">Select Material Name <span class="text-rose-400">*</span></label>
-                <div class="relative">
-                  <select formControlName="matName"
-                    (change)="onMatNameChange(scrapSellingForm.get('matName')?.value, scrapSellingForm)"
-                    class="field-input appearance-none pr-10"
-                    [class.field-input--error]="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched">
-                    <option value="">Select material name...</option>
-                    <option *ngFor="let item of getScrapItemOptions()" [value]="item.name">{{ item.name }}</option>
-                  </select>
-                  <ion-icon name="chevron-down-outline" class="absolute right-3 top-1/2 -translate-y-1/2 text-slate-400 pointer-events-none"></ion-icon>
-                </div>
+                <app-searchable-select formControlName="matName"
+                    [options]="getScrapItemOptions()" valueKey="name" labelKey="name"
+                    placeholder="Select material name..." searchPlaceholder="Search by code or name..."
+                    [hasError]="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched"
+                    (selectionChange)="onMatNameChange($event, scrapSellingForm)"></app-searchable-select>
                 <p *ngIf="scrapSellingForm.get('matName')?.invalid && scrapSellingForm.get('matName')?.touched" class="field-error">Please select a material name</p>
               </div>
 

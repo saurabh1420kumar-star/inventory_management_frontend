@@ -24,6 +24,11 @@ import { HapticService } from '../services/haptic.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { environment } from '../../environments/environment';
 import { AclDirective } from '../acl/acl.directive';
+import { DateRangeFilterComponent } from '../shared/date-range-filter/date-range-filter.component';
+import {
+  DateFilterState, DateMonthOption, EMPTY_DATE_FILTER,
+  buildMonthOptions, getDateRange, isWithinRange
+} from '../shared/date-range-filter/date-range-filter';
 
 export type InwardItemType = 'raw_material' | 'finished_product' | 'spare_parts' | 'promotional' | 'scrap';
 
@@ -55,6 +60,13 @@ export interface InwardEntry {
   condition?: string;
 }
 
+/** One accordion section on the list: all entries of a single item type, newest first. */
+export interface InwardSection {
+  type: InwardItemType;
+  items: InwardEntry[];
+  latestDate: string;
+}
+
 const UNIT_TYPES = [
   { value: 'KG',     label: 'Kilograms', sub: 'KG',     short: 'KG',  icon: 'cube-outline'    },
   { value: 'LITER',  label: 'Litres',    sub: 'LITER',  short: 'LTR', icon: 'water-outline'   },
@@ -80,7 +92,8 @@ const ITEM_TYPES: { type: InwardItemType; label: string; icon: string; color: st
     IonHeader, IonToolbar, IonTitle, IonContent,
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonSpinner, IonRefresher, IonRefresherContent,
-    AclDirective
+    AclDirective,
+    DateRangeFilterComponent
   ]
 })
 export class InwardPage implements OnInit {
@@ -94,6 +107,16 @@ export class InwardPage implements OnInit {
   // List state
   entries: InwardEntry[] = [];
   filteredEntries: InwardEntry[] = [];
+
+  // Accordion sections (one per item type, newest first)
+  readonly sectionPageSize = 12;
+  entrySections: InwardSection[] = [];
+  private collapsedSections = new Set<InwardItemType>();
+  private sectionLimits = new Map<InwardItemType, number>();
+
+  // Date filter (preset / month / custom range) + months that actually have data
+  dateFilter: DateFilterState = { ...EMPTY_DATE_FILTER };
+  monthOptions: DateMonthOption[] = [];
   isLoading = false;
   searchTerm = '';
   selectedFilter: InwardItemType | 'all' = 'all';
@@ -301,7 +324,99 @@ export class InwardPage implements OnInit {
         e.invoiceNumber?.toLowerCase().includes(q)
       );
     }
+    // Month dropdown lists the months present in the current type/search results
+    this.monthOptions = buildMonthOptions(
+      data.map(e => e.date),
+      this.dateFilter.preset === 'pickMonth' ? this.dateFilter.month : ''
+    );
+    const range = getDateRange(this.dateFilter);
+    if (range) data = data.filter(e => isWithinRange(e.date, range));
+
+    data.sort((a, b) => this.compareNewestFirst(a, b));
     this.filteredEntries = data;
+    this.entrySections = this.buildSections(data);
+  }
+
+  // ── Accordion sections ────────────────────────────────────────
+  private compareNewestFirst(a: InwardEntry, b: InwardEntry): number {
+    return (b.date || '').localeCompare(a.date || '') || (b.id ?? 0) - (a.id ?? 0);
+  }
+
+  /** Groups already-sorted entries by item type; sections are ordered by their newest entry. */
+  private buildSections(sorted: InwardEntry[]): InwardSection[] {
+    const byType = new Map<InwardItemType, InwardEntry[]>();
+    for (const e of sorted) {
+      if (!byType.has(e.itemType)) byType.set(e.itemType, []);
+      byType.get(e.itemType)!.push(e);
+    }
+    return Array.from(byType.entries())
+      .map(([type, items]) => ({ type, items, latestDate: items[0]?.date ?? '' }))
+      .sort((a, b) => this.compareNewestFirst(a.items[0], b.items[0]));
+  }
+
+  isSectionCollapsed(type: InwardItemType): boolean {
+    return this.collapsedSections.has(type);
+  }
+
+  toggleSection(type: InwardItemType): void {
+    if (this.collapsedSections.has(type)) this.collapsedSections.delete(type);
+    else this.collapsedSections.add(type);
+  }
+
+  get allSectionsCollapsed(): boolean {
+    return this.entrySections.length > 0 && this.entrySections.every(s => this.collapsedSections.has(s.type));
+  }
+
+  toggleAllSections(): void {
+    if (this.allSectionsCollapsed) {
+      this.collapsedSections.clear();
+    } else {
+      this.entrySections.forEach(s => this.collapsedSections.add(s.type));
+    }
+  }
+
+  private isSearching(): boolean {
+    return !!this.searchTerm.trim();
+  }
+
+  private sectionLimit(s: InwardSection): number {
+    return this.sectionLimits.get(s.type) ?? this.sectionPageSize;
+  }
+
+  /** Cards to render for a section — capped for speed, but a search always shows every match. */
+  getVisibleEntries(s: InwardSection): InwardEntry[] {
+    return this.isSearching() ? s.items : s.items.slice(0, this.sectionLimit(s));
+  }
+
+  getHiddenCount(s: InwardSection): number {
+    return this.isSearching() ? 0 : Math.max(0, s.items.length - this.sectionLimit(s));
+  }
+
+  canShowFewer(s: InwardSection): boolean {
+    return !this.isSearching() && this.sectionLimit(s) > this.sectionPageSize;
+  }
+
+  showMoreEntries(s: InwardSection): void {
+    this.sectionLimits.set(s.type, this.sectionLimit(s) + this.sectionPageSize);
+  }
+
+  showFewerEntries(s: InwardSection): void {
+    this.sectionLimits.delete(s.type);
+  }
+
+  // ── Date filter ───────────────────────────────────────────────
+  get isDateFilterActive(): boolean {
+    return getDateRange(this.dateFilter) !== null;
+  }
+
+  onDateFilterChange(next: DateFilterState): void {
+    this.dateFilter = next;
+    this.sectionLimits.clear();
+    this.applyFilter();
+  }
+
+  clearDateFilter(): void {
+    this.onDateFilterChange({ ...EMPTY_DATE_FILTER });
   }
 
   openModal() {

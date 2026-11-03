@@ -41,6 +41,12 @@ import { HapticService } from '../services/haptic.service';
 import { KeyboardService } from '../services/keyboard.service';
 import { User } from '../models/user.model';
 import { AclDirective } from '../acl/acl.directive';
+import { SearchableSelectComponent } from '../shared/searchable-select/searchable-select.component';
+import { DateRangeFilterComponent } from '../shared/date-range-filter/date-range-filter.component';
+import {
+  DateFilterState, DateMonthOption, EMPTY_DATE_FILTER,
+  buildMonthOptions, getDateRange, isWithinRange
+} from '../shared/date-range-filter/date-range-filter';
 
 export type ModalItemType = 'spare_parts' | 'promotional_items' | 'scrap_material';
 export type SpareSection = 'outward_giving' | 'returned_part';
@@ -81,6 +87,27 @@ interface OutwardIssuedGroup {
   items: OutwardRecord[];
 }
 
+/** One card inside an accordion section: a recipient group, a single record, or a catalog product. */
+interface OutwardSectionEntry {
+  key: string;
+  time: number;
+  seq: number;
+  group?: OutwardIssuedGroup;
+  record?: OutwardRecord;
+  product?: any;
+}
+
+/** Accordion section — every card of one category, newest first. */
+interface OutwardSection {
+  key: string;
+  label: string;
+  icon: string;
+  source: 'records' | 'products';
+  entries: OutwardSectionEntry[];
+  itemCount: number;
+  latestTime: number;
+}
+
 @Component({
   selector: 'app-outward-inventory',
   standalone: true,
@@ -94,7 +121,9 @@ interface OutwardIssuedGroup {
     IonButtons, IonMenuButton, IonButton, IonIcon,
     IonSpinner, IonRefresher, IonRefresherContent,
     NgIf, NgFor, NgClass, DatePipe,
-    AclDirective
+    AclDirective,
+    SearchableSelectComponent,
+    DateRangeFilterComponent
   ]
 })
 export class OutwardInventoryPage implements OnInit {
@@ -154,6 +183,16 @@ export class OutwardInventoryPage implements OnInit {
   rawProductCards: any[] = [];
   finishedProductCards: any[] = [];
   filteredProductCards: any[] = [];
+
+  // Accordion sections (one per category, newest first)
+  readonly sectionPageSize = 12;
+  sections: OutwardSection[] = [];
+  private collapsedSections = new Set<string>();
+  private sectionLimits = new Map<string, number>();
+
+  // Date filter (preset / month / custom range) + months that actually have data
+  dateFilter: DateFilterState = { ...EMPTY_DATE_FILTER };
+  monthOptions: DateMonthOption[] = [];
   isLoadingProducts = false;
 
   // Detail modal
@@ -448,6 +487,128 @@ export class OutwardInventoryPage implements OnInit {
       );
     }
     this.filteredProductCards = products;
+
+    // Date filter: month dropdown lists months present in the current type/search results
+    this.monthOptions = buildMonthOptions(
+      [...this.filteredRecords.map(r => r.createdAt), ...products.map(p => p.createdAt)],
+      this.dateFilter.preset === 'pickMonth' ? this.dateFilter.month : ''
+    );
+    const range = getDateRange(this.dateFilter);
+    if (range) {
+      this.filteredRecords = this.filteredRecords.filter(r => isWithinRange(r.createdAt, range));
+      this.filteredProductCards = products.filter(p => isWithinRange(p.createdAt, range));
+    }
+
+    this.sections = this.buildSections();
+  }
+
+  // ── Accordion sections ────────────────────────────────────────
+  private buildSections(): OutwardSection[] {
+    const meta: Record<string, { label: string; icon: string }> = {
+      spare_parts:       { label: 'Spare Parts',       icon: 'build-outline' },
+      promotional_items: { label: 'Promotional Items', icon: 'gift-outline' },
+      scrap_material:    { label: 'Scrap Material',    icon: 'trash-outline' },
+      raw_material:      { label: 'Raw Materials',     icon: 'cube-outline' },
+      finished_product:  { label: 'Finished Products', icon: 'bag-outline' }
+    };
+    const toTime = (s?: string) => Date.parse(s ?? '') || 0;
+    const map = new Map<string, OutwardSection>();
+
+    const add = (key: string, source: 'records' | 'products', entry: OutwardSectionEntry, count: number) => {
+      let section = map.get(key);
+      if (!section) {
+        const m = meta[key] ?? { label: key, icon: 'cube-outline' };
+        section = { key, label: m.label, icon: m.icon, source, entries: [], itemCount: 0, latestTime: 0 };
+        map.set(key, section);
+      }
+      section.entries.push(entry);
+      section.itemCount += count;
+    };
+
+    for (const g of this.issuedToGroups) {
+      add('promotional_items', 'records', { key: `g-${g.issuedTo}`, time: toTime(g.createdAt), seq: 0, group: g }, g.items.length);
+    }
+    for (const r of this.singleCards) {
+      add(r.itemType, 'records', { key: `r-${r.id}`, time: toTime(r.createdAt), seq: r.id ?? 0, record: r }, 1);
+    }
+    for (const p of this.filteredProductCards) {
+      add(p._cardType, 'products', { key: `p-${p._cardType}-${p.id}`, time: toTime(p.createdAt), seq: p.id ?? 0, product: p }, 1);
+    }
+
+    const sections = Array.from(map.values());
+    for (const s of sections) {
+      s.entries.sort((a, b) => b.time - a.time || b.seq - a.seq);
+      s.latestTime = s.entries[0]?.time ?? 0;
+    }
+    return sections.sort((a, b) => b.latestTime - a.latestTime);
+  }
+
+  trackBySection(_: number, s: OutwardSection) { return s.key; }
+  trackByEntry(_: number, e: OutwardSectionEntry) { return e.key; }
+
+  isSectionCollapsed(key: string): boolean {
+    return this.collapsedSections.has(key);
+  }
+
+  toggleSection(key: string): void {
+    if (this.collapsedSections.has(key)) this.collapsedSections.delete(key);
+    else this.collapsedSections.add(key);
+  }
+
+  get allSectionsCollapsed(): boolean {
+    return this.sections.length > 0 && this.sections.every(s => this.collapsedSections.has(s.key));
+  }
+
+  toggleAllSections(): void {
+    if (this.allSectionsCollapsed) {
+      this.collapsedSections.clear();
+    } else {
+      this.sections.forEach(s => this.collapsedSections.add(s.key));
+    }
+  }
+
+  private isSearching(): boolean {
+    return !!this.searchTerm.trim();
+  }
+
+  private sectionLimit(s: OutwardSection): number {
+    return this.sectionLimits.get(s.key) ?? this.sectionPageSize;
+  }
+
+  /** Cards to render for a section — capped for speed, but a search always shows every match. */
+  getVisibleEntries(s: OutwardSection): OutwardSectionEntry[] {
+    return this.isSearching() ? s.entries : s.entries.slice(0, this.sectionLimit(s));
+  }
+
+  getHiddenCount(s: OutwardSection): number {
+    return this.isSearching() ? 0 : Math.max(0, s.entries.length - this.sectionLimit(s));
+  }
+
+  canShowFewer(s: OutwardSection): boolean {
+    return !this.isSearching() && this.sectionLimit(s) > this.sectionPageSize;
+  }
+
+  showMoreEntries(s: OutwardSection): void {
+    this.sectionLimits.set(s.key, this.sectionLimit(s) + this.sectionPageSize);
+  }
+
+  showFewerEntries(s: OutwardSection): void {
+    this.sectionLimits.delete(s.key);
+  }
+
+  // ── Date filter ───────────────────────────────────────────────
+  get isDateFilterActive(): boolean {
+    return getDateRange(this.dateFilter) !== null;
+  }
+
+  onDateFilterChange(next: DateFilterState): void {
+    this.dateFilter = next;
+    this.sectionLimits.clear();
+    this.applyFilter();
+  }
+
+  clearDateFilter(): void {
+    this.onDateFilterChange({ ...EMPTY_DATE_FILTER });
   }
 
   openDetail(r: any): void {
