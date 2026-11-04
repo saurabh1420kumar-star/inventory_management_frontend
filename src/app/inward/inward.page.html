@@ -82,6 +82,9 @@
           </button>
         </div>
       </div>
+      <div class="mt-4 border-t border-slate-100 pt-4">
+        <app-date-range-filter [value]="dateFilter" [months]="monthOptions" (valueChange)="onDateFilterChange($event)"></app-date-range-filter>
+      </div>
     </div>
 
     <!-- ── Loading ── -->
@@ -91,7 +94,21 @@
     </div>
 
     <!-- ── Empty state ── -->
-    <div *ngIf="!isLoading && filteredEntries.length === 0"
+    <!-- ── Nothing in the chosen date range ── -->
+    <div *ngIf="!isLoading && filteredEntries.length === 0 && isDateFilterActive"
+         class="flex flex-col items-center justify-center py-16 bg-white rounded-2xl border-2 border-dashed border-slate-200">
+      <div class="w-16 h-16 rounded-2xl bg-slate-100 flex items-center justify-center mb-4">
+        <ion-icon name="calendar-outline" class="text-3xl text-slate-400"></ion-icon>
+      </div>
+      <h3 class="text-base font-bold text-slate-700 mb-1">No entries in this date range</h3>
+      <p class="text-slate-400 text-sm mb-5">Try a wider range or clear the date filter.</p>
+      <button type="button" (click)="clearDateFilter()"
+              class="rounded-xl border-0 bg-emerald-50 px-4 py-2 text-xs font-semibold text-emerald-700 hover:bg-emerald-100">
+        Clear date filter
+      </button>
+    </div>
+
+    <div *ngIf="!isLoading && filteredEntries.length === 0 && !isDateFilterActive"
          class="flex flex-col items-center justify-center py-20 bg-white rounded-2xl border-2 border-dashed border-slate-200">
       <div class="w-20 h-20 rounded-2xl bg-emerald-50 flex items-center justify-center mb-4">
         <ion-icon name="arrow-down-circle-outline" class="text-4xl text-emerald-400"></ion-icon>
@@ -104,91 +121,130 @@
       </ion-button>
     </div>
 
-    <!-- ── Entries grid ── -->
-    <div *ngIf="!isLoading && filteredEntries.length > 0"
-         class="grid grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-3">
+    <!-- ── Entries grouped by item type (accordion, newest first) ── -->
+    <ng-container *ngIf="!isLoading && filteredEntries.length > 0">
 
-      <div *ngFor="let e of filteredEntries"
-           class="group bg-white rounded-2xl border border-slate-200 shadow-sm hover:shadow-md hover:-translate-y-0.5 transition-all duration-200 overflow-hidden cursor-pointer"
-           [style.border-left]="'4px solid ' + getTypeConfig(e.itemType).color"
-           (click)="openDetail(e)">
-
-        <!-- ── HEADER: icon + name + code ── -->
-        <div class="p-3 pb-2.5">
-          <div class="flex items-start gap-2 mb-1.5">
-            <div class="w-7 h-7 rounded-lg flex items-center justify-center flex-shrink-0 mt-0.5"
-                 [style.background]="getTypeConfig(e.itemType).bg">
-              <ion-icon [name]="getTypeConfig(e.itemType).icon"
-                        class="text-sm"
-                        [style.color]="getTypeConfig(e.itemType).color"></ion-icon>
-            </div>
-            <div class="flex-1 min-w-0">
-              <p class="text-xs font-bold text-slate-800 leading-snug truncate">{{ e.itemName || '—' }}</p>
-              <p class="text-[10px] text-slate-400 font-mono truncate">{{ e.itemCode || '—' }}</p>
-            </div>
-            <span *ngIf="e.id" class="text-[9px] font-semibold text-slate-400 bg-slate-100 px-1.5 py-0.5 rounded-full flex-shrink-0 self-start">#{{ e.id }}</span>
-          </div>
-
-          <!-- Type badge -->
-          <div class="flex flex-wrap gap-1">
-            <span class="inline-flex items-center text-[9px] font-bold uppercase tracking-wide px-1.5 py-0.5 rounded-md"
-                  [style.background]="getTypeConfig(e.itemType).bg"
-                  [style.color]="getTypeConfig(e.itemType).color">
-              {{ getTypeConfig(e.itemType).label }}
-            </span>
-          </div>
-        </div>
-
-        <!-- ── DIVIDER ── -->
-        <div class="mx-3 border-t border-slate-100"></div>
-
-        <!-- ── METRICS: Qty ── -->
-        <div class="px-3 py-2">
-          <p class="text-[8px] text-slate-400 font-bold uppercase tracking-widest mb-0.5">Qty</p>
-          <p class="text-sm font-extrabold text-slate-800 leading-none">
-            {{ e.quantity }}<span class="text-[10px] font-semibold text-slate-400 ml-0.5">{{ getQuantityUnit(e) }}</span>
-          </p>
-        </div>
-
-        <!-- ── OPTIONAL DETAILS ── -->
-        <div class="px-3 pb-2.5 space-y-1.5">
-
-          <!-- Vendor -->
-          <div *ngIf="e.vendorName"
-               class="flex items-center gap-2 bg-emerald-50 border border-emerald-100 rounded-lg px-2 py-1.5">
-            <ion-icon name="business-outline" class="text-emerald-500 text-xs flex-shrink-0"></ion-icon>
-            <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
-              <span class="text-[8px] text-emerald-600 font-bold uppercase tracking-wide flex-shrink-0">Vendor</span>
-              <span class="text-[11px] font-bold text-emerald-800 truncate text-right">{{ e.vendorName }}</span>
-            </div>
-          </div>
-
-          <!-- Invoice -->
-          <div *ngIf="e.invoiceNumber"
-               class="flex items-center gap-2 bg-sky-50 border border-sky-100 rounded-lg px-2 py-1.5">
-            <ion-icon name="document-text-outline" class="text-sky-500 text-xs flex-shrink-0"></ion-icon>
-            <div class="min-w-0 flex-1 flex items-center justify-between gap-1">
-              <span class="text-[8px] text-sky-500 font-bold uppercase tracking-wide flex-shrink-0">Inv #</span>
-              <span class="text-[11px] font-bold text-sky-800 truncate text-right">{{ e.invoiceNumber }}</span>
-            </div>
-          </div>
-
-          <!-- Remarks -->
-          <div *ngIf="e.remarks"
-               class="flex items-start gap-1.5 bg-amber-50 border border-amber-100 rounded-lg px-2 py-1.5">
-            <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400 text-xs flex-shrink-0 mt-px"></ion-icon>
-            <p class="text-[10px] text-slate-500 italic line-clamp-1 leading-relaxed">"{{ e.remarks }}"</p>
-          </div>
-
-          <!-- Timestamp -->
-          <div class="flex items-center justify-end gap-1 pt-0.5 border-t border-slate-50">
-            <ion-icon name="time-outline" class="text-slate-300 text-[10px]"></ion-icon>
-            <p class="text-[9px] text-slate-300 font-medium">{{ e.date | date:'dd MMM yy' }}</p>
-          </div>
-
-        </div>
+      <div class="mb-3 flex items-center justify-between gap-3 px-1">
+        <p class="m-0 text-sm text-slate-500">
+          <span class="font-semibold text-slate-800">{{ filteredEntries.length }}</span>
+          entr{{ filteredEntries.length === 1 ? 'y' : 'ies' }} in
+          <span class="font-semibold text-slate-800">{{ entrySections.length }}</span>
+          categor{{ entrySections.length === 1 ? 'y' : 'ies' }} · newest first
+        </p>
+        <button type="button" (click)="toggleAllSections()"
+                class="flex items-center gap-1 rounded-lg border-0 bg-transparent px-2 py-1 text-xs font-semibold text-emerald-700 hover:bg-emerald-50">
+          <ion-icon [name]="allSectionsCollapsed ? 'chevron-expand-outline' : 'chevron-collapse-outline'" class="text-sm"></ion-icon>
+          {{ allSectionsCollapsed ? 'Expand all' : 'Collapse all' }}
+        </button>
       </div>
-    </div>
+
+      <section *ngFor="let s of entrySections" class="mb-5" [ngClass]="'inv-card--' + s.type">
+
+        <!-- Accordion header -->
+        <button type="button"
+                class="inv-section__header"
+                [attr.aria-expanded]="!isSectionCollapsed(s.type)"
+                (click)="toggleSection(s.type)">
+          <span class="inv-card__icon flex h-10 w-10 flex-shrink-0 items-center justify-center rounded-xl">
+            <ion-icon [name]="getTypeConfig(s.type).icon" class="text-xl"></ion-icon>
+          </span>
+          <span class="min-w-0 flex-1 text-left">
+            <span class="block text-[15px] font-semibold leading-tight text-slate-900">{{ getTypeConfig(s.type).label }}</span>
+            <span class="block text-xs text-slate-500">
+              {{ s.items.length }} entr{{ s.items.length === 1 ? 'y' : 'ies' }}<ng-container *ngIf="s.latestDate"> · latest {{ s.latestDate | date:'dd MMM yyyy' }}</ng-container>
+            </span>
+          </span>
+          <span class="inv-card__more rounded-full px-2.5 py-1 text-xs font-bold">{{ s.items.length }}</span>
+          <ion-icon [name]="isSectionCollapsed(s.type) ? 'chevron-down-outline' : 'chevron-up-outline'" class="flex-shrink-0 text-lg text-slate-400"></ion-icon>
+        </button>
+
+        <!-- Section body -->
+        <div *ngIf="!isSectionCollapsed(s.type)" class="mt-3">
+          <div class="grid grid-cols-1 gap-4 sm:grid-cols-2 lg:grid-cols-3">
+
+            <article *ngFor="let e of getVisibleEntries(s)"
+                     class="inv-card"
+                     [ngClass]="'inv-card--' + e.itemType"
+                     role="button"
+                     tabindex="0"
+                     (click)="openDetail(e)"
+                     (keydown.enter)="openDetail(e)">
+
+              <!-- ── HEADER: type icon, type label, name, code, id ── -->
+              <div class="flex items-start gap-3 px-4 pt-5 pb-3">
+                <div class="inv-card__icon w-11 h-11 rounded-xl flex items-center justify-center flex-shrink-0">
+                  <ion-icon [name]="getTypeConfig(e.itemType).icon" class="text-2xl"></ion-icon>
+                </div>
+                <div class="min-w-0 flex-1">
+                  <p class="inv-card__eyebrow m-0 text-[11px] font-semibold uppercase tracking-wide">{{ getTypeConfig(e.itemType).label }}</p>
+                  <p class="m-0 mt-0.5 text-[15px] font-semibold leading-snug text-slate-900 line-clamp-2" [title]="e.itemName || ''">{{ e.itemName || '—' }}</p>
+                  <p class="m-0 mt-0.5 text-xs font-mono text-slate-500 truncate">{{ e.itemCode || '—' }}</p>
+                </div>
+                <span *ngIf="e.id" class="flex-shrink-0 rounded-md bg-slate-100 px-2 py-0.5 text-xs font-semibold text-slate-500">#{{ e.id }}</span>
+              </div>
+
+              <!-- ── BODY ── -->
+              <div class="flex-1 space-y-3 px-4 pb-4">
+
+                <!-- Quantity -->
+                <div class="flex items-center justify-between gap-3 rounded-xl bg-slate-50 px-3.5 py-3">
+                  <span class="text-xs font-medium text-slate-500">Quantity</span>
+                  <span class="flex items-baseline gap-1.5 min-w-0">
+                    <span class="text-2xl font-bold leading-none text-slate-900 tabular-nums">{{ e.quantity }}</span>
+                    <span class="text-sm font-medium text-slate-500">{{ getQuantityUnit(e) }}</span>
+                  </span>
+                </div>
+
+                <!-- Vendor -->
+                <div *ngIf="e.vendorName" class="flex items-start gap-2.5">
+                  <ion-icon name="business-outline" class="mt-0.5 flex-shrink-0 text-base text-slate-400"></ion-icon>
+                  <div class="min-w-0">
+                    <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Vendor</p>
+                    <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 break-words">{{ e.vendorName }}</p>
+                  </div>
+                </div>
+
+                <!-- Invoice -->
+                <div *ngIf="e.invoiceNumber" class="flex items-start gap-2.5">
+                  <ion-icon name="document-text-outline" class="mt-0.5 flex-shrink-0 text-base text-slate-400"></ion-icon>
+                  <div class="min-w-0">
+                    <p class="m-0 text-[11px] font-medium uppercase tracking-wide text-slate-500">Invoice no.</p>
+                    <p class="m-0 text-[13px] font-medium leading-snug text-slate-800 font-mono break-words">{{ e.invoiceNumber }}</p>
+                  </div>
+                </div>
+
+                <!-- Remarks -->
+                <p *ngIf="e.remarks" class="m-0 border-l-2 border-slate-300 pl-3 text-[13px] italic leading-relaxed text-slate-600 line-clamp-2">{{ e.remarks }}</p>
+              </div>
+
+              <!-- ── FOOTER: date + affordance ── -->
+              <div class="flex items-center justify-between border-t border-slate-100 px-4 py-2.5 text-xs">
+                <span class="flex items-center gap-1.5 font-medium text-slate-500">
+                  <ion-icon name="calendar-outline" class="text-sm"></ion-icon>
+                  {{ e.date | date:'dd MMM yyyy' }}
+                </span>
+                <span class="inv-card__cta flex items-center gap-0.5 font-semibold text-slate-400">
+                  View details
+                  <ion-icon name="chevron-forward-outline" class="text-sm"></ion-icon>
+                </span>
+              </div>
+            </article>
+          </div>
+
+          <div *ngIf="getHiddenCount(s) > 0 || canShowFewer(s)" class="mt-4 flex items-center justify-center gap-2">
+            <button *ngIf="getHiddenCount(s) > 0" type="button" (click)="showMoreEntries(s)"
+                    class="inv-card__more rounded-xl px-4 py-2 text-xs font-semibold">
+              Show {{ getHiddenCount(s) > sectionPageSize ? sectionPageSize : getHiddenCount(s) }} more
+              <span class="font-medium opacity-80">({{ getHiddenCount(s) }} remaining)</span>
+            </button>
+            <button *ngIf="canShowFewer(s)" type="button" (click)="showFewerEntries(s)"
+                    class="rounded-xl border-0 bg-slate-100 px-4 py-2 text-xs font-semibold text-slate-600 hover:bg-slate-200">
+              Show less
+            </button>
+          </div>
+        </div>
+      </section>
+    </ng-container>
 
   </div>
 
