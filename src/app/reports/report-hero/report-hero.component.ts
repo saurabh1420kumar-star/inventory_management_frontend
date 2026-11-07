@@ -21,5 +21,7 @@ export class ReportHeroComponent {
   @Input() icon = 'stats-chart-outline';
   @Input() lastUpdated: Date | null = null;
   @Input() isBusy = false;
+  /** Opt-in black top bar (matches Distributor Master). Off by default so other report pages are unchanged. */
+  @Input() darkToolbar = false;
   @Output() refresh = new EventEmitter<void>();
 }

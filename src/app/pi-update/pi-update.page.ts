@@ -46,18 +46,30 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
   searchTerm = '';
   errorMessage = '';
 
-  /* ── Approve Dispatch Modal ── */
+  /* ── Approve Order Modal (unified: ledger balance + credit balance) ── */
   isApproveModalOpen = false;
   selectedOrder: PIOrderTile | null = null;
   selectedLedgerBalance: number = 0;
-  isBalanceSufficient = false;
+  selectedCreditBalance: number = 0;
   isApproving = false;
   isLoadingBalance = false;
+  balanceLoadFailed = false;
 
-  /* ── Approve by Credit Modal ── */
-  isApproveCreditModalOpen = false;
-  selectedOrderCredit: PIOrderTile | null = null;
-  isApprovingCredit = false;
+  /** Ledger + credit — what the order can be paid from. */
+  get combinedBalance(): number {
+    return this.selectedLedgerBalance + this.selectedCreditBalance;
+  }
+
+  /** How much the order exceeds the combined balance (0 when covered). */
+  get balanceShortfall(): number {
+    return Math.max(0, (this.selectedOrder?.amount ?? 0) - this.combinedBalance);
+  }
+
+  /** Approve is only allowed once balances loaded and ledger + credit covers the order amount. */
+  get isBalanceSufficient(): boolean {
+    return !!this.selectedOrder && !this.isLoadingBalance && !this.balanceLoadFailed
+      && this.combinedBalance >= this.selectedOrder.amount;
+  }
 
   /* ── Reject Modal ── */
   isRejectModalOpen = false;
@@ -139,31 +151,59 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
   }
 
   /* ══════════════════════════════════════════════════════════════ */
-  /*  APPROVE DISPATCH MODAL                                       */
+  /*  APPROVE ORDER MODAL (unified ledger + credit)                */
   /* ══════════════════════════════════════════════════════════════ */
   openApproveModal(order: PIOrderTile) {
     this.haptic.medium();
     this.selectedOrder = order;
     this.selectedLedgerBalance = 0;
-    this.isBalanceSufficient = false;
+    this.selectedCreditBalance = 0;
+    this.balanceLoadFailed = false;
+    this.isApproving = false;
     this.isLoadingBalance = true;
     this.isApproveModalOpen = true;
+    this.loadBalances(order);
+  }
 
-    /* Fetch real closing balance from payment history API */
-    this.ledgerService.getPaymentHistory(order.distributorId).subscribe({
-      next: (response: any) => {
-        const closingBalance = response?.data?.closingBalance ?? 0;
-        this.selectedLedgerBalance = Number(closingBalance);
-        this.isBalanceSufficient = this.selectedLedgerBalance >= order.amount;
+  /** Fetches ledger (netBalance, excludes credit-line entries) and remaining credit, then shows them combined. */
+  loadBalances(order: PIOrderTile) {
+    this.balanceLoadFailed = false;
+    this.isLoadingBalance = true;
+
+    forkJoin({
+      ledger: this.ledgerService.getPaymentHistory(order.distributorId),
+      credit: this.dispatchService.getDistributorCreditBalance(order.distributorId)
+    }).subscribe({
+      next: ({ ledger, credit }) => {
+        if (this.selectedOrder !== order) return; // modal closed / switched while loading
+        const net = Number((ledger as any)?.data?.netBalance);
+        const creditBal = Number(credit?.creditBalance);
+        if (!(ledger as any)?.success || !Number.isFinite(net) || !Number.isFinite(creditBal)) {
+          this.failBalanceLoad();
+          return;
+        }
+        this.selectedLedgerBalance = net;
+        this.selectedCreditBalance = creditBal;
         this.isLoadingBalance = false;
       },
-      error: () => {
-        this.selectedLedgerBalance = 0;
-        this.isBalanceSufficient = false;
-        this.isLoadingBalance = false;
-        this.toast.present('Failed to fetch ledger balance', 'warning');
+      error: (err) => {
+        console.error('Error loading balances for approval:', err);
+        if (this.selectedOrder !== order) return;
+        this.failBalanceLoad();
       }
     });
+  }
+
+  private failBalanceLoad() {
+    this.selectedLedgerBalance = 0;
+    this.selectedCreditBalance = 0;
+    this.balanceLoadFailed = true;
+    this.isLoadingBalance = false;
+    this.toast.present('Failed to fetch ledger / credit balance', 'warning');
+  }
+
+  retryLoadBalances() {
+    if (this.selectedOrder) this.loadBalances(this.selectedOrder);
   }
 
   closeApproveModal() {
@@ -172,78 +212,47 @@ export class PiUpdatePage implements OnInit, ViewWillEnter {
     this.selectedOrder = null;
     this.isApproving = false;
     this.isLoadingBalance = false;
+    this.balanceLoadFailed = false;
   }
 
-  confirmApproveDispatch() {
-    if (!this.selectedOrder || !this.isBalanceSufficient) return;
+  confirmApproveOrder() {
+    if (!this.selectedOrder || !this.isBalanceSufficient || this.isApproving) return;
     this.haptic.medium();
     this.isApproving = true;
 
-    // approve-PI expects the cart id
+    // distributorId is derived server-side from the order — only the cart/order id is sent.
     const orderId = this.selectedOrder.invoice.id;
-    const distributorId = this.selectedOrder.invoice.distributorId ?? this.selectedOrder.distributorId;
 
-    this.dispatchService.approvePayment(orderId, distributorId).subscribe({
+    this.dispatchService.approveOrderUnified(orderId).subscribe({
       next: (res) => {
         this.isApproving = false;
-        this.closeApproveModal();
-        const successMsg = res?.message || 'Dispatch approved successfully!';
-        this.toast.present(successMsg, 'success');
-        this.loadData();
-        setTimeout(() => {
-          this.router.navigate(['/dispatch']);
-        }, 350);
+        const status = (res?.status || '').toUpperCase();
+
+        if (status === 'APPROVED') {
+          this.closeApproveModal();
+          this.toast.present(res?.message || 'Order approved successfully!', 'success');
+          this.loadData();
+          setTimeout(() => {
+            this.router.navigate(['/dispatch']);
+          }, 350);
+        } else if (status === 'PENDING') {
+          // Server says ledger + credit can't cover it — order stays in the list.
+          this.closeApproveModal();
+          this.toast.present(`Insufficient balance — shortfall ${this.formatAmount(res?.shortfall ?? 0)}`, 'warning');
+        } else if (status === 'ALREADY_APPROVED') {
+          this.closeApproveModal();
+          this.toast.present(res?.message || 'This order is already approved', 'warning');
+          this.loadData();
+        } else {
+          this.closeApproveModal();
+          this.toast.present(res?.message || 'Unexpected approval response', 'warning');
+          this.loadData();
+        }
       },
       error: (err) => {
-        console.error('Error approving dispatch:', err);
+        console.error('Error approving order:', err);
         this.isApproving = false;
-        const msg = err?.error?.message || err?.message || 'Failed to approve dispatch';
-        this.toast.present(msg, 'danger');
-      }
-    });
-  }
-
-  /* ══════════════════════════════════════════════════════════════ */
-  /*  APPROVE BY CREDIT MODAL                                      */
-  /* ══════════════════════════════════════════════════════════════ */
-  openApproveCreditModal(order: PIOrderTile) {
-    this.haptic.medium();
-    this.selectedOrderCredit = order;
-    this.isApprovingCredit = false;
-    this.isApproveCreditModalOpen = true;
-  }
-
-  closeApproveCreditModal() {
-    this.haptic.light();
-    this.isApproveCreditModalOpen = false;
-    this.selectedOrderCredit = null;
-    this.isApprovingCredit = false;
-  }
-
-  confirmApproveCredit() {
-    if (!this.selectedOrderCredit) return;
-    this.haptic.medium();
-    this.isApprovingCredit = true;
-
-    const cartId = this.selectedOrderCredit.invoice.id;
-    const distributorId = this.selectedOrderCredit.invoice.distributorId ?? this.selectedOrderCredit.distributorId;
-
-    this.ledgerService.approvePIUsingCredit(cartId, distributorId).subscribe({
-      next: (res) => {
-        this.isApprovingCredit = false;
-        this.closeApproveCreditModal();
-        this.toast.present('Proforma invoice approved by credit successfully!', 'success');
-        this.loadData();
-        setTimeout(() => {
-          this.router.navigate(['/dispatch']);
-        }, 350);
-      },
-      error: (err) => {
-        console.error('Error approving by credit:', err);
-        this.isApprovingCredit = false;
-        const rawMsg: string = err?.error?.error || err?.error?.message || err?.message || 'Failed to approve by credit';
-        const match = rawMsg.match(/Credit not available for distributor/i);
-        const msg = match ? 'Credit not available for distributor' : rawMsg;
+        const msg = err?.error?.message || err?.error?.error || err?.message || 'Failed to approve order';
         this.toast.present(msg, 'danger');
       }
     });

@@ -25,12 +25,15 @@ import {
   checkmarkCircleOutline,
   closeCircleOutline,
   cubeOutline,
-  arrowBackOutline
+  arrowBackOutline,
+  gridOutline
 } from 'ionicons/icons';
 import { DistributorService, DistributorDto, DistributorStock } from '../services/distributor.service';
 import { SalesHierarchyService, RoleOption } from '../services/sales-hierarchy.service';
 import { Toast } from '../services/toast';
 import { HapticService } from '../services/haptic.service';
+import { DownloadService } from '../services/download.service';
+import { exportRowsToExcel, exportRowsToPdf, formatCurrencyFull, formatDisplayDate } from '../reports/report-shared';
 import { INDIA_LOCATION_DATA, findLocationByPincode } from '../services/india-location.data';
 import { AclDirective } from '../acl/acl.directive';
 
@@ -152,6 +155,9 @@ export class DistributorPage implements OnInit {
 
   private haptic = inject(HapticService);
   private http = inject(HttpClient);
+  private downloadService = inject(DownloadService);
+
+  isExporting = false;
 
   constructor(
     private fb: FormBuilder,
@@ -184,7 +190,8 @@ export class DistributorPage implements OnInit {
       'checkmark-circle-outline': checkmarkCircleOutline,
       'close-circle-outline': closeCircleOutline,
       'cube-outline': cubeOutline,
-      'arrow-back-outline': arrowBackOutline
+      'arrow-back-outline': arrowBackOutline,
+      'grid-outline': gridOutline
     });
   }
 
@@ -1008,6 +1015,82 @@ export class DistributorPage implements OnInit {
       month: 'long',
       year: 'numeric'
     });
+  }
+
+  // ── Export (everything matching the current tab + search, not a single page) ──
+  // Aadhaar, PAN, bank details and login credentials are deliberately left out of the files.
+
+  get canExport(): boolean {
+    return !this.isLoading && !this.isExporting && this.filteredDistributors.length > 0;
+  }
+
+  private statusLabel(d: Distributor): string {
+    const s = (d.status || 'ACTIVE').toUpperCase();
+    return s.charAt(0) + s.slice(1).toLowerCase();
+  }
+
+  private fullAddress(d: Distributor): string {
+    const place = [d.district, d.state].filter(Boolean).join(', ');
+    const withPin = place && d.pinCode ? `${place} - ${d.pinCode}` : place;
+    // The address field may already end with "City, District, State - Pincode" (added by the pincode lookup).
+    const base = (d.address || '').replace(/\s*\n\s*/g, ', ').trim();
+    if (!withPin || base.includes(withPin)) return base || '—';
+    return base ? `${base}, ${withPin}` : withPin;
+  }
+
+  async exportExcel() {
+    if (!this.canExport) return;
+    this.isExporting = true;
+    try {
+      const rows = this.filteredDistributors.map((d, i) => ({
+        '#': i + 1,
+        'Code': d.distributorCode || '',
+        'Distributor': d.name || '',
+        'Type': d.distributorType || '',
+        'Company Type': d.companyType || '',
+        'Key Person': this.getDistributorKeyPersonName(d),
+        'Contact': d.contact || '',
+        'Alternate Contact': d.alternateContact || '',
+        'Email': d.email || '',
+        'Address': this.fullAddress(d),
+        'GST Number': d.gstNumber || '',
+        'Status': this.statusLabel(d),
+        'Credit Limit (₹)': d.creditAmount ?? 0,
+        'Credit Balance (₹)': d.creditBalance ?? 0,
+        'Created On': d.createdAt ? formatDisplayDate(d.createdAt) : '',
+      }));
+      await exportRowsToExcel(rows, 'Distributor Master', this.downloadService, this.toast);
+    } catch (err) {
+      console.error('Failed to export distributors to Excel', err);
+      this.toast.present('Failed to export Excel', 'danger');
+    } finally {
+      this.isExporting = false;
+    }
+  }
+
+  async exportPdf() {
+    if (!this.canExport) return;
+    this.isExporting = true;
+    try {
+      const headers = ['#', 'Code', 'Distributor', 'Type', 'Key Person', 'Contact', 'Address', 'Status', 'Credit Limit'];
+      const rows = this.filteredDistributors.map((d, i) => [
+        i + 1,
+        d.distributorCode || '—',
+        d.name || '—',
+        d.distributorType || '—',
+        this.getDistributorKeyPersonName(d),
+        d.contact || '—',
+        this.fullAddress(d),
+        this.statusLabel(d),
+        d.creditAmount && d.creditAmount > 0 ? formatCurrencyFull(d.creditAmount) : '—',
+      ]);
+      await exportRowsToPdf(headers, rows, 'Distributor Master', this.downloadService, this.toast);
+    } catch (err) {
+      console.error('Failed to export distributors to PDF', err);
+      this.toast.present('Failed to export PDF', 'danger');
+    } finally {
+      this.isExporting = false;
+    }
   }
 
   openLegalDoc(type: 'terms' | 'privacy', title: string): void {

@@ -98,6 +98,36 @@ export interface GdnResponse {
   data?: any;
 }
 
+// ── POST /api/order/{orderId}/approve (approveOrderUnified) ──
+export type UnifiedApprovalStatus = 'APPROVED' | 'PENDING' | 'ALREADY_APPROVED' | string;
+
+export interface UnifiedOrderApprovalResponse {
+  orderId: number;
+  distributorId: number;
+  orderAmount: number;
+  status: UnifiedApprovalStatus;
+  message?: string;
+  ledgerBalanceUsed?: number;
+  creditBalanceUsed?: number;
+  remainingLedgerBalance?: number;
+  remainingCreditBalance?: number;
+  availableLedgerBalance?: number;
+  availableCreditBalance?: number;
+  combinedAvailableBalance?: number;
+  shortfall?: number;
+}
+
+// ── GET /api/accounts/credit-balance/{distributorId} ──
+export interface DistributorCreditBalance {
+  distributorId: number;
+  distributorName?: string;
+  creditLimit: number;
+  creditBalance: number; // credit still available to use
+  creditUsed: number;
+  availablePercentage?: number;
+  status?: string;
+}
+
 @Injectable({
   providedIn: 'root'
 })
@@ -144,6 +174,28 @@ export class DispatchService {
    */
   approveOrder(orderId: number): Observable<any> {
     return this.http.put<any>(`${this.orderApiUrl}/approve/${orderId}`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Unified payment approval: ledger balance is consumed first, credit covers any remainder.
+   * POST /api/order/{orderId}/approve — no body; distributorId is derived server-side (never send it).
+   * Check `status` in the response: APPROVED | PENDING (shortfall > 0) | ALREADY_APPROVED.
+   * Uses environment.apiUrl, so production and staging both resolve correctly.
+   */
+  approveOrderUnified(orderId: number): Observable<UnifiedOrderApprovalResponse> {
+    return this.http.post<UnifiedOrderApprovalResponse>(`${this.orderApiUrl}/${orderId}/approve`, {}, {
+      headers: this.getAuthHeaders()
+    });
+  }
+
+  /**
+   * Credit limit / remaining credit for a distributor.
+   * GET /api/accounts/credit-balance/{distributorId}
+   */
+  getDistributorCreditBalance(distributorId: number): Observable<DistributorCreditBalance> {
+    return this.http.get<DistributorCreditBalance>(`${environment.apiUrl}/accounts/credit-balance/${distributorId}`, {
       headers: this.getAuthHeaders()
     });
   }

@@ -338,3 +338,110 @@ table.report-table.dealer-table {
   font-size: 12px;
   color: var(--ion-color-medium, #6b7280);
 }
+
+// ── Export buttons (next to the filters) ─────────────────────────────────
+.dealer-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+
+  .report-btn {
+    height: 38px;
+    padding: 0 14px;
+
+    &:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+  }
+
+  @media (max-width: 640px) {
+    flex: 1 1 100%;
+
+    .report-btn {
+      flex: 1;
+      justify-content: center;
+    }
+  }
+}
+
+.dealer-select-status {
+  max-width: 150px;
+
+  @media (max-width: 640px) {
+    max-width: none;
+  }
+}
+
+// ── Status column + suspend / activate button ────────────────────────────
+.dealer-th-action,
+.dealer-td-action {
+  text-align: right;
+  white-space: nowrap;
+}
+
+.dealer-status-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  min-width: 98px;
+  height: 30px;
+  padding: 0 12px;
+  border-radius: 8px;
+  border: 1px solid transparent;
+  background: transparent;
+  font-size: 12px;
+  font-weight: 600;
+  cursor: pointer;
+  -webkit-appearance: none;
+  appearance: none;
+  -webkit-tap-highlight-color: transparent;
+  transition: background-color 0.15s ease, opacity 0.15s ease;
+
+  ion-icon {
+    font-size: 14px;
+  }
+
+  ion-spinner {
+    width: 14px;
+    height: 14px;
+  }
+
+  &.is-suspend {
+    color: #b91c1c;
+    border-color: rgba(185, 28, 28, 0.35);
+
+    &:hover:not(:disabled) { background: rgba(185, 28, 28, 0.08); }
+  }
+
+  &.is-activate {
+    color: #047857;
+    border-color: rgba(4, 120, 87, 0.35);
+
+    &:hover:not(:disabled) { background: rgba(4, 120, 87, 0.08); }
+  }
+
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+}
+
+.dealer-card-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-top: 12px;
+  padding-top: 12px;
+  border-top: 1px solid rgba(0, 0, 0, 0.06);
+}
+
+.dealer-skel-status { width: 8%; }
+
+@media (max-width: 767px) {
+  .dealer-skel-status {
+    display: none;
+  }
+}

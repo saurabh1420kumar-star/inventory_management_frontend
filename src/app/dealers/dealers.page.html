@@ -7,6 +7,7 @@
   icon="people-circle-outline"
   [lastUpdated]="lastUpdated"
   [isBusy]="isLoading"
+  [darkToolbar]="true"
   (refresh)="loadDealers()">
 
   <!-- ── Summary ─────────────────────────────────────────────── -->
@@ -60,6 +61,27 @@
           <option value="all">All Distributors</option>
           <option *ngFor="let name of distributors" [value]="name">{{ name }}</option>
         </select>
+
+        <select class="dealer-select dealer-select-status"
+                aria-label="Filter by status"
+                [ngModel]="statusFilter"
+                (ngModelChange)="onStatusChange($event)"
+                [disabled]="!dealers.length">
+          <option value="all">All Status</option>
+          <option value="ACTIVE">Active</option>
+          <option value="SUSPENDED">Suspended</option>
+        </select>
+
+        <div class="dealer-actions">
+          <button type="button" class="report-btn report-btn-outline report-btn-excel"
+                  [disabled]="!canExport" (click)="exportExcel()" aria-label="Export dealers to Excel">
+            <ion-icon name="grid-outline"></ion-icon> Excel
+          </button>
+          <button type="button" class="report-btn report-btn-outline report-btn-pdf"
+                  [disabled]="!canExport" (click)="exportPdf()" aria-label="Export dealers to PDF">
+            <ion-icon name="document-text-outline"></ion-icon> PDF
+          </button>
+        </div>
       </div>
     </div>
 
@@ -71,6 +93,7 @@
         <span class="dealer-skel dealer-skel-phone"></span>
         <span class="dealer-skel dealer-skel-address"></span>
         <span class="dealer-skel dealer-skel-dist"></span>
+        <span class="dealer-skel dealer-skel-status"></span>
       </div>
     </div>
 
@@ -93,7 +116,7 @@
       </ng-container>
       <ng-template #noMatch>
         <p class="dealer-state-title">No matching dealers</p>
-        <p class="dealer-state-text">Try a different search or distributor.</p>
+        <p class="dealer-state-text">Try a different search, distributor or status.</p>
         <button *ngIf="hasActiveFilters" type="button" class="report-btn report-btn-outline" (click)="resetFilters()">
           <ion-icon name="refresh-outline"></ion-icon> Clear filters
         </button>
@@ -111,6 +134,8 @@
               <th>Phone</th>
               <th>Address</th>
               <th>Distributor</th>
+              <th>Status</th>
+              <th class="dealer-th-action">Action</th>
             </tr>
           </thead>
           <tbody>
@@ -134,6 +159,22 @@
               <td>
                 <span *ngIf="d.distributorName; else noDistributor" class="report-badge report-badge-blue">{{ d.distributorName }}</span>
                 <ng-template #noDistributor><span class="dealer-muted">—</span></ng-template>
+              </td>
+              <td>
+                <span class="report-badge" [ngClass]="statusOf(d) === 'SUSPENDED' ? 'report-badge-red' : 'report-badge-green'">
+                  {{ statusOf(d) === 'SUSPENDED' ? 'Suspended' : 'Active' }}
+                </span>
+              </td>
+              <td class="dealer-td-action">
+                <button type="button" class="dealer-status-btn"
+                        [class.is-suspend]="statusOf(d) !== 'SUSPENDED'"
+                        [class.is-activate]="statusOf(d) === 'SUSPENDED'"
+                        [disabled]="isUpdating(d)"
+                        (click)="toggleStatus(d)">
+                  <ion-spinner *ngIf="isUpdating(d)" name="crescent"></ion-spinner>
+                  <ion-icon *ngIf="!isUpdating(d)" [name]="statusOf(d) === 'SUSPENDED' ? 'checkmark-circle-outline' : 'ban-outline'"></ion-icon>
+                  {{ statusOf(d) === 'SUSPENDED' ? 'Activate' : 'Suspend' }}
+                </button>
               </td>
             </tr>
           </tbody>
@@ -160,6 +201,20 @@
             <ion-icon name="business-outline"></ion-icon>
             <span *ngIf="d.distributorName; else cardNoDistributor" class="report-badge report-badge-blue">{{ d.distributorName }}</span>
             <ng-template #cardNoDistributor><span class="dealer-muted">—</span></ng-template>
+          </div>
+          <div class="dealer-card-footer">
+            <span class="report-badge" [ngClass]="statusOf(d) === 'SUSPENDED' ? 'report-badge-red' : 'report-badge-green'">
+              {{ statusOf(d) === 'SUSPENDED' ? 'Suspended' : 'Active' }}
+            </span>
+            <button type="button" class="dealer-status-btn"
+                    [class.is-suspend]="statusOf(d) !== 'SUSPENDED'"
+                    [class.is-activate]="statusOf(d) === 'SUSPENDED'"
+                    [disabled]="isUpdating(d)"
+                    (click)="toggleStatus(d)">
+              <ion-spinner *ngIf="isUpdating(d)" name="crescent"></ion-spinner>
+              <ion-icon *ngIf="!isUpdating(d)" [name]="statusOf(d) === 'SUSPENDED' ? 'checkmark-circle-outline' : 'ban-outline'"></ion-icon>
+              {{ statusOf(d) === 'SUSPENDED' ? 'Activate' : 'Suspend' }}
+            </button>
           </div>
         </li>
       </ul>
