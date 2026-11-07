@@ -72,6 +72,20 @@
                 <p class="text-sm text-slate-500">No distributors found</p>
               </div>
             </div>
+
+            <!-- Export: PDF / Excel (icon-only on phones) -->
+            <div class="flex gap-2 flex-shrink-0">
+              <button type="button" (click)="exportExcel()" [disabled]="!canExport" aria-label="Export distributors to Excel"
+                      class="flex items-center justify-center gap-2 px-3.5 sm:px-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-md text-sm font-semibold text-slate-700 hover:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                <ion-icon name="grid-outline" class="text-lg text-green-600"></ion-icon>
+                <span class="hidden sm:inline">Excel</span>
+              </button>
+              <button type="button" (click)="exportPdf()" [disabled]="!canExport" aria-label="Export distributors to PDF"
+                      class="flex items-center justify-center gap-2 px-3.5 sm:px-4 bg-white/95 backdrop-blur-sm rounded-xl shadow-md text-sm font-semibold text-slate-700 hover:bg-white transition-all disabled:opacity-60 disabled:cursor-not-allowed">
+                <ion-icon name="document-text-outline" class="text-lg text-red-600"></ion-icon>
+                <span class="hidden sm:inline">PDF</span>
+              </button>
+            </div>
           </div>
 
           <!-- Status Filter Tabs -->

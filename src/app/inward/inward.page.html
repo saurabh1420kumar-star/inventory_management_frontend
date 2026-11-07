@@ -322,11 +322,13 @@
             <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
               <ion-icon name="cube-outline" class="text-slate-400"></ion-icon>
               Material Name <span class="text-red-400">*</span>
+              <span *ngIf="hasError('itemName')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('itemName') }}</span>
             </label>
 
             <!-- Raw material: dropdown from API -->
             <ng-container *ngIf="selectedType === 'raw_material'">
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <select (change)="onRawMaterialSelect($any($event.target).value)"
                         [disabled]="isLoadingRawMaterials"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
@@ -343,7 +345,8 @@
 
             <!-- Scrap material -->
             <ng-container *ngIf="selectedType === 'scrap'">
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-rose-400 focus-within:ring-4 focus-within:ring-rose-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <select (change)="onScrapItemSelect($any($event.target).value)"
                         [disabled]="isLoadingScrapItems"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
@@ -360,7 +363,8 @@
 
             <!-- Promotional items -->
             <ng-container *ngIf="selectedType === 'promotional'">
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-violet-400 focus-within:ring-4 focus-within:ring-violet-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <select (change)="onPromotionalItemSelect($any($event.target).value)"
                         [disabled]="isLoadingPromotionalItems"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
@@ -377,7 +381,8 @@
 
             <!-- Spare parts -->
             <ng-container *ngIf="selectedType === 'spare_parts'">
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <select (change)="onMachinePartSelect($any($event.target).value)"
                         [disabled]="isLoadingMachineParts"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
@@ -394,7 +399,8 @@
 
             <!-- Finished product -->
             <ng-container *ngIf="selectedType === 'finished_product'">
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <select (change)="onFinishedProductSelect($any($event.target).value)"
                         [disabled]="isLoadingFinishedProducts"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
@@ -411,7 +417,8 @@
 
             <!-- Free-text fallback -->
             <ng-container *ngIf="selectedType !== 'raw_material' && selectedType !== 'scrap' && selectedType !== 'promotional' && selectedType !== 'spare_parts' && selectedType !== 'finished_product'">
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm"
+                   data-field="itemName" (focusout)="touchField('itemName')" [style.border-color]="hasError('itemName') ? '#f87171' : null">
                 <input [(ngModel)]="form.itemName" placeholder="e.g. Steel Rods"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none" />
@@ -423,9 +430,11 @@
           <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
             <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
               <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
-              Material Code
+              Material Code <span class="text-red-400">*</span>
+              <span *ngIf="hasError('itemCode')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('itemCode') }}</span>
             </label>
-            <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+            <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm"
+                 data-field="itemCode" (focusout)="touchField('itemCode')" [style.border-color]="hasError('itemCode') ? '#f87171' : null">
               <input [(ngModel)]="form.itemCode" placeholder="e.g. MAT-001"
                      style="background:transparent; color:#1e293b;"
                      class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
@@ -436,7 +445,7 @@
           <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
             <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-3 ml-1">
               <ion-icon name="layers-outline" class="text-indigo-400"></ion-icon>
-              Unit Type
+              Unit Type <span class="text-red-400">*</span>
             </label>
             <div class="grid grid-cols-2 gap-2.5">
               <button *ngFor="let u of unitTypes" type="button" (click)="form.unit = u.value"
@@ -473,8 +482,10 @@
                 Quantity <span class="text-red-400">*</span>
                 <span *ngIf="selectedType === 'finished_product'" class="ml-1 font-bold text-blue-500">(Bags)</span>
                 <span *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="ml-1 font-bold text-indigo-500">({{ getUnitShort() }})</span>
+                <span *ngIf="hasError('quantity')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('quantity') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm"
+                   data-field="quantity" (focusout)="touchField('quantity')" [style.border-color]="hasError('quantity') ? '#f87171' : null">
                 <input [(ngModel)]="form.quantity" (ngModelChange)="updateGrossAmount()" type="number" min="0" placeholder="0"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -484,9 +495,11 @@
             <div *ngIf="selectedType !== 'finished_product' && selectedType !== 'spare_parts'" class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="cash-outline" class="text-slate-400"></ion-icon>
-                Rate (₹)
+                Rate (₹) <span class="text-red-400">*</span>
+                <span *ngIf="hasError('rate')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('rate') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm"
+                   data-field="rate" (focusout)="touchField('rate')" [style.border-color]="hasError('rate') ? '#f87171' : null">
                 <input [(ngModel)]="form.rate" (ngModelChange)="updateGrossAmount()" type="number" min="0" placeholder="0.00"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -496,9 +509,11 @@
             <div *ngIf="selectedType === 'finished_product'" class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
-                Batch No
+                Batch No <span class="text-red-400">*</span>
+                <span *ngIf="hasError('batchNo')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('batchNo') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-indigo-400 focus-within:ring-4 focus-within:ring-indigo-50 transition-all shadow-sm"
+                   data-field="batchNo" (focusout)="touchField('batchNo')" [style.border-color]="hasError('batchNo') ? '#f87171' : null">
                 <input [(ngModel)]="form.batchNo" type="text" placeholder="e.g. B-2026-001"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -577,9 +592,11 @@
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="barcode-outline" class="text-slate-400"></ion-icon>
-                Part Number
+                Part Number <span class="text-red-400">*</span>
+                <span *ngIf="hasError('partNumber')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('partNumber') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                   data-field="partNumber" (focusout)="touchField('partNumber')" [style.border-color]="hasError('partNumber') ? '#f87171' : null">
                 <input [(ngModel)]="form.partNumber" placeholder="e.g. PN-001"
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
@@ -590,9 +607,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="build-outline" class="text-slate-400"></ion-icon>
-                  Category
+                  Category <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('category')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('category') }}</span>
                 </label>
-                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                     data-field="category" (focusout)="touchField('category')" [style.border-color]="hasError('category') ? '#f87171' : null">
                   <select [(ngModel)]="form.category"
                           style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
                           class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-8">
@@ -608,9 +627,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="business-outline" class="text-slate-400"></ion-icon>
-                  Vendor
+                  Vendor <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('vendor')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('vendor') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                     data-field="vendor" (focusout)="touchField('vendor')" [style.border-color]="hasError('vendor') ? '#f87171' : null">
                   <input [(ngModel)]="form.vendor" placeholder="e.g. Tata Steel"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -622,9 +643,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="calendar-outline" class="text-slate-400"></ion-icon>
-                  Purchase Date
+                  Purchase Date <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('purchaseDate')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('purchaseDate') }}</span>
                 </label>
-                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                     data-field="purchaseDate" (focusout)="touchField('purchaseDate')" [style.border-color]="hasError('purchaseDate') ? '#f87171' : null">
                   <input [(ngModel)]="form.purchaseDate" type="date"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
@@ -634,9 +657,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="shield-checkmark-outline" class="text-slate-400"></ion-icon>
-                  Warranty Expiry
+                  Warranty Expiry <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('warrantyExpiryDate')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('warrantyExpiryDate') }}</span>
                 </label>
-                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                     data-field="warrantyExpiryDate" (focusout)="touchField('warrantyExpiryDate')" [style.border-color]="hasError('warrantyExpiryDate') ? '#f87171' : null">
                   <input [(ngModel)]="form.warrantyExpiryDate" type="date"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
@@ -648,9 +673,11 @@
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="checkmark-circle-outline" class="text-slate-400"></ion-icon>
-                Condition
+                Condition <span class="text-red-400">*</span>
+                <span *ngIf="hasError('condition')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('condition') }}</span>
               </label>
-              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
+              <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                   data-field="condition" (focusout)="touchField('condition')" [style.border-color]="hasError('condition') ? '#f87171' : null">
                 <select [(ngModel)]="form.condition"
                         style="background:transparent; color:#1e293b; appearance:none; -webkit-appearance:none;"
                         class="w-full px-4 py-3.5 rounded-2xl text-sm font-medium outline-none pr-8">
@@ -680,9 +707,11 @@
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="car-outline" class="text-blue-400"></ion-icon>
-                Transport Name
+                Transport Name <span class="text-red-400">*</span>
+                <span *ngIf="hasError('transportName')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('transportName') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm"
+                   data-field="transportName" (focusout)="touchField('transportName')" [style.border-color]="hasError('transportName') ? '#f87171' : null">
                 <input [(ngModel)]="form.transportName" placeholder="e.g. Delivery Express Pvt. Ltd."
                        style="background:transparent; color:#1e293b;"
                        class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -693,9 +722,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="person-outline" class="text-blue-400"></ion-icon>
-                  Driver Name
+                  Driver Name <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('driverName')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('driverName') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm"
+                     data-field="driverName" (focusout)="touchField('driverName')" [style.border-color]="hasError('driverName') ? '#f87171' : null">
                   <input [(ngModel)]="form.driverName" placeholder="e.g. Ramesh Singh"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -704,10 +735,12 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="call-outline" class="text-blue-400"></ion-icon>
-                  Driver Mobile
+                  Driver Mobile <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('driverMobile')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('driverMobile') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm">
-                  <input [(ngModel)]="form.driverMobile" placeholder="9876543210" type="tel"
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-blue-400 focus-within:ring-4 focus-within:ring-blue-50 transition-all shadow-sm"
+                     data-field="driverMobile" (focusout)="touchField('driverMobile')" [style.border-color]="hasError('driverMobile') ? '#f87171' : null">
+                  <input [(ngModel)]="form.driverMobile" placeholder="9876543210" type="tel" maxlength="10"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
                 </div>
@@ -718,9 +751,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="business-outline" class="text-emerald-500"></ion-icon>
-                  Vendor Name
+                  Vendor Name <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('vendorName')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('vendorName') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm"
+                     data-field="vendorName" (focusout)="touchField('vendorName')" [style.border-color]="hasError('vendorName') ? '#f87171' : null">
                   <input [(ngModel)]="form.vendorName" placeholder="e.g. Tata Steel Ltd."
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none" />
@@ -729,9 +764,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="barcode-outline" class="text-emerald-500"></ion-icon>
-                  Vendor ID
+                  Vendor ID <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('vendorId')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('vendorId') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-emerald-400 focus-within:ring-4 focus-within:ring-emerald-50 transition-all shadow-sm"
+                     data-field="vendorId" (focusout)="touchField('vendorId')" [style.border-color]="hasError('vendorId') ? '#f87171' : null">
                   <input [(ngModel)]="form.vendorId" placeholder="e.g. VND-001"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
@@ -743,9 +780,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="document-text-outline" class="text-sky-400"></ion-icon>
-                  Invoice No.
+                  Invoice No. <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('invoiceNumber')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('invoiceNumber') }}</span>
                 </label>
-                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm">
+                <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm"
+                     data-field="invoiceNumber" (focusout)="touchField('invoiceNumber')" [style.border-color]="hasError('invoiceNumber') ? '#f87171' : null">
                   <input [(ngModel)]="form.invoiceNumber" placeholder="INV-2026-001"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm font-mono outline-none" />
@@ -754,9 +793,11 @@
               <div class="group">
                 <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                   <ion-icon name="calendar-outline" class="text-sky-400"></ion-icon>
-                  Date
+                  Date <span class="text-red-400">*</span>
+                  <span *ngIf="hasError('date')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('date') }}</span>
                 </label>
-                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm">
+                <div class="relative bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-sky-400 focus-within:ring-4 focus-within:ring-sky-50 transition-all shadow-sm"
+                     data-field="date" (focusout)="touchField('date')" [style.border-color]="hasError('date') ? '#f87171' : null">
                   <input [(ngModel)]="form.date" type="date"
                          style="background:transparent; color:#1e293b;"
                          class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none pr-10" />
@@ -768,10 +809,12 @@
             <div class="group">
               <label class="flex items-center gap-1.5 text-xs font-bold text-slate-500 uppercase tracking-wider mb-2 ml-1">
                 <ion-icon name="chatbubble-ellipses-outline" class="text-amber-400"></ion-icon>
-                Remarks
+                Remarks <span class="text-red-400">*</span>
+                <span *ngIf="hasError('remarks')" class="ml-auto mr-1 normal-case tracking-normal whitespace-nowrap text-[11px] font-semibold text-red-500">{{ fieldError('remarks') }}</span>
               </label>
-              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm">
-                <textarea [(ngModel)]="form.remarks" rows="2" placeholder="Optional notes…"
+              <div class="bg-white rounded-2xl border-2 border-slate-200 hover:border-slate-300 focus-within:border-amber-400 focus-within:ring-4 focus-within:ring-amber-50 transition-all shadow-sm"
+                   data-field="remarks" (focusout)="touchField('remarks')" [style.border-color]="hasError('remarks') ? '#f87171' : null">
+                <textarea [(ngModel)]="form.remarks" rows="2" placeholder="Enter remarks…"
                           style="background:transparent; color:#1e293b;"
                           class="w-full px-4 py-3.5 rounded-2xl text-sm outline-none resize-none"></textarea>
               </div>

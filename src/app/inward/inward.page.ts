@@ -422,6 +422,7 @@ export class InwardPage implements OnInit {
   openModal() {
     this.form = this.emptyForm();
     this.selectedType = null;
+    this.resetValidationState();
     this.isModalOpen = true;
   }
 
@@ -438,6 +439,7 @@ export class InwardPage implements OnInit {
   selectType(type: InwardItemType) {
     this.haptic.selectionChanged();
     this.selectedType = type;
+    this.resetValidationState();
     this.form.itemType = type;
     this.form.itemName = '';
     this.form.itemCode = '';
@@ -731,10 +733,129 @@ export class InwardPage implements OnInit {
     return d ? `${d}T00:00:00` : '';
   }
 
+  /** True once the user has tried to save — every invalid field is then highlighted. */
+  submitAttempted = false;
+
+  /** Fields the user has already visited and left (blurred) — these show their error straight away. */
+  private touchedFields = new Set<string>();
+
+  private readonly fieldLabels: Record<string, string> = {
+    itemName: 'Material Name', itemCode: 'Material Code', quantity: 'Quantity', rate: 'Rate',
+    batchNo: 'Batch No', partNumber: 'Part Number', category: 'Category', vendor: 'Vendor',
+    purchaseDate: 'Purchase Date', warrantyExpiryDate: 'Warranty Expiry', condition: 'Condition',
+    transportName: 'Transport Name', driverName: 'Driver Name', driverMobile: 'Driver Mobile',
+    vendorName: 'Vendor Name', vendorId: 'Vendor ID', invoiceNumber: 'Invoice No.', date: 'Date',
+    remarks: 'Remarks', unit: 'Unit Type',
+  };
+
+  /**
+   * Every field in the Create Inward form is mandatory. Returns a map of
+   * field key -> SHORT error message (it is shown on the field's label line)
+   * for the fields that apply to the selected type.
+   */
+  getFormErrors(): Record<string, string> {
+    const e: Record<string, string> = {};
+    const f = this.form;
+    const type = this.selectedType;
+    if (!type) return e;
+
+    const blank = (v: unknown) => v === null || v === undefined || String(v).trim() === '';
+
+    if (blank(f.itemName)) e['itemName'] = 'Select an item';
+    if (blank(f.quantity) || Number(f.quantity) <= 0) e['quantity'] = blank(f.quantity) ? 'Required' : 'Must be > 0';
+
+    if (type === 'finished_product') {
+      if (blank(f.batchNo)) e['batchNo'] = 'Required';
+      return e;
+    }
+
+    if (type === 'spare_parts') {
+      if (blank(f.partNumber)) e['partNumber'] = 'Required';
+      if (blank(f.category)) e['category'] = 'Required';
+      if (blank(f.vendor)) e['vendor'] = 'Required';
+      if (blank(f.purchaseDate)) e['purchaseDate'] = 'Required';
+      if (blank(f.warrantyExpiryDate)) e['warrantyExpiryDate'] = 'Required';
+      else if (!blank(f.purchaseDate) && f.warrantyExpiryDate! < f.purchaseDate!) {
+        e['warrantyExpiryDate'] = 'Before purchase date';
+      }
+      if (blank(f.condition)) e['condition'] = 'Required';
+      return e;
+    }
+
+    // raw_material, scrap, promotional (and any other type with rate + logistics)
+    if (blank(f.itemCode)) e['itemCode'] = 'Required';
+    if (blank(f.unit)) e['unit'] = 'Required';
+    if (blank(f.rate)) e['rate'] = 'Required';
+    else if (Number(f.rate) <= 0) e['rate'] = 'Must be > 0';
+    if (blank(f.transportName)) e['transportName'] = 'Required';
+    if (blank(f.driverName)) e['driverName'] = 'Required';
+    if (blank(f.driverMobile)) e['driverMobile'] = 'Required';
+    else if (!/^\d{10}$/.test(String(f.driverMobile).trim())) e['driverMobile'] = 'Enter 10 digits';
+    if (blank(f.vendorName)) e['vendorName'] = 'Required';
+    if (blank(f.vendorId)) e['vendorId'] = 'Required';
+    if (blank(f.invoiceNumber)) e['invoiceNumber'] = 'Required';
+    if (blank(f.date)) e['date'] = 'Required';
+    if (blank(f.remarks)) e['remarks'] = 'Required';
+    return e;
+  }
+
+  /** Called when focus leaves a field — from then on that field validates live. */
+  touchField(key: string): void {
+    this.touchedFields.add(key);
+  }
+
+  /** Whether a field should currently render in its error state (visited-and-invalid, or after a Save attempt). */
+  hasError(key: string): boolean {
+    return (this.submitAttempted || this.touchedFields.has(key)) && !!this.getFormErrors()[key];
+  }
+
+  /** Short message for the field's label line. */
+  fieldError(key: string): string {
+    return this.getFormErrors()[key] ?? '';
+  }
+
+  private resetValidationState(): void {
+    this.submitAttempted = false;
+    this.touchedFields.clear();
+  }
+
+  /** Full-sentence version of a field error, for the toast. */
+  private describeError(key: string, msg: string): string {
+    if (key === 'itemName') return 'Please select an item';
+    const label = this.fieldLabels[key] ?? key;
+    return msg === 'Required' ? `${label} is required` : `${label}: ${msg}`;
+  }
+
+  /** First invalid field in on-screen order (not object-key order). */
+  private firstInvalidKey(errors: Record<string, string>): string {
+    const el = Array.from(document.querySelectorAll<HTMLElement>('[data-field]'))
+      .find(node => !!errors[node.dataset['field'] ?? '']);
+    return el?.dataset['field'] ?? Object.keys(errors)[0];
+  }
+
+  /** Scrolls the field into view and puts the cursor in it. */
+  private focusField(key: string): void {
+    setTimeout(() => {
+      const el = document.querySelector<HTMLElement>(`[data-field="${key}"]`);
+      if (!el) return;
+      el.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      el.querySelector<HTMLElement>('input, select, textarea')?.focus({ preventScroll: true });
+    });
+  }
+
   submitEntry() {
     if (!this.selectedType) { this.showToast('Please select an item type', 'warning'); return; }
-    if (!this.form.itemName.trim()) { this.showToast('Item name is required', 'warning'); return; }
-    if (!this.form.quantity || this.form.quantity <= 0) { this.showToast('Enter a valid quantity', 'warning'); return; }
+
+    this.submitAttempted = true;
+    const errors = this.getFormErrors();
+    const keys = Object.keys(errors);
+    if (keys.length) {
+      const first = this.firstInvalidKey(errors);
+      const extra = keys.length > 1 ? ` (+${keys.length - 1} more field${keys.length > 2 ? 's' : ''})` : '';
+      this.showToast(this.describeError(first, errors[first]) + extra, 'warning');
+      this.focusField(first);
+      return;
+    }
 
     this.haptic.heavy();
     this.isSubmitting = true;

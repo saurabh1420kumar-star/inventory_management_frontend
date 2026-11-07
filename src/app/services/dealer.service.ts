@@ -8,11 +8,22 @@ import { catchError, map } from 'rxjs/operators';
 import { environment } from '../../environments/environment';
 import { Auth } from './auth';
 
+export type DealerStatus = 'ACTIVE' | 'SUSPENDED';
+
+// Backend may send `status` ("ACTIVE" | "SUSPENDED") or only the legacy `isActive` flag — accept either.
+function resolveDealerStatus(d: any): DealerStatus {
+  const raw = typeof d?.status === 'string' ? d.status.trim().toUpperCase() : '';
+  if (raw === 'SUSPENDED') return 'SUSPENDED';
+  if (raw === 'ACTIVE') return 'ACTIVE';
+  return (d?.isActive ?? d?.active ?? true) === false ? 'SUSPENDED' : 'ACTIVE';
+}
+
 export interface DealerDto {
   id: number;
   fullName: string;
   phone: string;
   address: string;
+  status?: DealerStatus;
   isActive: boolean;
   distributorId?: number;
   distributorName?: string;
@@ -39,6 +50,7 @@ export class DealerService {
           fullName: d.fullName ?? d.full_name ?? d.name ?? '—',
           phone: d.phone ?? '',
           address: d.address ?? '',
+          status: resolveDealerStatus(d),
           isActive: d.isActive ?? d.active ?? true,
           distributorId: d.distributorId ?? d.distributor?.id,
           distributorName: d.distributorName ?? d.distributor?.firmName ?? d.distributor?.name,
@@ -62,11 +74,17 @@ export class DealerService {
           fullName: d.fullName ?? d.full_name ?? d.name ?? '',
           phone: d.phone ?? '',
           address: d.address ?? '',
+          status: resolveDealerStatus(d),
           isActive: d.isActive ?? d.active ?? true,
           distributorId: d.distributorId ?? d.distributor?.id,
           distributorName: d.distributorName ?? d.distributor?.firmName ?? d.distributor?.name,
         }));
       })
     );
+  }
+
+  // PATCH /api/dealers/{id}/status — body { status: "ACTIVE" | "SUSPENDED" }.
+  updateDealerStatus(id: number, status: DealerStatus): Observable<unknown> {
+    return this.http.patch<unknown>(`${this.baseUrl}/${id}/status`, { status }, { headers: this.getAuthHeaders() });
   }
 }

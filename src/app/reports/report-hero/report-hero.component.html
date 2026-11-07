@@ -1,15 +1,21 @@
 <ion-header class="ion-no-border">
-  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50">
+  <ion-toolbar class="bg-white/80 backdrop-blur-md border-b border-slate-100 sticky top-0 z-50"
+               [style.--background]="darkToolbar ? '#000000' : null"
+               [style.--border-width]="darkToolbar ? '0' : null"
+               [style.border-color]="darkToolbar ? '#000000' : null">
     <ion-buttons slot="start">
-      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"></ion-menu-button>
+      <ion-menu-button class="text-slate-600 hover:text-emerald-500 transition-colors"
+                       [style.color]="darkToolbar ? '#ffffff' : null"></ion-menu-button>
     </ion-buttons>
-    <ion-title class="text-slate-800 font-bold tracking-tight text-xl">
-      <span *ngIf="toolbarAccent" class="text-emerald-500">{{ toolbarAccent }}</span> {{ toolbarTitle }}
+    <ion-title class="text-slate-800 font-bold tracking-tight text-xl"
+               [style.color]="darkToolbar ? '#ffffff' : null">
+      <span *ngIf="toolbarAccent" class="text-emerald-500" [style.color]="darkToolbar ? '#34d399' : null">{{ toolbarAccent }}</span> {{ toolbarTitle }}
     </ion-title>
     <ion-buttons slot="end">
       <span *ngIf="lastUpdated" class="hidden sm:inline text-[0.65rem] text-slate-400 mr-2">Updated {{ lastUpdated | date:'d MMM, h:mm a' }}</span>
       <ion-button (click)="refresh.emit()" [disabled]="isBusy" fill="clear">
-        <ion-icon slot="icon-only" name="refresh-outline" class="text-slate-500" [class.animate-spin]="isBusy"></ion-icon>
+        <ion-icon slot="icon-only" name="refresh-outline" class="text-slate-500" [class.animate-spin]="isBusy"
+                  [style.color]="darkToolbar ? '#ffffff' : null"></ion-icon>
       </ion-button>
     </ion-buttons>
   </ion-toolbar>
